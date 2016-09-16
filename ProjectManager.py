@@ -398,7 +398,8 @@ class WorkareaBuilder(Plugin):
         env = {
             'REPLACE_BUILD_PROJECT':projectpath,
             'REPLACE_TOPLVL':self.top,
-            'CACTUS_ROOT':realpath(self.prefix)
+            'CACTUS_ROOT':realpath(self.prefix),
+            'SCRIPT_PATH':dirname(realpath(__file__))
         }
 
         # fetch & execute the method corresponding to the product
@@ -474,13 +475,13 @@ mkSimTemplate='''
 BUILD_PROJECT:={REPLACE_BUILD_PROJECT}
 TOPLVL:={REPLACE_TOPLVL}
 CACTUS_ROOT:={CACTUS_ROOT}
+SCRIPT_PATH:={SCRIPT_PATH}
 
 DEPFILE:=$(TOPLVL).dep
 
 # Derived paths
-# UPGRADES_ROOT:=$(CACTUS_ROOT)/$(BUILD_TAG)/cactusupgrades
 UPGRADES_ROOT:=$(CACTUS_ROOT)
-DEPTREE:=$(CACTUS_ROOT)/scripts/firmware/dep_tree.py
+DEPTREE:=$(SCRIPT_PATH)/dep_tree.py
 IPSIM_FOLDER:=$(TOPLVL)/$(TOPLVL).srcs/sources_1/ip
 
 .PHONY: help project fli _checkenv ipsim addrtab decode
@@ -581,7 +582,6 @@ PROJNAME:=top
 CACTUS_ROOT:={CACTUS_ROOT}
 
 # Derived paths
-# UPGRADES_ROOT:=$(CACTUS_ROOT)/$(BUILD_TAG)/cactusupgrades
 UPGRADES_ROOT:=$(CACTUS_ROOT)
 DEPTREE:=$(CACTUS_ROOT)/scripts/firmware/dep_tree.py
 

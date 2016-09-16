@@ -60,7 +60,7 @@ export TCL_RESET_PROJECT
 .PHONY: clean reset addrtab decode
 
 $(PROJECTFILE):
-\t@$(DEPTREE) -p v $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkProject.tcl
+\t@$(DEPTREE) vivado $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkProject.tcl
 \t@vivado -mode batch -source mkProject.tcl
 
 $(BITFILE):
@@ -91,13 +91,13 @@ reset:
 addrtab:
 \t@echo "Collecting address tables..."
 \t@mkdir -p addrtab
-\t@$(DEPTREE) -p a $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) | xargs -tI: cp : addrtab
+\t@$(DEPTREE) addrtab $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) | xargs -tI: cp : addrtab
 \t@echo "Done."
 
 decode: addrtab
 \trm -rf decoders
 \tcp -a addrtab decoders
-\t$(DEPTREE) -p b $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o decoders/update.sh
+\t$(DEPTREE) b $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o decoders/update.sh
 \tchmod a+x decoders/update.sh
 \texport PATH=/opt/cactus/bin/uhal/tools:$$PATH; cd decoders && ./update.sh
 '''

@@ -87,14 +87,14 @@ help:
 
 project: _checkenv fli ipsim
 
-\t$(DEPTREE) -p s $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkProject.tcl
+\t$(DEPTREE) sim $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkProject.tcl
 \t$(MODELSIM_ROOT)/bin/vsim -c -do "do mkProject.tcl; quit"
 
 ipsim: .ipcores_sim_built
 
 .ipcores_sim_built:
 \techo Building IPCores simulation
-\t$(DEPTREE) -p ip $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkSimIPs.tcl
+\t$(DEPTREE) ip $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkSimIPs.tcl
 \tvivado -mode batch -source mkSimIPs.tcl
 \ttouch $@
 
@@ -118,13 +118,13 @@ clean:
 addrtab:
 \t@echo "Collecting address tables..."
 \t@mkdir -p addrtab
-\t@$(DEPTREE) -p a $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) | xargs -tI: cp : addrtab
+\t@$(DEPTREE) addrtab $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) | xargs -tI: cp : addrtab
 \t@echo "Done."
 
 decode: addrtab
 \trm -rf decoders
 \tcp -a addrtab decoders
-\t$(DEPTREE) -p b $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o decoders/update.sh
+\t$(DEPTREE) b $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o decoders/update.sh
 \tchmod a+x decoders/update.sh
 \texport PATH=/opt/cactus/bin/uhal/tools:$$PATH; cd decoders && ./update.sh
 '''

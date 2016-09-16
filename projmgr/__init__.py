@@ -34,8 +34,10 @@ class Plugin(object):
 
 
     def _run(self, cmd):
+        import subprocess
         self._log.info('Command:',cmd)
-        os.system( cmd )
+        # os.system( cmd )
+        subprocess.call( cmd, shell=True)
 
 
 #------------------------------------------------------------------------------

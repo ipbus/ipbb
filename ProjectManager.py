@@ -49,6 +49,7 @@ if __name__ == '__main__':
 
     from projmgr import WorkareaBuilder
     from projmgr.svn import CactusCreator, CactusProjectAdder, CactusFetcher, CactusCheckout
+    from projmgr.git import TestGit
     from projmgr.vivado import VivadoAreaBuilder
     from projmgr.modelsim import ModelsimAreaBuilder
 
@@ -60,6 +61,7 @@ if __name__ == '__main__':
         'buildarea': WorkareaBuilder,
         'sim'      : ModelsimAreaBuilder,
         'vivado'   : VivadoAreaBuilder,
+        'testgit'  : TestGit
     }
 
     cli_factory = CliFactory( plugins )

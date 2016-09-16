@@ -387,7 +387,7 @@ class WorkareaBuilder(Plugin):
             'REPLACE_BUILD_PROJECT':projectpath,
             'REPLACE_TOPLVL':self.top,
             'CACTUS_ROOT':realpath(self.prefix),
-            'SCRIPT_PATH':dirname(realpath(__file__))
+            'SCRIPT_PATH':self.scriptpath
         }
 
         # fetch & execute the method corresponding to the product

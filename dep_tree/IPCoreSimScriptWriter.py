@@ -77,8 +77,6 @@ set_property "target_language" "VHDL" $obj
           if lExt == ".xci":
             write("upgrade_ip [get_ips {0}]".format( lName ) )
             write("generate_target simulation [get_files {0}]".format( lBasename ) )
-          # write('puts $f "vcom {0}"'.format( os.path.join( lWorkingDir , "top.srcs/sources_1/ip" , lName, "sim" , lName + ".vhd" ) )  )
-      # write("close $f")
 #TOPLVL
       write('''
 exec mkdir -p {0}/{0}.srcs/sources_1/ip/built'''.format(aScriptVariables['device_top']))

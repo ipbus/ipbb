@@ -15,10 +15,11 @@ BUILD_PROJECT:={REPLACE_BUILD_PROJECT}
 TOPLVL:={REPLACE_TOPLVL}
 PROJNAME:=top
 CACTUS_ROOT:={CACTUS_ROOT}
+SCRIPT_PATH:={SCRIPT_PATH}
 
 # Derived paths
 UPGRADES_ROOT:=$(CACTUS_ROOT)
-DEPTREE:=$(CACTUS_ROOT)/scripts/firmware/dep_tree.py
+DEPTREE:=$(SCRIPT_PATH)/dep_tree.py
 
 # Timestamp
 TIMESTAMP=$(shell date +%y%m%d_%H%M)

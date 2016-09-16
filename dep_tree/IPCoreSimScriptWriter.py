@@ -14,8 +14,8 @@ class IPCoreSimScriptWriter( object ):
     self.Pathmaker = aPathmaker
 
   def write( self , aScriptVariables , aComponentPaths , aCommandList , aLibs, aMaps ):
-    # if not "device_name" in aScriptVariables:
-    #   raise RuntimeError("Variable 'device_name' not defined.")
+    if not "device_top" in aScriptVariables:
+      raise RuntimeError("Variable 'device_top' not defined.")
 
     # Hack alert : Alessandro
     code,output = commands.getstatusoutput('vsim -version')

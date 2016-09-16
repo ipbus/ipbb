@@ -90,13 +90,14 @@ project: _checkenv fli ipsim
 \t$(DEPTREE) -p s $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkProject.tcl
 \t$(MODELSIM_ROOT)/bin/vsim -c -do "do mkProject.tcl; quit"
 
-ipsim: $(IPSIM_FOLDER)/built
+ipsim: .ipcores_sim_built
+# ipsim: $(IPSIM_FOLDER)/built
 
-$(IPSIM_FOLDER)/built:
+# $(IPSIM_FOLDER)/built:
+.ipcores_sim_built:
 \techo Building IPCores simulation
 \t$(DEPTREE) -p ip $(UPGRADES_ROOT) $(BUILD_PROJECT) $(DEPFILE) -o mkSimIPs.tcl
 \tvivado -mode batch -source mkSimIPs.tcl
-\ttouch $@
 
 fli: _checkenv mac_fli.so
 

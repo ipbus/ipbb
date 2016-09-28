@@ -15,7 +15,8 @@ class TestGit(Plugin):
     def addArguments(subparsers,cmd):
         subp = subparsers.add_parser(cmd)
         subp.add_argument('repo',        help='repository', default='repo')
-        subp.add_argument('--codebox',        help='Area where the code lives', default='cactusupgrades')
+        subp.add_argument('-b', '--branch',   help='Area where the code lives', default='master')
+        subp.add_argument('--codebox',   help='Area where the code lives', default='cactusupgrades')
 
     def __init__(self,**kwargs):
         super(TestGit,self).__init__(**kwargs)
@@ -31,4 +32,4 @@ class TestGit(Plugin):
         # go to the tag directory
         sentry = DirSentry(self.codebox)
 
-        self._run('git clone %s' % (self.repo,))
+        self._run('git clone -b %s %s' % (self.branch,self.repo,))

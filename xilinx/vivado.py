@@ -1,4 +1,4 @@
-from . import IPopen
+from ipopen import IPopen, AppHandler
 
 class VivadoHandler(AppHandler):
     """docstring for VivadoHandler"""

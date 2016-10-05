@@ -1,70 +1,26 @@
 #!/usr/bin/env python
-#
-import subprocess
-import sys
 
-# process = subprocess.Popen(
-    # 'bash'.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE
-# )
-# print 'stica'
-# while True:
-    # out = process.stdout.read(1)
-    # if out == '' and process.poll() != None:
-        # break
-    # if out != '':
-        # sys.stdout.write(out)
-        # sys.stdout.flush()
+# Logging is important
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-#
-# process = subprocess.Popen(['vivado','-mode','tcl'], shell=False,
-#                            stdin=subprocess.PIPE,
-#                            # stderr=subprocess.PIPE,
-#                            stdout=subprocess.PIPE
-#                            )
+# Build vivado interface
+import xilinx.vivado
+v = xilinx.vivado.Vivado()
 
-# process.stdin.write('quit\n')
-# process.stdin.flush()
-# print process.stdout.readline()
-# # print process.stderr.readline()
+v.openHw()
+v.connect('localhost:3121')
+hw_targets = v.getHwTargets()
 
-# process = subprocess.Popen(['vivado','-mode','tcl'], shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=1)
-# # process.stdin.write('aaa\n')
-# print process.stdout.readline()
-# print process.stdout.readline()
-# print process.stdout.readline()
-# print process.stdout.readline()
-# process.stdin.write('date\n')
-# print process.stdout.readline()
+if 'Digilent' not in hw_targets[0]:
+    raise RuntimeError('Diligent programmer not found')
 
+v.openHwTarget(hw_targets[0])
 
-import hw.vivado
+devs = v.getHwDevices()
 
-viv = hw.vivado.Vivado()
-print '-'*40
-print 'aaaa\n',viv.execute('puts "Hello, World!"')
-print '-'*40
-print viv.openHw()
-print '-'*40
+if devs[0] != 'xc7k325t_0':
+    raise RuntimeError('WTF?!? Where is my kintex7?')
 
+v.programDevice(devs[0], '/net/home/ppd/thea/Development/ipbus/test/kc705_gmi/top/top.runs/impl_1/top.bit')
 
-
-# class IPopen(subprocess.Popen):
-
-    # POLL_INTERVAL = 0.1
-    # def __init__(self, *args, **kwargs):
-        # subprocess.Popen.__init__(self,
-            # # ['vivado','-mode','tcl'],
-            # # ['gdb'],
-            # ['bash'],
-            # stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-            # )
-        # while True:
-            # out = self.stdout.read(1)
-            # if out == '' and self.poll() != None:
-                # break
-            # if out != '':
-                # sys.stdout.write(out)
-                # sys.stdout.flush()
-
-# if __name__ == '__main__':
-    # x = IPopen()

@@ -111,6 +111,14 @@ class DepFileParser(object):
     #--------------------------------------------------------------
 
     #--------------------------------------------------------------
+    # Component path expected format <package>:<component>
+    lSplitPath = self.Pathmaker.getcomppath(aComponentPath)
+    if len(lSplitPath) != 2:
+      raise SystemExit('Malformed component path %s. Expected format <package>:<component>' % aComponentPath )
+    lPackage = lSplitPath[0]
+    #--------------------------------------------------------------
+
+    #--------------------------------------------------------------
     # Open the dep file and iterate over it
     with open(aFileName) as lDepFile:
       for lLine in lDepFile:
@@ -184,7 +192,7 @@ class DepFileParser(object):
         if (lParsedLine.component is None):
           lComponentPath = aComponentPath
         else:
-          lComponentPath = lParsedLine.component
+          lComponentPath = self.Pathmaker.normcomppath(lParsedLine.component, lPackage)
           if lComponentPath not in self.ComponentPaths:
             self.ComponentPaths.append(lComponentPath)
         #--------------------------------------------------------------
@@ -239,19 +247,21 @@ class DepFileParser(object):
         #--------------------------------------------------------------
         # Debugging
         if self.CommandLineArgs.verbosity > 1:
-          print("***", lParsedLine, lComponentPath, lFileExprList)
+          print(' '*self.depth,"***", lParsedLine, lComponentPath, lFileExprList)
         #--------------------------------------------------------------
 
         for lFileExpr in lFileExprList:
           #--------------------------------------------------------------
           # If we are looking at generated files, look in the ipcore_dir, else look where we are told
-          if 'generated' in lParsedLine and lParsedLine.generated:
-            lPath = self.Pathmaker.getrelpath( "ipcore_dir" , lFileExpr , lParsedLine.cd )
-            lFileList = [ lPath ]
-          else:
-            lPath = self.Pathmaker.getpath( lComponentPath , lParsedLine.cmd , lFileExpr , cd = lParsedLine.cd )
-            lFileList = glob.glob( lPath )
+          # if 'generated' in lParsedLine and lParsedLine.generated:
+          #   lPath = self.Pathmaker.getrelpath( "ipcore_dir" , lFileExpr , lParsedLine.cd )
+          #   lFileList = [ lPath ]
+          # else:
+          #   lPath = self.Pathmaker.getpath( lComponentPath , lParsedLine.cmd , lFileExpr , cd = lParsedLine.cd )
+          #   lFileList = glob.glob( lPath )
           #--------------------------------------------------------------
+          lPath = self.Pathmaker.getpath( lComponentPath , lParsedLine.cmd , lFileExpr , cd = lParsedLine.cd )
+          lFileList = glob.glob( lPath )
 
           #--------------------------------------------------------------
           # Warn if something looks odd

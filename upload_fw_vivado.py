@@ -20,8 +20,8 @@ def parseArgs():
 
     # Validate 'device'
     tokens = args.device.split(':')
-    if len(tokens) != 1:
-        parser.error('UUUuuuuuu')
+    if len(tokens) != 2:
+        parser.error('Device format error. Expected format: <target match>:<device>')
 
     args.target = tokens[0]
     args.device = tokens[1]
@@ -44,14 +44,18 @@ if __name__ == '__main__':
     v.connect('localhost:3121')
     hw_targets = v.getHwTargets()
 
-    if args.target not in hw_targets[0]:
-        raise RuntimeError('Diligent programmer not found')
+    matching_targets = [t for t in hw_targets if args.target in t]
+    if len(matching_targets) == 0:
+        raise RuntimeError('Target %s not found. Targets available %s: ' % (args.target, ', '.join(hw_targets)) )
 
-    v.openHwTarget(hw_targets[0])
+    if len(matching_targets) > 1:
+        raise RuntimeError('Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (args.target, ', '.join(hw_targets)) )
+
+    v.openHwTarget(matching_targets[0])
 
     devs = v.getHwDevices()
 
     if args.device not in devs:
-        raise RuntimeError('WTF?!? Where is my kintex7?')
+        raise RuntimeError('Device %s not found. Devices available %s: ' % (args.device, ', '.join(devs)) )
 
     v.programDevice(args.device, args.bitfile)

@@ -8,18 +8,29 @@ def parseArgs():
     parser.add_argument("bitfile")
     args = parser.parse_args()
 
+    # Validate bitfile path
     bitpath = os.path.abspath(args.bitfile)
     if not os.path.exists(bitpath):
-        raise RuntimeError('Aaaaargh!!!')
+        parser.error('Aaaaargh!!!')
 
     if not os.path.splitext(bitpath)[-1].lower() == '.bit':
-        raise RuntimeError('Aaaaargh!!! Not a bitfile!!')
+        parser.error('Aaaaargh!!! Not a bitfile!!')
 
     args.bitfile = bitpath
+
+    # Validate 'device'
+    tokens = args.device.split(':')
+    if len(tokens) != 1:
+        parser.error('UUUuuuuuu')
+
+    args.target = tokens[0]
+    args.device = tokens[1]
+
     return args
 
 if __name__ == '__main__':
     args = parseArgs()
+
 
     # Logging is important
     import logging
@@ -33,7 +44,7 @@ if __name__ == '__main__':
     v.connect('localhost:3121')
     hw_targets = v.getHwTargets()
 
-    if 'Digilent' not in hw_targets[0]:
+    if args.target not in hw_targets[0]:
         raise RuntimeError('Diligent programmer not found')
 
     v.openHwTarget(hw_targets[0])

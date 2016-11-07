@@ -1,26 +1,46 @@
 #!/usr/bin/env python
 
-# Logging is important
-import logging
-logging.basicConfig(level=logging.DEBUG)
+def parseArgs():
+    import argparse
+    import os.path
+    parser = argparse.ArgumentParser()
+    parser.add_argument("device")
+    parser.add_argument("bitfile")
+    args = parser.parse_args()
 
-# Build vivado interface
-import xilinx.vivado
-v = xilinx.vivado.Vivado()
+    bitpath = os.path.abspath(args.bitfile)
+    if not os.path.exists(bitpath):
+        raise RuntimeError('Aaaaargh!!!')
 
-v.openHw()
-v.connect('localhost:3121')
-hw_targets = v.getHwTargets()
+    if not os.path.splitext(bitpath)[-1].lower() == '.bit':
+        raise RuntimeError('Aaaaargh!!! Not a bitfile!!')
 
-if 'Digilent' not in hw_targets[0]:
-    raise RuntimeError('Diligent programmer not found')
+    args.bitfile = bitpath
+    return args
 
-v.openHwTarget(hw_targets[0])
+if __name__ == '__main__':
+    args = parseArgs()
 
-devs = v.getHwDevices()
+    # Logging is important
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
 
-if devs[0] != 'xc7k325t_0':
-    raise RuntimeError('WTF?!? Where is my kintex7?')
+    # Build vivado interface
+    import xilinx.vivado
+    v = xilinx.vivado.Vivado()
 
-v.programDevice(devs[0], '/net/home/ppd/thea/Development/ipbus/test/kc705_gmi/top/top.runs/impl_1/top.bit')
+    v.openHw()
+    v.connect('localhost:3121')
+    hw_targets = v.getHwTargets()
 
+    if 'Digilent' not in hw_targets[0]:
+        raise RuntimeError('Diligent programmer not found')
+
+    v.openHwTarget(hw_targets[0])
+
+    devs = v.getHwDevices()
+
+    if args.device not in devs:
+        raise RuntimeError('WTF?!? Where is my kintex7?')
+
+    v.programDevice(args.device, args.bitfile)

@@ -68,33 +68,25 @@ class DepFileParser(object):
     parser_add = parser.add_subparsers(dest = "cmd")
     subp = parser_add.add_parser("include")
     subp.add_argument("-c","--component")
-    subp.add_argument("-d","--descend", action = "count")
-    subp.add_argument("-s","--subdir")
     subp.add_argument("--cd")
     subp.add_argument("file", nargs = "*")
     subp.add_argument("--vhdl2008" , action = "store_true")
     subp = parser_add.add_parser("setup")
     subp.add_argument("-c","--component")
     subp.add_argument("-z","--coregen", action = "store_true")
-    subp.add_argument("-d","--descend", action = "count")
-    subp.add_argument("-s","--subdir")
     subp.add_argument("--cd")
     subp.add_argument("file", nargs = "*")
     subp = parser_add.add_parser("src")
     subp.add_argument("-c", "--component")
     subp.add_argument("-l", "--lib")
     subp.add_argument("-m", "--map")
-    subp.add_argument("-g", "--generated" , action = "store_true")
+    subp.add_argument("-g", "--generated" , action = "store_true") # TODO: Check if still used in Vivado
     subp.add_argument("-n", "--noinclude" , action = "store_true")
-    subp.add_argument("-d","--descend", action = "count")
-    subp.add_argument("-s","--subdir")
     subp.add_argument("--cd")
     subp.add_argument("file", nargs = "+")
     subp.add_argument("--vhdl2008" , action = "store_true")
     subp = parser_add.add_parser("addrtab")
     subp.add_argument("-c","--component")
-    subp.add_argument("-d","--descend", action = "count")
-    subp.add_argument("-s","--subdir")
     subp.add_argument("--cd")
     subp.add_argument("-t","--toplevel" , action = "store_true")
     subp.add_argument("file", nargs = "*")
@@ -172,22 +164,6 @@ class DepFileParser(object):
         #--------------------------------------------------------------
 
         #--------------------------------------------------------------
-        # Throw on depricated syntax
-        if lParsedLine.descend or lParsedLine.subdir:
-          if lParsedLine.descend == None:
-            lParsedLine.descend = 0
-          if lParsedLine.subdir == None:
-            lParsedLine.subdir = ""
-
-          if len( lParsedLine.file ) == 1:
-            cmd = "{0} ...flags... {1}".format( lParsedLine.cmd, os.path.normpath( os.path.join( "../"*lParsedLine.descend , lParsedLine.subdir, lParsedLine.file[0]  )) )
-          else:
-            cmd = "{0} ...flags... --cd {1} {2}".format( lParsedLine.cmd, os.path.normpath( os.path.join( "../"*lParsedLine.descend , lParsedLine.subdir )) , " ".join( lParsedLine.file ) )
-
-          raise SystemExit( "Dep file --descend (-d) and -subdir (-s) syntax is deprecated , in {0} please change line\n '{1}' -> '{2}'".format( aFileName , lLine , cmd ) )
-        #--------------------------------------------------------------
-
-        #--------------------------------------------------------------
         # Set the component path, whether specified explicitly or not
         if (lParsedLine.component is None):
           lComponentPath = aComponentPath
@@ -252,6 +228,7 @@ class DepFileParser(object):
 
         for lFileExpr in lFileExprList:
           #--------------------------------------------------------------
+          # TODO: Check if still used in Vivado
           # If we are looking at generated files, look in the ipcore_dir, else look where we are told
           # if 'generated' in lParsedLine and lParsedLine.generated:
           #   lPath = self.Pathmaker.getrelpath( "ipcore_dir" , lFileExpr , lParsedLine.cd )

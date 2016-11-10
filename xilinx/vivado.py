@@ -1,10 +1,15 @@
 import logging
 import pexpect
 import sys
+import re
 import collections
+
 
 class Vivado(object):
   """docstring for Vivado"""
+
+  __char_backspace = re.compile(".\b")
+  
   #--------------------------------------------------------------
   def __init__(self):
     super(Vivado, self).__init__()
@@ -25,75 +30,73 @@ class Vivado(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def __expectprompt(self):
-    index = None
-    buffer = []
+  def __send(self, aText):
+
+    #--------------------------------------------------------------
+    # Hard check: First line of output must match the injected command
+    self._me.expect('\r\n')
+    lCmdRcvd = self.__char_backspace.sub('',self._me.before)
+    lCmdSent = aText
+    if lCmdRcvd != lCmdSent:
+      #--------------------------------------------------------------
+      # Find where the 2 strings don't match
+      print len(lCmdRcvd), len(lCmdSent)
+      for i in xrange(min(len(lCmdRcvd), len(lCmdSent))):
+          r = lCmdRcvd[i]
+          s = lCmdSent[i]
+          # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s), ord(s) > 128 
+          print i, '\t', r, s, r==s, ord(r)
+
+      print ''.join([str(i%10) for i in xrange(len(lCmdRcvd))])
+      print lCmdRcvd
+      print ''.join([str(i%10) for i in xrange(len(lCmdSent))])
+      print lCmdSent
+      #--------------------------------------------------------------
+      raise RuntimeError('Command and first output line don\'t match Sent=\'{0}\', Rcvd=\'{1}\''.format(lCmdSent,lCmdRcvd))
+    #--------------------------------------------------------------
+
+  def __expectPrompt(self, aMaxLen):
+    lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
+    lIndex = None
+    lBuffer = collections.deque([],aMaxLen)
+
+    #--------------------------------------------------------------
     while True:
       # Search for newlines, prompt, end-of-file
-      # index = self._me.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
-      index = self._me.expect(['\r\n','Vivado%\t', 'ERROR:'])
+      # lIndex = self._me.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
+      lIndex = self._me.expect(lExpectList)
       # print '>',self._me.before
 
-      # Break if prompt or EOF
-      if index != 0:
+
+      #----------------------------------------------------------
+      # Break if prompt
+      if lIndex == 1:
         break
+      # or do something smart fi an error is caugth
+      elif lIndex == 2:
+        print 'ERROR detected'
+      #----------------------------------------------------------
 
-      # Store the 
-      buffer += [self._me.before]
+      # Store the output in the circular buffer
+      lBuffer.append(self._me.before)
+    #--------------------------------------------------------------
 
-    return buffer
+    return lBuffer
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def __send(self, text):
-    self._me.sendline(text)
+  def execute(self, aText):
+    if isinstance(aText, str):
+      lCmds = [aText]
+    elif isinstance(aText, list):
+      lCmds = aText
+
+    lOutput = []
+    for lCmd in lCmds:
+      self.__send(lCmd)
+      lOutput.extend(self.__expectprompt())
+    return lOutput
   #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def __run(self, text):
-
-    import re
-    char_backspace = re.compile(".\b")
-    
-    self.__send(text)
-    output = self.__expectprompt()
-
-    # Sanitise Vivado output (backspaces leaking in here?!?)
-    cmdrcvd = char_backspace.sub('',output[0])
-    cmdsent = text
-    if cmdrcvd != cmdsent:
-        #-----
-        # Find where the 2 strings don't match
-        print len(cmdrcvd), len(cmdsent)
-        for i in xrange(min(len(cmdrcvd), len(cmdsent))):
-            r = cmdrcvd[i]
-            s = cmdsent[i]
-            # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s), ord(s) > 128 
-            print i, '\t', r, s, r==s, ord(r)
-
-        print ''.join([str(i%10) for i in xrange(len(cmdrcvd))])
-        print cmdrcvd
-        print ''.join([str(i%10) for i in xrange(len(cmdsent))])
-        print cmdsent
-        #-----
-        #
-        raise RuntimeError('Command and first output line don\'t match cmdsent=\'{0}\', cmdrcvd=\'{1}\''.format(cmdsent,cmdrcvd))
-    return output[1:]
-  #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def execute(self, text):
-    if isinstance(text, str):
-      cmds = [text]
-    elif isinstance(text, list):
-      cmds = text
-
-    output = []
-    for cmd in cmds:
-      output.append(self.__run(cmd))
-    return output
-  #--------------------------------------------------------------
-
 
   #--------------------------------------------------------------
   def openHw(self):

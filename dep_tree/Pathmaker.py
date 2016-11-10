@@ -16,7 +16,7 @@ class Pathmaker(object):
     self.componentmap = None
 
     if self.verbosity > 2:
-      print("+++ Pathmaker init", root, topdir, mapfile)
+      print("+++ Pathmaker init", rootdir, mapfile)
 
     if mapfile:
       self.componentmap = dict()
@@ -26,6 +26,25 @@ class Pathmaker(object):
           if lLine == "" or lLine[0] == "#": continue
           lTokenized = lLine.split()
           self.componentmap[ lTokenized[0] ] = lTokenized[1]
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def splitcomppath(self, aComponentPath ):
+    
+    lSeparators = lComponentPath.count(':')
+    # Validate the format
+    if lSeparators > 1:
+      raise SystemExit('Malformed component name : %s' % aComponentPath)
+    # elif lSeparators == 1:
+    #   return tuple(lComponentPath.split(':'))
+    # else:
+    #   return (None, aComponentPath)
+    lTokenized = lComponentPath.split(':')
+
+    if len(lTokenized) == 1:
+      lTokenized.insert(0, None)
+
+    return tuple(lTokenized)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -83,7 +102,7 @@ class Pathmaker(object):
     path2 = os.path.normpath( os.path.join( self.rootdir , *path ) )
 
     if self.verbosity > 2:
-      print("+++ Pathmaker", comp, kind, name, defext, descend, subdir, path2)
+      print("+++ Pathmaker", comp, kind, name, defext, path2)
     return path2
   #--------------------------------------------------------------
 

@@ -79,5 +79,7 @@ class VivadoScriptWriter( object ):
         write("create_ip_run [get_files {0}]".format(i) )
       for i in lXciBasenames:     
         write("launch_run {0}_synth_1".format(i) )
-      write('close_project')
+      for i in lXciBasenames:     
+        write("wait_on_run {0}_synth_1".format(i) )
+      # write('close_project')
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

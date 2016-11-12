@@ -3,38 +3,120 @@ import pexpect
 import sys
 import re
 import collections
+import subprocess
+import os.path
+
+#------------------------------------------------
+# This is for when python 2.7 will become available
+# pexpect.spawn(...,preexec_fn=on_parent_exit('SIGTERM'))
+import signal
+from ctypes import cdll
+
+# Constant taken from http://linux.die.net/include/linux/prctl.h
+PR_SET_PDEATHSIG = 1
+
+class PrCtlError(Exception):
+    pass
+
+def on_parent_exit(signame):
+    """
+    Return a function to be run in a child process which will trigger
+    SIGNAME to be sent when the parent process dies
+    """
+    signum = getattr(signal, signame)
+    def set_parent_exit_signal():
+        # http://linux.die.net/man/2/prctl
+        result = cdll['libc.so.6'].prctl(PR_SET_PDEATHSIG, signum)
+        if result != 0:
+            raise PrCtlError('prctl failed with error code %s' % result)
+    return set_parent_exit_signal
+#------------------------------------------------
 
 
-class Vivado(object):
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class Batch(object):
+  """docstring for Batch"""
+
+  reInfo = re.compile('^INFO:')
+  reWarn = re.compile('^WARNING:')
+  reError = re.compile('^ERROR:')
+
+  def __init__(self, script):
+    super(Batch, self).__init__()
+
+    lBasename, lExt = os.path.splitext(script)
+
+    if lExt != '.tcl':
+      raise RuntimeError('Bugger off!!!')
+
+    self._script = script
+    self._log = 'vivado_{0}.log'.format(lBasename)
+
+    cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(self._script, self._log)
+    process = subprocess.Popen(cmd.split())
+    process.wait()
+
+    self.errors = []
+    self.info = []
+    self.warnings = []
+
+    with  open(self._log) as lLog:
+      for i,l in enumerate(lLog):
+        if self.reError.match(l): self.errors.append( (i,l) )
+        elif self.reWarn.match(l): self.warnings.append( (i,l) )
+        elif self.reInfo.match(l): self.info.append( (i,l) )
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class Console(object):
   """docstring for Vivado"""
 
   __char_backspace = re.compile(".\b")
   
   #--------------------------------------------------------------
   def __init__(self):
-    super(Vivado, self).__init__()
+    super(Console, self).__init__()
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
     self._me = pexpect.spawn('vivado -mode tcl')
     self._me.logfile = sys.stdout
-    self.__expectprompt()
+    self.__expectPrompt()
     self._log.debug('Vivado up and running')
-  #--------------------------------------------------------------
+    # Method mapping
+    isAlive = self._me.isalive
 
-        # print self._me.before
+  #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __del__(self):
-    self.execute('quit')
-    self._me.close()
+    self.quit()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def quit(self):
+    # Return immediately of already dead
+    if not self._me.isalive():
+      self._log.debug('Vivado has already been stopped')
+      return
+
+    self._log.debug('Shutting Vivado down')
+    try:
+      self.execute('quit')
+    except pexpect.ExceptionPexpect as e:
+      pass
+
+    # Just in case
+    self._me.close(True)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __send(self, aText):
 
+    self._me.sendline(aText)
     #--------------------------------------------------------------
     # Hard check: First line of output must match the injected command
-    self._me.expect('\r\n')
+    self._me.expect(['\r\n',pexpect.EOF])
     lCmdRcvd = self.__char_backspace.sub('',self._me.before)
     lCmdSent = aText
     if lCmdRcvd != lCmdSent:
@@ -55,8 +137,9 @@ class Vivado(object):
       raise RuntimeError('Command and first output line don\'t match Sent=\'{0}\', Rcvd=\'{1}\''.format(lCmdSent,lCmdRcvd))
     #--------------------------------------------------------------
 
-  def __expectPrompt(self, aMaxLen):
-    lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
+  def __expectPrompt(self, aMaxLen=100):
+    # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
+    lCpl = self._me.compile_pattern_list(['\r\n','Vivado%\t', 'ERROR:'])
     lIndex = None
     lBuffer = collections.deque([],aMaxLen)
 
@@ -64,12 +147,12 @@ class Vivado(object):
     while True:
       # Search for newlines, prompt, end-of-file
       # lIndex = self._me.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
-      lIndex = self._me.expect(lExpectList)
+      lIndex = self._me.expect_list(lCpl)
       # print '>',self._me.before
 
 
       #----------------------------------------------------------
-      # Break if prompt
+      # Break if prompt 
       if lIndex == 1:
         break
       # or do something smart fi an error is caugth
@@ -94,7 +177,7 @@ class Vivado(object):
     lOutput = []
     for lCmd in lCmds:
       self.__send(lCmd)
-      lOutput.extend(self.__expectprompt())
+      lOutput.extend(self.__expectPrompt())
     return lOutput
   #--------------------------------------------------------------
 
@@ -124,10 +207,6 @@ class Vivado(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  # def setCurrentHwDevice(self, device):
-      # return self.execute('current_hw_device {0}'.format(device))
-
-  #--------------------------------------------------------------
   def programDevice(self, device, bitfile):
       from os.path import abspath, normpath
 
@@ -141,4 +220,5 @@ class Vivado(object):
       self.execute('set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath))
       self.execute('program_hw_devices [current_hw_device]')
   #--------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -18,7 +18,7 @@ lCommandLineArgs = dummy()
 # lCommandLineArgs.rootdir = '/net/home/ppd/thea/Development/ipbus/test/cactusupgrades/ipbus-fw-test'
 # lCommandLineArgs.topdir = 'boards/kc705/base_fw/kc705_gmii/synth/'
 lCommandLineArgs.rootdir = '/net/home/ppd/thea/Development/ipbus/test/cactusupgrades'
-lCommandLineArgs.topdir = 'my-proj:projects/example/'
+lCommandLineArgs.topdir = 'dummy-fw-proj:projects/example/'
 lCommandLineArgs.depfile = 'top_kc705_gmii.dep'
 lCommandLineArgs.define = []
 lCommandLineArgs.product = 'vivado'
@@ -40,13 +40,16 @@ if args.legacy:
     lDepFileParser.parse( lTopFile , lCommandLineArgs.topdir )
     #--------------------------------------------------------------
 else:
+
+    lCommandLineArgs.rootdir = '/home/ale/Development/ipbus-upgr/integration/sandbox'
+
     from dep_tree.Pathmaker2g import Pathmaker as Pathmaker2g
     from dep_tree.DepFileParser2g import DepFileParser as DepFileParser2g
 
     lPathmaker = Pathmaker2g( lCommandLineArgs.rootdir, lCommandLineArgs.verbosity )
     lDepFileParser = DepFileParser2g( lCommandLineArgs , lPathmaker )
 
-    lDepFileParser.parse( 'my-proj', 'projects/example', 'top_kc705_gmii.dep')
+    lDepFileParser.parse( 'dummy-fw-proj', 'projects/example', 'top_kc705_gmii.dep')
 
     print '\n'.join([str(id) for id in lDepFileParser.ComponentIds])
 
@@ -57,6 +60,8 @@ else:
     lWriter = VivadoScriptWriter(lDummy, lPathmaker)
     lWriter.write(lDepFileParser.ScriptVariables, lDepFileParser.ComponentIds, lDepFileParser.CommandList, None, None)
 
+    lLines = [ l.strip() for l in open('here.tcl').readlines() ]
+    import xilinx.vivado
 
 if args.interactive:
     import IPython

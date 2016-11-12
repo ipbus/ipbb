@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     # Build vivado interface
     import xilinx.vivado
-    v = xilinx.vivado.Vivado()
+    v = xilinx.vivado.Console()
 
     v.openHw()
     v.connect('localhost:3121')

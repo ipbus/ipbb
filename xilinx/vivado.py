@@ -5,6 +5,7 @@ import re
 import collections
 import subprocess
 import os.path
+import atexit
 
 #------------------------------------------------
 # This is for when python 2.7 will become available
@@ -87,7 +88,14 @@ class Console(object):
 
   __reCharBackspace = re.compile(".\b")
   __reError = re.compile('^ERROR:')
-  
+  __instances = set()
+
+  @classmethod
+  def killAll(cls):
+    lInstances = set(cls.__instances)
+    for lInstance in lInstances:
+      lInstance.quit()
+
   #--------------------------------------------------------------
   def __init__(self):
     super(Console, self).__init__()
@@ -99,8 +107,8 @@ class Console(object):
     self.__expectPrompt()
     self._log.debug('Vivado up and running')
     # Method mapping
-    isAlive = self._me.isalive
-
+    self.isAlive = self._me.isalive
+    self.__instances.add(self)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -123,6 +131,8 @@ class Console(object):
 
     # Just in case
     self._me.terminate(True)
+
+    self.__instances.remove(self)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -133,7 +143,7 @@ class Console(object):
     # Hard check: First line of output must match the injected command
     self._me.expect(['\r\n',pexpect.EOF])
     lCmdRcvd = self.__reCharBackspace.sub('',self._me.before)
-    lCmdSent = aText
+    lCmdSent = aText.split('\n')[0]
     if lCmdRcvd != lCmdSent:
       #--------------------------------------------------------------
       # Find where the 2 strings don't match
@@ -188,10 +198,11 @@ class Console(object):
     if not isinstance(aCmd,str):
       raise TypeError('expected string')
 
+    if aCmd.count('\n') != 0:
+      raise ValueError('format error. Newline not allowed in commands')
+
     self.__send(aCmd)
     lBuffer,lErrors = self.__expectPrompt(aMaxLen)
-    print lBuffer, lErrors
-    import pdb; pdb.set_trace()
     if lErrors is not None:
       raise ConsoleError(lErrors, aCmd)
     return list(lBuffer)
@@ -199,13 +210,12 @@ class Console(object):
 
   #--------------------------------------------------------------
   def executeMany(self, aCmds, aMaxLen=1):
-    if not isinstance(aCmd,list):
+    if not isinstance(aCmds,list):
       raise TypeError('expected list')
 
     lOutput = []
-    for lCmd in lCmds:
-      self.__send(lCmd)
-      lOutput.extend(self.__expectPrompt(aMaxLen))
+    for lCmd in aCmds:
+      lOutput.extend(self.execute(lCmd, aMaxLen))
     return lOutput
   #--------------------------------------------------------------
 
@@ -248,5 +258,11 @@ class Console(object):
       self.execute('set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath))
       self.execute('program_hw_devices [current_hw_device]')
   #--------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+@atexit.register
+def __goodbye():
+    Console.killAll()
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

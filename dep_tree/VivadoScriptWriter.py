@@ -81,5 +81,5 @@ class VivadoScriptWriter( object ):
         write("launch_run {0}_synth_1".format(i) )
       for i in lXciBasenames:     
         write("wait_on_run {0}_synth_1".format(i) )
-      # write('close_project')
+      write('close_project')
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

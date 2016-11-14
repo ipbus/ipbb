@@ -67,20 +67,35 @@ class Batch(object):
         elif self.reInfo.match(l): self.info.append( (i,l) )
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class ConsoleError(Exception):
+    """Exception raised for errors in the input.
+
+    Attributes:
+        message -- explanation of the error
+        command -- input command in which the error occurred
+    """
+
+    def __init__(self, errors, command):
+        self.errors = errors
+        self.command = command
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Console(object):
   """docstring for Vivado"""
 
-  __char_backspace = re.compile(".\b")
+  __reCharBackspace = re.compile(".\b")
+  __reError = re.compile('^ERROR:')
   
   #--------------------------------------------------------------
   def __init__(self):
     super(Console, self).__init__()
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
-    self._me = pexpect.spawn('vivado -mode tcl')
+    self._me = pexpect.spawn('vivado -mode tcl',maxread=1)
     self._me.logfile = sys.stdout
+    self._me.delaybeforesend = 0.00 #1
     self.__expectPrompt()
     self._log.debug('Vivado up and running')
     # Method mapping
@@ -107,7 +122,7 @@ class Console(object):
       pass
 
     # Just in case
-    self._me.close(True)
+    self._me.terminate(True)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -117,7 +132,7 @@ class Console(object):
     #--------------------------------------------------------------
     # Hard check: First line of output must match the injected command
     self._me.expect(['\r\n',pexpect.EOF])
-    lCmdRcvd = self.__char_backspace.sub('',self._me.before)
+    lCmdRcvd = self.__reCharBackspace.sub('',self._me.before)
     lCmdSent = aText
     if lCmdRcvd != lCmdSent:
       #--------------------------------------------------------------
@@ -139,9 +154,10 @@ class Console(object):
 
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-    lCpl = self._me.compile_pattern_list(['\r\n','Vivado%\t', 'ERROR:'])
+    lCpl = self._me.compile_pattern_list(['\r\n','Vivado%\t'])
     lIndex = None
     lBuffer = collections.deque([],aMaxLen)
+    lErrors = []
 
     #--------------------------------------------------------------
     while True:
@@ -155,29 +171,41 @@ class Console(object):
       # Break if prompt 
       if lIndex == 1:
         break
-      # or do something smart fi an error is caugth
-      elif lIndex == 2:
-        print 'ERROR detected'
       #----------------------------------------------------------
 
       # Store the output in the circular buffer
       lBuffer.append(self._me.before)
+
+      if self.__reError.match(self._me.before):
+        lErrors.append(self._me.before)
     #--------------------------------------------------------------
 
-    return lBuffer
+    return lBuffer,(lErrors if lErrors else None)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def execute(self, aText):
-    if isinstance(aText, str):
-      lCmds = [aText]
-    elif isinstance(aText, list):
-      lCmds = aText
+  def execute(self, aCmd, aMaxLen=1):
+    if not isinstance(aCmd,str):
+      raise TypeError('expected string')
+
+    self.__send(aCmd)
+    lBuffer,lErrors = self.__expectPrompt(aMaxLen)
+    print lBuffer, lErrors
+    import pdb; pdb.set_trace()
+    if lErrors is not None:
+      raise ConsoleError(lErrors, aCmd)
+    return list(lBuffer)
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def executeMany(self, aCmds, aMaxLen=1):
+    if not isinstance(aCmd,list):
+      raise TypeError('expected list')
 
     lOutput = []
     for lCmd in lCmds:
       self.__send(lCmd)
-      lOutput.extend(self.__expectPrompt())
+      lOutput.extend(self.__expectPrompt(aMaxLen))
     return lOutput
   #--------------------------------------------------------------
 

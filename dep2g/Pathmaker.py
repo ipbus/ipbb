@@ -27,12 +27,16 @@ class Pathmaker(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def getPath( self, package, component, kind=None, name=None, cd=None):
+  def getPath( self, package, component=None, kind=None, name=None, cd=None):
 
-    path = [package, component]
+    # path = [package, component]
+    path = [package]
+
+    if component:
+      path.append( component )
 
     if kind:
-      path.append( self.fpaths[kind])
+      path.append( self.fpaths[kind] )
 
     if cd:
       path.append( cd )
@@ -47,24 +51,24 @@ class Pathmaker(object):
     return lPath
   #--------------------------------------------------------------
 
-  #--------------------------------------------------------------
-  def splitcomppath(self, aComponentPath ):
+  # #--------------------------------------------------------------
+  # def splitcomppath(self, aComponentPath ):
     
-    lSeparators = lComponentPath.count(':')
-    # Validate the format
-    if lSeparators > 1:
-      raise SystemExit('Malformed component name : %s' % aComponentPath)
-    # elif lSeparators == 1:
-    #   return tuple(lComponentPath.split(':'))
-    # else:
-    #   return (None, aComponentPath)
-    lTokenized = lComponentPath.split(':')
+  #   lSeparators = lComponentPath.count(':')
+  #   # Validate the format
+  #   if lSeparators > 1:
+  #     raise SystemExit('Malformed component name : %s' % aComponentPath)
+  #   # elif lSeparators == 1:
+  #   #   return tuple(lComponentPath.split(':'))
+  #   # else:
+  #   #   return (None, aComponentPath)
+  #   lTokenized = lComponentPath.split(':')
 
-    if len(lTokenized) == 1:
-      lTokenized.insert(0, None)
+  #   if len(lTokenized) == 1:
+  #     lTokenized.insert(0, None)
 
-    return tuple(lTokenized)
-  #--------------------------------------------------------------
+  #   return tuple(lTokenized)
+  # #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def getDefName(self, kind, name):

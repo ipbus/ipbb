@@ -43,25 +43,29 @@ else:
 
     lCommandLineArgs.rootdir = '/home/ale/Development/ipbus-upgr/integration/sandbox'
 
-    from dep_tree.Pathmaker2g import Pathmaker as Pathmaker2g
-    from dep_tree.DepFileParser2g import DepFileParser as DepFileParser2g
+    from dep2g.Pathmaker import Pathmaker as Pathmaker2g
+    from dep2g.DepFileParser import DepFileParser as DepFileParser2g
 
     lPathmaker = Pathmaker2g( lCommandLineArgs.rootdir, lCommandLineArgs.verbosity )
     lDepFileParser = DepFileParser2g( lCommandLineArgs , lPathmaker )
 
     lDepFileParser.parse( 'dummy-fw-proj', 'projects/example', 'top_kc705_gmii.dep')
 
-    print '\n'.join([str(id) for id in lDepFileParser.ComponentIds])
+    print lDepFileParser
+    
+    # print '\n'.join([str(id) for id in lDepFileParser.ComponentIds])
 
-    from dep_tree.VivadoScriptWriter import VivadoScriptWriter
+    # from dep2g.VivadoProjectMaker import VivadoProjectMaker
 
-    lDummy = dummy()
-    lDummy.output = 'here.tcl'
-    lWriter = VivadoScriptWriter(lDummy, lPathmaker)
-    lWriter.write(lDepFileParser.ScriptVariables, lDepFileParser.ComponentIds, lDepFileParser.CommandList, None, None)
+    # lDummy = dummy()
+    # lDummy.output = 'here.tcl'
+    # lWriter = VivadoProjectMaker(lDummy, lPathmaker)
 
-    lLines = [ l.strip() for l in open('here.tcl').readlines() ]
     import xilinx.vivado
+    # with xilinx.vivado.SmartConsole() as lTarget:
+    #     lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.ComponentIds, lDepFileParser.CommandList, None, None)
+
+    # lLines = [ l.strip() for l in open('here.tcl').readlines() ]
 
 if args.interactive:
     import IPython

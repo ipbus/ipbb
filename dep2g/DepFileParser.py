@@ -6,13 +6,14 @@ import glob
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Command(object):
   #--------------------------------------------------------------
-  def __init__( self , aFilePath, aLib, aMap, aInclude , aTopLevel , aComponentPath, aVhdl2008 ):
+  def __init__( self , aFilePath , aPackage, aComponent, aLib, aMap, aInclude , aTopLevel , aVhdl2008 ):
     self.FilePath = aFilePath
+    self.Package = aPackage
+    self.Component = aComponent
     self.Lib = aLib
     self.Map = aMap
     self.Include = aInclude
     self.TopLevel = aTopLevel
-    self.ComponentPath = aComponentPath
     self.Vhdl2008 = aVhdl2008
 
   def __str__(self):
@@ -55,14 +56,15 @@ class DepFileParser(object):
     self.depth = 0
 
     self.ScriptVariables = {}
-    self.ComponentIds = list()
     self.CommandList = {"setup": [], "src": [], "addrtab": [] , "cgpfile" : [] }
     self.Libs = list()
     self.Maps = list()
     self.FilesNotFound = list()
     #---
-    self.Packages = list()
-    self.PackagesNotFound = list()
+    self.Packages = set()
+    self.MissingPackages = set()
+    self.Components = set()
+    self.MissingComponents = set()
     #--------------------------------------------------------------
 
     #--------------------------------------------------------------
@@ -119,9 +121,42 @@ class DepFileParser(object):
     self.parseLine = parser.parse_args
     #--------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------------------------------------------------------
+  def __str__(self):
+    string = self.__repr__()+'\n'
+    string += 'commands:\n'
+    for k in self.CommandList:
+      string += ' %s (%d)\n' % (k,len(self.CommandList[k]))
+      for lCmd in self.CommandList[k]:
+        string += ' _ '+str(lCmd)+'\n'
+      # print(c,self.CommandList[c])
+    string += 'packages: '+str(list(self.Packages))+'\n'
+    string += 'components: '+str(list(self.Components))+'\n'
+    string += 'missing packages: '+str(list(self.MissingPackages))+'\n'
+    string += 'missing components: '+str(list(self.MissingComponents))+'\n'
+    return string
+
+  #----------------------------------------------------------------------------------------------------------------------------
   
   #----------------------------------------------------------------------------------------------------------------------------
   def parse(self, aPackage, aComponent, aDepFileName):
+    # import pdb; pdb.set_trace()
+    # if not os.path.exists(self.Pathmaker.getPath(aPackage)):
+    #   self.MissingPackages.add(aPackage)
+    # else:
+    #   self.Packages.add(aPackage)
+
+    self._parse(aPackage, aComponent, aDepFileName)
+  #----------------------------------------------------------------------------------------------------------------------------
+  
+  #----------------------------------------------------------------------------------------------------------------------------
+  def _resolve(self, lPackage, lComponent, lFileExprList):
+
+  #----------------------------------------------------------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------------------------------------------------------
+  def _parse(self, aPackage, aComponent, aDepFileName):
     '''
     Parses a dependency file from package aPackage/aComponent
     '''
@@ -194,26 +229,12 @@ class DepFileParser(object):
         lPackage,lComponent = lParsedLine.component
 
         #--------------------------------------------------------------
-        # Store package name, if exists. Continue otherwise
+        # Set package and component to current ones if not defined
         if lPackage is None:
           lPackage = aPackage
-        else:
-          if not self.Pathmaker.packageExists(lPackage):
-            self.PackagesNotFound.append(lPackage)
-            continue
 
-          if lPackage not in self.Packages:
-            self.Packages.append(lPackage)
-        #--------------------------------------------------------------
-        
-        #--------------------------------------------------------------
-        # Store component paths
         if lComponent is None:
           lComponent = aComponent
-
-        lComponentId = (lPackage, lComponent)
-        if lComponentId not in self.ComponentIds:
-          self.ComponentIds.append( lComponentId )
         #--------------------------------------------------------------
 
         #--------------------------------------------------------------
@@ -224,6 +245,8 @@ class DepFileParser(object):
         else:
           lFileExprList = lParsedLine.file
         #--------------------------------------------------------------
+        
+        self._resolve(lPackage, lComponent, lFileExprList)
 
         #--------------------------------------------------------------
         #
@@ -262,10 +285,24 @@ class DepFileParser(object):
           # Expand file expression
           lPathExpr, lFileList = self.Pathmaker.glob( lPackage, lComponent, lParsedLine.cmd , lFileExpr , cd = lParsedLine.cd )
 
+          lComponentId = (lPackage, lComponent)
+
           #--------------------------------------------------------------
           # Warn if something looks odd
           if not lFileList:
-            self.FilesNotFound.append( lPath )
+            self.FilesNotFound.append( lPathExpr )
+
+            if not os.path.exists(self.Pathmaker.getPath(lPackage, lComponent)):
+              self.MissingComponents.add(lComponentId)
+
+            if not os.path.exists(self.Pathmaker.getPath(lPackage)):
+              self.MissingPackages.add(lPackage)
+
+            continue
+
+          # Do the appropriate bookkeeping otherwise
+          self.Packages.add(lPackage)
+          self.Components.add( lComponentId )
           #--------------------------------------------------------------
 
           for lFile, lFilePath in lFileList:
@@ -278,7 +315,7 @@ class DepFileParser(object):
             #--------------------------------------------------------------
             # If an include command, parse the specified dep file, otherwise add the command to the command list
             if lParsedLine.cmd == "include":
-              self.parse(lPackage, lComponent, lFile)
+              self._parse(lPackage, lComponent, lFile)
             else:
 
               # # Map to any generated libraries
@@ -289,7 +326,7 @@ class DepFileParser(object):
               #   lMap = None
 
               # self.CommandList[ lType ].append( Command( lFile, lLib, lMap, lInclude , lTopLevel , lComponentPath, lVhdl2008 ) )
-              self.CommandList[ lType ].append( Command( lFilePath, None, None, lInclude , lTopLevel , lComponentId, lVhdl2008 ) )
+              self.CommandList[ lType ].append( Command( lFilePath, lPackage, lComponent, None, None, lInclude , lTopLevel , lVhdl2008 ) )
             #--------------------------------------------------------------
     #--------------------------------------------------------------
 

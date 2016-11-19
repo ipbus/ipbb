@@ -40,5 +40,7 @@ function pathadd() {
 SH_SOURCE=${BASH_SOURCE}
 HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
 pathadd PATH ${HERE}
+# Temporary
+pathadd PYTHONPATH "${HERE}/dep_tree"
 
-export PATH
+export PATH PYTHONPATH

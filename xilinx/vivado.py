@@ -83,6 +83,33 @@ class ConsoleError(Exception):
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class SmartConsole(object):
+  """docstring for SmartConsole"""
+
+  #--------------------------------------------------------------
+  def __init__(self):
+    super(SmartConsole, self).__init__()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __enter__(self):
+    self._console = Console()
+    return self
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __exit__(self, type, value, traceback):
+    self._console.quit()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __call__(self, aCmd='', aMaxLen=1):
+    return self._console.execute(aCmd, aMaxLen)
+  #--------------------------------------------------------------
+    
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Console(object):
   """docstring for Vivado"""
 
@@ -90,25 +117,29 @@ class Console(object):
   __reError = re.compile('^ERROR:')
   __instances = set()
 
+  #--------------------------------------------------------------
   @classmethod
-  def killAll(cls):
+  def killAllInstances(cls):
     lInstances = set(cls.__instances)
     for lInstance in lInstances:
       lInstance.quit()
+  #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __init__(self):
     super(Console, self).__init__()
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
-    self._me = pexpect.spawn('vivado -mode tcl',maxread=1)
-    self._me.logfile = sys.stdout
-    self._me.delaybeforesend = 0.00 #1
+    self._process = pexpect.spawn('vivado -mode tcl',maxread=1)
+    self._process.logfile = sys.stdout
+    self._process.delaybeforesend = 0.00 #1
     self.__expectPrompt()
     self._log.debug('Vivado up and running')
     # Method mapping
-    self.isAlive = self._me.isalive
+    self.isAlive = self._process.isalive
+    # Add self to the list of instances
     self.__instances.add(self)
+    print self._process
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -119,7 +150,7 @@ class Console(object):
   #--------------------------------------------------------------
   def quit(self):
     # Return immediately of already dead
-    if not self._me.isalive():
+    if not self._process.isalive():
       self._log.debug('Vivado has already been stopped')
       return
 
@@ -130,7 +161,7 @@ class Console(object):
       pass
 
     # Just in case
-    self._me.terminate(True)
+    self._process.terminate(True)
 
     self.__instances.remove(self)
   #--------------------------------------------------------------
@@ -138,11 +169,11 @@ class Console(object):
   #--------------------------------------------------------------
   def __send(self, aText):
 
-    self._me.sendline(aText)
+    self._process.sendline(aText)
     #--------------------------------------------------------------
     # Hard check: First line of output must match the injected command
-    self._me.expect(['\r\n',pexpect.EOF])
-    lCmdRcvd = self.__reCharBackspace.sub('',self._me.before)
+    self._process.expect(['\r\n',pexpect.EOF])
+    lCmdRcvd = self.__reCharBackspace.sub('',self._process.before)
     lCmdSent = aText.split('\n')[0]
     if lCmdRcvd != lCmdSent:
       #--------------------------------------------------------------
@@ -162,9 +193,10 @@ class Console(object):
       raise RuntimeError('Command and first output line don\'t match Sent=\'{0}\', Rcvd=\'{1}\''.format(lCmdSent,lCmdRcvd))
     #--------------------------------------------------------------
 
+  #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-    lCpl = self._me.compile_pattern_list(['\r\n','Vivado%\t'])
+    lCpl = self._process.compile_pattern_list(['\r\n','Vivado%\t'])
     lIndex = None
     lBuffer = collections.deque([],aMaxLen)
     lErrors = []
@@ -172,9 +204,9 @@ class Console(object):
     #--------------------------------------------------------------
     while True:
       # Search for newlines, prompt, end-of-file
-      # lIndex = self._me.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
-      lIndex = self._me.expect_list(lCpl)
-      # print '>',self._me.before
+      # lIndex = self._process.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
+      lIndex = self._process.expect_list(lCpl)
+      # print '>',self._process.before
 
 
       #----------------------------------------------------------
@@ -184,10 +216,10 @@ class Console(object):
       #----------------------------------------------------------
 
       # Store the output in the circular buffer
-      lBuffer.append(self._me.before)
+      lBuffer.append(self._process.before)
 
-      if self.__reError.match(self._me.before):
-        lErrors.append(self._me.before)
+      if self.__reError.match(self._process.before):
+        lErrors.append(self._process.before)
     #--------------------------------------------------------------
 
     return lBuffer,(lErrors if lErrors else None)
@@ -263,6 +295,6 @@ class Console(object):
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @atexit.register
 def __goodbye():
-    Console.killAll()
+    Console.killAllInstances()
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -196,7 +196,7 @@ class Console(object):
   #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-    lCpl = self._process.compile_pattern_list(['\r\n','Vivado%\t'])
+    lCpl = self._process.compile_pattern_list(['\r\n','Vivado%\t',pexpect.TIMEOUT])
     lIndex = None
     lBuffer = collections.deque([],aMaxLen)
     lErrors = []
@@ -213,6 +213,8 @@ class Console(object):
       # Break if prompt 
       if lIndex == 1:
         break
+      elif lIndex == 2:
+        print '-->> timeout caught'
       #----------------------------------------------------------
 
       # Store the output in the circular buffer

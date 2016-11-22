@@ -51,30 +51,12 @@ class Pathmaker(object):
     return lPath
   #--------------------------------------------------------------
 
-  # #--------------------------------------------------------------
-  # def splitcomppath(self, aComponentPath ):
-    
-  #   lSeparators = lComponentPath.count(':')
-  #   # Validate the format
-  #   if lSeparators > 1:
-  #     raise SystemExit('Malformed component name : %s' % aComponentPath)
-  #   # elif lSeparators == 1:
-  #   #   return tuple(lComponentPath.split(':'))
-  #   # else:
-  #   #   return (None, aComponentPath)
-  #   lTokenized = lComponentPath.split(':')
-
-  #   if len(lTokenized) == 1:
-  #     lTokenized.insert(0, None)
-
-  #   return tuple(lTokenized)
-  # #--------------------------------------------------------------
-
   #--------------------------------------------------------------
   def getDefName(self, kind, name):
     return "{0}.{1}".format( name , self.fexts[kind] )
   #--------------------------------------------------------------
   
+
   #--------------------------------------------------------------
   def glob( self, package, component, kind, fileexpr, cd = None ):
     import glob
@@ -82,7 +64,8 @@ class Pathmaker(object):
     lPathExpr = self.getPath( package, component, kind , fileexpr , cd = cd )
     lComponentPath = self.getPath( package, component, kind , cd = cd )
     lFilePaths = glob.glob( lPathExpr )
+    # Calculate the relative path and pair it up with the absolute path
     lFileList = [ (os.path.relpath( lPath2, lComponentPath ),lPath2) for lPath2 in lFilePaths ]
-    # Expand path and remove component path
     return  lPathExpr, lFileList
+  #--------------------------------------------------------------
 

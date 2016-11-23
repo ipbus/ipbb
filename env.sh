@@ -46,7 +46,7 @@ SH_SOURCE=${BASH_SOURCE}
 HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
 pathadd PATH ${HERE}/bin
 # Temporary
-pathadd PYTHONPATH "${HERE}/dep_tree"
+pathadd PYTHONPATH "${HERE}"
 
 export PATH PYTHONPATH
 
@@ -59,18 +59,20 @@ fi
 
 if [ ! -d "${HERE}/external/ibb" ] ; then
 
-  virtualenv external/ibb --no-site-packages
+  virtualenv ${HERE}/external/ibb --no-site-packages
   source ${HERE}/external/ibb/bin/activate
 
-  PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info.major,version_info.minor))')
+  PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
     pip install ipython
     pip install click
+    pip install pexpect
     pip install -U git+https://github.com/alessandrothea/click-shell.git
   elif [ "${PYTHON_VERSION}" == "2.6" ] ; then
     pip install ipython==1.2.1
     pip install click
+    pip install pexpect
     pip install -U git+https://github.com/alessandrothea/click-shell.git
   fi
 

@@ -1,10 +1,6 @@
 #!/bin/env python
 import argparse
 
-from dep_tree.DepFileParser import DepFileParser
-from dep_tree.Pathmaker import Pathmaker
-
-
 parser = argparse.ArgumentParser(usage = argparse.SUPPRESS)
 parser.add_argument('-b', dest='interactive', default=True, action='store_false')
 parser_add = parser.add_subparsers(dest = "cmd")
@@ -37,6 +33,9 @@ lCommandLineArgs.componentmap = None
 lCommandLineArgs.verbosity = args.verbose
 
 if args.cmd == 'legacy':
+    from dep_tree.DepFileParser import DepFileParser
+    from dep_tree.Pathmaker import Pathmaker
+
     # lPathmaker = Pathmaker( lCommandLineArgs.rootdir , lCommandLineArgs.topdir , lCommandLineArgs.componentmap , lCommandLineArgs.verbosity )
     lPathmaker = Pathmaker( lCommandLineArgs.rootdir, lCommandLineArgs.componentmap , lCommandLineArgs.verbosity )
     lDepFileParser = DepFileParser( lCommandLineArgs , lPathmaker )
@@ -49,40 +48,11 @@ if args.cmd == 'legacy':
     #--------------------------------------------------------------
     # Parse the requested dep file
     lDepFileParser.parse( lTopFile , lCommandLineArgs.topdir )
-#     #--------------------------------------------------------------
-# elif args.cmd == 'dev':
 
-#     lCommandLineArgs.rootdir = '/home/ale/Development/ipbus-upgr/integration/sandbox'
-
-#     from dep2g.Pathmaker import Pathmaker as Pathmaker2g
-#     from dep2g.DepFileParser import DepFileParser as DepFileParser2g
-
-#     lPathmaker = Pathmaker2g( lCommandLineArgs.rootdir, lCommandLineArgs.verbosity )
-#     lDepFileParser = DepFileParser2g( lCommandLineArgs , lPathmaker )
-
-#     lDepFileParser.parse( 'dummy-fw-proj', 'projects/example', 'top_kc705_gmii.dep')
-
-#     if args.printparser:
-#         print lDepFileParser
-    
-#     # print '\n'.join([str(id) for id in lDepFileParser.ComponentIds])
-
-#     from dep2g.VivadoProjectMaker import VivadoProjectMaker
-
-#     lDummy = dummy()
-#     lDummy.output = 'here.tcl'
-#     lWriter = VivadoProjectMaker(lDummy, lPathmaker)
-
-#     if args.create:
-#         import xilinx.vivado
-#         with xilinx.vivado.SmartConsole() as lTarget:
-#             lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
-
-    # lLines = [ l.strip() for l in open('here.tcl').readlines() ]
     # 
 elif args.cmd in ['dev','mp7']:
 
-    lCommandLineArgs.rootdir = '/home/ale/Development/ipbus-upgr/integration/sandbox'
+    lCommandLineArgs.rootdir = '/home/ale/Development/ipbus-upgr/test_envs/xyz/src'
 
     from dep2g.Pathmaker import Pathmaker as Pathmaker2g
     from dep2g.DepFileParser import DepFileParser as DepFileParser2g

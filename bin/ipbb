@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 from __future__ import print_function
 
 from click_shell import shell
@@ -7,7 +7,6 @@ import click
 
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 import os
 #------------------------------------------------------------------------------
 class DirSentry:
@@ -29,22 +28,53 @@ class DirSentry:
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-def findBuildFile(aBuildFileName):
+def trackFile(aAreaFileName):
   lPath = os.getcwd()
 
   # import pdb; pdb.set_trace()
 
   while lPath is not '/':
-    lBuildFile = os.path.join(lPath,aBuildFileName)
+    lBuildFile = os.path.join(lPath,aAreaFileName)
     if os.path.exists(lBuildFile):
       return lBuildFile
     lPath,_ = os.path.split(lPath)
 
   return None
 #------------------------------------------------------------------------------
+
+
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Modules
+import subprocess
 
+# Elements
+from os.path import join, split, exists, splitext
 
+kBuildFileName = '.buildarea'
+kWorkFileName = '.workarea'
+kSourceDir = 'src'
+enviroment = None
+
+#------------------------------------------------------------------------------
+class Environment(object):
+    """docstring for Environment"""
+    def __init__(self):
+        super(Environment, self).__init__()
+
+        lBuildFilePath = trackFile(kBuildFileName)
+        lWorkFilePath = trackFile(kWorkFileName)
+
+        self.root, self.rootFile = os.path.split( lBuildFilePath ) if lBuildFilePath else ( None, None )
+        self.work, self.workFile = os.path.split( lWorkFilePath ) if lWorkFilePath else ( None, None )
+
+    def __str__(self):
+        return '{{ root: {root}, work: {work} }}'.format(**(self.__dict__))
+
+    @property
+    def src(self):
+      return join(self.root, kSourceDir) if self.root is not None else None
+
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # @click.group()  # no longer
@@ -58,24 +88,16 @@ def cli():
 #------------------------------------------------------------------------------
 @cli.command()
 @click.argument('area')
-@click.option('-r', '--repository')
-@click.option('-c', '--cleanup')
-def init(area, repository, cleanup):
+@click.option('-r', '--repo')
+def init(area, repo):
     print('Setting up firmware area \''+area+'\'')
 
-    from os.path import join, split, exists
-    import os
-    import subprocess
 
-    kBuildFileName = '.build'
-    kSourceDir = 'src'
+    if environment.root is not None:
+      raise click.ClickException( 'Cannot create an area inside an existing one %s' % environment.root )
 
     if exists(area):
         raise click.ClickException( 'Area already exists %s' % area )
-
-    lParentBuildFile = findBuildFile(kBuildFileName)
-    if lParentBuildFile is not None:
-      raise click.ClickException( 'Cannot create an area inside another one %s' % lParentBuildFile )
 
     # Build source code directory
     os.makedirs(join(area, kSourceDir))
@@ -83,16 +105,137 @@ def init(area, repository, cleanup):
     with open(join(area,kBuildFileName),'w') as lBuild:
         lBuild.write('\n')
     
-    print('----->',repository,join(area, kSourceDir))
-    if not repository:
+    print('--->',repo,join(area, kSourceDir))
+    if not repo:
         return
     else:
         with DirSentry( join(area, kSourceDir) ) as lSentry:
-            subprocess.check_call(['git','clone',repository])
+            subprocess.check_call(['git','clone',repo])
 
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@cli.group()
+def add():
+    pass
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@add.command()
+@click.argument( 'repo' )
+@click.option( '-b', '--branch', default=None )
+def git(repo, branch):
+  '''Add a git repository to the source area'''
+  
+  # Must be in a build area
+  if environment.root is None:
+    raise ClickException('sticaaaaa')
+
+  print('adding git repository',repo)
+
+  # Ensure that the destination direcotry doesn't exist
+  # Maybe not necessary  
+  from urlparse import urlparse
+  
+  lUrl = urlparse(repo)
+  lRepoName = splitext(split(lUrl.path)[-1])[0]
+  lRepoLocalPath = join(environment.root, kSourceDir, lRepoName)
+  
+  if exists(lRepoLocalPath):
+    raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
+
+  lArgs = ['clone', repo]
+  if branch is not None:
+    lArgs += ['-b', branch]
+
+  # Do the cloning
+  with DirSentry( join(environment.root, kSourceDir) ) as lSentry:
+    subprocess.check_call(['git']+lArgs)
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@add.command()
+@click.argument( 'repo' )
+@click.option( '-n', '--dryrun', is_flag=True )
+@click.option( '-s', '--sparse', default=None, multiple=True )
+def svn(repo, dryrun, sparse):
+
+  def rebuildEmpty(self, lPath):
+    lTokens = [ lToken for lToken in lPath.split('/') if lToken ]
+
+    lPartials =  [ '/'.join(lTokens[:i+1]) for i,_ in enumerate(lTokens) ]
+
+    for lPartial in lPartials:
+        lCmd = ['svn','up','--depth=empty',lPartial]
+        subprocess.check_call(cmd)
+
+  # Must be in a build area
+  if environment.root is None:
+    raise ClickException('sticaaaaa')
+
+  print('adding svn repository',repo)
+  from urlparse import urlparse
+  
+  lUrl = urlparse(repo)
+  lRepoName = splitext(split(lUrl.path)[-1])[0]
+  lRepoLocalPath = join(environment.src, lRepoName)
+  
+  if exists(lRepoLocalPath):
+    raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
+
+  #------------------------------------------------------------------------------
+  if not sparse:
+    lArgs = ['checkout', repo]
+    # Do the checkout
+    lCmd = ['svn']+lArgs
+    print(' '.join(lCmd))
+    with DirSentry( environment.src ) as lSrcSentry:
+      if not dryrun:
+        subprocess.check_call(lCmd)
+  else:
+    print (sparse)
+    #------------------------------------------------------------------------------
+    # Checkout an empty base folder
+    lArgs = ['checkout', repo, '--depth=empty']
+    lCmd = ['svn']+lArgs
+    print(' '.join(lCmd))
+    with DirSentry( environment.src ) as lSrcSentry:
+      if not dryrun:
+        subprocess.check_call(lCmd)
+    #------------------------------------------------------------------------------
+    lArgs = ['update']
+    lCmd = ['svn']+lArgs
+    with DirSentry( lRepoLocalPath ) as lSrcSentry:
+      for lPath in sparse:
+        lTokens = [ lToken for lToken in lPath.split('/') if lToken ]
+
+        lPartials =  [ '/'.join(lTokens[:i+1]) for i,_ in enumerate(lTokens) ]
+
+        for lPartial in lPartials:
+            print (lCmd)
+            lCmd = ['svn','up','--depth=empty',lPartial]
+            subprocess.check_call(lCmd)
+
+        lCmd = ['svn','up','--set-depth=infinity',lPath]
+        print (lCmd)
+        subprocess.check_call(lCmd)
+        
+  #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# def discover():
+#     print(Environment())
+#------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
+    '''Discovers the environment at startup'''
+
+    global environment
+    environment = Environment()
+    print(environment)
     cli()
 #------------------------------------------------------------------------------

@@ -58,11 +58,22 @@ if [ ! -d "${HERE}/external" ] ; then
 fi
 
 if [ ! -d "${HERE}/external/ibb" ] ; then
+
   virtualenv external/ibb --no-site-packages
-  . ${HERE}/external/ibb/bin/activate
-  pip install ipython==1.2.1
-  pip install click
-  pip install -U git+https://github.com/alessandrothea/click-shell.git
+  source ${HERE}/external/ibb/bin/activate
+
+  PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info.major,version_info.minor))')
+
+  if [ "${PYTHON_VERSION}" == "2.7" ] ; then
+    pip install ipython
+    pip install click
+    pip install -U git+https://github.com/alessandrothea/click-shell.git
+  elif [ "${PYTHON_VERSION}" == "2.6" ] ; then
+    pip install ipython==1.2.1
+    pip install click
+    pip install -U git+https://github.com/alessandrothea/click-shell.git
+  fi
+
   deactivate
 fi
 

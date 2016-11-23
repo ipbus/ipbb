@@ -59,8 +59,14 @@ fi
 
 if [ ! -d "${HERE}/external/ibb" ] ; then
   virtualenv external/ibb --no-site-packages
-  . external/ibb/bin/activate
+  . ${HERE}/external/ibb/bin/activate
   pip install ipython==1.2.1
   pip install click
   pip install -U git+https://github.com/alessandrothea/click-shell.git
+  deactivate
+fi
+
+if [ -z ${VIRTUAL_ENV+X} ] ; then
+  echo "Activating env"
+  source ${HERE}/external/ibb/bin/activate
 fi

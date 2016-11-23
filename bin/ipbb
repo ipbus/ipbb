@@ -1,0 +1,98 @@
+#!/bin/env python
+from __future__ import print_function
+
+from click_shell import shell
+import click
+
+
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import os
+#------------------------------------------------------------------------------
+class DirSentry:
+  def __init__(self, aDir):
+    self.dir = aDir
+
+  def __enter__(self):
+    if not os.path.exists(self.dir):
+        raise RuntimeError('stocazzo '+self.dir)
+
+    self._lOldDir = os.path.realpath(os.getcwd())
+    # print self._lOldDir
+    os.chdir(self.dir)
+    return self 
+
+  def __exit__(self, type, value, traceback):
+    import os
+    os.chdir(self._lOldDir)
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+def findBuildFile(aBuildFileName):
+  lPath = os.getcwd()
+
+  # import pdb; pdb.set_trace()
+
+  while lPath is not '/':
+    lBuildFile = os.path.join(lPath,aBuildFileName)
+    if os.path.exists(lBuildFile):
+      return lBuildFile
+    lPath,_ = os.path.split(lPath)
+
+  return None
+#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+#------------------------------------------------------------------------------
+# @click.group()  # no longer
+@shell(prompt='ipbb > ', intro='Starting IPBus Builder...')
+def cli():
+    pass
+#------------------------------------------------------------------------------
+
+# repoPath = 'https://:@gitlab.cern.ch:8443/ipbus/dummy-fw-proj.git'
+
+#------------------------------------------------------------------------------
+@cli.command()
+@click.argument('area')
+@click.option('-r', '--repository')
+@click.option('-c', '--cleanup')
+def init(area, repository, cleanup):
+    print('Setting up firmware area \''+area+'\'')
+
+    from os.path import join, split, exists
+    import os
+    import subprocess
+
+    kBuildFileName = '.build'
+    kSourceDir = 'src'
+
+    if exists(area):
+        raise click.ClickException( 'Area already exists %s' % area )
+
+    lParentBuildFile = findBuildFile(kBuildFileName)
+    if lParentBuildFile is not None:
+      raise click.ClickException( 'Cannot create an area inside another one %s' % lParentBuildFile )
+
+    # Build source code directory
+    os.makedirs(join(area, kSourceDir))
+
+    with open(join(area,kBuildFileName),'w') as lBuild:
+        lBuild.write('\n')
+    
+    print('----->',repository,join(area, kSourceDir))
+    if not repository:
+        return
+    else:
+        with DirSentry( join(area, kSourceDir) ) as lSentry:
+            subprocess.check_call(['git','clone',repository])
+
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+if __name__ == '__main__':
+    cli()
+#------------------------------------------------------------------------------

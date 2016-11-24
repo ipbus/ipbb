@@ -1,20 +1,22 @@
+from __future__ import print_function
+
 # Modules
 import click
 import os
-import ipbb.env
+import ipbb
 import subprocess
+
 # Elements
 from os.path import join, split, exists, splitext
-from ipbb.common import DirSentry
-# Fixme
-from ipbb.env import current as env
+from common import DirSentry
 
 
 #------------------------------------------------------------------------------
 @click.command()
 @click.argument('area')
 @click.option('-r', '--repo')
-def init(area, repo):
+@click.pass_obj
+def init(env, area, repo):
   '''Initialise a new firmware development area'''
 
   print('Setting up firmware area \''+area+'\'')
@@ -24,21 +26,20 @@ def init(area, repo):
     raise click.ClickException( 'Cannot create a new area inside an existing one %s' % env.root )
 
   if exists(area):
-      raise click.ClickException( 'Directory \'%s\' already exists' % area )
+    raise click.ClickException( 'Directory \'%s\' already exists' % area )
 
   # Build source code directory
-  os.makedirs(join(area, ipbb.env.kSourceDir))
+  os.makedirs(join(area, ipbb.kSourceDir))
 
-  with open(join(area,ipbb.env.kBuildFileName),'w') as lBuild:
-      lBuild.write('\n')
+  with open( join( area, ipbb.kBuildFileName ),'w' ) as lBuild:
+    lBuild.write('\n')
   
-  print('--->',repo,join(area, ipbb.env.kSourceDir))
+  print( '--->', repo, join( area, ipbb.kSourceDir ) )
   if not repo:
-      return
+    return
   else:
-      with DirSentry( join(area, ipbb.env.kSourceDir) ) as lSentry:
-          subprocess.check_call(['git','clone',repo])
-
+    with DirSentry( join( area, ipbb.kSourceDir ) ) as lSentry:
+      subprocess.check_call( ['git', 'clone', repo] )
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -51,7 +52,8 @@ def add():
 @add.command()
 @click.argument( 'repo' )
 @click.option( '-b', '--branch', default=None )
-def git(repo, branch):
+@click.pass_obj
+def git(env, repo, branch):
   '''Add a git repository to the source area'''
   
   # Must be in a build area
@@ -66,7 +68,7 @@ def git(repo, branch):
   
   lUrl = urlparse(repo)
   lRepoName = splitext(split(lUrl.path)[-1])[0]
-  lRepoLocalPath = join(env.root, ipbb.env.kSourceDir, lRepoName)
+  lRepoLocalPath = join(env.root, ipbb.kSourceDir, lRepoName)
   
   if exists(lRepoLocalPath):
     raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
@@ -76,7 +78,7 @@ def git(repo, branch):
     lArgs += ['-b', branch]
 
   # Do the cloning
-  with DirSentry( join(env.root, ipbb.env.kSourceDir) ) as lSentry:
+  with DirSentry( join(env.root, ipbb.kSourceDir) ) as lSentry:
     subprocess.check_call(['git']+lArgs)
 #------------------------------------------------------------------------------
 
@@ -85,7 +87,8 @@ def git(repo, branch):
 @click.argument( 'repo' )
 @click.option( '-n', '--dryrun', is_flag=True )
 @click.option( '-s', '--sparse', default=None, multiple=True )
-def svn(repo, dryrun, sparse):
+@click.pass_obj
+def svn(env, repo, dryrun, sparse):
   '''Add a svn repository/folder to the source area'''
 
   #------------------------------------------------------------------------------
@@ -136,9 +139,9 @@ def svn(repo, dryrun, sparse):
         lPartials =  [ '/'.join(lTokens[:i+1]) for i,_ in enumerate(lTokens) ]
 
         for lPartial in lPartials:
-            print (lCmd)
-            lCmd = ['svn','up','--depth=empty',lPartial]
-            subprocess.check_call(lCmd)
+          print (lCmd)
+          lCmd = ['svn','up','--depth=empty',lPartial]
+          subprocess.check_call(lCmd)
 
         lCmd = ['svn','up','--set-depth=infinity',lPath]
         print (lCmd)

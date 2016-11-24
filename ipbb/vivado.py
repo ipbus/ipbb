@@ -1,11 +1,11 @@
+from __future__ import print_function
+
 # Modules
 import click
 import os
-import ipbb.env
-
+import ipbb
 # Elements
 from os.path import join, split, exists, splitext
-from ipbb.env import current as env
 
 #------------------------------------------------------------------------------
 @click.group()
@@ -28,8 +28,8 @@ def validateCmp(ctx, param, value):
 @click.argument('workarea')
 @click.argument('component', callback=validateCmp)
 @click.argument('dep')
-
-def create(workarea, component, dep):
+@click.pass_obj
+def create( env, workarea, component, dep ):
   #------------------------------------------------------------------------------
   # Must be in a build area
   if env.root is None:
@@ -46,7 +46,6 @@ def create(workarea, component, dep):
   from dep2g.Pathmaker import Pathmaker
   lPathmaker = Pathmaker(env.src, 0)
   lTopPackage, lTopComponent = component
-  # lTopDepPath = join(env.src, lTopPackage, lTopComponent)
   lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', dep)
   if not exists(lTopDepPath):
     raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
@@ -62,7 +61,7 @@ def create(workarea, component, dep):
     'topDep': dep,
 
   }
-  with open(join(lWorkAreaPath,ipbb.env.kWorkFileName),'w') as lWorkFile:
+  with open(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
     import json
     json.dump(lCfg, lWorkFile, indent=2)
 #------------------------------------------------------------------------------
@@ -70,7 +69,8 @@ def create(workarea, component, dep):
 
 #------------------------------------------------------------------------------
 @vivado.command()
-def project():
+@click.pass_obj
+def project( env ):
 
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
@@ -109,7 +109,8 @@ def project():
 
 #------------------------------------------------------------------------------
 @vivado.command()
-def build():
+@click.pass_obj
+def build( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
@@ -144,7 +145,8 @@ def build():
 
 #------------------------------------------------------------------------------
 @vivado.command()
-def bitfile():
+@click.pass_obj
+def bitfile( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
@@ -168,7 +170,8 @@ def bitfile():
 
 #------------------------------------------------------------------------------
 @vivado.command()
-def reset():
+@click.pass_obj
+def reset( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 

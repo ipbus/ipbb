@@ -1,259 +1,38 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-from click_shell import shell
-import click
-
-
-
-# #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# import os
-# #------------------------------------------------------------------------------
-# class DirSentry:
-#   def __init__(self, aDir):
-#     self.dir = aDir
-
-#   def __enter__(self):
-#     if not os.path.exists(self.dir):
-#         raise RuntimeError('stocazzo '+self.dir)
-
-#     self._lOldDir = os.path.realpath(os.getcwd())
-#     # print self._lOldDir
-#     os.chdir(self.dir)
-#     return self 
-
-#   def __exit__(self, type, value, traceback):
-#     import os
-#     os.chdir(self._lOldDir)
-# #------------------------------------------------------------------------------
-
-# #------------------------------------------------------------------------------
-# def trackFile(aAreaFileName):
-#   lPath = os.getcwd()
-
-#   # import pdb; pdb.set_trace()
-
-#   while lPath is not '/':
-#     lBuildFile = os.path.join(lPath,aAreaFileName)
-#     if os.path.exists(lBuildFile):
-#       return lBuildFile
-#     lPath,_ = os.path.split(lPath)
-
-#   return None
-# #------------------------------------------------------------------------------
-
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
+import click
 import subprocess
-import ipbb.env
+import ipbb
 
 # Elements
+from click_shell import shell
 from os.path import join, split, exists, splitext
-# env = ipbb.env.current
-
-# from ipbb.env import current as env
-
-# kBuildFileName = '.buildarea'
-# kWorkFileName = '.workarea'
-# kSourceDir = 'src'
-
-# #------------------------------------------------------------------------------
-# class Environment(object):
-#     """docstring for Environment"""
-#     def __init__(self):
-#       super(Environment, self).__init__()
-
-#       self.root = None
-#       self.rootFile = None
-#       self.work = None
-#       self.workFile = None
-#       self.workConfig = None
-
-#       self._autodetect()
-
-#     def _autodetect(self):
-
-#         lBuildFilePath = trackFile(kBuildFileName)
-#         lWorkFilePath = trackFile(kWorkFileName)
-
-#         if lBuildFilePath:
-#           self.root, self.rootFile = os.path.split( lBuildFilePath )
-
-#         if lWorkFilePath:
-#           self.work, self.workFile = os.path.split( lWorkFilePath )
-#           import json
-#           with open(lWorkFilePath,'r') as lWorkFile:
-#             self.workConfig = json.load(lWorkFile)
-
-
-#     def __str__(self):
-#         return '{{ root: {root}, work: {work}, work_cfg: {workConfig} }}'.format(**(self.__dict__))
-
-#     @property
-#     def src(self):
-#       return join(self.root, kSourceDir) if self.root is not None else None
-
-#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # @click.group()  # no longer
 @shell(prompt='\x1b[38;5;74mipbb\x1b[0m> ', intro='Starting IPBus Builder...')
-def cli():
-  pass
+@click.pass_context
+def cli(ctx):
+  ctx.obj = ipbb.Environment()
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @cli.command()
 def info():
   '''Tentative command to set up shell env'''
-  print( 'export IPBB_ROOT=%s' % env.root)
-  print( 'export IPBB_WORK=%s' % env.work)
+  print( 'export IPBB_ROOT=%s' % ipbb.env.root)
+  print( 'export IPBB_WORK=%s' % ipbb.env.work)
 #------------------------------------------------------------------------------
-
-# #------------------------------------------------------------------------------
-# @cli.command()
-# @click.argument('area')
-# @click.option('-r', '--repo')
-# def init(area, repo):
-#   '''Initialise a new firmware development area'''
-
-#   print('Setting up firmware area \''+area+'\'')
-
-
-#   if env.root is not None:
-#     raise click.ClickException( 'Cannot create a new area inside an existing one %s' % env.root )
-
-#   if exists(area):
-#       raise click.ClickException( 'Directory \'%s\' already exists' % area )
-
-#   # Build source code directory
-#   os.makedirs(join(area, kSourceDir))
-
-#   with open(join(area,kBuildFileName),'w') as lBuild:
-#       lBuild.write('\n')
-  
-#   print('--->',repo,join(area, kSourceDir))
-#   if not repo:
-#       return
-#   else:
-#       with DirSentry( join(area, kSourceDir) ) as lSentry:
-#           subprocess.check_call(['git','clone',repo])
-
-# #------------------------------------------------------------------------------
-
-# #------------------------------------------------------------------------------
-# @cli.group()
-# def add():
-#   pass
-# #------------------------------------------------------------------------------
-
-# #------------------------------------------------------------------------------
-# @add.command()
-# @click.argument( 'repo' )
-# @click.option( '-b', '--branch', default=None )
-# def git(repo, branch):
-#   '''Add a git repository to the source area'''
-  
-#   # Must be in a build area
-#   if env.root is None:
-#     raise click.ClickException('Build area root directory not found')
-
-#   print('adding git repository',repo)
-
-#   # Ensure that the destination direcotry doesn't exist
-#   # Maybe not necessary  
-#   from urlparse import urlparse
-  
-#   lUrl = urlparse(repo)
-#   lRepoName = splitext(split(lUrl.path)[-1])[0]
-#   lRepoLocalPath = join(env.root, kSourceDir, lRepoName)
-  
-#   if exists(lRepoLocalPath):
-#     raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
-
-#   lArgs = ['clone', repo]
-#   if branch is not None:
-#     lArgs += ['-b', branch]
-
-#   # Do the cloning
-#   with DirSentry( join(env.root, kSourceDir) ) as lSentry:
-#     subprocess.check_call(['git']+lArgs)
-# #------------------------------------------------------------------------------
-
-# #------------------------------------------------------------------------------
-# @add.command()
-# @click.argument( 'repo' )
-# @click.option( '-n', '--dryrun', is_flag=True )
-# @click.option( '-s', '--sparse', default=None, multiple=True )
-# def svn(repo, dryrun, sparse):
-#   '''Add a svn repository/folder to the source area'''
-
-#   #------------------------------------------------------------------------------
-#   # Must be in a build area
-#   if env.root is None:
-#     raise click.ClickException('Build area root directory not found')
-#   #------------------------------------------------------------------------------
-
-#   #------------------------------------------------------------------------------
-#   # Stop if the target directory already exists
-#   print('adding svn repository',repo)
-#   from urlparse import urlparse
-  
-#   lUrl = urlparse(repo)
-#   lRepoName = splitext(split(lUrl.path)[-1])[0]
-#   lRepoLocalPath = join(env.src, lRepoName)
-  
-#   if exists(lRepoLocalPath):
-#     raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
-#   #------------------------------------------------------------------------------
-
-#   #------------------------------------------------------------------------------
-#   if not sparse:
-#     lArgs = ['checkout', repo]
-#     # Do the checkout
-#     lCmd = ['svn']+lArgs
-#     print(' '.join(lCmd))
-#     with DirSentry( env.src ) as lSrcSentry:
-#       if not dryrun:
-#         subprocess.check_call(lCmd)
-#   else:
-#     print (sparse)
-#     #------------------------------------------------------------------------------
-#     # Checkout an empty base folder
-#     lArgs = ['checkout', repo, '--depth=empty']
-#     lCmd = ['svn']+lArgs
-#     print(' '.join(lCmd))
-#     with DirSentry( env.src ) as lSrcSentry:
-#       if not dryrun:
-#         subprocess.check_call(lCmd)
-#     #------------------------------------------------------------------------------
-#     lArgs = ['update']
-#     lCmd = ['svn']+lArgs
-#     with DirSentry( lRepoLocalPath ) as lSrcSentry:
-#       for lPath in sparse:
-#         lTokens = [ lToken for lToken in lPath.split('/') if lToken ]
-
-#         lPartials =  [ '/'.join(lTokens[:i+1]) for i,_ in enumerate(lTokens) ]
-
-#         for lPartial in lPartials:
-#             print (lCmd)
-#             lCmd = ['svn','up','--depth=empty',lPartial]
-#             subprocess.check_call(lCmd)
-
-#         lCmd = ['svn','up','--set-depth=infinity',lPath]
-#         print (lCmd)
-#         subprocess.check_call(lCmd)
-        
-#   #------------------------------------------------------------------------------
-
-
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
   '''Discovers the env at startup'''
-  ipbb.env.current = ipbb.env.Environment()
-  print(ipbb.env.current)
+  # ipbb.env = ipbb.Environment()
+  # print(ipbb.__env)
 
   # Add custom commands to shell
   import ipbb.repo

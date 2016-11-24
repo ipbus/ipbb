@@ -61,7 +61,7 @@ class Batch(object):
     self.info = []
     self.warnings = []
 
-    with  open(self._log) as lLog:
+    with open(self._log) as lLog:
       for i,l in enumerate(lLog):
         if self.reError.match(l): self.errors.append( (i,l) )
         elif self.reWarn.match(l): self.warnings.append( (i,l) )
@@ -103,8 +103,16 @@ class SmartConsole(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def __call__(self, aCmd='', aMaxLen=1):
-    return self._console(aCmd, aMaxLen)
+  def __call__(self, aCmd=None, aMaxLen=1):
+    # FIXME: only needed because of VivadoProjectMaker
+    # Fix at source and remove
+    if aCmd is None:
+      return
+
+    if isinstance(aCmd, str):
+      return self._console.execute(aCmd, aMaxLen)
+    elif isinstance(aCmd, list):
+      return self._console.executeMany(aCmd, aMaxLen)
   #--------------------------------------------------------------
     
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,7 +147,6 @@ class Console(object):
     self.isAlive = self._process.isalive
     # Add self to the list of instances
     self.__instances.add(self)
-    print self._process
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------

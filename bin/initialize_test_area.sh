@@ -17,10 +17,14 @@ cd ${BUILD_AREA}
 
 ipbb vivado create kc705 dummy-fw-proj:projects/example top_kc705_gmii.dep
 cd kc705
+ipbb vivado project
 ipbb vivado build
+ipbb vivado bitfile
 
 cd ${HERE}
 
 ipbb vivado create mp7xe_690_minimal cactusupgrades:projects/examples/mp7xe_690_minimal top.dep
 cd mp7xe_690_minimal
+ipbb vivado project
 ipbb vivado build
+ipbb vivado bitfile

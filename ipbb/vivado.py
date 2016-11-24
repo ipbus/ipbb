@@ -1,9 +1,11 @@
 # Modules
 import click
+import os
+import ipbb.env
 
 # Elements
 from os.path import join, split, exists, splitext
-
+from ipbb.env import current as env
 
 #------------------------------------------------------------------------------
 @click.group()
@@ -54,13 +56,13 @@ def create(workarea, component, dep):
   os.makedirs(lWorkAreaPath)
 
   lCfg = {
-    'kind': 'vivado',
+    'type': 'vivado',
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
     'topDep': dep,
 
   }
-  with open(join(lWorkAreaPath,kWorkFileName),'w') as lWorkFile:
+  with open(join(lWorkAreaPath,ipbb.env.kWorkFileName),'w') as lWorkFile:
     import json
     json.dump(lCfg, lWorkFile, indent=2)
 #------------------------------------------------------------------------------
@@ -73,8 +75,8 @@ def project():
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['kind'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['kind'] )
+  if env.workConfig['type'] != 'vivado':
+    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
 
 
   #------------------------------------------------------------------------------
@@ -111,8 +113,8 @@ def build():
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['kind'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['kind'] )
+  if env.workConfig['type'] != 'vivado':
+    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -146,8 +148,8 @@ def bitfile():
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['kind'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['kind'] )
+  if env.workConfig['type'] != 'vivado':
+    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -170,8 +172,8 @@ def reset():
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['kind'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['kind'] )
+  if env.workConfig['type'] != 'vivado':
+    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
   
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),

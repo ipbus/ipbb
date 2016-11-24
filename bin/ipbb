@@ -13,8 +13,13 @@ from click_shell import shell
 from os.path import join, split, exists, splitext
 
 #------------------------------------------------------------------------------
+# Add -h as default help option
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 # @click.group()  # no longer
-@shell(prompt='\x1b[38;5;74mipbb\x1b[0m> ', intro='Starting IPBus Builder...')
+@shell(prompt='\x1b[38;5;74mipbb\x1b[0m> ', intro='Starting IPBus Builder...', context_settings=CONTEXT_SETTINGS)
 @click.pass_context
 def cli(ctx):
   ctx.obj = ipbb.Environment()
@@ -24,7 +29,7 @@ def cli(ctx):
 @cli.command()
 @click.pass_obj
 def info(env):
-  '''Tentative command to set up shell env'''
+  '''WORK IN PROGRESS: Tentative command to set up shell env'''
   print( 'export IPBB_ROOT=%s' % env.root)
   print( 'export IPBB_WORK=%s' % env.work)
 #------------------------------------------------------------------------------

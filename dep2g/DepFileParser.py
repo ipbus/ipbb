@@ -44,7 +44,7 @@ class ComponentAction(argparse.Action):
     lSeparators = values.count(':')
     # Validate the format
     if lSeparators > 1:
-      raise argparse.ArgumentTypeError('Malformed component name : %s. Expected <module>:<component>' % aComponentPath)
+      raise argparse.ArgumentTypeError('Malformed component name : %s. Expected <module>:<component>' % values)
     
     lTokenized = values.split(':')
     if len(lTokenized) == 1:

@@ -59,16 +59,33 @@ enviroment = None
 class Environment(object):
     """docstring for Environment"""
     def __init__(self):
-        super(Environment, self).__init__()
+      super(Environment, self).__init__()
+
+      self.root = None
+      self.rootFile = None
+      self.work = None
+      self.workFile = None
+      self.workConfig = None
+
+      self._autodetect()
+
+    def _autodetect(self):
 
         lBuildFilePath = trackFile(kBuildFileName)
         lWorkFilePath = trackFile(kWorkFileName)
 
-        self.root, self.rootFile = os.path.split( lBuildFilePath ) if lBuildFilePath else ( None, None )
-        self.work, self.workFile = os.path.split( lWorkFilePath ) if lWorkFilePath else ( None, None )
+        if lBuildFilePath:
+          self.root, self.rootFile = os.path.split( lBuildFilePath )
+
+        if lWorkFilePath:
+          self.work, self.workFile = os.path.split( lWorkFilePath )
+          import json
+          with open(lWorkFilePath,'r') as lWorkFile:
+            self.workConfig = json.load(lWorkFile)
+
 
     def __str__(self):
-        return '{{ root: {root}, work: {work} }}'.format(**(self.__dict__))
+        return '{{ root: {root}, work: {work}, work_cfg: {workConfig} }}'.format(**(self.__dict__))
 
     @property
     def src(self):
@@ -78,46 +95,54 @@ class Environment(object):
 
 #------------------------------------------------------------------------------
 # @click.group()  # no longer
-@shell(prompt='ipbb > ', intro='Starting IPBus Builder...')
+@shell(prompt='\x1b[38;5;74mipbb\x1b[0m> ', intro='Starting IPBus Builder...')
 def cli():
-    pass
+  pass
 #------------------------------------------------------------------------------
 
-# repoPath = 'https://:@gitlab.cern.ch:8443/ipbus/dummy-fw-proj.git'
+#------------------------------------------------------------------------------
+@cli.command()
+def env():
+  '''Tentative command to set up shell environment'''
+  print( 'export IPBB_ROOT=%s' % environment.root)
+  print( 'export IPBB_WORK=%s' % environment.work)
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @cli.command()
 @click.argument('area')
 @click.option('-r', '--repo')
 def init(area, repo):
-    print('Setting up firmware area \''+area+'\'')
+  '''Initialise a new firmware development area'''
+
+  print('Setting up firmware area \''+area+'\'')
 
 
-    if environment.root is not None:
-      raise click.ClickException( 'Cannot create an area inside an existing one %s' % environment.root )
+  if environment.root is not None:
+    raise click.ClickException( 'Cannot create a new area inside an existing one %s' % environment.root )
 
-    if exists(area):
-        raise click.ClickException( 'Area already exists %s' % area )
+  if exists(area):
+      raise click.ClickException( 'Directory \'%s\' already exists' % area )
 
-    # Build source code directory
-    os.makedirs(join(area, kSourceDir))
+  # Build source code directory
+  os.makedirs(join(area, kSourceDir))
 
-    with open(join(area,kBuildFileName),'w') as lBuild:
-        lBuild.write('\n')
-    
-    print('--->',repo,join(area, kSourceDir))
-    if not repo:
-        return
-    else:
-        with DirSentry( join(area, kSourceDir) ) as lSentry:
-            subprocess.check_call(['git','clone',repo])
+  with open(join(area,kBuildFileName),'w') as lBuild:
+      lBuild.write('\n')
+  
+  print('--->',repo,join(area, kSourceDir))
+  if not repo:
+      return
+  else:
+      with DirSentry( join(area, kSourceDir) ) as lSentry:
+          subprocess.check_call(['git','clone',repo])
 
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @cli.group()
 def add():
-    pass
+  pass
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -129,7 +154,7 @@ def git(repo, branch):
   
   # Must be in a build area
   if environment.root is None:
-    raise ClickException('sticaaaaa')
+    raise click.ClickException('Build area root directory not found')
 
   print('adding git repository',repo)
 
@@ -159,20 +184,16 @@ def git(repo, branch):
 @click.option( '-n', '--dryrun', is_flag=True )
 @click.option( '-s', '--sparse', default=None, multiple=True )
 def svn(repo, dryrun, sparse):
+  '''Add a svn repository/folder to the source area'''
 
-  def rebuildEmpty(self, lPath):
-    lTokens = [ lToken for lToken in lPath.split('/') if lToken ]
-
-    lPartials =  [ '/'.join(lTokens[:i+1]) for i,_ in enumerate(lTokens) ]
-
-    for lPartial in lPartials:
-        lCmd = ['svn','up','--depth=empty',lPartial]
-        subprocess.check_call(cmd)
-
+  #------------------------------------------------------------------------------
   # Must be in a build area
   if environment.root is None:
-    raise ClickException('sticaaaaa')
+    raise click.ClickException('Build area root directory not found')
+  #------------------------------------------------------------------------------
 
+  #------------------------------------------------------------------------------
+  # Stop if the target directory already exists
   print('adding svn repository',repo)
   from urlparse import urlparse
   
@@ -182,6 +203,7 @@ def svn(repo, dryrun, sparse):
   
   if exists(lRepoLocalPath):
     raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
+  #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
   if not sparse:
@@ -225,17 +247,113 @@ def svn(repo, dryrun, sparse):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# def discover():
-#     print(Environment())
+@cli.group()
+def vivado():
+  pass
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+def validateCmp(ctx, param, value):
+  lSeparators = value.count(':')
+  # Validate the format
+  if lSeparators > 1:
+    raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
+  
+  return tuple(value.split(':'))
+
+
+@vivado.command()
+@click.argument('workarea')
+@click.argument('component', callback=validateCmp)
+@click.argument('dep')
+
+def create(workarea, component, dep):
+  #------------------------------------------------------------------------------
+  # Must be in a build area
+  if environment.root is None:
+    raise click.ClickException('Build area root directory not found')
+  #------------------------------------------------------------------------------
+
+  #------------------------------------------------------------------------------
+  lWorkAreaPath = join(environment.root, workarea)
+  if exists(lWorkAreaPath):
+    raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
+  #------------------------------------------------------------------------------
+
+  #------------------------------------------------------------------------------
+  from dep2g.Pathmaker import Pathmaker
+  lPathmaker = Pathmaker(environment.src, 0)
+  lTopPackage, lTopComponent = component
+  # lTopDepPath = join(environment.src, lTopPackage, lTopComponent)
+  lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', dep)
+  if not exists(lTopDepPath):
+    raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
+  #------------------------------------------------------------------------------
+
+  # Build source code directory
+  os.makedirs(lWorkAreaPath)
+
+  lCfg = {
+    'kind': 'vivado',
+    'topPkg': lTopPackage,
+    'topCmp': lTopComponent,
+    'topDep': dep,
+
+  }
+  with open(join(lWorkAreaPath,kWorkFileName),'w') as lWorkFile:
+    import json
+    json.dump(lCfg, lWorkFile)
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+@vivado.command()
+def project():
+
+  if environment.work is None:
+    raise click.ClickException('Work area root directory not found')
+
+  if environment.workConfig['kind'] != 'vivado':
+    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % environment.workConfig['kind'] )
+
+
+  #------------------------------------------------------------------------------
+  
+  from dep2g.Pathmaker import Pathmaker
+  from dep2g.DepFileParser import DepFileParser
+
+  class dummy:pass
+  lCommandLineArgs = dummy()
+  lCommandLineArgs.define = ''
+  lCommandLineArgs.product = 'vivado'
+  lCommandLineArgs.verbosity = 3
+  lCommandLineArgs.output = ''
+
+  lPathmaker = Pathmaker(environment.src, 0)
+
+  lCfg = environment.workConfig
+  lDepFileParser = DepFileParser( lCommandLineArgs , lPathmaker )
+  lDepFileParser.parse(lCfg['topPkg'], lCfg['topCmp'], lCfg['topDep'])
+
+  from dep2g.VivadoProjectMaker import VivadoProjectMaker
+  lWriter = VivadoProjectMaker(lCommandLineArgs, lPathmaker)
+  
+  import xilinx.vivado
+  with xilinx.vivado.SmartConsole() as lTarget:
+    lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
+
+  #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
-    '''Discovers the environment at startup'''
+  '''Discovers the environment at startup'''
 
-    global environment
-    environment = Environment()
-    print(environment)
-    cli()
+  global environment
+  environment = Environment()
+  print(environment)
+  cli.shell.prompt = '\x1b[38;5;74m'+cli.shell.prompt+'\x1b[0m'
+  cli()
 #------------------------------------------------------------------------------

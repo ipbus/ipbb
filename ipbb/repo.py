@@ -11,6 +11,9 @@ from os.path import join, split, exists, splitext
 from common import DirSentry
 
 
+def __listWorkAreas(env):
+  return [ lArea for lArea in next(os.walk(env.root))[1] if exists( join( env.root, lArea, ipbb.kWorkFileName ) ) ]
+
 #------------------------------------------------------------------------------
 @click.command()
 @click.argument('area')
@@ -42,6 +45,53 @@ def init(env, area, repo):
       subprocess.check_call( ['git', 'clone', repo] )
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+@click.command()
+@click.pass_obj
+def listwork(env):
+  
+  if env.root is None:
+    raise click.ClickException('Build area root directory not found')
+
+  lAreas = __listWorkAreas(env)
+  print ( 'Root:', env.root )
+  print ( 'Work areas:')
+  print ( ', '.join( [ ' * '+lArea for lArea in lAreas ] ) )
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@click.command()
+@click.argument( 'newroot' )
+@click.pass_obj
+def changeroot(env,newroot):
+    
+  with DirSentry( newroot ) as lSentry:
+    env._autodetect()
+
+  os.chdir(env.root)
+  print( 'New current directory %s' % os.getcwd() )
+
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@click.command()
+@click.argument( 'newwork' )
+@click.pass_obj
+def changework(env,newwork):
+
+  if newwork[-1] == os.sep: newwork = newwork[:-1]
+  lAreas = __listWorkAreas(env)
+  if newwork not in lAreas:
+    raise click.ClickException('Requested work area not found. Available areas %s' % ', '.join(lAreas))
+
+  with DirSentry( join(env.root,newwork) ) as lSentry:
+    env._autodetect()
+
+  os.chdir(join(env.root,newwork))
+  print( 'New current directory %s' % os.getcwd() )
+
+#------------------------------------------------------------------------------
+#
 #------------------------------------------------------------------------------
 @click.group()
 def add():
@@ -146,5 +196,6 @@ def svn(env, repo, dryrun, sparse):
         lCmd = ['svn','up','--set-depth=infinity',lPath]
         print (lCmd)
         subprocess.check_call(lCmd)
-        
   #------------------------------------------------------------------------------
+
+

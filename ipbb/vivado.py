@@ -8,11 +8,19 @@ import ipbb
 from os.path import join, split, exists, splitext
 
 #------------------------------------------------------------------------------
+def ensureVivado( env ):
+  if env.workConfig['product'] != 'vivado':
+    raise click.ClickException('Work area product mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['product'] )
+
+  if 'XILINX_VIVADO' not in os.environ:
+    raise click.ClickException('Vivado is not available. Have you sourced the environment script?' )
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
 @click.group()
 def vivado():
   pass
 #------------------------------------------------------------------------------
-
 
 #------------------------------------------------------------------------------
 def validateCmp(ctx, param, value):
@@ -55,7 +63,7 @@ def create( env, workarea, component, dep ):
   os.makedirs(lWorkAreaPath)
 
   lCfg = {
-    'type': 'vivado',
+    'product': 'vivado',
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
     'topDep': dep,
@@ -75,10 +83,8 @@ def project( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['type'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
-
-
+  ensureVivado( env )
+  
   #------------------------------------------------------------------------------
   # Very messy, to be sorted out later
   from dep2g.Pathmaker import Pathmaker
@@ -87,9 +93,9 @@ def project( env ):
   class dummy:pass
   lCommandLineArgs = dummy()
   lCommandLineArgs.define = ''
-  lCommandLineArgs.product = 'vivado'
+  lCommandLineArgs.product = lCfg['product']
   lCommandLineArgs.verbosity = 3
-  lCommandLineArgs.output = ''
+  # lCommandLineArgs.output = ''
 
   lPathmaker = Pathmaker(env.src, 0)
 
@@ -114,8 +120,7 @@ def build( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['type'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
+  ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -150,8 +155,7 @@ def bitfile( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['type'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
+  ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -175,9 +179,8 @@ def reset( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  if env.workConfig['type'] != 'vivado':
-    raise click.ClickException('Work area type mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['type'] )
-  
+  ensureVivado( env )
+
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
   ]

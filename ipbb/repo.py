@@ -49,6 +49,7 @@ def init(env, area, repo):
 @click.command()
 @click.pass_obj
 def listwork(env):
+  '''List existing working areas'''
   
   if env.root is None:
     raise click.ClickException('Build area root directory not found')
@@ -64,6 +65,7 @@ def listwork(env):
 @click.argument( 'newroot' )
 @click.pass_obj
 def changeroot(env,newroot):
+  '''Change to new root directory'''
     
   with DirSentry( newroot ) as lSentry:
     env._autodetect()

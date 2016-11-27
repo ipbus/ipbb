@@ -19,6 +19,7 @@ def ensureVivado( env ):
 #------------------------------------------------------------------------------
 @click.group()
 def vivado():
+  '''Vivado command group'''
   pass
 #------------------------------------------------------------------------------
 
@@ -33,11 +34,13 @@ def validateCmp(ctx, param, value):
 
 
 @vivado.command()
-@click.argument('workarea')
-@click.argument('component', callback=validateCmp)
-@click.argument('dep')
+@click.argument('workarea', help = 'Name of the work area')
+@click.argument('component', callback=validateCmp, help='Location (package:component) where the top-level dependency file is located.')
+@click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
+
 @click.pass_obj
 def create( env, workarea, component, dep ):
+  '''Create a new Vivado working area'''
   #------------------------------------------------------------------------------
   # Must be in a build area
   if env.root is None:
@@ -79,7 +82,8 @@ def create( env, workarea, component, dep ):
 @vivado.command()
 @click.pass_obj
 def project( env ):
-
+  '''Assemble current vivado project'''
+  
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
@@ -117,6 +121,8 @@ def project( env ):
 @vivado.command()
 @click.pass_obj
 def build( env ):
+  '''Syntesize and implement current vivado project'''
+
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
@@ -133,11 +139,6 @@ def build( env ):
 
   lImplCmds = [
     'launch_runs impl_1',
-    'wait_on_run impl_1',
-  ]
-
-  lBitFileCmds = [
-    'launch_runs impl_1 -to_step write_bitstream',
     'wait_on_run impl_1',
   ]
 

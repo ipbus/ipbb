@@ -18,8 +18,11 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# @click.group()  # no longer
-@shell(prompt='\x1b[38;5;74mipbb\x1b[0m> ', intro='Starting IPBus Builder...', context_settings=CONTEXT_SETTINGS)
+@shell(
+  prompt='\x1b[38;5;74mipbb\x1b[0m> ',
+  intro='Starting IPBus Builder...',
+  context_settings=CONTEXT_SETTINGS
+)
 @click.pass_context
 def cli(ctx):
   ctx.obj = ipbb.Environment()
@@ -27,12 +30,14 @@ def cli(ctx):
 
 #------------------------------------------------------------------------------
 @cli.command()
+@click.option('-v', '--verbose', count=True, help='arse')
 @click.pass_obj
-def info(env):
+def info(env, verbose):
   '''WORK IN PROGRESS: Tentative command to set up shell env'''
   print( 'export IPBB_ROOT=%s' % env.root)
   print( 'export IPBB_WORK=%s' % env.work)
 #------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -48,11 +53,11 @@ if __name__ == '__main__':
   cli.add_command(ipbb.repo.changework)
   cli.add_command(ipbb.repo.add)
 
-  import ipbb.dep
-  cli.add_command(ipbb.dep.dep)
+  # import ipbb.dep
+  # cli.add_command(ipbb.dep.dep)
 
-  import ipbb.vivado
-  cli.add_command(ipbb.vivado.vivado)
+  # import ipbb.vivado
+  # cli.add_command(ipbb.vivado.vivado)
 
   cli.shell.prompt = '\x1b[38;5;74m'+cli.shell.prompt+'\x1b[0m'
   cli()

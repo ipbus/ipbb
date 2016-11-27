@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import .common
+from . import common
 
 from os.path import join, split, exists, splitext
 

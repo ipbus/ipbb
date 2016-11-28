@@ -20,7 +20,7 @@ def _ensureVivado( env ):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-@click.group()
+@click.group(chain=True)
 def vivado():
   '''Vivado command group'''
   pass
@@ -114,8 +114,8 @@ def project( env ):
   from dep2g.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker(lCommandLineArgs, lPathmaker)
 
-  import xilinx.vivado
-  with xilinx.vivado.SmartConsole() as lTarget:
+  import tools.xilinx
+  with tools.xilinx.VivadoSmartConsole() as lTarget:
     lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
 
   #------------------------------------------------------------------------------
@@ -146,8 +146,8 @@ def build( env ):
     'wait_on_run impl_1',
   ]
 
-  import xilinx.vivado
-  with xilinx.vivado.SmartConsole() as lTarget:
+  import tools.xilinx
+  with tools.xilinx.VivadoSmartConsole() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lSynthCmds)
     lTarget(lImplCmds)
@@ -171,8 +171,8 @@ def bitfile( env ):
     'wait_on_run impl_1',
   ]
 
-  import xilinx.vivado
-  with xilinx.vivado.SmartConsole() as lTarget:
+  import tools.xilinx
+  with tools.xilinx.VivadoSmartConsole() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lBitFileCmds)
 #------------------------------------------------------------------------------
@@ -195,8 +195,8 @@ def reset( env ):
     'reset_run impl_1',
   ]
 
-  import xilinx.vivado
-  with xilinx.vivado.SmartConsole() as lTarget:
+  import tools.xilinx
+  with tools.xilinx.VivadoSmartConsole() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lResetCmds)
 #------------------------------------------------------------------------------

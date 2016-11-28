@@ -37,8 +37,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     # Build vivado interface
-    import xilinx.vivado
-    v = xilinx.vivado.Console()
+    import tools.xilinx
+    v = tools.xilinx.VivadoConsole()
 
     v.openHw()
     v.connect('localhost:3121')

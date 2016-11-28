@@ -311,7 +311,7 @@ class DepFileParser(object):
         if lParsedLine.cmd == "include":
           for lFileList in lFileLists:
             for lFile, lFilePath in lFileList:
-              self._parse(lPackage, lComponent, lFile)
+              self.parse(lPackage, lComponent, lFile)
 
         else:
           #--------------------------------------------------------------

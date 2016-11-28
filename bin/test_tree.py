@@ -70,12 +70,12 @@ elif args.cmd in ['dev','mp7']:
     
     if args.create:
         from dep2g.VivadoProjectMaker import VivadoProjectMaker
-        import xilinx.vivado
+        import tools.xilinx
 
         lDummy = dummy()
         lDummy.output = ''
         lWriter = VivadoProjectMaker(lDummy, lPathmaker)
-        lTarget = xilinx.vivado.Console()
+        lTarget = tools.xilinx.VivadoConsole()
         lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
 
 

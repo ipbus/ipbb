@@ -84,4 +84,5 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
   source ${HERE}/external/ibb/bin/activate
 fi
 
+# Obscure click vodoo to enable bash autocompletion
 eval "$(_IPBB_COMPLETE=source ipbb)"

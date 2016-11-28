@@ -33,6 +33,22 @@ def on_parent_exit(signame):
     return set_parent_exit_signal
 #------------------------------------------------
 
+#------------------------------------------------
+# Currently implemented in ipbb.common. Copied here not to generate circular dependencies until the package structure is finalised
+def _which( aExecutable ):
+  return any(
+    os.access(os.path.join(lPath, aExecutable), os.X_OK) 
+    for lPath in os.environ["PATH"].split(os.pathsep)
+  )
+#------------------------------------------------
+
+#------------------------------------------------
+class VivadoNotFoundError(Exception):
+
+  def __init__(self, message):
+    # Call the base class constructor with the parameters it needs
+    super(VivadoNotFoundError, self).__init__(message)
+#------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class Batch(object):
@@ -53,8 +69,13 @@ class Batch(object):
     self._script = script
     self._log = 'vivado_{0}.log'.format(lBasename)
 
+    # Guard against missing vivado executable 
+    if not _which('vivado'):
+      raise VivadoNotFoundError('\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script')
+
     cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(self._script, self._log)
     process = subprocess.Popen(cmd.split())
+
     process.wait()
 
     self.errors = []
@@ -78,43 +99,9 @@ class ConsoleError(Exception):
     """
 
     def __init__(self, errors, command):
+
         self.errors = errors
         self.command = command
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class SmartConsole(object):
-  """docstring for SmartConsole"""
-
-  #--------------------------------------------------------------
-  def __init__(self):
-    super(SmartConsole, self).__init__()
-  #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def __enter__(self):
-    self._console = Console()
-    return self
-  #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def __exit__(self, type, value, traceback):
-    self._console.quit()
-  #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def __call__(self, aCmd=None, aMaxLen=1):
-    # FIXME: only needed because of VivadoProjectMaker
-    # Fix at source and remove
-    if aCmd is None:
-      return
-
-    if isinstance(aCmd, str):
-      return self._console.execute(aCmd, aMaxLen)
-    elif isinstance(aCmd, list):
-      return self._console.executeMany(aCmd, aMaxLen)
-  #--------------------------------------------------------------
-    
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,8 +123,13 @@ class Console(object):
   #--------------------------------------------------------------
   def __init__(self):
     super(Console, self).__init__()
+
+    if not _which('vivado'):
+      raise VivadoNotFoundError('\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script')
+
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
+
     self._process = pexpect.spawn('vivado -mode tcl',maxread=1)
     self._process.logfile = sys.stdout
     self._process.delaybeforesend = 0.00 #1
@@ -304,6 +296,41 @@ class Console(object):
       self.execute('set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath))
       self.execute('program_hw_devices [current_hw_device]')
   #--------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class SmartConsole(object):
+  """docstring for SmartConsole"""
+
+  #--------------------------------------------------------------
+  def __init__(self):
+    super(SmartConsole, self).__init__()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __enter__(self):
+    self._console = Console()
+    return self
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __exit__(self, type, value, traceback):
+    self._console.quit()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __call__(self, aCmd=None, aMaxLen=1):
+    # FIXME: only needed because of VivadoProjectMaker
+    # Fix at source and remove
+    if aCmd is None:
+      return
+
+    if isinstance(aCmd, str):
+      return self._console.execute(aCmd, aMaxLen)
+    elif isinstance(aCmd, list):
+      return self._console.executeMany(aCmd, aMaxLen)
+  #--------------------------------------------------------------
+    
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

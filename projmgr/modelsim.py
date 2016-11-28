@@ -48,7 +48,7 @@ notfound=0
 for v in $vars; do
     echo ${v} ${!v}
     if [ ! -d "${!v}" ]; then
-        echo "WARNING: $v does not exits"
+        echo "WARNING: $v does not exists"
         (( notfound++ ))
     fi
 done

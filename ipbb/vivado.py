@@ -34,12 +34,12 @@ def validateCmp(ctx, param, value):
 
 
 @vivado.command()
-@click.argument('workarea', help = 'Name of the work area')
-@click.argument('component', callback=validateCmp, help='Location (package:component) where the top-level dependency file is located.')
+@click.argument('workarea')
+@click.argument('component', callback=validateCmp)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 
 @click.pass_obj
-def create( env, workarea, component, dep ):
+def create( env, workarea, component, topdep ):
   '''Create a new Vivado working area'''
   #------------------------------------------------------------------------------
   # Must be in a build area
@@ -57,7 +57,7 @@ def create( env, workarea, component, dep ):
   from dep2g.Pathmaker import Pathmaker
   lPathmaker = Pathmaker(env.src, 0)
   lTopPackage, lTopComponent = component
-  lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', dep)
+  lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
   if not exists(lTopDepPath):
     raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
   #------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ def create( env, workarea, component, dep ):
     'product': 'vivado',
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
-    'topDep': dep,
+    'topDep': topdep,
 
   }
   with open(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
@@ -94,6 +94,8 @@ def project( env ):
   from dep2g.Pathmaker import Pathmaker
   from dep2g.DepFileParser import DepFileParser
 
+  lCfg = env.workConfig
+
   class dummy:pass
   lCommandLineArgs = dummy()
   lCommandLineArgs.define = ''
@@ -103,7 +105,6 @@ def project( env ):
 
   lPathmaker = Pathmaker(env.src, 0)
 
-  lCfg = env.workConfig
   lDepFileParser = DepFileParser( lCommandLineArgs , lPathmaker )
   lDepFileParser.parse(lCfg['topPkg'], lCfg['topCmp'], lCfg['topDep'])
 

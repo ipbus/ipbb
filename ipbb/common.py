@@ -1,6 +1,7 @@
 from __future__ import print_function
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 import os
+
 #------------------------------------------------------------------------------
 class DirSentry:
   def __init__(self, aDir):
@@ -8,7 +9,7 @@ class DirSentry:
 
   def __enter__(self):
     if not os.path.exists(self.dir):
-        raise RuntimeError('stocazzo '+self.dir)
+        raise RuntimeError('Directory '+self.dir+' does not exist')
 
     self._lOldDir = os.path.realpath(os.getcwd())
     # print self._lOldDir
@@ -23,8 +24,6 @@ class DirSentry:
 #------------------------------------------------------------------------------
 def trackFile(aAreaFileName):
   lPath = os.getcwd()
-
-  # import pdb; pdb.set_trace()
 
   while lPath is not '/':
     lBuildFile = os.path.join(lPath,aAreaFileName)

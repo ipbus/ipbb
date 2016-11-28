@@ -10,9 +10,36 @@ import subprocess
 from os.path import join, split, exists, splitext
 from common import DirSentry
 
+'''
+Commands defined here
 
-def __listWorkAreas(env):
+* init
+* add
+  * git
+  * svn
+* chroot
+* chwork
+* ls
+
+# Possible evolution
+
+* init
+* repo
+  * add
+    * git
+    * svb
+  * ls
+  * rm
+* cd (?)
+* work
+  * cd
+  * ls
+'''
+
+#------------------------------------------------------------------------------
+def __lswork(env):
   return [ lArea for lArea in next(os.walk(env.root))[1] if exists( join( env.root, lArea, ipbb.kWorkFileName ) ) ]
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @click.command()
@@ -48,13 +75,13 @@ def init(env, area, repo):
 #------------------------------------------------------------------------------
 @click.command()
 @click.pass_obj
-def listwork(env):
+def lswork(env):
   '''List existing working areas'''
   
   if env.root is None:
     raise click.ClickException('Build area root directory not found')
 
-  lAreas = __listWorkAreas(env)
+  lAreas = __lswork(env)
   print ( 'Root:', env.root )
   print ( 'Work areas:')
   print ( ', '.join( [ ' * '+lArea for lArea in lAreas ] ) )
@@ -64,7 +91,7 @@ def listwork(env):
 @click.command()
 @click.argument( 'newroot' )
 @click.pass_obj
-def changeroot(env,newroot):
+def chroot(env,newroot):
   '''Change to new root directory'''
     
   with DirSentry( newroot ) as lSentry:
@@ -79,10 +106,10 @@ def changeroot(env,newroot):
 @click.command()
 @click.argument( 'newwork' )
 @click.pass_obj
-def changework(env,newwork):
+def chwork(env,newwork):
 
   if newwork[-1] == os.sep: newwork = newwork[:-1]
-  lAreas = __listWorkAreas(env)
+  lAreas = __lswork(env)
   if newwork not in lAreas:
     raise click.ClickException('Requested work area not found. Available areas %s' % ', '.join(lAreas))
 

@@ -6,13 +6,15 @@ import os
 import ipbb
 # Elements
 from os.path import join, split, exists, splitext
+from .common import which
 
 #------------------------------------------------------------------------------
-def ensureVivado( env ):
+def _ensureVivado( env ):
   if env.workConfig['product'] != 'vivado':
     raise click.ClickException('Work area product mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['product'] )
 
-  if 'XILINX_VIVADO' not in os.environ:
+  if not which('vivado'):
+  # if 'XILINX_VIVADO' not in os.environ:
     raise click.ClickException('Vivado is not available. Have you sourced the environment script?' )
 #------------------------------------------------------------------------------
 
@@ -87,7 +89,7 @@ def project( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  ensureVivado( env )
+  _ensureVivado( env )
   
   #------------------------------------------------------------------------------
   # Very messy, to be sorted out later
@@ -127,7 +129,7 @@ def build( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  ensureVivado( env )
+  _ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -157,7 +159,7 @@ def bitfile( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  ensureVivado( env )
+  _ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -181,7 +183,7 @@ def reset( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  ensureVivado( env )
+  _ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),

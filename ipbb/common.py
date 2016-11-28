@@ -33,3 +33,11 @@ def trackFile(aAreaFileName):
 
   return None
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+def which( aExecutable ):
+  return any(
+    os.access(os.path.join(lPath, aExecutable), os.X_OK) 
+    for lPath in os.environ["PATH"].split(os.pathsep)
+  )
+#------------------------------------------------------------------------------

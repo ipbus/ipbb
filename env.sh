@@ -83,3 +83,5 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
   echo "Activating env"
   source ${HERE}/external/ibb/bin/activate
 fi
+
+eval "$(_IPBB_COMPLETE=source ipbb)"

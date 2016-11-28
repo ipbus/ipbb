@@ -196,17 +196,6 @@ class DepFileParser(object):
   
   #----------------------------------------------------------------------------------------------------------------------------
   def parse(self, aPackage, aComponent, aDepFileName):
-    # import pdb; pdb.set_trace()
-    # if not os.path.exists(self.Pathmaker.getPath(aPackage)):
-    #   self.PackagesNotFound.add(aPackage)
-    # else:
-    #   self.Packages.add(aPackage)
-
-    self._parse(aPackage, aComponent, aDepFileName)
-  #----------------------------------------------------------------------------------------------------------------------------
-
-  #----------------------------------------------------------------------------------------------------------------------------
-  def _parse(self, aPackage, aComponent, aDepFileName):
     '''
     Parses a dependency file from package aPackage/aComponent
     '''

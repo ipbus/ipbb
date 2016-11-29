@@ -145,6 +145,10 @@ class VivadoConsole(object):
 
   #--------------------------------------------------------------
   def __del__(self):
+
+    if not hasattr(self, '_process'):
+      return
+
     self.quit()
   #--------------------------------------------------------------
 
@@ -155,6 +159,7 @@ class VivadoConsole(object):
 
   #--------------------------------------------------------------
   def quit(self):
+
     # Return immediately of already dead
     if not self._process.isalive():
       self._log.debug('Vivado has already been stopped')
@@ -178,31 +183,28 @@ class VivadoConsole(object):
     self._process.sendline(aText)
     #--------------------------------------------------------------
     # Hard check: First line of output must match the injected command
-    lIndex = self._process.expect(['\r\n',pexpect.EOF])
-    
-    if lIndex == 1:
-      raise RuntimeError("%s was terminated while executing command '%s'" % (self.__executable, aText))
+    lIndex = self._process.expect(['\r\n'])
     
     lCmdRcvd = self.__reCharBackspace.sub('',self._process.before)
     lCmdSent = aText.split('\n')[0]
     if lCmdRcvd != lCmdSent:
       #--------------------------------------------------------------
+      print ( '-'*20 )
       # Find where the 2 strings don't match
-      print len(lCmdRcvd), len(lCmdSent)
+      print ( ' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd) )
       for i in xrange(min(len(lCmdRcvd), len(lCmdSent))):
           r = lCmdRcvd[i]
           s = lCmdSent[i]
           # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s), ord(s) > 128 
-          print i, '\t', r, s, r==s, ord(r)
+          print (i, '\t', r, s, r==s, ord(r))
 
-      print ''.join([str(i%10) for i in xrange(len(lCmdRcvd))])
-      print lCmdRcvd
-      print ''.join([str(i%10) for i in xrange(len(lCmdSent))])
-      print lCmdSent
+      print (''.join([str(i%10) for i in xrange(len(lCmdRcvd))]))
+      print (lCmdRcvd)
+      print (''.join([str(i%10) for i in xrange(len(lCmdSent))]))
+      print (lCmdSent)
       #--------------------------------------------------------------
       raise RuntimeError("Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent,lCmdRcvd))
     #--------------------------------------------------------------
-
   #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
@@ -214,17 +216,15 @@ class VivadoConsole(object):
     #--------------------------------------------------------------
     while True:
       # Search for newlines, prompt, end-of-file
-      # lIndex = self._process.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
       lIndex = self._process.expect_list(lCpl)
       # print '>',self._process.before
-
 
       #----------------------------------------------------------
       # Break if prompt 
       if lIndex == 1:
         break
       elif lIndex == 2:
-        print '-->> timeout caught'
+        print ('-->> timeout caught')
       #----------------------------------------------------------
 
       # Store the output in the circular buffer
@@ -305,12 +305,12 @@ class VivadoConsole(object):
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class VivadoSmartConsole(object):
-  """docstring for VivadoSmartConsole"""
+class VivadoOpen(object):
+  """docstring for VivadoOpen"""
 
   #--------------------------------------------------------------
   def __init__(self):
-    super(VivadoSmartConsole, self).__init__()
+    super(VivadoOpen, self).__init__()
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -336,7 +336,6 @@ class VivadoSmartConsole(object):
     elif isinstance(aCmd, list):
       return self._console.executeMany(aCmd, aMaxLen)
   #--------------------------------------------------------------
-    
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

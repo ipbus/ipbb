@@ -101,21 +101,26 @@ class ModelSimConsole(object):
     self.variant = autodetect()
     # set prompt pattern based on sim variant
     self._prompt = {
-      'ModelSim':'ModelSim> ',
-      'QuestaSim':'QuestaSim> '
+      'ModelSim':'ModelSim> \rModelSim> ',
+      'QuestaSim':'QuestaSim> \rQuestaSim> '
       }[self.variant]
 
     self._process = pexpect.spawn('%s -c' % _vsim, maxread=1)
     self._process.logfile = sys.stdout
     self._process.delaybeforesend = 0.00 #1
     self.__expectPrompt()
+    # Method mapping
     self.isAlive = self._process.isalive
+    # Add self to the list of instances
     self.__instances.add(self)
 
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __del__(self):
+    if not hasattr(self, '_process'):
+      return
+
     self.quit()
   #--------------------------------------------------------------
 
@@ -147,19 +152,20 @@ class ModelSimConsole(object):
     self._process.sendline(aText)
     #--------------------------------------------------------------
     # Hard check: First line of output must match the injected command
-    lIndex = self._process.expect(['\r\n'])
-    
+    lIndex = self._process.expect(['\r\n','\n\r'])
+
     lCmdRcvd = self.__reCharBackspace.sub('',self._process.before)
     lCmdSent = aText.split('\n')[0]
     if lCmdRcvd != lCmdSent:
       #--------------------------------------------------------------
+      print ( '-'*20 )
       # Find where the 2 strings don't match
-      print (len(lCmdRcvd), len(lCmdSent))
-      for i in xrange(min(len(lCmdRcvd), len(lCmdSent))):
-          r = lCmdRcvd[i]
-          s = lCmdSent[i]
+      print ( ' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd) )
+      for i in xrange(max(len(lCmdRcvd), len(lCmdSent))):
+          r = lCmdRcvd[i] if len(lCmdRcvd) > i else ' '
+          s = lCmdSent[i] if len(lCmdSent) > i else ' '
           # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s), ord(s) > 128 
-          print (i, '\t', r, s, r==s, ord(r))
+          print (i, '\t', repr(s),  repr(r), r==s, ord(r))
 
       print (''.join([str(i%10) for i in xrange(len(lCmdRcvd))]))
       print (lCmdRcvd)
@@ -172,7 +178,7 @@ class ModelSimConsole(object):
   #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-    lCpl = self._process.compile_pattern_list(['\r\n',self._prompt,pexpect.TIMEOUT])
+    lCpl = self._process.compile_pattern_list(['\r\n','\n\r',self._prompt,pexpect.TIMEOUT])
     lIndex = None
     lBuffer = collections.deque([],aMaxLen)
     lErrors = []
@@ -180,16 +186,13 @@ class ModelSimConsole(object):
     #--------------------------------------------------------------
     while True:
       # Search for newlines, prompt, end-of-file
-      # lIndex = self._process.expect(['\r\n','Vivado%\t', 'ERROR:', pexpect.EOF])
       lIndex = self._process.expect_list(lCpl)
-      # print '>',self._process.before
-
 
       #----------------------------------------------------------
       # Break if prompt 
-      if lIndex == 1:
+      if lIndex in [1,2]:
         break
-      elif lIndex == 2:
+      elif lIndex == 3:
         print ('-->> timeout caught')
       #----------------------------------------------------------
 
@@ -229,8 +232,42 @@ class ModelSimConsole(object):
       lOutput.extend(self.execute(lCmd, aMaxLen))
     return lOutput
   #--------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class ModelSimOpen(object):
+  """docstring for ModelSimOpen"""
+
+  #--------------------------------------------------------------
+  def __init__(self):
+    super(ModelSimOpen, self).__init__()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __enter__(self):
+    self._console = ModelSimConsole()
+    return self
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __exit__(self, type, value, traceback):
+    self._console.quit()
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def __call__(self, aCmd=None, aMaxLen=1):
+    # FIXME: only needed because of VivadoProjectMaker
+    # Fix at source and remove
+    if aCmd is None:
+      return
+
+    if isinstance(aCmd, str):
+      return self._console.execute(aCmd, aMaxLen)
+    elif isinstance(aCmd, list):
+      return self._console.executeMany(aCmd, aMaxLen)
+  #--------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @atexit.register

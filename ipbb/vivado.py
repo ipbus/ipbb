@@ -115,7 +115,7 @@ def project( env ):
   lWriter = VivadoProjectMaker(lCommandLineArgs, lPathmaker)
 
   import tools.xilinx
-  with tools.xilinx.VivadoSmartConsole() as lTarget:
+  with tools.xilinx.VivadoOpen() as lTarget:
     lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
 
   #------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ def build( env ):
   ]
 
   import tools.xilinx
-  with tools.xilinx.VivadoSmartConsole() as lTarget:
+  with tools.xilinx.VivadoOpen() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lSynthCmds)
     lTarget(lImplCmds)
@@ -172,7 +172,7 @@ def bitfile( env ):
   ]
 
   import tools.xilinx
-  with tools.xilinx.VivadoSmartConsole() as lTarget:
+  with tools.xilinx.VivadoOpen() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lBitFileCmds)
 #------------------------------------------------------------------------------
@@ -196,7 +196,7 @@ def reset( env ):
   ]
 
   import tools.xilinx
-  with tools.xilinx.VivadoSmartConsole() as lTarget:
+  with tools.xilinx.VivadoOpen() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lResetCmds)
 #------------------------------------------------------------------------------

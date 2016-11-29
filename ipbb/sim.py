@@ -5,11 +5,11 @@ from __future__ import print_function
 import click
 import os
 import ipbb
-import sys
+import subprocess
 
 # Elements
 from os.path import join, split, exists, splitext
-from .common import which
+from tools.common import which
 
 
 #------------------------------------------------
@@ -33,6 +33,15 @@ def sim():
 def create(env):
   if not which('vsim'):
     raise ModelsimNotFoundError('\'vsim\' not found in PATH.')
+
+  lVsim = subprocess.Popen(['vsim','-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = lVsim.communicate()
+
+  if lVsim.returncode != 0:
+    raise RuntimeError()
+
+  print (out.strip())
+
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

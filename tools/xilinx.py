@@ -1,3 +1,8 @@
+from __future__ import print_function
+#------------------------------------------------------------------------------
+
+
+# Modules
 import logging
 import pexpect
 import sys
@@ -6,6 +11,9 @@ import collections
 import subprocess
 import os.path
 import atexit
+
+# Elements
+from .common import which
 
 #------------------------------------------------
 # This is for when python 2.7 will become available
@@ -34,15 +42,6 @@ def on_parent_exit(signame):
 #------------------------------------------------
 
 #------------------------------------------------
-# Currently implemented in ipbb.common. Copied here not to generate circular dependencies until the package structure is finalised
-def _which( aExecutable ):
-  return any(
-    os.access(os.path.join(lPath, aExecutable), os.X_OK) 
-    for lPath in os.environ["PATH"].split(os.pathsep)
-  )
-#------------------------------------------------
-
-#------------------------------------------------
 class VivadoNotFoundError(Exception):
 
   def __init__(self, message):
@@ -54,9 +53,9 @@ class VivadoNotFoundError(Exception):
 class VivadoBatch(object):
   """docstring for VivadoBatch"""
 
-  reInfo = re.compile('^INFO:')
-  reWarn = re.compile('^WARNING:')
-  reError = re.compile('^ERROR:')
+  _reInfo = re.compile('^INFO:')
+  _reWarn = re.compile('^WARNING:')
+  _reError = re.compile('^ERROR:')
 
   def __init__(self, script):
     super(VivadoBatch, self).__init__()
@@ -67,10 +66,12 @@ class VivadoBatch(object):
       raise RuntimeError('Bugger off!!!')
 
     self._script = script
+
+    # Define custom log file
     self._log = 'vivado_{0}.log'.format(lBasename)
 
     # Guard against missing vivado executable 
-    if not _which('vivado'):
+    if not which('vivado'):
       raise VivadoNotFoundError('\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script')
 
     cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(self._script, self._log)
@@ -84,9 +85,9 @@ class VivadoBatch(object):
 
     with open(self._log) as lLog:
       for i,l in enumerate(lLog):
-        if self.reError.match(l): self.errors.append( (i,l) )
-        elif self.reWarn.match(l): self.warnings.append( (i,l) )
-        elif self.reInfo.match(l): self.info.append( (i,l) )
+        if self._reError.match(l): self.errors.append( (i,l) )
+        elif self._reWarn.match(l): self.warnings.append( (i,l) )
+        elif self._reInfo.match(l): self.info.append( (i,l) )
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,12 +125,13 @@ class VivadoConsole(object):
   def __init__(self):
     super(VivadoConsole, self).__init__()
 
-    if not _which('vivado'):
+    if not which('vivado'):
       raise VivadoNotFoundError('\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script')
 
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
 
+    self._prompt = 'Vivado%\t'
     self._process = pexpect.spawn('vivado -mode tcl',maxread=1)
     self._process.logfile = sys.stdout
     self._process.delaybeforesend = 0.00 #1
@@ -176,7 +178,11 @@ class VivadoConsole(object):
     self._process.sendline(aText)
     #--------------------------------------------------------------
     # Hard check: First line of output must match the injected command
-    self._process.expect(['\r\n',pexpect.EOF])
+    lIndex = self._process.expect(['\r\n',pexpect.EOF])
+    
+    if lIndex == 1:
+      raise RuntimeError("%s was terminated while executing command '%s'" % (self.__executable, aText))
+    
     lCmdRcvd = self.__reCharBackspace.sub('',self._process.before)
     lCmdSent = aText.split('\n')[0]
     if lCmdRcvd != lCmdSent:
@@ -194,13 +200,13 @@ class VivadoConsole(object):
       print ''.join([str(i%10) for i in xrange(len(lCmdSent))])
       print lCmdSent
       #--------------------------------------------------------------
-      raise RuntimeError('Command and first output line don\'t match Sent=\'{0}\', Rcvd=\'{1}\''.format(lCmdSent,lCmdRcvd))
+      raise RuntimeError("Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent,lCmdRcvd))
     #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-    lCpl = self._process.compile_pattern_list(['\r\n','Vivado%\t',pexpect.TIMEOUT])
+    lCpl = self._process.compile_pattern_list(['\r\n',self._prompt,pexpect.TIMEOUT])
     lIndex = None
     lBuffer = collections.deque([],aMaxLen)
     lErrors = []

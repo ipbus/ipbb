@@ -22,7 +22,7 @@ class DirSentry:
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-def trackFile(aAreaFileName):
+def findFileInParents(aAreaFileName):
   lPath = os.getcwd()
 
   while lPath is not '/':
@@ -32,12 +32,4 @@ def trackFile(aAreaFileName):
     lPath,_ = os.path.split(lPath)
 
   return None
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-def which( aExecutable ):
-  return any(
-    os.access(os.path.join(lPath, aExecutable), os.X_OK) 
-    for lPath in os.environ["PATH"].split(os.pathsep)
-  )
 #------------------------------------------------------------------------------

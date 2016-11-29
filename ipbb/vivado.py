@@ -7,7 +7,7 @@ import os
 import ipbb
 # Elements
 from os.path import join, split, exists, splitext
-from .common import which
+from tools.common import which
 
 #------------------------------------------------------------------------------
 def _ensureVivado( env ):
@@ -27,7 +27,7 @@ def vivado():
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-def validateCmp(ctx, param, value):
+def _validateComponent(ctx, param, value):
   lSeparators = value.count(':')
   # Validate the format
   if lSeparators > 1:
@@ -38,7 +38,7 @@ def validateCmp(ctx, param, value):
 
 @vivado.command()
 @click.argument('workarea')
-@click.argument('component', callback=validateCmp)
+@click.argument('component', callback=_validateComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 
 @click.pass_obj

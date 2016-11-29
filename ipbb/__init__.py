@@ -18,8 +18,8 @@ class Environment(object):
     self.work = None
     self.workFile = None
     self.workConfig = None
-    lBuildFilePath = common.trackFile(kBuildFileName)
-    lWorkFilePath = common.trackFile(kWorkFileName)
+    lBuildFilePath = common.findFileInParents(kBuildFileName)
+    lWorkFilePath = common.findFileInParents(kWorkFileName)
 
     if lBuildFilePath:
       self.root, self.rootFile = split( lBuildFilePath )

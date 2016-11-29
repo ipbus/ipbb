@@ -8,7 +8,7 @@ import subprocess
 
 # Elements
 from os.path import join, split, exists, splitext
-from common import DirSentry
+from .common import DirSentry
 
 '''
 Commands defined here

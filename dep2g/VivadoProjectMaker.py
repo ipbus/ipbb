@@ -1,18 +1,17 @@
 from __future__ import print_function
 import time, os
 
-# from SmartOpen import SmartOpen
-# from CommandLineParser import CommandLineParser
-from Pathmaker import Pathmaker
-
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectMaker( object ):
+  #--------------------------------------------------------------
   def __init__( self , aCommandLineArgs , aPathmaker ):
     self.CommandLineArgs = aCommandLineArgs
     self.Pathmaker = aPathmaker
     
     self.FileSets = { ".xdc":"constrs_1" , ".tcl":"constrs_1" , ".mif":"sources_1" , ".vhd":"sources_1" , ".v":"sources_1" , ".xci":"sources_1" , ".ngc":"sources_1", ".ucf":"ise_1" , ".xco":"ise_1", ".edn":"sources_1", ".edf":"sources_1" }
+  #--------------------------------------------------------------
  
+  #--------------------------------------------------------------
   def write( self , aTarget, aScriptVariables , aComponentPaths , aCommandList , aLibs, aMaps ):
     
     if not "device_name" in aScriptVariables:
@@ -82,4 +81,6 @@ class VivadoProjectMaker( object ):
     for i in lXciBasenames:     
       write("wait_on_run {0}_synth_1".format(i) )
     write('close_project')
+  #--------------------------------------------------------------
+
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

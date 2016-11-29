@@ -1,15 +1,17 @@
 from __future__ import print_function
 import time, os
 
-from tools.common import SmartOpen
-# from Pathmaker import Pathmaker
+from Pathmaker import Pathmaker
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelsimScriptWriter( object ):
+  #--------------------------------------------------------------
   def __init__( self , aCommandLineArgs , aPathmaker ):
     self.CommandLineArgs = aCommandLineArgs
     self.Pathmaker = aPathmaker
- 
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
   def write( self , aScriptVariables , aComponentPaths , aCommandList , aLibs, aMaps ):
 
     with SmartOpen( self.CommandLineArgs.output ) as write:
@@ -97,6 +99,6 @@ class ModelsimScriptWriter( object ):
     os.rename("modelsim.ini","modelsim.ini.bak")
     with SmartOpen( "modelsim.ini" ) as newIni:
       lModelsimIni.write(newIni.file)
-
+  #--------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

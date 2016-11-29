@@ -77,6 +77,8 @@ set_property "target_language" "VHDL" $obj
             write("generate_target simulation [get_files {0}]".format( lBasename ) )
 
       write('''
+exec mkdir -p {0}/{0}.srcs/sources_1/ip/built'''.format(aScriptVariables['device_top']))
+      write('''
 set_property top top [get_filesets sim_1]
 launch_simulation -scripts_only
 cd {0}

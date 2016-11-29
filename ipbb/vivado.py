@@ -10,7 +10,7 @@ from os.path import join, split, exists, splitext
 from tools.common import which
 
 #------------------------------------------------------------------------------
-def _ensureVivado( env ):
+def ensureVivado( env ):
   if env.workConfig['product'] != 'vivado':
     raise click.ClickException('Work area product mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['product'] )
 
@@ -27,6 +27,7 @@ def vivado():
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+# FIXME: duplicated in sim.create
 def _validateComponent(ctx, param, value):
   lSeparators = value.count(':')
   # Validate the format
@@ -40,7 +41,6 @@ def _validateComponent(ctx, param, value):
 @click.argument('workarea')
 @click.argument('component', callback=_validateComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
-
 @click.pass_obj
 def create( env, workarea, component, topdep ):
   '''Create a new Vivado working area'''
@@ -90,7 +90,7 @@ def project( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  _ensureVivado( env )
+  ensureVivado( env )
   
   #------------------------------------------------------------------------------
   # Very messy, to be sorted out later
@@ -104,7 +104,6 @@ def project( env ):
   lCommandLineArgs.define = ''
   lCommandLineArgs.product = lCfg['product']
   lCommandLineArgs.verbosity = 3
-  # lCommandLineArgs.output = ''
 
   lPathmaker = Pathmaker(env.src, 0)
 
@@ -117,7 +116,6 @@ def project( env ):
   import tools.xilinx
   with tools.xilinx.VivadoOpen() as lTarget:
     lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
-
   #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
@@ -130,7 +128,7 @@ def build( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  _ensureVivado( env )
+  ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -160,7 +158,7 @@ def bitfile( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  _ensureVivado( env )
+  ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),
@@ -184,7 +182,7 @@ def reset( env ):
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
 
-  _ensureVivado( env )
+  ensureVivado( env )
 
   lOpenCmds = [
     'open_project %s' % join(env.work, 'top', 'top'),

@@ -331,6 +331,9 @@ class VivadoOpen(object):
     if aCmd is None:
       return
 
+    if aCmd.count('\n') is not 0:
+      aCmd = aCmd.split('\n')
+        
     if isinstance(aCmd, str):
       return self._console.execute(aCmd, aMaxLen)
     elif isinstance(aCmd, list):

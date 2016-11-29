@@ -76,7 +76,7 @@ elif args.cmd in ['dev','mp7']:
         lDummy.output = ''
         lWriter = VivadoProjectMaker(lDummy, lPathmaker)
         lTarget = tools.xilinx.VivadoConsole()
-        lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
+        lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
 
 
 if args.interactive:

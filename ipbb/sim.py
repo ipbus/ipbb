@@ -128,10 +128,10 @@ def ipcores(env, output):
   if output:
     from dep_tree.SmartOpen import SmartOpen
     with SmartOpen(output) as lTarget:
-      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
+      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
   else:
     import tools.xilinx
     with tools.xilinx.VivadoOpen() as lTarget:
-      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
+      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
 #------------------------------------------------------------------------------
 

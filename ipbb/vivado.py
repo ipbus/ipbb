@@ -115,7 +115,7 @@ def project( env ):
 
   import tools.xilinx
   with tools.xilinx.VivadoOpen() as lTarget:
-    lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList, None, None)
+    lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
   #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 

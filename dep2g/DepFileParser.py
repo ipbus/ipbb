@@ -112,8 +112,8 @@ class DepFileParser(object):
     subp.add_argument("file", nargs = "*")
     subp = parser_add.add_parser("src")
     subp.add_argument("-c", "--component", **lCompArgOpts )
-    # subp.add_argument("-l", "--lib")
-    # subp.add_argument("-m", "--map")
+    subp.add_argument("-l", "--lib")
+    subp.add_argument("-m", "--map")
     # subp.add_argument("-g", "--generated" , action = "store_true") # TODO: Check if still used in Vivado
     subp.add_argument("-n", "--noinclude" , action = "store_true")
     subp.add_argument("--cd")
@@ -328,6 +328,24 @@ class DepFileParser(object):
           #--------------------------------------------------------------
 
           #--------------------------------------------------------------
+          # Set the target library, whether specified explicitly or not
+          if ('lib' in lParsedLine) and (lParsedLine.lib):
+            lLib = lParsedLine.lib
+            self.Libs.append(lLib)
+          else:
+            lLib = None
+          #--------------------------------------------------------------
+
+          #--------------------------------------------------------------
+          # Map to any generated libraries
+          if ('map' in lParsedLine) and (lParsedLine.map):
+            lMap = lParsedLine.map
+            self.Maps.append((lMap, lFile))
+          else:
+            lMap = None
+          #--------------------------------------------------------------
+
+          #--------------------------------------------------------------
           # Specifies the files should be read as VHDL 2008
           if lParsedLine.cmd == 'src' or lParsedLine.cmd == 'include' in lParsedLine:
             lVhdl2008 = lParsedLine.vhdl2008
@@ -349,15 +367,9 @@ class DepFileParser(object):
                 print(' ' * self.depth, ':', lParsedLine.cmd, lFile, lFilePath)
               #--------------------------------------------------------------
           
-              # # Map to any generated libraries
-              # if ('map' in lParsedLine) and (lParsedLine.map):
-              #   lMap = lParsedLine.map
-              #   self.Maps.append((lMap, lFile))
-              # else:
-              #   lMap = None
 
               # self.CommandList[ lParsedLine.cmd ].append( Command( lFile, lLib, lMap, lInclude , lTopLevel , lComponentPath, lVhdl2008 ) )
-              self.CommandList[ lParsedLine.cmd ].append( Command( lFilePath, lPackage, lComponent, None, None, lInclude , lTopLevel , lVhdl2008 ) )
+              self.CommandList[ lParsedLine.cmd ].append( Command( lFilePath, lPackage, lComponent, lMap, lInclude, lInclude , lTopLevel , lVhdl2008 ) )
             #--------------------------------------------------------------
     #--------------------------------------------------------------
 

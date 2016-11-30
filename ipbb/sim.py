@@ -8,8 +8,9 @@ import ipbb
 import subprocess
 
 # Elements
-from os.path import join, split, exists, splitext, basename
-from tools.common import which
+from os.path import join, split, exists, splitext, basename, dirname
+from tools.common import which, do, makeParser
+from .common import DirSentry
 
 
 #------------------------------------------------
@@ -24,7 +25,7 @@ class ModelsimNotFoundError(Exception):
 #------------------------------------------------------------------------------
 @click.group()
 def sim():
-    pass
+  pass    
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -74,7 +75,6 @@ def create( env, workarea, component, topdep ):
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
     'topDep': topdep,
-
   }
   with open(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
     import json
@@ -92,6 +92,9 @@ def ipcores(env, output):
   # Must be in a build area
   if env.work is None:
     raise click.ClickException('Work area root directory not found')
+  
+  if env.workConfig['product'] != 'sim':
+    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.workConfig['product'] )
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
@@ -100,29 +103,12 @@ def ipcores(env, output):
     raise click.ClickException('Vivado is not available. Have you sourced the environment script?' )
   #------------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  # Very messy, to be sorted out later
-  from dep2g.Pathmaker import Pathmaker
-  from dep2g.DepFileParser import DepFileParser
-
-  lCfg = env.workConfig
-
-  class dummy:pass
-  lCommandLineArgs = dummy()
-  lCommandLineArgs.define = ''
-  lCommandLineArgs.product = lCfg['product']
-  lCommandLineArgs.verbosity = 3
-
-  lPathmaker = Pathmaker(env.src, 0)
-
-  lDepFileParser = DepFileParser( lCommandLineArgs , lPathmaker )
-  lDepFileParser.parse(lCfg['topPkg'], lCfg['topCmp'], lCfg['topDep'])
-
+  lDepFileParser, lPathmaker, lCommandLineArgs = makeParsers( env, 3 )
 
   from dep2g.IPCoresSimMaker import IPCoresSimMaker
   lWriter = IPCoresSimMaker(lCommandLineArgs, lPathmaker)
 
-  # Yeah, this is a hack
+  # FIXME: Yeah, this is a hack
   os.environ['XILINX_SIMLIBS'] = join('.xil_sim_libs',basename(os.environ['XILINX_VIVADO']))
 
   if output:
@@ -133,5 +119,70 @@ def ipcores(env, output):
     import tools.xilinx
     with tools.xilinx.VivadoOpen() as lTarget:
       lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@sim.command()
+@click.pass_obj
+def fli(env):
+
+  #------------------------------------------------------------------------------
+  # Must be in a build area
+  if env.work is None:
+    raise click.ClickException('Work area root directory not found')
+  
+  if env.workConfig['product'] != 'sim':
+    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.workConfig['product'] )
+  #------------------------------------------------------------------------------
+
+  # Set ModelSim root based on vsim's path
+  os.environ['MODELSIM_ROOT'] = ( dirname( dirname( which( 'vsim' ) ) ) )
+
+  lFliSrc = join(env.src, 'ipbus-fw-dev', 'components', 'ipbus_eth', 'firmware', 'sim', 'modelsim_fli')
+  lCmds = '''  
+rm -rf modelsim_fli
+cp -a {0} ./
+cd modelsim_fli && ./mac_fli_compile.sh
+cp modelsim_fli/mac_fli.so .
+'''.format(lFliSrc)
+
+  do( lCmds )
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+@sim.command()
+@click.option('-o', '--output', default=None)
+@click.pass_obj
+def project( env, output ):
+
+  #------------------------------------------------------------------------------
+  # Must be in a build area
+  if env.work is None:
+    raise click.ClickException('Work area root directory not found')
+  
+  if env.workConfig['product'] != 'sim':
+    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.workConfig['product'] )
+  #------------------------------------------------------------------------------
+
+  #------------------------------------------------------------------------------
+  if not which('vsim'):
+    raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
+  #------------------------------------------------------------------------------
+
+  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+
+  from dep2g.ModelSimProjectMaker import ModelSimProjectMaker
+  lWriter = ModelSimProjectMaker(lCommandLineArgs, lPathmaker)
+
+  if output:
+    from dep_tree.SmartOpen import SmartOpen
+    with SmartOpen(output) as lTarget:
+      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+  else:
+    import tools.mentor
+    with tools.mentor.ModelSimOpen() as lTarget:
+      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+
 #------------------------------------------------------------------------------
 

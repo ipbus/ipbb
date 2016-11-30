@@ -7,16 +7,16 @@ import os
 import ipbb
 # Elements
 from os.path import join, split, exists, splitext
-from tools.common import which
+from tools.common import which, makeParser
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
   if env.workConfig['product'] != 'vivado':
-    raise click.ClickException('Work area product mismatch. Expected \'vivado\', found \'%s\'' % env.workConfig['product'] )
+    raise click.ClickException("Work area product mismatch. Expected 'vivado', found '%s'" % env.workConfig['product'] )
 
   if not which('vivado'):
   # if 'XILINX_VIVADO' not in os.environ:
-    raise click.ClickException('Vivado is not available. Have you sourced the environment script?' )
+    raise click.ClickException("Vivado is not available. Have you sourced the environment script?" )
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -92,23 +92,7 @@ def project( env ):
 
   ensureVivado( env )
   
-  #------------------------------------------------------------------------------
-  # Very messy, to be sorted out later
-  from dep2g.Pathmaker import Pathmaker
-  from dep2g.DepFileParser import DepFileParser
-
-  lCfg = env.workConfig
-
-  class dummy:pass
-  lCommandLineArgs = dummy()
-  lCommandLineArgs.define = ''
-  lCommandLineArgs.product = lCfg['product']
-  lCommandLineArgs.verbosity = 3
-
-  lPathmaker = Pathmaker(env.src, 0)
-
-  lDepFileParser = DepFileParser( lCommandLineArgs , lPathmaker )
-  lDepFileParser.parse(lCfg['topPkg'], lCfg['topCmp'], lCfg['topDep'])
+  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
 
   from dep2g.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker(lCommandLineArgs, lPathmaker)

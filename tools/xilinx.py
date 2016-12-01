@@ -145,10 +145,6 @@ class VivadoConsole(object):
 
   #--------------------------------------------------------------
   def __del__(self):
-
-    if not hasattr(self, '_process'):
-      return
-
     self.quit()
   #--------------------------------------------------------------
 
@@ -161,7 +157,8 @@ class VivadoConsole(object):
   def quit(self):
 
     # Return immediately of already dead
-    if not self._process.isalive():
+    if not hasattr(self, '_process') or not self._process.isalive():
+      self.__instances.remove(self)
       self._log.debug('Vivado has already been stopped')
       return
 

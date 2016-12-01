@@ -25,9 +25,9 @@ class ModelSimProjectMaker( object ):
 
     #----------------------------------------------------------
     # Hacky hack: add newly generated libraries to modelsim.ini
-    lSimLibDirectory = abspath( join( lWorkingDir, 'top.sim','sim_1','behav','msim') )
-    lSimLibs = next(os.walk(lSimLibDirectory))[1]
-    print ( 'found libs', lSimLibs )
+    # lSimLibDirectory = abspath( join( lWorkingDir, 'top.sim','sim_1','behav','msim') )
+    # lSimLibs = next(os.walk(lSimLibDirectory))[1]
+    # print ( 'found libs', lSimLibs )
 
     #----------------------------------------------------------
 
@@ -82,25 +82,6 @@ class ModelSimProjectMaker( object ):
 
           if file is None:
             raise IOError('No simulation source found for core '+lBasename)
-
-          # print('+-+ sim core >>> ',file)
-
-          #----------------------------------------------------------
-          # Find interface files to sim library
-          '''
-          for lSimLib in lSimLibs:
-            lModelPath = join(lIpPath,lName,lSimLib, 'simulation' )
-            if not exists(lModelPath): continue
-            print( '+-+   ', lModelPath)
-            _ , _ , lSimFiles = next(os.walk( lModelPath ))
-            for lSimFile in lSimFiles:
-              if splitext(lSimFile)[1] == '.vhd':
-                lCmd = 'vcom'
-              elif splitext(lSimFile)[1] == '.v':
-                lCmd = 'vlog'
-
-              write( '{0} {1}'.format( lCmd , join( lModelPath, lSimFile ) ) )
-            '''
           #----------------------------------------------------------
         else:
           file = src.FilePath
@@ -130,18 +111,18 @@ class ModelSimProjectMaker( object ):
       write( '{0} {1}'.format( cmd , file ) )
       #----------------------------------------------------------
 
-    print ( 'Adapting modelsim.ini' )
-    import ConfigParser
+    # print ( 'Adapting modelsim.ini' )
+    # import ConfigParser
     
-    lModelsimIni = ConfigParser.RawConfigParser()
-    lModelsimIni.read('modelsim.ini')
-    print(lModelsimIni.sections())
-    for lSimLib in lSimLibs:
-      lModelsimIni.set('Library',lSimLib,join(lSimLibDirectory,lSimLib))
+    # lModelsimIni = ConfigParser.RawConfigParser()
+    # lModelsimIni.read('modelsim.ini')
+    # print(lModelsimIni.sections())
+    # for lSimLib in lSimLibs:
+    #   lModelsimIni.set('Library',lSimLib,join(lSimLibDirectory,lSimLib))
 
-    os.rename('modelsim.ini','modelsim.ini.bak')
-    with SmartOpen( 'modelsim.ini' ) as newIni:
-      lModelsimIni.write(newIni.file)
+    # os.rename('modelsim.ini','modelsim.ini.bak')
+    # with SmartOpen( 'modelsim.ini' ) as newIni:
+    #   lModelsimIni.write(newIni.file)
 #--------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

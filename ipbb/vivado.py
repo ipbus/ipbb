@@ -7,7 +7,7 @@ import os
 import ipbb
 # Elements
 from os.path import join, split, exists, splitext
-from tools.common import which, makeParser
+from tools.common import which, makeParser, SmartOpen
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
@@ -75,9 +75,9 @@ def create( env, workarea, component, topdep ):
     'topDep': topdep,
 
   }
-  with open(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
+  with SmartOpen(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
     import json
-    json.dump(lCfg, lWorkFile, indent=2)
+    json.dump(lCfg, lWorkFile.file, indent=2)
 #------------------------------------------------------------------------------
 
 
@@ -182,3 +182,54 @@ def reset( env ):
     lTarget(lOpenCmds)
     lTarget(lResetCmds)
 #------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@vivado.command()
+@click.pass_obj
+def package( env ):
+  '''List address table files'''
+  ensureVivado( env )
+
+  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+
+
+  lBitPath = join('top','top.runs','impl_1','top.bit')
+  if not exists(lBitPath):
+    raise ValueError("Bitfile {0} not found. Please run 'bitfile' command first.".format(lBitPath))
+
+  import sh
+  lPkgPath = 'package'
+  lSrcPath = join(lPkgPath,'src')
+
+  # Cleanup first
+  sh.rm('-r', lPkgPath)
+
+  # Create the folders
+  try: os.makedirs(join(lSrcPath,'addrtab'))
+  except OSError as e: pass
+
+  import socket, time
+
+  lSignature = dict(env.workConfig)
+  lSignature.update({
+    'time': socket.gethostname().replace('.','_'),
+    'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+  })
+
+  with SmartOpen(join(lSrcPath,'signature')) as lSignatureFile:
+    import json
+    json.dump(lSignature, lSignatureFile.file, indent=2)
+
+  print( sh.cp( '-av', lBitPath, lSrcPath ) ) 
+
+  for addrtab in lDepFileParser.CommandList['addrtab']:
+    print( sh.cp( '-av', addrtab.FilePath, join(lSrcPath,'addrtab') ) )
+
+  lTgzPath = 'top_{0}_{1}.tgz'.format(
+    socket.gethostname().replace('.','_'),
+    time.strftime('%y%m%d_%H%M')
+    )
+
+  print(sh.tar('cvfz', join(lPkgPath, lTgzPath), lSrcPath))
+#------------------------------------------------------------------------------
+

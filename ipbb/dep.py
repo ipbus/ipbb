@@ -2,6 +2,8 @@ from __future__ import print_function
 
 # Modules
 import click
+import os
+from os.path import join, split, exists, basename, abspath
 
 from dep_tree.SmartOpen import SmartOpen
 from tools.common import makeParser
@@ -29,7 +31,7 @@ def dump( env, output ):
 @click.argument('group',type=click.Choice(['setup', 'src', 'addrtab', 'cgpfile']))
 @click.option('-o', '--output', default=None)
 @click.pass_obj
-def cmds( env, group, output ):
+def show( env, group, output ):
   '''List source files'''
   lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
@@ -40,32 +42,34 @@ def cmds( env, group, output ):
 
 #------------------------------------------------------------------------------
 @dep.command()
-@click.option('-o', '--output', default=None)
 @click.pass_obj
 def addrtab( env, output ):
   '''List address table files'''
 
   lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
-  from dep2g.AddressTableListMaker import AddressTableListMaker
+  try:
+    os.mkdir('addrtab')
+  except OSError as e:
+    pass
 
-  with SmartOpen( output ) as lWriter:
-    for addrtab in lDepFileParser.CommandList["addrtab"]:
-      lWriter( addrtab.FilePath )
+  import sh
+  for addrtab in lDepFileParser.CommandList["addrtab"]:
+    print( sh.cp( '-a', addrtab.FilePath, join('addrtab', basename(addrtab.FilePath) ) ) ) 
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-@dep.command()
-@click.option('-o', '--output', default=None)
-@click.pass_obj
-def sources( env, output ):
-  '''List source files'''
+# @dep.command()
+# @click.option('-o', '--output', default=None)
+# @click.pass_obj
+# def sources( env, output ):
+#   '''List source files'''
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+#   lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
-  with SmartOpen( output ) as lWriter:
-    for addrtab in lDepFileParser.CommandList["src"]:
-      lWriter( addrtab.FilePath )
+#   with SmartOpen( output ) as lWriter:
+#     for addrtab in lDepFileParser.CommandList["src"]:
+#       lWriter( addrtab.FilePath )
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

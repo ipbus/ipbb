@@ -3,29 +3,22 @@ from __future__ import print_function
 
 import os
 import sys
+import pexpect
 import subprocess
-
-# #------------------------------------------------------------------------------
-# # Helper function equivalent to which in posics systems
-# def which( aExecutable ):
-#   '''Searches for exectable il $PATH'''
-#   return any(
-#     os.access(os.path.join(lPath, aExecutable), os.X_OK) 
-#     for lPath in os.environ["PATH"].split(os.pathsep)
-#   )
-# #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # Helper function equivalent to which in posics systems
 def which( aExecutable ):
   '''Searches for exectable il $PATH'''
-  for lPath in os.environ["PATH"].split(os.pathsep):
+  lSearchPaths = os.environ["PATH"].split(os.pathsep) if aExecutable[0] != os.sep else [os.path.dirname(aExecutable)]
+  for lPath in lSearchPaths:
     if not os.access(os.path.join(lPath, aExecutable), os.X_OK): continue
     return os.path.normpath(os.path.join(lPath, aExecutable))
   return None
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+# TODO: turn it into a class?
 def do( aCmdList  ):
 
   if isinstance(aCmdList, str):
@@ -34,6 +27,24 @@ def do( aCmdList  ):
   for lCmd in aCmdList:
     print (lCmd)
     subprocess.check_call(lCmd, shell=True)      
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+def ensuresudo( ):
+  import pexpect, getpass
+  lPrompt = '> '
+
+  p = pexpect.spawn('sudo -p "{0}" whoami'.format(lPrompt) ) #, logfile = sys.stdout)
+  lIndex = p.expect([pexpect.EOF, lPrompt])
+
+  # I have sudo powers, therefore I return
+  while lIndex != 0:
+    lPwd = getpass.getpass('Please insert password for user {0}: '.format(os.getlogin()))
+    p.sendline(lPwd)
+    lIndex = p.expect([pexpect.EOF, lPrompt])
+    if lIndex == 0: break
+
+  return p.exitstatus
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -61,7 +72,7 @@ class SmartOpen( object ):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-def makeParser(env, verbosity ):
+def makeParser(env, verbosity = 0 ):
   from dep2g.Pathmaker import Pathmaker
   from dep2g.DepFileParser import DepFileParser
 

@@ -20,7 +20,7 @@ def ensureVivado( env ):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-@click.group(chain=True)
+@click.group() # chain = True
 def vivado():
   '''Vivado command group'''
   pass

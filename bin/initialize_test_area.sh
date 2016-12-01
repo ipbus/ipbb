@@ -34,4 +34,4 @@ cd ${HERE}
 
 ipbb sim create mp7_sim cactusupgrades:projects/examples/mp7_sim 
 cd mp7_sim
-ipbb sim ipcores
+ipbb sim ipcores fli project

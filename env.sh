@@ -57,31 +57,30 @@ if [ ! -d "${HERE}/external" ] ; then
   mkdir ${HERE}/external
 fi
 
-if [ ! -d "${HERE}/external/ibb" ] ; then
+if [ ! -d "${HERE}/external/ipbb" ] ; then
 
-  virtualenv ${HERE}/external/ibb --no-site-packages
-  source ${HERE}/external/ibb/bin/activate
+  virtualenv ${HERE}/external/ipbb --no-site-packages
+  source ${HERE}/external/ipbb/bin/activate
 
   PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
     pip install ipython
-    pip install click
-    pip install pexpect
-    pip install -U git+https://github.com/alessandrothea/click-shell.git
   elif [ "${PYTHON_VERSION}" == "2.6" ] ; then
     pip install ipython==1.2.1
-    pip install click
-    pip install pexpect
-    pip install -U git+https://github.com/alessandrothea/click-shell.git
   fi
+
+  pip install click
+  pip install pexpect
+  pip install sh
+  pip install -U git+https://github.com/alessandrothea/click-shell.git
 
   deactivate
 fi
 
 if [ -z ${VIRTUAL_ENV+X} ] ; then
   echo "Activating env"
-  source ${HERE}/external/ibb/bin/activate
+  source ${HERE}/external/ipbb/bin/activate
 fi
 
 # Obscure click vodoo to enable bash autocompletion

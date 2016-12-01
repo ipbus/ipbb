@@ -8,8 +8,8 @@ import ipbb
 import subprocess
 
 # Elements
-from os.path import join, split, exists, splitext, basename, dirname
-from tools.common import which, do, makeParser
+from os.path import join, split, exists, splitext, basename, dirname, abspath
+from tools.common import which, do, makeParser, ensuresudo
 from .common import DirSentry
 
 
@@ -23,7 +23,7 @@ class ModelsimNotFoundError(Exception):
 
 
 #------------------------------------------------------------------------------
-@click.group()
+@click.group() # chain = True
 def sim():
   pass    
 #------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ def ipcores(env, output):
     raise click.ClickException('Vivado is not available. Have you sourced the environment script?' )
   #------------------------------------------------------------------------------
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParsers( env, 3 )
+  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
 
   from dep2g.IPCoresSimMaker import IPCoresSimMaker
   lWriter = IPCoresSimMaker(lCommandLineArgs, lPathmaker)
@@ -176,6 +176,7 @@ def project( env, output ):
   lWriter = ModelSimProjectMaker(lCommandLineArgs, lPathmaker)
 
   if output:
+    if output == 'stdout': output = None
     from dep_tree.SmartOpen import SmartOpen
     with SmartOpen(output) as lTarget:
       lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
@@ -184,5 +185,56 @@ def project( env, output ):
     with tools.mentor.ModelSimOpen() as lTarget:
       lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
 
+
+  #----------------------------------------------------------
+  # FIXME: Tempourary assignments
+  lWorkingDir = abspath( join( os.getcwd() , 'top' ) )
+  #----------------------------------------------------------
+
+  #----------------------------------------------------------
+  # Hacky hack: add newly generated libraries to modelsim.ini
+  lSimLibDirectory = abspath( join( lWorkingDir, 'top.sim','sim_1','behav','msim') )
+  lSimLibs = next(os.walk(lSimLibDirectory))[1]
+  print ( 'Detected simulation libraries: ', ', '.join( lSimLibs ) )
+
+
+  print ( 'Adapting modelsim.ini' )
+  import ConfigParser
+  
+  lModelsimIni = ConfigParser.RawConfigParser()
+  lModelsimIni.read('modelsim.ini')
+  print(lModelsimIni.sections())
+  for lSimLib in lSimLibs:
+    lModelsimIni.set('Library',lSimLib,join(lSimLibDirectory,lSimLib))
+
+  os.rename('modelsim.ini','modelsim.ini.bak')
+  with SmartOpen( 'modelsim.ini' ) as newIni:
+    lModelsimIni.write(newIni.file)
+
+  print ( 'Writing modelsim wrapper \'./vsim\'' )
+  with SmartOpen('vsim') as lVsimSh:
+    lVsimSh ( '#!/bin/sh' )
+    lVsimSh ( 'vsim ' + ' '.join('-L '+l for l in lSimLibs ) + ' $@')
+
+  os.chmod('vsim', 0755)
+
+
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+@sim.command()
+@click.argument('name', default='tap0')
+@click.option('--ip', default='192.168.201.1')
+@click.pass_obj
+def virtualtap(env, name, ip):
+
+  ensuresudo()
+
+  lCmds = '''
+sudo openvpn --mktun --dev {0}
+sudo /sbin/ifconfig {0} up {1}
+sudo chmod a+rw /dev/net/tun
+'''.format(name, ip)
+  
+  do( lCmds )
+#------------------------------------------------------------------------------

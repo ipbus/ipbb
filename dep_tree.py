@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.6
+#!/usr/bin/env python
 
 '''
 Usage:
@@ -111,15 +111,15 @@ def main():
   #--------------------------------------------------------------
   # Assign the product handlers to the appropriate commandline flag and check we know how to handle the requested product
   lWriters = {
-                "c":ComponentListWriter ,         # Output file lists
-                "f":SourceListWriter ,            # Output file lists
-                "f2":SourceListWriter2 ,          # Output file lists
-                "a":AddressTableListWriter ,      # Output file lists
+                "component":ComponentListWriter , # Output file lists
+                "files":SourceListWriter ,        # Output file lists
+                "files2":SourceListWriter2 ,      # Output file lists
+                "addrtab":AddressTableListWriter ,# Output file lists
                 "b":AddressTableGeneratorWriter , # Output address table generator file
-                "s":ModelsimScriptWriter ,        # Output Modelsim script
-                "ip":IPCoreSimScriptWriter ,           # Output IPSim script
-                "x":XtclshScriptWriter  ,         # Output xtclsh script
-                "v":VivadoScriptWriter            # Output vivado script
+                "sim":ModelsimScriptWriter ,      # Output Modelsim script
+                "ip":IPCoreSimScriptWriter ,      # Output IPSim script
+                "xtclsh":XtclshScriptWriter  ,    # Output xtclsh script
+                "vivado":VivadoScriptWriter       # Output vivado script
               }
 
   if lCommandLineArgs.product not in lWriters:
@@ -180,4 +180,3 @@ def main():
 if __name__ == '__main__':
     main()
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-

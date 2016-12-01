@@ -2,7 +2,6 @@ from __future__ import print_function
 import time, os
 
 from SmartOpen import SmartOpen
-from DepFileParser import DepFileParser
 from CommandLineParser import CommandLineParser
 from Pathmaker import Pathmaker
 
@@ -80,5 +79,7 @@ class VivadoScriptWriter( object ):
         write("create_ip_run [get_files {0}]".format(i) )
       for i in lXciBasenames:     
         write("launch_run {0}_synth_1".format(i) )
-
+      for i in lXciBasenames:     
+        write("wait_on_run {0}_synth_1".format(i) )
+      write('close_project')
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,10 +1,8 @@
 from __future__ import print_function
 import time, os
 
-from SmartOpen import SmartOpen
-from DepFileParser import DepFileParser
-from CommandLineParser import CommandLineParser
-from Pathmaker import Pathmaker
+from tools.common import SmartOpen
+# from Pathmaker import Pathmaker
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelsimScriptWriter( object ):

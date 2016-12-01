@@ -10,10 +10,7 @@ will come at some point
 
 from __future__ import print_function
 import argparse
-# import sys
 import os
-# import time
-# import shelve
 import logging
 
 #---
@@ -50,7 +47,9 @@ class CliFactory(object):
 
 if __name__ == '__main__':
 
-    from projmgr import CactusCreator, CactusProjectAdder, CactusFetcher, CactusCheckout, WorkareaBuilder
+    from projmgr import WorkareaBuilder
+    from projmgr.svn import CactusCreator, CactusProjectAdder, CactusFetcher, CactusCheckout
+    from projmgr.git import TestGit
     from projmgr.vivado import VivadoAreaBuilder
     from projmgr.modelsim import ModelsimAreaBuilder
 
@@ -62,11 +61,14 @@ if __name__ == '__main__':
         'buildarea': WorkareaBuilder,
         'sim'      : ModelsimAreaBuilder,
         'vivado'   : VivadoAreaBuilder,
+        'testgit'  : TestGit
     }
 
     cli_factory = CliFactory( plugins )
     plugin = cli_factory.get()
 
+    plugin.execute()
+    import sys; sys.exit(0)
     try:
         plugin.execute()
     except Exception as e:

@@ -6,7 +6,7 @@ import os
 from os.path import join, split, exists, basename, abspath
 
 # from dep_tree.SmartOpen import SmartOpen
-from tools.common import makeParser, SmartOpen
+from tools.common import SmartOpen
 
 #------------------------------------------------------------------------------
 @click.group()
@@ -20,10 +20,11 @@ def dep():
 @click.pass_obj
 def dump( env, output ):
   '''List source files'''
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
   with SmartOpen( output ) as lWriter:
-    lWriter( str(lDepFileParser) )
+    # lWriter( str(lDepFileParser) )
+    lWriter( str( env.depParser ) )
 #------------------------------------------------------------------------------
 #
 #------------------------------------------------------------------------------
@@ -33,10 +34,11 @@ def dump( env, output ):
 @click.pass_obj
 def show( env, group, output ):
   '''List source files'''
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
   with SmartOpen( output ) as lWriter:
-    for addrtab in lDepFileParser.CommandList[group]:
+    # for addrtab in lDepFileParser.CommandList[group]:
+    for addrtab in env.depParser.CommandList[group]:
       lWriter( addrtab.FilePath )
 #------------------------------------------------------------------------------
 
@@ -44,9 +46,9 @@ def show( env, group, output ):
 @dep.command()
 @click.pass_obj
 def addrtab( env, output ):
-  '''List address table files'''
+  '''Copy address table files into addrtab subfolder'''
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
   try:
     os.mkdir('addrtab')
@@ -54,7 +56,8 @@ def addrtab( env, output ):
     pass
 
   import sh
-  for addrtab in lDepFileParser.CommandList["addrtab"]:
+  # for addrtab in lDepFileParser.CommandList["addrtab"]:
+  for addrtab in env.depParser.CommandList["addrtab"]:
     print( sh.cp( '-a', addrtab.FilePath, join('addrtab', basename(addrtab.FilePath) ) ) ) 
 #------------------------------------------------------------------------------
 
@@ -64,10 +67,10 @@ def addrtab( env, output ):
 @click.pass_obj
 def components( env, output ):
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
   with SmartOpen( output ) as lWriter:
-    for lPkt, lCmps in lDepFileParser.Components.iteritems():
+    for lPkt, lCmps in env.depParser.Components.iteritems():
       lWriter('['+lPkt+']')
       for lCmp in lCmps:
         lWriter(lCmp)
@@ -81,7 +84,7 @@ def components( env, output ):
 def ipy( env ):
   '''Opens IPython to inspect the parser'''
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
   import IPython
   IPython.embed()

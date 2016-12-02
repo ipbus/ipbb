@@ -6,8 +6,7 @@ from tools.mentor import autodetect
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class IPCoresSimMaker( object ):
-  def __init__( self , aCommandLineArgs , aPathmaker ):
-    self.CommandLineArgs = aCommandLineArgs
+  def __init__( self , aPathmaker ):
     self.Pathmaker = aPathmaker
 
   def write( self , aTarget, aScriptVariables , aComponentPaths , aCommandList , aLibs, aMaps ):

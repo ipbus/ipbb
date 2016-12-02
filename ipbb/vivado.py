@@ -7,7 +7,7 @@ import os
 import ipbb
 # Elements
 from os.path import join, split, exists, splitext
-from tools.common import which, makeParser, SmartOpen
+from tools.common import which, SmartOpen
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
@@ -28,6 +28,7 @@ def vivado():
 
 #------------------------------------------------------------------------------
 @vivado.command()
+@click.option('-o', '--output', default=None)
 @click.pass_obj
 def project( env ):
   '''Assemble current vivado project'''
@@ -37,14 +38,36 @@ def project( env ):
 
   ensureVivado( env )
   
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+  lDepFileParser = env.depParser
 
   from dep2g.VivadoProjectMaker import VivadoProjectMaker
-  lWriter = VivadoProjectMaker(lCommandLineArgs, lPathmaker)
+  lWriter = VivadoProjectMaker( lPathmaker )
 
-  import tools.xilinx
-  with tools.xilinx.VivadoOpen() as lTarget:
-    lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+  # TODO: Simplify here
+  if output:
+    if output == 'stdout': output = None
+    with tools.xilinx.VivadoOpen() as lTarget:
+      lWriter.write( 
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components, 
+        lDepFileParser.CommandList , 
+        lDepFileParser.Libs, 
+        lDepFileParser.Maps
+      )
+  else:
+    # import tools.xilinx
+    import tools.xilinx
+    with tools.xilinx.VivadoOpen() as lTarget:
+      lWriter.write( 
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components, 
+        lDepFileParser.CommandList , 
+        lDepFileParser.Libs, 
+        lDepFileParser.Maps
+      )
   #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
@@ -135,7 +158,7 @@ def package( env ):
   '''List address table files'''
   ensureVivado( env )
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
 
   lBitPath = join('top','top.runs','impl_1','top.bit')
@@ -153,6 +176,9 @@ def package( env ):
   try: os.makedirs(join(lSrcPath,'addrtab'))
   except OSError as e: pass
 
+
+  #------------------------------------------------------------------------------
+  # Generate a json signature file
   import socket, time
 
   lSignature = dict(env.projectConfig)
@@ -164,10 +190,12 @@ def package( env ):
   with SmartOpen(join(lSrcPath,'signature')) as lSignatureFile:
     import json
     json.dump(lSignature, lSignatureFile.file, indent=2)
+  #------------------------------------------------------------------------------
 
   print( sh.cp( '-av', lBitPath, lSrcPath ) ) 
 
-  for addrtab in lDepFileParser.CommandList['addrtab']:
+  # for addrtab in lDepFileParser.CommandList['addrtab']:
+  for addrtab in env.depParser.CommandList['addrtab']:
     print( sh.cp( '-av', addrtab.FilePath, join(lSrcPath,'addrtab') ) )
 
   lTgzPath = 'top_{0}_{1}.tgz'.format(

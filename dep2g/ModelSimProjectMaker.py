@@ -8,8 +8,7 @@ from tools.common import SmartOpen
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimProjectMaker( object ):
   #--------------------------------------------------------------
-  def __init__( self , aCommandLineArgs , aPathmaker ):
-    self.CommandLineArgs = aCommandLineArgs
+  def __init__( self , aPathmaker ):
     self.Pathmaker = aPathmaker
   #--------------------------------------------------------------
 

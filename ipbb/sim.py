@@ -9,7 +9,7 @@ import subprocess
 
 # Elements
 from os.path import join, split, exists, splitext, basename, dirname, abspath
-from tools.common import which, do, makeParser, ensuresudo, SmartOpen
+from tools.common import which, do, ensuresudo, SmartOpen
 from .common import DirSentry
 
 #------------------------------------------------
@@ -52,21 +52,39 @@ def ipcores(env, output):
     raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
   #------------------------------------------------------------------------------
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+  lDepFileParser = env.pathMaker
 
   from dep2g.IPCoresSimMaker import IPCoresSimMaker
-  lWriter = IPCoresSimMaker(lCommandLineArgs, lPathmaker)
+  lWriter = IPCoresSimMaker( lPathmaker )
 
   # FIXME: Yeah, this is a hack
+  # TODO: Remove XILINX_SIMLIBS reference from IPCoresSimMaker
   os.environ['XILINX_SIMLIBS'] = join('.xil_sim_libs',basename(os.environ['XILINX_VIVADO']))
 
+  # TODO: Simplify here
   if output:
+    if output == 'stdout': output = None
     with SmartOpen(output) as lTarget:
-      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+      lWriter.write(
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
+        lDepFileParser.Maps
+      )
   else:
     import tools.xilinx
     with tools.xilinx.VivadoOpen() as lTarget:
-      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+      lWriter.write(
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
+        lDepFileParser.Maps
+      )
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -118,19 +136,35 @@ def project( env, output ):
     raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
   #------------------------------------------------------------------------------
 
-  lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
+  lDepFileParser = env.pathMaker
 
   from dep2g.ModelSimProjectMaker import ModelSimProjectMaker
-  lWriter = ModelSimProjectMaker(lCommandLineArgs, lPathmaker)
+  lWriter = ModelSimProjectMaker( lPathmaker )
 
+  # TODO: Simplify here
   if output:
     if output == 'stdout': output = None
     with SmartOpen(output) as lTarget:
-      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+      lWriter.write(
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
+        lDepFileParser.Maps
+      )
   else:
     import tools.mentor
     with tools.mentor.ModelSimOpen() as lTarget:
-      lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
+      lWriter.write(
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
+        lDepFileParser.Maps
+      )
 
 
   #----------------------------------------------------------

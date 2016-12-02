@@ -4,11 +4,22 @@ import time, os
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectMaker( object ):
   #--------------------------------------------------------------
-  def __init__( self , aCommandLineArgs , aPathmaker ):
-    self.CommandLineArgs = aCommandLineArgs
+  def __init__( self , aPathmaker ):
     self.Pathmaker = aPathmaker
     
-    self.FileSets = { ".xdc":"constrs_1" , ".tcl":"constrs_1" , ".mif":"sources_1" , ".vhd":"sources_1" , ".v":"sources_1" , ".xci":"sources_1" , ".ngc":"sources_1", ".ucf":"ise_1" , ".xco":"ise_1", ".edn":"sources_1", ".edf":"sources_1" }
+    self.FileSets = { 
+     ".xdc":"constrs_1",
+     ".tcl":"constrs_1",
+     ".mif":"sources_1",
+     ".vhd":"sources_1",
+     ".v"  :"sources_1",
+     ".xci":"sources_1",
+     ".ngc":"sources_1", 
+     ".ucf":"ise_1",
+     ".xco":"ise_1",
+     ".edn":"sources_1",
+     ".edf":"sources_1" 
+    }
   #--------------------------------------------------------------
  
   #--------------------------------------------------------------

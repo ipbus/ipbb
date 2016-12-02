@@ -37,7 +37,7 @@ Commands defined here
 '''
 
 #------------------------------------------------------------------------------
-def __lswork(env):
+def _lswork(env):
   return [ lArea for lArea in next(os.walk(env.root))[1] if exists( join( env.root, lArea, ipbb.kWorkFileName ) ) ]
 #------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ def lswork(env):
   if env.root is None:
     raise click.ClickException('Build area root directory not found')
 
-  lAreas = __lswork(env)
+  lAreas = _lswork(env)
   print ( 'Root:', env.root )
   print ( 'Work areas:')
   print ( ', '.join( [ ' * '+lArea for lArea in lAreas ] ) )
@@ -109,7 +109,7 @@ def chroot(env,newroot):
 def chwork(env,newwork):
 
   if newwork[-1] == os.sep: newwork = newwork[:-1]
-  lAreas = __lswork(env)
+  lAreas = _lswork(env)
   if newwork not in lAreas:
     raise click.ClickException('Requested work area not found. Available areas %s' % ', '.join(lAreas))
 

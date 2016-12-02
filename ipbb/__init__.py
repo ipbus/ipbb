@@ -42,4 +42,6 @@ class Environment(object):
 # Constants
 kBuildFileName = '.buildarea'
 kWorkFileName = '.workarea'
-kSourceDir = 'src'
+kSourceDir = 'source'
+kBuildDir = 'build'
+

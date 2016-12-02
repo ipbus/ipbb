@@ -75,7 +75,7 @@ def create( env, workarea, component, topdep ):
     'topDep': topdep,
 
   }
-  with SmartOpen(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
+  with SmartOpen( join(lWorkAreaPath,ipbb.kWorkFileName) ) as lWorkFile:
     import json
     json.dump(lCfg, lWorkFile.file, indent=2)
 #------------------------------------------------------------------------------

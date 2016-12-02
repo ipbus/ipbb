@@ -34,8 +34,9 @@ def cli(ctx):
 @click.pass_obj
 def info(env, verbose):
   '''WORK IN PROGRESS: Tentative command to set up shell env'''
-  print( 'export IPBB_ROOT=%s' % env.root)
-  print( 'export IPBB_WORK=%s' % env.work)
+  # print( 'export IPBB_ROOT=%s' % env.root)
+  # print( 'export IPBB_WORK=%s' % env.work)
+  print ( env )
 #------------------------------------------------------------------------------
 
 

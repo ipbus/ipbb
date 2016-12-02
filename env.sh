@@ -43,24 +43,24 @@ if ! [ -x "$(command -v virtualenv)" ]; then
 fi
 
 SH_SOURCE=${BASH_SOURCE}
-HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
-pathadd PATH ${HERE}/bin
+IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
+pathadd PATH ${IPBB_ROOT}/bin
 # Temporary
-pathadd PYTHONPATH "${HERE}"
+pathadd PYTHONPATH "${IPBB_ROOT}"
 
 export PATH PYTHONPATH
 
 # hash virtualenv 2>/dev/null || { echo >&2 "I require foo but it's not installed.  Aborting."; exit 1; }
 
 
-if [ ! -d "${HERE}/external" ] ; then
-  mkdir ${HERE}/external
+if [ ! -d "${IPBB_ROOT}/external" ] ; then
+  mkdir ${IPBB_ROOT}/external
 fi
 
-if [ ! -d "${HERE}/external/ipbb" ] ; then
+if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
 
-  virtualenv ${HERE}/external/ipbb --no-site-packages
-  source ${HERE}/external/ipbb/bin/activate
+  virtualenv ${IPBB_ROOT}/external/ipbb --no-site-packages
+  source ${IPBB_ROOT}/external/ipbb/bin/activate
 
   PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
 
@@ -79,8 +79,8 @@ if [ ! -d "${HERE}/external/ipbb" ] ; then
 fi
 
 if [ -z ${VIRTUAL_ENV+X} ] ; then
-  echo "Activating env"
-  source ${HERE}/external/ipbb/bin/activate
+  echo "Activating ipbb environment"
+  source ${IPBB_ROOT}/external/ipbb/bin/activate
 fi
 
 # Obscure click vodoo to enable bash autocompletion

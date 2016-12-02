@@ -4,16 +4,16 @@
 
 # Repository structure
  * my_area/
-   * .buildarea
+   * .ipbbarea
    * src/
      * repo_1/
      * repo_2/
      * repo_3/
    * build
      * proj_A/
-       * .workarea
+       * .projarea
      * proj_B/
-       * .workarea
+       * .projarea
 
 # Example
 

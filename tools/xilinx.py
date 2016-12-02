@@ -118,6 +118,7 @@ class VivadoConsole(object):
   def killAllInstances(cls):
     lInstances = set(cls.__instances)
     for lInstance in lInstances:
+      print ( 'What' )  
       lInstance.quit()
   #--------------------------------------------------------------
 
@@ -158,8 +159,12 @@ class VivadoConsole(object):
 
     # Return immediately of already dead
     if not hasattr(self, '_process') or not self._process.isalive():
-      self.__instances.remove(self)
       self._log.debug('Vivado has already been stopped')
+      # try:
+      #   # I am being pedantic here, in case, for any reason, it wasn't done yet
+      #   self.__instances.remove(self)
+      # except KeyError:
+      #   pass
       return
 
     self._log.debug('Shutting Vivado down')
@@ -171,6 +176,7 @@ class VivadoConsole(object):
     # Just in case
     self._process.terminate(True)
 
+    # Remove self from the list of instances
     self.__instances.remove(self)
   #--------------------------------------------------------------
 
@@ -211,6 +217,7 @@ class VivadoConsole(object):
     lErrors = []
 
     #--------------------------------------------------------------
+    lTimeoutCounts = 0
     while True:
       # Search for newlines, prompt, end-of-file
       lIndex = self._process.expect_list(lCpl)
@@ -221,7 +228,8 @@ class VivadoConsole(object):
       if lIndex == 1:
         break
       elif lIndex == 2:
-        print ('-->> timeout caught')
+        lTimeoutCounts += 1;
+        print ("<Time elapsed: {0}s>".format(lTimeoutCounts*self._process.timeout))
       #----------------------------------------------------------
 
       # Store the output in the circular buffer
@@ -341,6 +349,6 @@ class VivadoOpen(object):
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @atexit.register
 def __goodbye():
-    VivadoConsole.killAllInstances()
+  VivadoConsole.killAllInstances()
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

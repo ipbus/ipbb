@@ -26,6 +26,11 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.pass_context
 def cli(ctx):
   ctx.obj = ipbb.Environment()
+
+  print (vars(ctx))
+  # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
+  if not ctx.protected_args and not ctx.invoked_subcommand:
+    print (ctx.obj)
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -35,7 +40,7 @@ def cli(ctx):
 def info(env, verbose):
   '''WORK IN PROGRESS: Tentative command to set up shell env'''
   # print( 'export IPBB_ROOT=%s' % env.root)
-  # print( 'export IPBB_WORK=%s' % env.work)
+  # print( 'export IPBB_WORK=%s' % env.project)
   print ( env )
 #------------------------------------------------------------------------------
 
@@ -46,6 +51,10 @@ if __name__ == '__main__':
   # ipbb.env = ipbb.Environment()
   # print(ipbb.__env)
 
+  # Logging is important
+  # import logging
+  # logging.basicConfig(level=logging.DEBUG)
+    
   # Add custom commands to shell
   import ipbb.repo
   cli.add_command(ipbb.repo.init)
@@ -53,6 +62,9 @@ if __name__ == '__main__':
   cli.add_command(ipbb.repo.chroot)
   cli.add_command(ipbb.repo.chwork)
   cli.add_command(ipbb.repo.add)
+
+  import ipbb.proj
+  cli.add_command(ipbb.proj.proj)
 
   import ipbb.dep
   cli.add_command(ipbb.dep.dep)

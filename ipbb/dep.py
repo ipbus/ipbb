@@ -5,8 +5,8 @@ import click
 import os
 from os.path import join, split, exists, basename, abspath
 
-from dep_tree.SmartOpen import SmartOpen
-from tools.common import makeParser
+# from dep_tree.SmartOpen import SmartOpen
+from tools.common import makeParser, SmartOpen
 
 #------------------------------------------------------------------------------
 @click.group()

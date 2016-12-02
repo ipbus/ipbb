@@ -128,9 +128,15 @@ class ModelSimConsole(object):
 
   #--------------------------------------------------------------
   def quit(self):
+    
     # Return immediately of already dead
     if not hasattr(self, '_process') or not self._process.isalive():
-      self.__instances.remove(self)
+      # self._log.debug('ModelSim has already been stopped')
+      # try:
+      #   # I am being pedantic here, in case, for any reason, it wasn't done yet
+      #   self.__instances.remove(self)
+      # except KeyError:
+      #   pass
       return
 
     try:

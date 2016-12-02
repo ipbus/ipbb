@@ -9,9 +9,8 @@ import subprocess
 
 # Elements
 from os.path import join, split, exists, splitext, basename, dirname, abspath
-from tools.common import which, do, makeParser, ensuresudo
+from tools.common import which, do, makeParser, ensuresudo, SmartOpen
 from .common import DirSentry
-
 
 #------------------------------------------------
 class ModelsimNotFoundError(Exception):
@@ -30,55 +29,55 @@ def sim():
 
 #------------------------------------------------------------------------------
 # FIXME: duplicated in vivado.create
-def _validateComponent(ctx, param, value):
-  lSeparators = value.count(':')
-  # Validate the format
-  if lSeparators > 1:
-    raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
+# def _validateComponent(ctx, param, value):
+#   lSeparators = value.count(':')
+#   # Validate the format
+#   if lSeparators > 1:
+#     raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
   
-  return tuple(value.split(':'))
+#   return tuple(value.split(':'))
 
 
-@sim.command()
-@click.argument('workarea')
-@click.argument('component', callback=_validateComponent)
-@click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
-@click.pass_obj
-def create( env, workarea, component, topdep ):
-  '''Create a new ModelSim/QuestaSim working area'''
-  #------------------------------------------------------------------------------
-  # Must be in a build area
-  if env.root is None:
-    raise click.ClickException('Build area root directory not found')
-  #------------------------------------------------------------------------------
+# @sim.command()
+# @click.argument('workarea')
+# @click.argument('component', callback=_validateComponent)
+# @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
+# @click.pass_obj
+# def create( env, workarea, component, topdep ):
+#   '''Create a new ModelSim/QuestaSim working area'''
+#   #------------------------------------------------------------------------------
+#   # Must be in a build area
+#   if env.root is None:
+#     raise click.ClickException('Build area root directory not found')
+#   #------------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  lWorkAreaPath = join(env.root, workarea)
-  if exists(lWorkAreaPath):
-    raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
-  #------------------------------------------------------------------------------
+#   #------------------------------------------------------------------------------
+#   lWorkAreaPath = join(env.root, workarea)
+#   if exists(lWorkAreaPath):
+#     raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
+#   #------------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  from dep2g.Pathmaker import Pathmaker
-  lPathmaker = Pathmaker(env.src, 0)
-  lTopPackage, lTopComponent = component
-  lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
-  if not exists(lTopDepPath):
-    raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
-  #------------------------------------------------------------------------------
+#   #------------------------------------------------------------------------------
+#   from dep2g.Pathmaker import Pathmaker
+#   lPathmaker = Pathmaker(env.src, 0)
+#   lTopPackage, lTopComponent = component
+#   lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
+#   if not exists(lTopDepPath):
+#     raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
+#   #------------------------------------------------------------------------------
 
-  # Build source code directory
-  os.makedirs(lWorkAreaPath)
+#   # Build source code directory
+#   os.makedirs(lWorkAreaPath)
 
-  lCfg = {
-    'product': 'sim',
-    'topPkg': lTopPackage,
-    'topCmp': lTopComponent,
-    'topDep': topdep,
-  }
-  with open(join(lWorkAreaPath,ipbb.kWorkFileName),'w') as lWorkFile:
-    import json
-    json.dump(lCfg, lWorkFile, indent=2)
+#   lCfg = {
+#     'product': 'sim',
+#     'topPkg': lTopPackage,
+#     'topCmp': lTopComponent,
+#     'topDep': topdep,
+#   }
+#   with open(join(lWorkAreaPath,ipbb.kProjectFile),'w') as lWorkFile:
+#     import json
+#     json.dump(lCfg, lWorkFile, indent=2)
 
 #------------------------------------------------------------------------------
 
@@ -90,17 +89,22 @@ def ipcores(env, output):
 
   #------------------------------------------------------------------------------
   # Must be in a build area
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
   
-  if env.workConfig['product'] != 'sim':
-    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.workConfig['product'] )
+  if env.projectConfig['product'] != 'sim':
+    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
   if not which('vivado'):
   # if 'XILINX_VIVADO' not in os.environ:
     raise click.ClickException('Vivado is not available. Have you sourced the environment script?' )
+  #------------------------------------------------------------------------------
+
+  #------------------------------------------------------------------------------
+  if not which('vsim'):
+    raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
   #------------------------------------------------------------------------------
 
   lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
@@ -112,7 +116,6 @@ def ipcores(env, output):
   os.environ['XILINX_SIMLIBS'] = join('.xil_sim_libs',basename(os.environ['XILINX_VIVADO']))
 
   if output:
-    from dep_tree.SmartOpen import SmartOpen
     with SmartOpen(output) as lTarget:
       lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
   else:
@@ -128,11 +131,11 @@ def fli(env):
 
   #------------------------------------------------------------------------------
   # Must be in a build area
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
   
-  if env.workConfig['product'] != 'sim':
-    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.workConfig['product'] )
+  if env.projectConfig['product'] != 'sim':
+    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
   #------------------------------------------------------------------------------
 
   # Set ModelSim root based on vsim's path
@@ -158,11 +161,11 @@ def project( env, output ):
 
   #------------------------------------------------------------------------------
   # Must be in a build area
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
   
-  if env.workConfig['product'] != 'sim':
-    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.workConfig['product'] )
+  if env.projectConfig['product'] != 'sim':
+    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
@@ -177,7 +180,6 @@ def project( env, output ):
 
   if output:
     if output == 'stdout': output = None
-    from dep_tree.SmartOpen import SmartOpen
     with SmartOpen(output) as lTarget:
       lWriter.write(lTarget,lDepFileParser.ScriptVariables, lDepFileParser.Components, lDepFileParser.CommandList , lDepFileParser.Libs, lDepFileParser.Maps)
   else:
@@ -204,7 +206,6 @@ def project( env, output ):
   
   lModelsimIni = ConfigParser.RawConfigParser()
   lModelsimIni.read('modelsim.ini')
-  print(lModelsimIni.sections())
   for lSimLib in lSimLibs:
     lModelsimIni.set('Library',lSimLib,join(lSimLibDirectory,lSimLib))
 

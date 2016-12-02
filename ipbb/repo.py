@@ -38,15 +38,15 @@ Commands defined here
 
 #------------------------------------------------------------------------------
 def _lswork(env):
-  return [ lArea for lArea in next(os.walk(env.root))[1] if exists( join( env.root, lArea, ipbb.kWorkFileName ) ) ]
+  return [ lArea for lArea in next(os.walk(env.root))[1] if exists( join( env.root, lArea, ipbb.kProjectFile ) ) ]
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @click.command()
 @click.argument('area')
-@click.option('-r', '--repo')
+# @click.option('-r', '--repo')
 @click.pass_obj
-def init(env, area, repo):
+def init(env, area):
   '''Initialise a new firmware development area'''
 
   print('Setting up firmware area \''+area+'\'')
@@ -60,16 +60,17 @@ def init(env, area, repo):
 
   # Build source code directory
   os.makedirs(join(area, ipbb.kSourceDir))
+  os.makedirs(join(area, ipbb.kWorkDir))
 
-  with open( join( area, ipbb.kBuildFileName ),'w' ) as lBuild:
-    lBuild.write('\n')
+  with open( join( area, ipbb.kSignatureFile ),'w' ) as lSignature:
+    lSignature.write('\n')
   
-  print( '--->', repo, join( area, ipbb.kSourceDir ) )
-  if not repo:
-    return
-  else:
-    with DirSentry( join( area, ipbb.kSourceDir ) ) as lSentry:
-      subprocess.check_call( ['git', 'clone', repo] )
+  # print( '--->', repo, join( area, ipbb.kSourceDir ) )
+  # if not repo:
+    # return
+  # else:
+    # with DirSentry( join( area, ipbb.kSourceDir ) ) as lSentry:
+      # subprocess.check_call( ['git', 'clone', repo] )
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

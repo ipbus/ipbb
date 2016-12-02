@@ -47,9 +47,6 @@ class ModelSimProjectMaker( object ):
       write('vmap {0} {1}'.format( ma[0], ma[1] ))
       write('vcom -work {0} -refresh -force_refresh'.format( ma[0] ))
     
-    for lSimLib in lSimLibs:
-      write ('vopt -L {0} -o work.top'.format(lSimLib))
-
     #----------------------------------------------------------
     for src in reversed( aCommandList['src'] ):
 

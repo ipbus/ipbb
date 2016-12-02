@@ -2,7 +2,7 @@ from __future__ import print_function
 
 from . import common
 
-from os.path import join, split, exists, splitext
+from os.path import join, split, exists, splitext, basename
 
 #------------------------------------------------------------------------------
 class Environment(object):
@@ -15,33 +15,46 @@ class Environment(object):
   def _autodetect(self):
     self.root = None
     self.rootFile = None
-    self.work = None
-    self.workFile = None
-    self.workConfig = None
-    lBuildFilePath = common.findFileInParents(kBuildFileName)
-    lWorkFilePath = common.findFileInParents(kWorkFileName)
+    self.project = None
+    self.projectPath = None
+    self.projectFile = None
+    self.projectConfig = None
 
-    if lBuildFilePath:
-      self.root, self.rootFile = split( lBuildFilePath )
 
-    if lWorkFilePath:
-      self.work, self.workFile = split( lWorkFilePath )
+    lSignaturePath = common.findFileInParents(kSignatureFile)
+    # 
+    if lSignaturePath:
+      self.root, self.rootFile = split( lSignaturePath )
+
+    # 
+    lProjectPath = common.findFileInParents(kProjectFile)
+
+    if lProjectPath:
+      self.projectPath, self.projectFile = split( lProjectPath )
+      self.project = basename(self.projectPath)
       import json
-      with open(lWorkFilePath,'r') as lWorkFile:
-        self.workConfig = json.load(lWorkFile)
+      with open(lProjectPath,'r') as lProjectFile:
+        self.projectConfig = json.load(lProjectFile)
 
 
   def __str__(self):
-      return '{{ root: {root}, work: {work}, work_cfg: {workConfig} }}'.format(**(self.__dict__))
+      return self.__repr__()+'''({{
+  root: {root},
+  project: {project},
+  configuration: {projectConfig}
+}})'''.format(**(self.__dict__))
 
   @property
   def src(self):
     return join(self.root, kSourceDir) if self.root is not None else None
+
+  @property
+  def work(self):
+    return join(self.root, kWorkDir) if self.root is not None else None
 #------------------------------------------------------------------------------
 
 # Constants
-kBuildFileName = '.buildarea'
-kWorkFileName = '.workarea'
+kSignatureFile = '.ipbbarea'
+kProjectFile = '.ipbbproj'
 kSourceDir = 'source'
-kBuildDir = 'build'
-
+kWorkDir = 'work'

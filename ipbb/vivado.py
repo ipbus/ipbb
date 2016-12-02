@@ -11,8 +11,8 @@ from tools.common import which, makeParser, SmartOpen
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
-  if env.workConfig['product'] != 'vivado':
-    raise click.ClickException("Work area product mismatch. Expected 'vivado', found '%s'" % env.workConfig['product'] )
+  if env.projectConfig['product'] != 'vivado':
+    raise click.ClickException("Work area product mismatch. Expected 'vivado', found '%s'" % env.projectConfig['product'] )
 
   if not which('vivado'):
   # if 'XILINX_VIVADO' not in os.environ:
@@ -28,56 +28,56 @@ def vivado():
 
 #------------------------------------------------------------------------------
 # FIXME: duplicated in sim.create
-def _validateComponent(ctx, param, value):
-  lSeparators = value.count(':')
-  # Validate the format
-  if lSeparators > 1:
-    raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
+# def _validateComponent(ctx, param, value):
+#   lSeparators = value.count(':')
+#   # Validate the format
+#   if lSeparators > 1:
+#     raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
   
-  return tuple(value.split(':'))
+#   return tuple(value.split(':'))
 
 
-@vivado.command()
-@click.argument('workarea')
-@click.argument('component', callback=_validateComponent)
-@click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
-@click.pass_obj
-def create( env, workarea, component, topdep ):
-  '''Create a new Vivado working area'''
-  #------------------------------------------------------------------------------
-  # Must be in a build area
-  if env.root is None:
-    raise click.ClickException('Build area root directory not found')
-  #------------------------------------------------------------------------------
+# @vivado.command()
+# @click.argument('workarea')
+# @click.argument('component', callback=_validateComponent)
+# @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
+# @click.pass_obj
+# def create( env, workarea, component, topdep ):
+#   '''Create a new Vivado working area'''
+#   #------------------------------------------------------------------------------
+#   # Must be in a build area
+#   if env.root is None:
+#     raise click.ClickException('Build area root directory not found')
+#   #------------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  lWorkAreaPath = join(env.root, workarea)
-  if exists(lWorkAreaPath):
-    raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
-  #------------------------------------------------------------------------------
+#   #------------------------------------------------------------------------------
+#   lWorkAreaPath = join(env.root, workarea)
+#   if exists(lWorkAreaPath):
+#     raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
+#   #------------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  from dep2g.Pathmaker import Pathmaker
-  lPathmaker = Pathmaker(env.src, 0)
-  lTopPackage, lTopComponent = component
-  lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
-  if not exists(lTopDepPath):
-    raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
-  #------------------------------------------------------------------------------
+#   #------------------------------------------------------------------------------
+#   from dep2g.Pathmaker import Pathmaker
+#   lPathmaker = Pathmaker(env.src, 0)
+#   lTopPackage, lTopComponent = component
+#   lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
+#   if not exists(lTopDepPath):
+#     raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
+#   #------------------------------------------------------------------------------
 
-  # Build source code directory
-  os.makedirs(lWorkAreaPath)
+#   # Build source code directory
+#   os.makedirs(lWorkAreaPath)
 
-  lCfg = {
-    'product': 'vivado',
-    'topPkg': lTopPackage,
-    'topCmp': lTopComponent,
-    'topDep': topdep,
+#   lCfg = {
+#     'product': 'vivado',
+#     'topPkg': lTopPackage,
+#     'topCmp': lTopComponent,
+#     'topDep': topdep,
 
-  }
-  with SmartOpen( join(lWorkAreaPath,ipbb.kWorkFileName) ) as lWorkFile:
-    import json
-    json.dump(lCfg, lWorkFile.file, indent=2)
+#   }
+#   with SmartOpen( join(lWorkAreaPath,ipbb.kProjectFile) ) as lWorkFile:
+#     import json
+#     json.dump(lCfg, lWorkFile.file, indent=2)
 #------------------------------------------------------------------------------
 
 
@@ -87,8 +87,8 @@ def create( env, workarea, component, topdep ):
 def project( env ):
   '''Assemble current vivado project'''
   
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
 
   ensureVivado( env )
   
@@ -109,13 +109,13 @@ def project( env ):
 def build( env ):
   '''Syntesize and implement current vivado project'''
 
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
 
   ensureVivado( env )
 
   lOpenCmds = [
-    'open_project %s' % join(env.work, 'top', 'top'),
+    'open_project %s' % join(env.project, 'top', 'top'),
   ]
 
   lSynthCmds = [
@@ -139,13 +139,13 @@ def build( env ):
 @vivado.command()
 @click.pass_obj
 def bitfile( env ):
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
 
   ensureVivado( env )
 
   lOpenCmds = [
-    'open_project %s' % join(env.work, 'top', 'top'),
+    'open_project %s' % join(env.project, 'top', 'top'),
   ]
 
   lBitFileCmds = [
@@ -163,13 +163,13 @@ def bitfile( env ):
 @vivado.command()
 @click.pass_obj
 def reset( env ):
-  if env.work is None:
-    raise click.ClickException('Work area root directory not found')
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
 
   ensureVivado( env )
 
   lOpenCmds = [
-    'open_project %s' % join(env.work, 'top', 'top'),
+    'open_project %s' % join(env.project, 'top', 'top'),
   ]
 
   lResetCmds = [
@@ -210,7 +210,7 @@ def package( env ):
 
   import socket, time
 
-  lSignature = dict(env.workConfig)
+  lSignature = dict(env.projectConfig)
   lSignature.update({
     'time': socket.gethostname().replace('.','_'),
     'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),

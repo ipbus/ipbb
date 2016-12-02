@@ -28,10 +28,10 @@ from os.path import join, split, exists
 import os
 import subprocess
 
-kBuildFileName = '.build'
+kSignatureFile = '.build'
 kSourceDir = 'src'
 
-subprocess.call(['rm','-rf',kBuildFileName, kSourceDir])
+subprocess.call(['rm','-rf',kSignatureFile, kSourceDir])
 
 def findBuildFile():
   lPath = os.getcwd()
@@ -39,7 +39,7 @@ def findBuildFile():
   # import pdb; pdb.set_trace()
 
   while lPath is not '/':
-    lBuildFile = join(lPath,kBuildFileName)
+    lBuildFile = join(lPath,kSignatureFile)
     if exists(lBuildFile):
       return lBuildFile
     lPath,_ = split(lPath)
@@ -53,7 +53,7 @@ if lBuildFile is not None:
 if exists(kSourceDir):
   raise SystemExit('Source directory \'src\' already exists')
 
-with open(kBuildFileName,'w') as lBuild:
+with open(kSignatureFile,'w') as lBuild:
   lBuild.write('\n')
 
 # Build source code directory

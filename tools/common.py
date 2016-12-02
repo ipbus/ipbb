@@ -76,7 +76,7 @@ def makeParser(env, verbosity = 0 ):
   from dep2g.Pathmaker import Pathmaker
   from dep2g.DepFileParser import DepFileParser
 
-  lCfg = env.workConfig
+  lCfg = env.projectConfig
 
   class dummy:pass
   lCommandLineArgs = dummy()

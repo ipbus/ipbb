@@ -20,66 +20,11 @@ def ensureVivado( env ):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-@click.group() # chain = True
+@click.group( chain = True )
 def vivado():
   '''Vivado command group'''
   pass
 #------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-# FIXME: duplicated in sim.create
-# def _validateComponent(ctx, param, value):
-#   lSeparators = value.count(':')
-#   # Validate the format
-#   if lSeparators > 1:
-#     raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
-  
-#   return tuple(value.split(':'))
-
-
-# @vivado.command()
-# @click.argument('workarea')
-# @click.argument('component', callback=_validateComponent)
-# @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
-# @click.pass_obj
-# def create( env, workarea, component, topdep ):
-#   '''Create a new Vivado working area'''
-#   #------------------------------------------------------------------------------
-#   # Must be in a build area
-#   if env.root is None:
-#     raise click.ClickException('Build area root directory not found')
-#   #------------------------------------------------------------------------------
-
-#   #------------------------------------------------------------------------------
-#   lWorkAreaPath = join(env.root, workarea)
-#   if exists(lWorkAreaPath):
-#     raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
-#   #------------------------------------------------------------------------------
-
-#   #------------------------------------------------------------------------------
-#   from dep2g.Pathmaker import Pathmaker
-#   lPathmaker = Pathmaker(env.src, 0)
-#   lTopPackage, lTopComponent = component
-#   lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
-#   if not exists(lTopDepPath):
-#     raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
-#   #------------------------------------------------------------------------------
-
-#   # Build source code directory
-#   os.makedirs(lWorkAreaPath)
-
-#   lCfg = {
-#     'product': 'vivado',
-#     'topPkg': lTopPackage,
-#     'topCmp': lTopComponent,
-#     'topDep': topdep,
-
-#   }
-#   with SmartOpen( join(lWorkAreaPath,ipbb.kProjectFile) ) as lWorkFile:
-#     import json
-#     json.dump(lCfg, lWorkFile.file, indent=2)
-#------------------------------------------------------------------------------
-
 
 #------------------------------------------------------------------------------
 @vivado.command()
@@ -115,7 +60,7 @@ def build( env ):
   ensureVivado( env )
 
   lOpenCmds = [
-    'open_project %s' % join(env.project, 'top', 'top'),
+    'open_project %s' % join(env.projectPath, 'top', 'top'),
   ]
 
   lSynthCmds = [
@@ -145,7 +90,7 @@ def bitfile( env ):
   ensureVivado( env )
 
   lOpenCmds = [
-    'open_project %s' % join(env.project, 'top', 'top'),
+    'open_project %s' % join(env.projectPath, 'top', 'top'),
   ]
 
   lBitFileCmds = [

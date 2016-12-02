@@ -2,7 +2,7 @@
 
 set -e
 
-BUILD_AREA="xyz"
+BUILD_AREA="myarea"
 
 ipbb init ${BUILD_AREA}
 cd ${BUILD_AREA}
@@ -15,15 +15,13 @@ exit 0
 HERE=$(pwd)
 cd ${BUILD_AREA}
 
-ipbb vivado create kc705 dummy-fw-proj:projects/example -t top_kc705_gmii.dep
-cd kc705
-ipbb vivado project
-ipbb vivado build
-ipbb vivado bitfile
+ipbb proj create vivado kc705 dummy-fw-proj:projects/example -t top_kc705_gmii.dep
+cd work/kc705
+ipbb vivado project build bitfile
 
 cd ${HERE}
 
-ipbb vivado create mp7xe_690_minimal cactusupgrades:projects/examples/mp7xe_690_minimal 
+ipbb proj create vivado mp7xe_690_minimal cactusupgrades:projects/examples/mp7xe_690_minimal 
 cd mp7xe_690_minimal
 ipbb vivado project
 ipbb vivado build
@@ -32,6 +30,6 @@ ipbb vivado bitfile
 
 cd ${HERE}
 
-ipbb sim create mp7_sim cactusupgrades:projects/examples/mp7_sim 
+ipbb proj create sim mp7_sim cactusupgrades:projects/examples/mp7_sim 
 cd mp7_sim
 ipbb sim ipcores fli project

@@ -59,20 +59,6 @@ def addrtab( env, output ):
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
-# @dep.command()
-# @click.option('-o', '--output', default=None)
-# @click.pass_obj
-# def sources( env, output ):
-#   '''List source files'''
-
-#   lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
-
-#   with SmartOpen( output ) as lWriter:
-#     for addrtab in lDepFileParser.CommandList["src"]:
-#       lWriter( addrtab.FilePath )
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
 @dep.command()
 @click.option('-o', '--output', default=None)
 @click.pass_obj

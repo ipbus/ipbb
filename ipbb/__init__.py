@@ -21,20 +21,20 @@ class Environment(object):
     self.projectConfig = None
 
 
-    lSignaturePath = common.findFileInParents(kSignatureFile)
+    lSignaturePath = common.findFileInParents( kSignatureFile )
     # 
     if lSignaturePath:
       self.root, self.rootFile = split( lSignaturePath )
 
     # 
-    lProjectPath = common.findFileInParents(kProjectFile)
+    lProjectPath = common.findFileInParents( kProjectFile )
 
     if lProjectPath:
       self.projectPath, self.projectFile = split( lProjectPath )
-      self.project = basename(self.projectPath)
+      self.project = basename( self.projectPath )
       import json
-      with open(lProjectPath,'r') as lProjectFile:
-        self.projectConfig = json.load(lProjectFile)
+      with open( lProjectPath,'r' ) as lProjectFile:
+        self.projectConfig = json.load( lProjectFile )
 
 
   def __str__(self):

@@ -12,13 +12,24 @@ from .common import DirSentry
 from os.path import join, split, exists, splitext
 from tools.common import SmartOpen
 
+
+#------------------------------------------------------------------------------
+def _getprojects(env):
+
+  if not exists(env.work):
+    raise click.ClickException("Directory '%s' does not exist." % env.work )
+
+  '''Returns the list of existing projects'''
+  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, ipbb.kProjectFile ) ) ]
+#------------------------------------------------------------------------------
+
 #------------------------------------------------------------------------------
 @click.group()
 def proj():
   pass
 #------------------------------------------------------------------------------
 
-
+#------------------------------------------------------------------------------
 def _validateComponent(ctx, param, value):
   lSeparators = value.count(':')
   # Validate the format
@@ -26,6 +37,7 @@ def _validateComponent(ctx, param, value):
     raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
   
   return tuple(value.split(':'))
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # TODO: move the list of supported products somewhere else
@@ -80,9 +92,6 @@ def create( env, kind, projarea, component, topdep ):
     import json
     json.dump(lCfg, lWorkFile.file, indent=2)
 #------------------------------------------------------------------------------
-
-def _getprojects(env):
-  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, ipbb.kProjectFile ) ) ]
 
 #------------------------------------------------------------------------------
 @proj.command()

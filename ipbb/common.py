@@ -33,3 +33,4 @@ def findFileInParents(aAreaFileName):
 
   return None
 #------------------------------------------------------------------------------
+

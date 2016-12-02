@@ -27,7 +27,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 def cli(ctx):
   ctx.obj = ipbb.Environment()
 
-  print (vars(ctx))
+  # print (vars(ctx))
   # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
   if not ctx.protected_args and not ctx.invoked_subcommand:
     print (ctx.obj)
@@ -54,13 +54,11 @@ if __name__ == '__main__':
   # Logging is important
   # import logging
   # logging.basicConfig(level=logging.DEBUG)
-    
+
   # Add custom commands to shell
   import ipbb.repo
   cli.add_command(ipbb.repo.init)
-  cli.add_command(ipbb.repo.lswork)
-  cli.add_command(ipbb.repo.chroot)
-  cli.add_command(ipbb.repo.chwork)
+  cli.add_command(ipbb.repo.cd)
   cli.add_command(ipbb.repo.add)
 
   import ipbb.proj

@@ -7,8 +7,8 @@ import ipbb
 import subprocess
 
 # Elements
-from os.path import join, split, exists, splitext
-from .common import DirSentry
+from os.path import join, split, exists, splitext, dirname
+from .common import DirSentry, findFileInParents
 
 '''
 Commands defined here
@@ -37,11 +37,6 @@ Commands defined here
 '''
 
 #------------------------------------------------------------------------------
-def _lswork(env):
-  return [ lArea for lArea in next(os.walk(env.root))[1] if exists( join( env.root, lArea, ipbb.kProjectFile ) ) ]
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
 @click.command()
 @click.argument('area')
 # @click.option('-r', '--repo')
@@ -49,8 +44,7 @@ def _lswork(env):
 def init(env, area):
   '''Initialise a new firmware development area'''
 
-  print('Setting up firmware area \''+area+'\'')
-
+  print('Setting up new firmware area \''+area+'\'')
 
   if env.root is not None:
     raise click.ClickException( 'Cannot create a new area inside an existing one %s' % env.root )
@@ -75,53 +69,21 @@ def init(env, area):
 
 #------------------------------------------------------------------------------
 @click.command()
+@click.argument( 'path', type=click.Path() )
 @click.pass_obj
-def lswork(env):
-  '''List existing working areas'''
-  
-  if env.root is None:
-    raise click.ClickException('Build area root directory not found')
-
-  lAreas = _lswork(env)
-  print ( 'Root:', env.root )
-  print ( 'Work areas:')
-  print ( ', '.join( [ ' * '+lArea for lArea in lAreas ] ) )
-#------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-@click.command()
-@click.argument( 'newroot' )
-@click.pass_obj
-def chroot(env,newroot):
+def cd( env, path ):
   '''Change to new root directory'''
-    
-  with DirSentry( newroot ) as lSentry:
-    env._autodetect()
 
-  os.chdir(env.root)
-  print( 'New current directory %s' % os.getcwd() )
+  os.chdir(path)
+  env._autodetect()
 
+  print( 'New root directory %s' % os.getcwd() )
+  print ( env )
 #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-@click.command()
-@click.argument( 'newwork' )
-@click.pass_obj
-def chwork(env,newwork):
+def _getsources(env):
+  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, ipbb.kProjectFile ) ) ]
 
-  if newwork[-1] == os.sep: newwork = newwork[:-1]
-  lAreas = _lswork(env)
-  if newwork not in lAreas:
-    raise click.ClickException('Requested work area not found. Available areas %s' % ', '.join(lAreas))
-
-  with DirSentry( join(env.root,newwork) ) as lSentry:
-    env._autodetect()
-
-  os.chdir(join(env.root,newwork))
-  print( 'New current directory %s' % os.getcwd() )
-
-#------------------------------------------------------------------------------
-#
 #------------------------------------------------------------------------------
 @click.group()
 def add():

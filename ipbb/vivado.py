@@ -170,7 +170,7 @@ def package( env ):
   lSrcPath = join(lPkgPath,'src')
 
   # Cleanup first
-  sh.rm('-r', lPkgPath)
+  sh.rm('-rf', lPkgPath)
 
   # Create the folders
   try: os.makedirs(join(lSrcPath,'addrtab'))

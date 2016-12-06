@@ -53,10 +53,10 @@ def ipcores(env, output):
   #------------------------------------------------------------------------------
 
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
-  lDepFileParser = env.pathMaker
+  lDepFileParser = env.depParser
 
   from dep2g.IPCoresSimMaker import IPCoresSimMaker
-  lWriter = IPCoresSimMaker( lPathmaker )
+  lWriter = IPCoresSimMaker( env.pathMaker )
 
   # FIXME: Yeah, this is a hack
   # TODO: Remove XILINX_SIMLIBS reference from IPCoresSimMaker

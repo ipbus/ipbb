@@ -137,10 +137,10 @@ def project( env, output ):
   #------------------------------------------------------------------------------
 
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
-  lDepFileParser = env.pathMaker
+  lDepFileParser = env.depParser
 
   from dep2g.ModelSimProjectMaker import ModelSimProjectMaker
-  lWriter = ModelSimProjectMaker( lPathmaker )
+  lWriter = ModelSimProjectMaker( env.pathMaker )
 
   # TODO: Simplify here
   if output:

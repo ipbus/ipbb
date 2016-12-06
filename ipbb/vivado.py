@@ -30,42 +30,42 @@ def vivado():
 @vivado.command()
 @click.option('-o', '--output', default=None)
 @click.pass_obj
-def project( env ):
+def project( env, output ):
   '''Assemble current vivado project'''
-  
+
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
 
   ensureVivado( env )
-  
+
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
   from dep2g.VivadoProjectMaker import VivadoProjectMaker
-  lWriter = VivadoProjectMaker( lPathmaker )
+  lWriter = VivadoProjectMaker( env.pathMaker )
 
   # TODO: Simplify here
   if output:
     if output == 'stdout': output = None
     with tools.xilinx.VivadoOpen() as lTarget:
-      lWriter.write( 
+      lWriter.write(
         lTarget,
         lDepFileParser.ScriptVariables,
-        lDepFileParser.Components, 
-        lDepFileParser.CommandList , 
-        lDepFileParser.Libs, 
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
         lDepFileParser.Maps
       )
   else:
     # import tools.xilinx
     import tools.xilinx
     with tools.xilinx.VivadoOpen() as lTarget:
-      lWriter.write( 
+      lWriter.write(
         lTarget,
         lDepFileParser.ScriptVariables,
-        lDepFileParser.Components, 
-        lDepFileParser.CommandList , 
-        lDepFileParser.Libs, 
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
         lDepFileParser.Maps
       )
   #------------------------------------------------------------------------------
@@ -192,7 +192,7 @@ def package( env ):
     json.dump(lSignature, lSignatureFile.file, indent=2)
   #------------------------------------------------------------------------------
 
-  print( sh.cp( '-av', lBitPath, lSrcPath ) ) 
+  print( sh.cp( '-av', lBitPath, lSrcPath ) )
 
   # for addrtab in lDepFileParser.CommandList['addrtab']:
   for addrtab in env.depParser.CommandList['addrtab']:

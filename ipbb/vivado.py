@@ -47,7 +47,7 @@ def project( env, output ):
   # TODO: Simplify here
   if output:
     if output == 'stdout': output = None
-    with tools.xilinx.VivadoOpen() as lTarget:
+    with SmartOpen(output) as lTarget:
       lWriter.write(
         lTarget,
         lDepFileParser.ScriptVariables,

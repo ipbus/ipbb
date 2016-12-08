@@ -118,7 +118,6 @@ class VivadoConsole(object):
   def killAllInstances(cls):
     lInstances = set(cls.__instances)
     for lInstance in lInstances:
-      print ( 'What' )  
       lInstance.quit()
   #--------------------------------------------------------------
 
@@ -132,7 +131,7 @@ class VivadoConsole(object):
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
 
-    self._prompt = 'Vivado%\t'
+    self._prompt = 'Vivado%[ \t]'
     self._process = pexpect.spawn('vivado -mode tcl',maxread=1)
     self._process.logfile = sys.stdout
     self._process.delaybeforesend = 0.00 #1

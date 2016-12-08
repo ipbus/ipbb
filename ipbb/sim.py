@@ -20,11 +20,13 @@ class ModelsimNotFoundError(Exception):
     super(ModelsimNotFoundError, self).__init__(message)
 #------------------------------------------------
 
+
 #------------------------------------------------------------------------------
 @click.group( chain = True )
 def sim():
   pass    
 #------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 @sim.command()
@@ -87,6 +89,7 @@ def ipcores(env, output):
       )
 #------------------------------------------------------------------------------
 
+
 #------------------------------------------------------------------------------
 @sim.command()
 @click.pass_obj
@@ -101,18 +104,30 @@ def fli(env):
     raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
   #------------------------------------------------------------------------------
 
+  #------------------------------------------------------------------------------
+  if not which('vsim'):
+    raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
+  #------------------------------------------------------------------------------
+
   # Set ModelSim root based on vsim's path
   os.environ['MODELSIM_ROOT'] = ( dirname( dirname( which( 'vsim' ) ) ) )
+  # Apply set 
+  os.environ['MTI_VCO_MODE']='64'
 
+  print ( os.environ )
+  
   lFliSrc = join(env.src, 'ipbus-fw-dev', 'components', 'ipbus_eth', 'firmware', 'sim', 'modelsim_fli')
-  lCmds = '''  
-rm -rf modelsim_fli
-cp -a {0} ./
-cd modelsim_fli && ./mac_fli_compile.sh
-cp modelsim_fli/mac_fli.so .
-'''.format(lFliSrc)
+
+  import sh
+  sh.rm('-rf', 'modelsim_fli')
+  sh.cp('-a', lFliSrc, './')
+
+  lCmds = 'cd modelsim_fli && ./mac_fli_compile.sh'
 
   do( lCmds )
+
+  sh.ln('-s', 'modelsim_fli/mac_fli.so', '.')
+
 #------------------------------------------------------------------------------
 
 
@@ -198,13 +213,13 @@ def project( env, output ):
   print ( 'Writing modelsim wrapper \'./vsim\'' )
   with SmartOpen('vsim') as lVsimSh:
     lVsimSh ( '#!/bin/sh' )
+    lVsimSh ( 'export MTI_VCO_MODE=64' )
     lVsimSh ( 'vsim ' + ' '.join('-L '+l for l in lSimLibs ) + ' $@')
 
   # Make it executable
   os.chmod('vsim', 0755)
-
-
 #------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 @sim.command()
@@ -213,7 +228,7 @@ def project( env, output ):
 @click.pass_obj
 def virtualtap(env, name, ip):
 
-  ensuresudo()
+  # ensuresudo()
 
   lCmds = '''
 sudo openvpn --mktun --dev {0}

@@ -64,29 +64,42 @@ def ipcores(env, output):
   # TODO: Remove XILINX_SIMLIBS reference from IPCoresSimMaker
   os.environ['XILINX_SIMLIBS'] = join('.xil_sim_libs',basename(os.environ['XILINX_VIVADO']))
 
+
+
   # TODO: Simplify here
-  if output:
-    if output == 'stdout': output = None
-    with SmartOpen(output) as lTarget:
-      lWriter.write(
-        lTarget,
-        lDepFileParser.ScriptVariables,
-        lDepFileParser.Components,
-        lDepFileParser.CommandList ,
-        lDepFileParser.Libs,
-        lDepFileParser.Maps
-      )
-  else:
-    import tools.xilinx
-    with tools.xilinx.VivadoOpen() as lTarget:
-      lWriter.write(
-        lTarget,
-        lDepFileParser.ScriptVariables,
-        lDepFileParser.Components,
-        lDepFileParser.CommandList ,
-        lDepFileParser.Libs,
-        lDepFileParser.Maps
-      )
+  # if output:
+  #   if output == 'stdout': output = None
+  #   with SmartOpen(output) as lTarget:
+  #     lWriter.write(
+  #       lTarget,
+  #       lDepFileParser.ScriptVariables,
+  #       lDepFileParser.Components,
+  #       lDepFileParser.CommandList ,
+  #       lDepFileParser.Libs,
+  #       lDepFileParser.Maps
+  #     )
+  # else:
+  #   import tools.xilinx
+  #   with tools.xilinx.VivadoOpen() as lTarget:
+  #     lWriter.write(
+  #       lTarget,
+  #       lDepFileParser.ScriptVariables,
+  #       lDepFileParser.Components,
+  #       lDepFileParser.CommandList ,
+  #       lDepFileParser.Libs,
+  #       lDepFileParser.Maps
+  #     )
+
+  from tools.xilinx import VivadoOpen
+  with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+    lWriter.write(
+      lTarget,
+      lDepFileParser.ScriptVariables,
+      lDepFileParser.Components,
+      lDepFileParser.CommandList ,
+      lDepFileParser.Libs,
+      lDepFileParser.Maps
+    )
 #------------------------------------------------------------------------------
 
 
@@ -162,29 +175,39 @@ def project( env, output ):
   lWriter = ModelSimProjectMaker( env.pathMaker )
 
   # TODO: Simplify here
-  if output:
-    if output == 'stdout': output = None
-    with SmartOpen(output) as lTarget:
-      lWriter.write(
-        lTarget,
-        lDepFileParser.ScriptVariables,
-        lDepFileParser.Components,
-        lDepFileParser.CommandList ,
-        lDepFileParser.Libs,
-        lDepFileParser.Maps
-      )
-  else:
-    import tools.mentor
-    with tools.mentor.ModelSimOpen() as lTarget:
-      lWriter.write(
-        lTarget,
-        lDepFileParser.ScriptVariables,
-        lDepFileParser.Components,
-        lDepFileParser.CommandList ,
-        lDepFileParser.Libs,
-        lDepFileParser.Maps
-      )
+  # if output:
+  #   if output == 'stdout': output = None
+  #   with SmartOpen(output) as lTarget:
+  #     lWriter.write(
+  #       lTarget,
+  #       lDepFileParser.ScriptVariables,
+  #       lDepFileParser.Components,
+  #       lDepFileParser.CommandList ,
+  #       lDepFileParser.Libs,
+  #       lDepFileParser.Maps
+  #     )
+  # else:
+  #   import tools.mentor
+  #   with tools.mentor.ModelSimOpen() as lTarget:
+  #     lWriter.write(
+  #       lTarget,
+  #       lDepFileParser.ScriptVariables,
+  #       lDepFileParser.Components,
+  #       lDepFileParser.CommandList ,
+  #       lDepFileParser.Libs,
+  #       lDepFileParser.Maps
+  #     )
 
+  from tools.mentor import ModelSimOpen
+  with ( ModelSimOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+    lWriter.write(
+      lTarget,
+      lDepFileParser.ScriptVariables,
+      lDepFileParser.Components,
+      lDepFileParser.CommandList ,
+      lDepFileParser.Libs,
+      lDepFileParser.Maps
+    )
 
   #----------------------------------------------------------
   # FIXME: Tempourary assignments
@@ -231,6 +254,8 @@ def project( env, output ):
 @click.option('--ip', metavar='IP', default='192.168.201.1', help='ip address of the virtual interface')
 @click.pass_obj
 def virtualtap(env, dev, ip):
+  """VirtualTap
+  """
 
   # ensuresudo()
 

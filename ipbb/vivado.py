@@ -45,29 +45,40 @@ def project( env, output ):
   lWriter = VivadoProjectMaker( env.pathMaker )
 
   # TODO: Simplify here
-  if output:
-    if output == 'stdout': output = None
-    with SmartOpen(output) as lTarget:
-      lWriter.write(
-        lTarget,
-        lDepFileParser.ScriptVariables,
-        lDepFileParser.Components,
-        lDepFileParser.CommandList ,
-        lDepFileParser.Libs,
-        lDepFileParser.Maps
-      )
-  else:
-    # import tools.xilinx
-    import tools.xilinx
-    with tools.xilinx.VivadoOpen() as lTarget:
-      lWriter.write(
-        lTarget,
-        lDepFileParser.ScriptVariables,
-        lDepFileParser.Components,
-        lDepFileParser.CommandList ,
-        lDepFileParser.Libs,
-        lDepFileParser.Maps
-      )
+  # if output:
+  #   if output == 'stdout': output = None
+  #   with SmartOpen(output) as lTarget:
+  #     lWriter.write(
+  #       lTarget,
+  #       lDepFileParser.ScriptVariables,
+  #       lDepFileParser.Components,
+  #       lDepFileParser.CommandList ,
+  #       lDepFileParser.Libs,
+  #       lDepFileParser.Maps
+  #     )
+  # else:
+  #   # import tools.xilinx
+  #   import tools.xilinx
+  #   with tools.xilinx.VivadoOpen() as lTarget:
+  #     lWriter.write(
+  #       lTarget,
+  #       lDepFileParser.ScriptVariables,
+  #       lDepFileParser.Components,
+  #       lDepFileParser.CommandList ,
+  #       lDepFileParser.Libs,
+  #       lDepFileParser.Maps
+  #     )
+
+  from tools.xilinx import VivadoOpen
+  with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+    lWriter.write(
+      lTarget,
+      lDepFileParser.ScriptVariables,
+      lDepFileParser.Components,
+      lDepFileParser.CommandList ,
+      lDepFileParser.Libs,
+      lDepFileParser.Maps
+    )
   #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 

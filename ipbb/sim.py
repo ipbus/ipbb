@@ -241,7 +241,7 @@ def project( env, output ):
   with SmartOpen('vsim') as lVsimSh:
     lVsimSh ( '#!/bin/sh' )
     lVsimSh ( 'export MTI_VCO_MODE=64' )
-    lVsimSh ( 'vsim ' + ' '.join('-L '+l for l in lSimLibs ) + ' $@')
+    lVsimSh ( 'vsim {libs} "$@"'.format( libs = ' '.join('-L '+l for l in lSimLibs ) ) )
 
   # Make it executable
   os.chmod('vsim', 0755)

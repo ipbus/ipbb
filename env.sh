@@ -45,13 +45,11 @@ fi
 SH_SOURCE=${BASH_SOURCE}
 IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 pathadd PATH ${IPBB_ROOT}/bin
+
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"
 
 export PATH PYTHONPATH
-
-# hash virtualenv 2>/dev/null || { echo >&2 "I require foo but it's not installed.  Aborting."; exit 1; }
-
 
 if [ ! -d "${IPBB_ROOT}/external" ] ; then
   mkdir ${IPBB_ROOT}/external

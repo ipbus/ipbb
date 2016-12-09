@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from . import common
 
+from os import walk
 from os.path import join, split, exists, splitext, basename
 from dep2g.Pathmaker import Pathmaker
 from dep2g.DepFileParser import DepFileParser
@@ -100,6 +101,17 @@ class Environment(object):
   def work(self):
     return join(self.root, kWorkDir) if self.root is not None else None
   #------------------------------------------------------------------------------
+  
+  #------------------------------------------------------------------------------
+  def getsources(self):
+    return next(walk(self.src))[1]
+  #------------------------------------------------------------------------------
+  
+  #------------------------------------------------------------------------------
+  def getworks(self):
+    return [ lProj for lProj in next(walk(self.work))[1] if exists( join( self.work, lProj, kProjectFile ) ) ]
+  #------------------------------------------------------------------------------
+
 #------------------------------------------------------------------------------
 
 # Constants

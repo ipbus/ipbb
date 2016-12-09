@@ -81,9 +81,6 @@ def cd( env, path ):
   print ( env )
 #------------------------------------------------------------------------------
 
-def _getsources(env):
-  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, ipbb.kProjectFile ) ) ]
-
 #------------------------------------------------------------------------------
 @click.group()
 def add():

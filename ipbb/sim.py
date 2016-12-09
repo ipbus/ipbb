@@ -92,8 +92,9 @@ def ipcores(env, output):
 
 #------------------------------------------------------------------------------
 @sim.command()
+@click.option('--dev', metavar='DEVICE', default='tap0', help='name of the new device')
 @click.pass_obj
-def fli(env):
+def fli(env, dev):
 
   #------------------------------------------------------------------------------
   # Must be in a build area
@@ -106,26 +107,29 @@ def fli(env):
 
   #------------------------------------------------------------------------------
   if not which('vsim'):
-    raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
+    raise click.ClickException( "ModelSim is not available. Have you sourced the environment script?" )
+  #------------------------------------------------------------------------------
+
+  #------------------------------------------------------------------------------
+  if 'ipbus-fw-dev' not in env.getsources():
+    raise click.ClickException( "ipbus-fw-dev is not available. The FLI cannot be built." )
   #------------------------------------------------------------------------------
 
   # Set ModelSim root based on vsim's path
   os.environ['MODELSIM_ROOT'] = ( dirname( dirname( which( 'vsim' ) ) ) )
   # Apply set 
-  os.environ['MTI_VCO_MODE']='64'
+  # os.environ['MTI_VCO_MODE']='64'
 
-  print ( os.environ )
-  
   lFliSrc = join(env.src, 'ipbus-fw-dev', 'components', 'ipbus_eth', 'firmware', 'sim', 'modelsim_fli')
 
   import sh
-  sh.rm('-rf', 'modelsim_fli')
+  # Clean-up
+  sh.rm('-rf', 'modelsim_fli', 'mac_fli.so')
+  # Copy
   sh.cp('-a', lFliSrc, './')
-
-  lCmds = 'cd modelsim_fli && ./mac_fli_compile.sh'
-
-  do( lCmds )
-
+  # Make
+  sh.make('-C','modelsim_fli','TAP_DEV={0}'.format(dev))
+  # Link
   sh.ln('-s', 'modelsim_fli/mac_fli.so', '.')
 
 #------------------------------------------------------------------------------
@@ -223,10 +227,10 @@ def project( env, output ):
 
 #------------------------------------------------------------------------------
 @sim.command()
-@click.argument('name', default='tap0')
-@click.option('--ip', default='192.168.201.1')
+@click.option('--dev', metavar='DEVICE', default='tap0', help='name of the new device')
+@click.option('--ip', metavar='IP', default='192.168.201.1', help='ip address of the virtual interface')
 @click.pass_obj
-def virtualtap(env, name, ip):
+def virtualtap(env, dev, ip):
 
   # ensuresudo()
 
@@ -234,7 +238,7 @@ def virtualtap(env, name, ip):
 sudo openvpn --mktun --dev {0}
 sudo /sbin/ifconfig {0} up {1}
 sudo chmod a+rw /dev/net/tun
-'''.format(name, ip)
+'''.format(dev, ip)
   
   do( lCmds )
 #------------------------------------------------------------------------------

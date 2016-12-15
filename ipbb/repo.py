@@ -125,10 +125,11 @@ def git(env, repo, branch):
 @add.command()
 @click.argument( 'repo' )
 @click.option( '-d','--dest', default=None )
+@click.option( '-r','--rev', type=click.INT, default=None )
 @click.option( '-n', '--dryrun', is_flag=True )
 @click.option( '-s', '--sparse', default=None, multiple=True )
 @click.pass_obj
-def svn(env, repo, dest, dryrun, sparse):
+def svn(env, repo, dest, rev, dryrun, sparse):
   '''Add a svn repository/folder to the source area'''
 
   #------------------------------------------------------------------------------
@@ -154,8 +155,10 @@ def svn(env, repo, dest, dryrun, sparse):
   if not sparse:
     lArgs = ['checkout', repo]
 
-    # Append 
+    # Append destination directory if defined
     if dest is not None: lArgs.append(dest)
+
+    if rev is not None: lArgs += [ '-r', str(rev) ]
     
     # Do the checkout
     lCmd = ['svn']+lArgs
@@ -168,7 +171,11 @@ def svn(env, repo, dest, dryrun, sparse):
     #------------------------------------------------------------------------------
     # Checkout an empty base folder
     lArgs = ['checkout', '--depth=empty', repo]
+    
+    # Append destination directory if defined
     if dest is not None: lArgs.append(dest)
+
+    if rev is not None: lArgs += [ '-r', str(rev) ]
 
     lCmd = ['svn']+lArgs
     print(' '.join(lCmd))

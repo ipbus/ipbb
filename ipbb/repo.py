@@ -124,10 +124,11 @@ def git(env, repo, branch):
 #------------------------------------------------------------------------------
 @add.command()
 @click.argument( 'repo' )
+@click.option( '-d','--dest', default=None )
 @click.option( '-n', '--dryrun', is_flag=True )
 @click.option( '-s', '--sparse', default=None, multiple=True )
 @click.pass_obj
-def svn(env, repo, dryrun, sparse):
+def svn(env, repo, dest, dryrun, sparse):
   '''Add a svn repository/folder to the source area'''
 
   #------------------------------------------------------------------------------
@@ -142,7 +143,7 @@ def svn(env, repo, dryrun, sparse):
   from urlparse import urlparse
   
   lUrl = urlparse(repo)
-  lRepoName = splitext(split(lUrl.path)[-1])[0]
+  lRepoName = splitext(split(lUrl.path)[-1])[0] if dest is None else dest
   lRepoLocalPath = join(env.src, lRepoName)
   
   if exists(lRepoLocalPath):
@@ -152,6 +153,10 @@ def svn(env, repo, dryrun, sparse):
   #------------------------------------------------------------------------------
   if not sparse:
     lArgs = ['checkout', repo]
+
+    # Append 
+    if dest is not None: lArgs.append(dest)
+    
     # Do the checkout
     lCmd = ['svn']+lArgs
     print(' '.join(lCmd))
@@ -162,7 +167,9 @@ def svn(env, repo, dryrun, sparse):
     print (sparse)
     #------------------------------------------------------------------------------
     # Checkout an empty base folder
-    lArgs = ['checkout', repo, '--depth=empty']
+    lArgs = ['checkout', '--depth=empty', repo]
+    if dest is not None: lArgs.append(dest)
+
     lCmd = ['svn']+lArgs
     print(' '.join(lCmd))
     with DirSentry( env.src ) as lSrcSentry:

@@ -161,7 +161,7 @@ class DepFileParser(object):
   def FilesNotFound(self):
     lNotFound = set()
 
-    for lPathExpr, aCmd, lPackage, lComponent in self.NotFound:
+    for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.NotFound:
       lNotFound.add(lPathExpr)
 
     return lNotFound
@@ -172,7 +172,7 @@ class DepFileParser(object):
   def ComponentsNotFound(self):
     lNotFound = OrderedDict()
 
-    for lPathExpr, aCmd, lPackage, lComponent in self.NotFound:
+    for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.NotFound:
       if os.path.exists(self.Pathmaker.getPath(lPackage, lComponent)):
         continue
 
@@ -186,7 +186,7 @@ class DepFileParser(object):
   def PackagesNotFound(self):
     lNotFound = set()
 
-    for lPathExpr, aCmd, lPackage, lComponent in self.NotFound:
+    for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.NotFound:
       if os.path.exists(self.Pathmaker.getPath(lPackage)):
         continue
 
@@ -302,7 +302,7 @@ class DepFileParser(object):
           #--------------------------------------------------------------
 
           # Something's off, no files found
-          self.NotFound.append( (lPathExpr, lParsedLine.cmd, lPackage, lComponent) )
+          self.NotFound.append( (lPathExpr, lParsedLine.cmd, lPackage, lComponent, lDepFilePath) )
         #--------------------------------------------------------------
 
 

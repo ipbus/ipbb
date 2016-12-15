@@ -86,6 +86,7 @@ def create( env, kind, projarea, component, topdep ):
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
     'topDep': topdep,
+    'name': projarea
 
   }
   with SmartOpen( join(lWorkAreaPath,ipbb.kProjectFile) ) as lWorkFile:

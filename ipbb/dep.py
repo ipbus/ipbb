@@ -109,10 +109,10 @@ def generate( ctx ):
   # Extract context
   env = ctx.obj
 
-  # with DirSentry( env.projectPath ) as lProjDir:
-    # sh.rm('-r', lDecodersDir)
+  with DirSentry( env.projectPath ) as lProjDir:
+    sh.rm('-rf', lDecodersDir)
     # Gather address tables
-    # ctx.invoke(addrtab, output=lDecodersDir)
+    ctx.invoke(addrtab, output=lDecodersDir)
   
   #------------------------------------------------------------------------------
   # TODO: Clean me up
@@ -135,7 +135,7 @@ def generate( ctx ):
       if not lAddr.TopLevel: continue
 
       # Generate a new decoder file
-      # lGen(basename(lAddr.FilePath))
+      lGen(basename(lAddr.FilePath))
       lDecoder = 'ipbus_decode_{0}.vhd'.format( splitext( basename( lAddr.FilePath ) )[0])
       lTarget = env.pathMaker.getPath(lAddr.Package, lAddr.Component, 'src', lDecoder )
 

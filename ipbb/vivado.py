@@ -6,8 +6,9 @@ import click
 import os
 import ipbb
 # Elements
-from os.path import join, split, exists, splitext
+from os.path import join, split, exists, splitext, abspath, basename
 from tools.common import which, SmartOpen
+from .common import DirSentry
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
@@ -43,31 +44,6 @@ def project( env, output ):
 
   from dep2g.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker( env.pathMaker )
-
-  # TODO: Simplify here
-  # if output:
-  #   if output == 'stdout': output = None
-  #   with SmartOpen(output) as lTarget:
-  #     lWriter.write(
-  #       lTarget,
-  #       lDepFileParser.ScriptVariables,
-  #       lDepFileParser.Components,
-  #       lDepFileParser.CommandList ,
-  #       lDepFileParser.Libs,
-  #       lDepFileParser.Maps
-  #     )
-  # else:
-  #   # import tools.xilinx
-  #   import tools.xilinx
-  #   with tools.xilinx.VivadoOpen() as lTarget:
-  #     lWriter.write(
-  #       lTarget,
-  #       lDepFileParser.ScriptVariables,
-  #       lDepFileParser.Components,
-  #       lDepFileParser.CommandList ,
-  #       lDepFileParser.Libs,
-  #       lDepFileParser.Maps
-  #     )
 
   from tools.xilinx import VivadoOpen
   with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
@@ -169,9 +145,6 @@ def package( env ):
   '''List address table files'''
   ensureVivado( env )
 
-  # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
-
-
   lBitPath = join('top','top.runs','impl_1','top.bit')
   if not exists(lBitPath):
     raise ValueError("Bitfile {0} not found. Please run 'bitfile' command first.".format(lBitPath))
@@ -209,11 +182,16 @@ def package( env ):
   for addrtab in env.depParser.CommandList['addrtab']:
     print( sh.cp( '-av', addrtab.FilePath, join(lSrcPath,'addrtab') ) )
 
-  lTgzPath = 'top_{0}_{1}.tgz'.format(
-    socket.gethostname().replace('.','_'),
-    time.strftime('%y%m%d_%H%M')
+  lTgzBaseName = '{name}_{host}_{time}'.format(
+    name=env.projectConfig['name'],
+    host=socket.gethostname().replace('.','_'),
+    time=time.strftime('%y%m%d_%H%M')
     )
+  lTgzPath = abspath(join(lPkgPath,lTgzBaseName+'.tgz'))
 
-  print(sh.tar('cvfz', join(lPkgPath, lTgzPath), lSrcPath))
+  # with DirSentry( lSrcPath ) as lSentry:
+    # print ( os.getcwd() )
+    # Zip it
+  print(sh.tar('cvfz', lTgzPath, '-C', lPkgPath, '--transform', 's/^src/'+lTgzBaseName+'/', 'src'))
 #------------------------------------------------------------------------------
 

@@ -7,6 +7,12 @@ from os.path import join, split, exists, splitext, basename
 from dep2g.Pathmaker import Pathmaker
 from dep2g.DepFileParser import DepFileParser
 
+# Constants
+kSignatureFile = '.ipbbarea'
+kProjectFile = '.ipbbproj'
+kSourceDir = 'source'
+kWorkDir = 'work'
+
 #------------------------------------------------------------------------------
 class Environment(object):
   """docstring for Environment"""
@@ -56,6 +62,8 @@ class Environment(object):
 
     self.projectPath, self.projectFile = split( lProjectPath )
     self.project = basename( self.projectPath )
+
+    # Import project settings
     import json
     with open( lProjectPath,'r' ) as lProjectFile:
       self.projectConfig = json.load( lProjectFile )
@@ -114,8 +122,3 @@ class Environment(object):
 
 #------------------------------------------------------------------------------
 
-# Constants
-kSignatureFile = '.ipbbarea'
-kProjectFile = '.ipbbproj'
-kSourceDir = 'source'
-kWorkDir = 'work'

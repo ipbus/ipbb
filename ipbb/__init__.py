@@ -1,7 +1,9 @@
 from __future__ import print_function
 
-from . import common
+# Import click for ansi colors
+import click
 
+from . import common
 from os import walk
 from os.path import join, split, exists, splitext, basename
 from dep2g.Pathmaker import Pathmaker
@@ -84,6 +86,12 @@ class Environment(object):
       self.projectConfig['topCmp'],
       self.projectConfig['topDep']
     )
+
+    #---------
+    if self.depParser.NotFound:
+      click.secho ('Some files and components were not found', fg='red')
+    #---------
+
   #------------------------------------------------------------------------------
 
 

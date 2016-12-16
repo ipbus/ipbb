@@ -62,10 +62,14 @@ class Pathmaker(object):
     import glob
 
     lPathExpr = self.getPath( package, component, kind , fileexpr , cd = cd )
-    lComponentPath = self.getPath( package, component, kind , cd = cd )
+    lKindPath = self.getPath( package, component, kind , cd = cd )
+    
+    # Expand the expression
     lFilePaths = glob.glob( lPathExpr )
+    
     # Calculate the relative path and pair it up with the absolute path
-    lFileList = [ (os.path.relpath( lPath2, lComponentPath ),lPath2) for lPath2 in lFilePaths ]
+    lFileList = [ (os.path.relpath( lPath2, lKindPath ),lPath2) for lPath2 in lFilePaths ]
+
     return  lPathExpr, lFileList
   #--------------------------------------------------------------
 

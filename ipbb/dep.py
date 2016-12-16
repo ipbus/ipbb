@@ -19,19 +19,19 @@ def dep():
 @dep.command()
 @click.option('-o', '--output', default=None)
 @click.pass_obj
-def dump( env, output ):
-  '''List source files'''
+def print( env, output ):
+  '''Print the '''
 
   with SmartOpen( output ) as lWriter:
     lWriter( str( env.depParser ) )
 #------------------------------------------------------------------------------
-#
+
 #------------------------------------------------------------------------------
 @dep.command()
 @click.argument('group',type=click.Choice(['setup', 'src', 'addrtab', 'cgpfile']))
 @click.option('-o', '--output', default=None)
 @click.pass_obj
-def show( env, group, output ):
+def ls( env, group, output ):
   '''List source files'''
 
   with SmartOpen( output ) as lWriter:
@@ -70,7 +70,13 @@ def components( env, output ):
       for lCmp in lCmps:
         lWriter(lCmp)
       lWriter()
+#------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+@dep.command()
+@click.pass_obj
+def status(env):
+    pass
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -147,11 +153,13 @@ def generate( ctx ):
 
         lUpdatedDecoders.append( (lDecoder, lTarget) )
 
+    #------------------------------------------------------------------------------
+    # If no difference between old and newly generated decoders, quit here.
     if not lUpdatedDecoders:
       print ( 'All ipbus decoders are up-to-date' )
       return
+    #------------------------------------------------------------------------------
 
-      print ( [ lFile for lFile,lTarget in lUpdatedDecoders])
     print ( 'The following decoders have changed:\n' +'\n'.join([ '* '+lDecoder for lDecoder,lTarget in lUpdatedDecoders] ) )
     click.confirm('Do you want to continue?', abort=True)
     for lDecoder,lTarget in lUpdatedDecoders:

@@ -130,7 +130,7 @@ def git(env, repo, branch):
 @click.option( '-s', '--sparse', default=None, multiple=True )
 @click.pass_obj
 def svn(env, repo, dest, rev, dryrun, sparse):
-  '''Add a svn repository/folder to the source area'''
+  '''Add svn repository REPO to the source area'''
 
   #------------------------------------------------------------------------------
   # Must be in a build area

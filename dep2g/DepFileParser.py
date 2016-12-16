@@ -131,38 +131,102 @@ class DepFileParser(object):
   #----------------------------------------------------------------------------------------------------------------------------
   def __str__(self):
     string = self.__repr__()+'\n'
-    string += '--- parsed ---\n'
-    string += 'commands:\n'
+    string += '+------------+\n'
+    string += '|  Commands  |\n'
+    string += '+------------+\n'
     for k in self.CommandList:
       string += '+ %s (%d)\n' % (k,len(self.CommandList[k]))
       for lCmd in self.CommandList[k]:
         string += '  * '+str(lCmd)+'\n'
       # print(c,self.CommandList[c])
+    
+    
+    string += '\n'
+    string += '+----------------------------------+\n'
+    string += '|  Resolved packages & components  |\n'
+    string += '+----------------------------------+\n'
     string += 'packages: '+str(list(self.Components.iterkeys()))+'\n'
-    string += 'components: \n'
-    for pkg in self.Components:
+    string += 'components:\n'
+    for pkg in sorted(self.Components):
       string += '+ %s (%d)\n' % (pkg,len(self.Components[pkg]))
-      for cmp in self.Components[pkg]:
+      for cmp in sorted(self.Components[pkg]):
         string += '  > '+str(cmp)+'\n'
 
-    string += '--- not found ---\n'
-    string += 'packages: '+str(list(self.PackagesNotFound))+'\n'
-    string += 'components: \n'
-    for pkg in self.ComponentsNotFound:
-      string += '+ %s (%d)\n' % (pkg,len(self.ComponentsNotFound[pkg]))
-      for cmp in self.ComponentsNotFound[pkg]:
-        string += '  > '+str(cmp)+'\n'
-    string += 'files: '+str(self.FilesNotFound)+'\n'
+    if self.NotFound:
+      string += '\n'
+      string += '+----------------------------------------+\n'
+      string += '|  Missing packages, components & files  |\n'
+      string += '+----------------------------------------+\n'
+      
+      if self.PackagesNotFound:
+        string += 'packages: '+str(list(self.PackagesNotFound))+'\n'
+
+      #------
+      lCNF = self.ComponentsNotFound
+      if lCNF:
+        string += 'components: \n'
+
+        for pkg in sorted(lCNF):
+          string += '+ %s (%d)\n' % (pkg,len(lCNF[pkg]))
+
+          for cmp in sorted(lCNF[pkg]):
+            string += '  > '+str(cmp)+'\n'
+      #------
+
+
+      #------
+      lFNF = self.FilesNotFound
+      if lFNF:
+        string += 'missing files:\n'
+
+        for pkg in sorted(lFNF):
+          lCmps = lFNF[pkg]
+          string += '+ %s (%d components)\n' % (pkg,len(lCmps))
+
+          for cmp in sorted(lCmps):
+            lFiles = lCmps[cmp]
+            string += '  + %s (%d files)\n' % (cmp,len(lFiles))
+
+            lCmpPath = self.Pathmaker.getPath(pkg,cmp)
+            for lFile in sorted(lFiles):
+              lSrcs = lFiles[lFile]
+              string += '    + %s (sourced by %d deps)\n' % (os.path.relpath(lFile, lCmpPath), len(lSrcs))
+
+              for lSrc in lSrcs:
+                string += '        ^- %s\n' % lSrc
+              string += '\n'
+      #------
+
+    # string += '\n'.join([' > '+f for f in sorted(self.FilesNotFound)])
     return string
   #----------------------------------------------------------------------------------------------------------------------------
 
   #----------------------------------------------------------------------------------------------------------------------------
   @property
-  def FilesNotFound(self):
+  def aFilesNotFound(self):
     lNotFound = set()
 
     for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.NotFound:
       lNotFound.add(lPathExpr)
+
+    return lNotFound
+  #----------------------------------------------------------------------------------------------------------------------------
+
+  #----------------------------------------------------------------------------------------------------------------------------
+  @property
+  def FilesNotFound(self):
+    lNotFound = OrderedDict()
+    for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.NotFound:
+      lNotFound.setdefault(
+          lPackage,
+          OrderedDict()
+        ).setdefault(
+          lComponent,
+          OrderedDict()
+        ).setdefault(
+          lPathExpr,
+          set()
+        ).add(lDepFilePath)
 
     return lNotFound
   #----------------------------------------------------------------------------------------------------------------------------
@@ -176,7 +240,7 @@ class DepFileParser(object):
       if os.path.exists(self.Pathmaker.getPath(lPackage, lComponent)):
         continue
 
-      lNotFound.setdefault(lPackage,[]).append(lComponent)
+      lNotFound.setdefault(lPackage,set()).add(lComponent)
 
     return lNotFound
   #----------------------------------------------------------------------------------------------------------------------------
@@ -298,11 +362,11 @@ class DepFileParser(object):
             lFileLists.append(lFileList)
 
             self.Components.setdefault(lPackage,[]).append(lComponent)
-            continue
-          #--------------------------------------------------------------
 
-          # Something's off, no files found
-          self.NotFound.append( (lPathExpr, lParsedLine.cmd, lPackage, lComponent, lDepFilePath) )
+          else:
+            # Something's off, no files found
+            self.NotFound.append( (lPathExpr, lParsedLine.cmd, lPackage, lComponent, lDepFilePath) )
+          #--------------------------------------------------------------
         #--------------------------------------------------------------
 
 
@@ -337,15 +401,6 @@ class DepFileParser(object):
           #--------------------------------------------------------------
 
           #--------------------------------------------------------------
-          # Map to any generated libraries
-          if ('map' in lParsedLine) and (lParsedLine.map):
-            lMap = lParsedLine.map
-            self.Maps.append((lMap, lFile))
-          else:
-            lMap = None
-          #--------------------------------------------------------------
-
-          #--------------------------------------------------------------
           # Specifies the files should be read as VHDL 2008
           if lParsedLine.cmd == 'src' or lParsedLine.cmd == 'include' in lParsedLine:
             lVhdl2008 = lParsedLine.vhdl2008
@@ -353,12 +408,6 @@ class DepFileParser(object):
             lVhdl2008 = False
           #--------------------------------------------------------------
 
-          #--------------------------------------------------------------
-          # Debugging
-          # if self.CommandLineArgs.verbosity > 1:
-          #   print(' '*self.depth, lPackage, lComponent, lFileExprList)
-          #--------------------------------------------------------------
-        
           for lFileList in lFileLists:
             for lFile, lFilePath in lFileList:
               #--------------------------------------------------------------
@@ -367,6 +416,14 @@ class DepFileParser(object):
                 print(' ' * self.depth, ':', lParsedLine.cmd, lFile, lFilePath)
               #--------------------------------------------------------------
           
+              #--------------------------------------------------------------
+              # Map to any generated libraries
+              if ('map' in lParsedLine) and (lParsedLine.map):
+                lMap = lParsedLine.map
+                self.Maps.append((lMap, lFilePath))
+              else:
+                lMap = None
+              #--------------------------------------------------------------
 
               # self.CommandList[ lParsedLine.cmd ].append( Command( lFile, lLib, lMap, lInclude , lTopLevel , lComponentPath, lVhdl2008 ) )
               self.CommandList[ lParsedLine.cmd ].append( Command( lFilePath, lPackage, lComponent, lMap, lInclude, lInclude , lTopLevel , lVhdl2008 ) )

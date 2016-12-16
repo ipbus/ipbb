@@ -39,8 +39,6 @@ def cli(ctx):
 @click.pass_obj
 def info(env, verbose):
   '''WORK IN PROGRESS: Tentative command to set up shell env'''
-  # print( 'export IPBB_ROOT=%s' % env.root)
-  # print( 'export IPBB_WORK=%s' % env.project)
   print ( env )
 #------------------------------------------------------------------------------
 
@@ -48,12 +46,6 @@ def info(env, verbose):
 #------------------------------------------------------------------------------
 if __name__ == '__main__':
   '''Discovers the env at startup'''
-  # ipbb.env = ipbb.Environment()
-  # print(ipbb.__env)
-
-  # Logging is important
-  # import logging
-  # logging.basicConfig(level=logging.DEBUG)
 
   # Add custom commands to shell
   import ipbb.repo
@@ -73,6 +65,7 @@ if __name__ == '__main__':
   import ipbb.sim
   cli.add_command(ipbb.sim.sim)
 
-  cli.shell.prompt = '\x1b[38;5;74m'+cli.shell.prompt+'\x1b[0m'
+  # cli.shell.prompt = '\x1b[38;5;74m'+cli.shell.prompt+'\x1b[0m'
+  # cli.shell.prompt = click.style(cli.shell.prompt, fg='red')
   cli()
 #------------------------------------------------------------------------------

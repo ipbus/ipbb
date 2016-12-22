@@ -77,6 +77,21 @@ class ModelSimBatch(object):
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class ModelSimConsoleError(Exception):
+    """Exception raised for errors in the input.
+
+    Attributes:
+        message -- explanation of the error
+        command -- input command in which the error occurred
+    """
+
+    def __init__(self, errors, command):
+
+        self.errors = errors
+        self.command = command
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimConsole(object):
   """docstring for ModelSimConsole"""
 
@@ -222,7 +237,7 @@ class ModelSimConsole(object):
     self.__send(aCmd)
     lBuffer,lErrors = self.__expectPrompt(aMaxLen)
     if lErrors is not None:
-      raise VivadoConsoleError(lErrors, aCmd)
+      raise ModelSimConsoleError(lErrors, aCmd)
     return list(lBuffer)
   #--------------------------------------------------------------
 

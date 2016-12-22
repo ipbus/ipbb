@@ -12,8 +12,8 @@ from .common import DirSentry
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
-  if env.projectConfig['product'] != 'vivado':
-    raise click.ClickException("Work area product mismatch. Expected 'vivado', found '%s'" % env.projectConfig['product'] )
+  if env.projectConfig['toolset'] != 'vivado':
+    raise click.ClickException("Work area product mismatch. Expected 'vivado', found '%s'" % env.projectConfig['toolset'] )
 
   if not which('vivado'):
   # if 'XILINX_VIVADO' not in os.environ:

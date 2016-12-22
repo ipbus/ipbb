@@ -39,8 +39,8 @@ def ipcores(env, output):
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
   
-  if env.projectConfig['product'] != 'sim':
-    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
+  if env.projectConfig['toolset'] != 'sim':
+    raise click.ClickException("Work area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'] )
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
@@ -114,8 +114,8 @@ def fli(env, dev):
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
   
-  if env.projectConfig['product'] != 'sim':
-    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
+  if env.projectConfig['toolset'] != 'sim':
+    raise click.ClickException("Work area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'] )
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
@@ -159,8 +159,8 @@ def project( env, output ):
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
   
-  if env.projectConfig['product'] != 'sim':
-    raise click.ClickException("Work area product mismatch. Expected 'sim', found '%s'" % env.projectConfig['product'] )
+  if env.projectConfig['toolset'] != 'sim':
+    raise click.ClickException("Work area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'] )
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------

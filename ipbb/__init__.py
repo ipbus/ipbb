@@ -70,17 +70,8 @@ class Environment(object):
     with open( lProjectPath,'r' ) as lProjectFile:
       self.projectConfig = json.load( lProjectFile )
 
-    #------------------------------------------------------------------------------
-    class dummy:pass
-    lCommandLineArgs = dummy()
-    lCommandLineArgs.define = ''
-    lCommandLineArgs.product = self.projectConfig['product']
-    lCommandLineArgs.verbosity = self._verbosity
-    #------------------------------------------------------------------------------
-
-
     lPathmaker = Pathmaker( self.src, self._verbosity )
-    self.depParser = DepFileParser( lCommandLineArgs , self.pathMaker )
+    self.depParser = DepFileParser( self.projectConfig['toolset'] , self.pathMaker, aVerbosity = self._verbosity )
     self.depParser.parse(
       self.projectConfig['topPkg'],
       self.projectConfig['topCmp'],
@@ -88,8 +79,8 @@ class Environment(object):
     )
 
     #---------
-    if self.depParser.NotFound:
-      click.secho ('Some files and components were not found', fg='red')
+    # if self.depParser.NotFound:
+      # click.secho ('Some files and components were not found', fg='red')
     #---------
 
   #------------------------------------------------------------------------------
@@ -98,8 +89,8 @@ class Environment(object):
   #------------------------------------------------------------------------------
   def __str__(self):
       return self.__repr__()+'''({{
-  root: {root},
-  project: {project},
+  area root: {root},
+  project root: {project},
   configuration: {projectConfig},
   pathMaker: {pathMaker},
   parser: {depParser}

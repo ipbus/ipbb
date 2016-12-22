@@ -37,9 +37,45 @@ def cli(ctx):
 @cli.command()
 @click.option('-v', '--verbose', count=True, help='arse')
 @click.pass_obj
-def info(env, verbose):
+def summary(env, verbose):
   '''WORK IN PROGRESS: Tentative command to set up shell env'''
-  print ( env )
+
+  from click import echo, style, secho
+  
+  echo()
+  secho ( "Current environment", fg='blue' )
+  echo  ( "-------------------")  
+  echo  ( "Sandbox path : " + ( env.root if env.root else style("Not found", fg='red') ) )
+  echo  ( "Work path    : " + ( env.projectPath if env.projectPath else style("Not found", fg='red') ) )
+  echo  ( )
+
+  if env.projectConfig is None: return
+  secho ("Project details", fg='blue')
+  echo  ( "---------------")
+  echo  ( "name          : " + env.projectConfig['name'] )
+  echo  ( "toolset       : " + env.projectConfig['toolset'] )
+  echo  ( "top package   : " + env.projectConfig['topPkg'] )
+  echo  ( "    component : " + env.projectConfig['topCmp'] )
+  echo  ( "    dep file  : " + env.projectConfig['topDep'] )
+  echo  ( )
+  
+  secho ( "DepTree details", fg='blue')
+  echo  ( "---------------")
+  echo  ( "parsed files:" )
+  echo  ( "  setup   : %d file(s)" % len(env.depParser.CommandList['setup']))
+  echo  ( "  src     : %d file(s)" % len(env.depParser.CommandList['src']))
+  echo  ( "  addrtab : %d file(s)" % len(env.depParser.CommandList['addrtab']))
+  echo  ( "  cgpfile : %d file(s)" % len(env.depParser.CommandList['cgpfile']))
+  echo  ( )
+
+  if env.depParser.NotFound is None: return
+  echo  ( "missing files:" )
+  echo  ( str(len(env.depParser.aFilesNotFound)))
+
+
+  # click.secho("AAA", fg='red')
+  # print ( env )
+  
 #------------------------------------------------------------------------------
 
 

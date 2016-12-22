@@ -72,7 +72,7 @@ class VivadoProjectMaker( object ):
           else:
               write(cmd)
         if src.Lib:
-          write( "set_property library {1} [get_files [ {0} ]]".format( lFile , src.Lib ) )
+          write( "set_property library {1} [ get_files [ {0} ] ]".format( src.FilePath , src.Lib ) )
 
     write( "set_property top top [current_fileset]" )
     

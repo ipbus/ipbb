@@ -81,7 +81,7 @@ class SmartOpen( object ):
 #   class dummy:pass
 #   lCommandLineArgs = dummy()
 #   lCommandLineArgs.define = ''
-#   lCommandLineArgs.product = lCfg['product']
+#   lCommandLineArgs.product = lCfg['toolset']
 #   lCommandLineArgs.verbosity = verbosity
 
 

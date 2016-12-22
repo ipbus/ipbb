@@ -56,12 +56,15 @@ class ComponentAction(argparse.Action):
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class DepFileParser(object):
   #----------------------------------------------------------------------------------------------------------------------------
-  def __init__( self , aCommandLineArgs , aPathmaker ):
+  # def __init__( self , aCommandLineArgs , aPathmaker, aVariables = {}, aVerbosity = 0 ):
+  def __init__( self , aToolSet , aPathmaker, aVariables = {}, aVerbosity = 0 ):
     #--------------------------------------------------------------
     # Member variables
-    self.CommandLineArgs = aCommandLineArgs
+    # self.CommandLineArgs = aCommandLineArgs
+    self._toolset = aToolSet
     self.Pathmaker = aPathmaker
-    self.depth = 0
+    self._depth = 0
+    self._verbosity = aVerbosity
 
     self.ScriptVariables = {}
     self.CommandList = {"setup": [], "src": [], "addrtab": [] , "cgpfile" : [] }
@@ -75,18 +78,18 @@ class DepFileParser(object):
 
     #--------------------------------------------------------------
     # Add to or override the Script Variables with user commandline
-    for lArgs in self.CommandLineArgs.define:
+    for lArgs in aVariables:
       lKey , lVal = lArgs.split('=')
       self.ScriptVariables[ lKey ] = lVal
     #--------------------------------------------------------------
 
     #--------------------------------------------------------------
     # Set the toolset
-    if self.CommandLineArgs.product == 'xtclsh':
+    if self._toolset == 'xtclsh':
       self.ScriptVariables[ "toolset" ] = "ISE"
-    elif self.CommandLineArgs.product == 'vivado':
+    elif self._toolset == 'vivado':
       self.ScriptVariables[ "toolset" ] = "Vivado"
-    elif self.CommandLineArgs.product == 'sim' or self.CommandLineArgs.product == 'ip':
+    elif self._toolset == 'sim':
       self.ScriptVariables[ "toolset" ] = "Modelsim"
     else:
       self.ScriptVariables[ "toolset" ] = "other"
@@ -193,7 +196,7 @@ class DepFileParser(object):
               string += '    + %s (sourced by %d deps)\n' % (os.path.relpath(lFile, lCmpPath), len(lSrcs))
 
               for lSrc in lSrcs:
-                string += '        ^- %s\n' % lSrc
+                string += '        <-- %s\n' % lSrc
               string += '\n'
       #------
 
@@ -265,10 +268,10 @@ class DepFileParser(object):
     '''
     #--------------------------------------------------------------
     # We have gone one layer further down the rabbit hole
-    self.depth += 1
+    self._depth += 1
     #--------------------------------------------------------------
-    if self.CommandLineArgs.verbosity > 1:
-      print('>'*self.depth,'Parsing', aPackage, aComponent, aDepFileName)
+    if self._verbosity > 1:
+      print('>'*self._depth,'Parsing', aPackage, aComponent, aDepFileName)
     
     #--------------------------------------------------------------
     lDepFilePath = self.Pathmaker.getPath( aPackage, aComponent, 'include', aDepFileName )
@@ -288,14 +291,14 @@ class DepFileParser(object):
         if lLine[0] == "@":
           lTokenized = lLine[ 1: ].split( "=" )
           if len(lTokenized) != 2:
-            raise SystemExit( "@ directives must be key=value pairs. Found '{0}' in {1}".format( lLine , aFileName ) )
+            raise SystemExit( "@ directives must be key=value pairs. Found '{0}' in {1}".format( lLine , aDepFileName ) )
           if lTokenized[0].strip() in self.ScriptVariables:
             print( "Warning!" , lTokenized[0].strip() , "already defined. Not redefining." )
           else:
             try:
               exec( lLine[ 1: ] , None , self.ScriptVariables )
             except:
-              raise SystemExit( "Parsing directive failed in {0} , line '{1}'".format( aFileName , lLine ) )
+              raise SystemExit( "Parsing directive failed in {0} , line '{1}'".format( aDepFileName , lLine ) )
           continue
         #--------------------------------------------------------------
 
@@ -304,15 +307,15 @@ class DepFileParser(object):
         if lLine[0] == "?":
           lTokens = [ i for i, letter in enumerate(lLine) if letter == "?" ]
           if len(lTokens) != 2:
-            raise SystemExit( "There must be precisely two '?' tokens per line. Found {0} in {1} , line '{2}'".format( len(lTokens) , aFileName , lLine ) )
+            raise SystemExit( "There must be precisely two '?' tokens per line. Found {0} in {1} , line '{2}'".format( len(lTokens) , aDepFileName , lLine ) )
 
           try:
             lExprValue = eval( lLine[ lTokens[0]+1 : lTokens[1] ] , None , self.ScriptVariables )
           except:
-            raise SystemExit( "Parsing directive failed in {0} , line '{1}'".format( aFileName , lLine ) )
+            raise SystemExit( "Parsing directive failed in {0} , line '{1}'".format( aDepFileName , lLine ) )
 
           if not isinstance( lExprValue , bool ):
-            raise SystemExit( "Directive does not evaluate to boolean type in {0} , line '{1}'".format( aFileName , lLine ) )
+            raise SystemExit( "Directive does not evaluate to boolean type in {0} , line '{1}'".format( aDepFileName , lLine ) )
 
           if not lExprValue:
             continue
@@ -323,8 +326,8 @@ class DepFileParser(object):
         #--------------------------------------------------------------
         # Parse the line using arg_parse
         lParsedLine = self.parseLine(lLine.split())
-        if self.CommandLineArgs.verbosity > 1:
-          print(' '*self.depth, '- Parsed line', vars(lParsedLine))
+        if self._verbosity > 1:
+          print(' '*self._depth, '- Parsed line', vars(lParsedLine))
         #--------------------------------------------------------------
 
         #--------------------------------------------------------------
@@ -412,8 +415,8 @@ class DepFileParser(object):
             for lFile, lFilePath in lFileList:
               #--------------------------------------------------------------
               # Debugging
-              if self.CommandLineArgs.verbosity > 0:
-                print(' ' * self.depth, ':', lParsedLine.cmd, lFile, lFilePath)
+              if self._verbosity > 0:
+                print(' ' * self._depth, ':', lParsedLine.cmd, lFile, lFilePath)
               #--------------------------------------------------------------
           
               #--------------------------------------------------------------
@@ -432,14 +435,14 @@ class DepFileParser(object):
 
     #--------------------------------------------------------------
     # We are about to return one layer up the rabbit hole
-    if self.CommandLineArgs.verbosity > 1:
-      print('<'*self.depth)
-    self.depth -= 1
+    if self._verbosity > 1:
+      print('<'*self._depth)
+    self._depth -= 1
     #--------------------------------------------------------------
 
     #--------------------------------------------------------------
     # If we are exiting the top-level, uniquify the commands list, keeping the order as defined in Dave's origianl voodoo
-    if self.depth==0:
+    if self._depth==0:
       for i in self.CommandList:
         lTemp = list()
         for j in reversed( self.CommandList[i] ):

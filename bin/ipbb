@@ -37,8 +37,7 @@ def cli(ctx):
 @cli.command()
 @click.option('-v', '--verbose', count=True, help='arse')
 @click.pass_obj
-def summary(env, verbose):
-  '''WORK IN PROGRESS: Tentative command to set up shell env'''
+def info(env, verbose):
 
   from click import echo, style, secho
   
@@ -61,21 +60,20 @@ def summary(env, verbose):
   
   secho ( "DepTree details", fg='blue')
   echo  ( "---------------")
-  echo  ( "parsed files:" )
-  echo  ( "  setup   : %d file(s)" % len(env.depParser.CommandList['setup']))
-  echo  ( "  src     : %d file(s)" % len(env.depParser.CommandList['src']))
-  echo  ( "  addrtab : %d file(s)" % len(env.depParser.CommandList['addrtab']))
-  echo  ( "  cgpfile : %d file(s)" % len(env.depParser.CommandList['cgpfile']))
+  echo  ( "parsed file(s):" )
+  echo  ( "  setup   : %d" % len(env.depParser.CommandList['setup']))
+  echo  ( "  src     : %d" % len(env.depParser.CommandList['src']))
+  echo  ( "  addrtab : %d" % len(env.depParser.CommandList['addrtab']))
+  echo  ( "  cgpfile : %d" % len(env.depParser.CommandList['cgpfile']))
   echo  ( )
 
-  if env.depParser.NotFound is None: return
-  echo  ( "missing files:" )
-  echo  ( str(len(env.depParser.aFilesNotFound)))
+  if not env.depParser.NotFound : return
+  echo  ( "missing item(s):" )
+  echo  ( "  packages: %d" % len(env.depParser.PackagesNotFound ) )
+  echo  ( "  components: %d" % len(env.depParser.ComponentsNotFound ) )
+  echo  ( "  paths: %d" % len(env.depParser.PathsNotFound ) )
+  echo  ( )
 
-
-  # click.secho("AAA", fg='red')
-  # print ( env )
-  
 #------------------------------------------------------------------------------
 
 
@@ -101,7 +99,5 @@ if __name__ == '__main__':
   import ipbb.sim
   cli.add_command(ipbb.sim.sim)
 
-  # cli.shell.prompt = '\x1b[38;5;74m'+cli.shell.prompt+'\x1b[0m'
-  # cli.shell.prompt = click.style(cli.shell.prompt, fg='red')
   cli()
 #------------------------------------------------------------------------------

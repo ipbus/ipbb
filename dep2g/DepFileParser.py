@@ -60,17 +60,15 @@ class DepFileParser(object):
   def __init__( self , aToolSet , aPathmaker, aVariables = {}, aVerbosity = 0 ):
     #--------------------------------------------------------------
     # Member variables
-    # self.CommandLineArgs = aCommandLineArgs
     self._toolset = aToolSet
-    self.Pathmaker = aPathmaker
     self._depth = 0
     self._verbosity = aVerbosity
+    self.Pathmaker = aPathmaker
 
     self.ScriptVariables = {}
-    self.CommandList = {"setup": [], "src": [], "addrtab": [] , "cgpfile" : [] }
+    self.CommandList = {'setup': [], 'src': [], 'addrtab': [] , 'cgpfile' : [] }
     self.Libs = list()
     self.Maps = list()
-    #---
     self.Components = OrderedDict()
 
     self.NotFound = list()
@@ -86,13 +84,13 @@ class DepFileParser(object):
     #--------------------------------------------------------------
     # Set the toolset
     if self._toolset == 'xtclsh':
-      self.ScriptVariables[ "toolset" ] = "ISE"
+      self.ScriptVariables[ 'toolset' ] = 'ISE'
     elif self._toolset == 'vivado':
-      self.ScriptVariables[ "toolset" ] = "Vivado"
+      self.ScriptVariables[ 'toolset' ] = 'Vivado'
     elif self._toolset == 'sim':
-      self.ScriptVariables[ "toolset" ] = "Modelsim"
+      self.ScriptVariables[ 'toolset' ] = 'Modelsim'
     else:
-      self.ScriptVariables[ "toolset" ] = "other"
+      self.ScriptVariables[ 'toolset' ] = 'other'
     #--------------------------------------------------------------
 
     #--------------------------------------------------------------
@@ -127,6 +125,8 @@ class DepFileParser(object):
     subp.add_argument("--cd")
     subp.add_argument("-t","--toplevel" , action = "store_true")
     subp.add_argument("file", nargs = "*")
+
+    # map parser method to self
     self.parseLine = parser.parse_args
     #--------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ class DepFileParser(object):
 
   #----------------------------------------------------------------------------------------------------------------------------
   @property
-  def aFilesNotFound(self):
+  def PathsNotFound(self):
     lNotFound = set()
 
     for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.NotFound:

@@ -25,7 +25,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 )
 @click.pass_context
 def cli(ctx):
-  ctx.obj = ipbb.Environment()
+  ctx.obj = ipbb.commands.Environment()
 
   # print (vars(ctx))
   # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
@@ -60,7 +60,7 @@ def info(env, verbose):
   
   secho ( "DepTree details", fg='blue')
   echo  ( "---------------")
-  echo  ( "parsed file(s):" )
+  echo  ( "parsed item(s):" )
   echo  ( "  setup   : %d" % len(env.depParser.CommandList['setup']))
   echo  ( "  src     : %d" % len(env.depParser.CommandList['src']))
   echo  ( "  addrtab : %d" % len(env.depParser.CommandList['addrtab']))
@@ -82,22 +82,22 @@ if __name__ == '__main__':
   '''Discovers the env at startup'''
 
   # Add custom commands to shell
-  import ipbb.repo
-  cli.add_command(ipbb.repo.init)
-  cli.add_command(ipbb.repo.cd)
-  cli.add_command(ipbb.repo.add)
+  import ipbb.commands.repo as repo
+  cli.add_command(repo.init)
+  cli.add_command(repo.cd)
+  cli.add_command(repo.add)
 
-  import ipbb.proj
-  cli.add_command(ipbb.proj.proj)
+  import ipbb.commands.proj as proj
+  cli.add_command(proj.proj)
 
-  import ipbb.dep
-  cli.add_command(ipbb.dep.dep)
+  import ipbb.commands.dep as dep
+  cli.add_command(dep.dep)
 
-  import ipbb.vivado
-  cli.add_command(ipbb.vivado.vivado)
+  import ipbb.commands.vivado as vivado
+  cli.add_command(vivado.vivado)
 
-  import ipbb.sim
-  cli.add_command(ipbb.sim.sim)
+  import ipbb.commands.sim as sim
+  cli.add_command(sim.sim)
 
   cli()
 #------------------------------------------------------------------------------

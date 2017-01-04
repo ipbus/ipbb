@@ -3,38 +3,13 @@ from __future__ import print_function
 # Modules
 import click
 import os
-import ipbb
+# import ipbb
 import subprocess
+from . import kSourceDir, kWorkDir, kSignatureFile
 
 # Elements
 from os.path import join, split, exists, splitext, dirname
 from .common import DirSentry, findFileInParents
-
-'''
-Commands defined here
-
-* init
-* add
-  * git
-  * svn
-* chroot
-* chwork
-* ls
-
-# Possible evolution
-
-* init
-* repo
-  * add
-    * git
-    * svb
-  * ls
-  * rm
-* cd (?)
-* work
-  * cd
-  * ls
-'''
 
 #------------------------------------------------------------------------------
 @click.command()
@@ -53,18 +28,12 @@ def init(env, area):
     raise click.ClickException( 'Directory \'%s\' already exists' % area )
 
   # Build source code directory
-  os.makedirs(join(area, ipbb.kSourceDir))
-  os.makedirs(join(area, ipbb.kWorkDir))
+  os.makedirs(join(area, kSourceDir))
+  os.makedirs(join(area, kWorkDir))
 
-  with open( join( area, ipbb.kSignatureFile ),'w' ) as lSignature:
+  with open( join( area, kSignatureFile ),'w' ) as lSignature:
     lSignature.write('\n')
   
-  # print( '--->', repo, join( area, ipbb.kSourceDir ) )
-  # if not repo:
-    # return
-  # else:
-    # with DirSentry( join( area, ipbb.kSourceDir ) ) as lSentry:
-      # subprocess.check_call( ['git', 'clone', repo] )
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -107,7 +76,7 @@ def git(env, repo, branch):
   
   lUrl = urlparse(repo)
   lRepoName = splitext(split(lUrl.path)[-1])[0]
-  lRepoLocalPath = join(env.root, ipbb.kSourceDir, lRepoName)
+  lRepoLocalPath = join(env.root, kSourceDir, lRepoName)
   
   if exists(lRepoLocalPath):
     raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
@@ -117,7 +86,7 @@ def git(env, repo, branch):
     lArgs += ['-b', branch]
 
   # Do the cloning
-  with DirSentry( join(env.root, ipbb.kSourceDir) ) as lSentry:
+  with DirSentry( join(env.root, kSourceDir) ) as lSentry:
     subprocess.check_call(['git']+lArgs)
 #------------------------------------------------------------------------------
 

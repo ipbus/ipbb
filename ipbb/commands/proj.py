@@ -7,6 +7,7 @@ import ipbb
 import subprocess
 
 # Elements
+from . import kProjectFile, kWorkDir
 from .common import DirSentry
 
 from os.path import join, split, exists, splitext
@@ -20,7 +21,7 @@ def _getprojects(env):
     raise click.ClickException("Directory '%s' does not exist." % env.work )
 
   '''Returns the list of existing projects'''
-  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, ipbb.kProjectFile ) ) ]
+  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, kProjectFile ) ) ]
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -64,7 +65,7 @@ def create( env, kind, projarea, component, topdep ):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  lWorkAreaPath = join(env.root, ipbb.kWorkDir, projarea)
+  lWorkAreaPath = join( env.root, kWorkDir, projarea )
   if exists(lWorkAreaPath):
     raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
   #------------------------------------------------------------------------------
@@ -73,7 +74,7 @@ def create( env, kind, projarea, component, topdep ):
   from dep2g.Pathmaker import Pathmaker
   lPathmaker = Pathmaker(env.src, 0)
   lTopPackage, lTopComponent = component
-  lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
+  lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
   if not exists(lTopDepPath):
     raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
   #------------------------------------------------------------------------------
@@ -89,7 +90,7 @@ def create( env, kind, projarea, component, topdep ):
     'name': projarea
 
   }
-  with SmartOpen( join(lWorkAreaPath,ipbb.kProjectFile) ) as lWorkFile:
+  with SmartOpen( join(lWorkAreaPath, kProjectFile) ) as lWorkFile:
     import json
     json.dump(lCfg, lWorkFile.file, indent=2)
 #------------------------------------------------------------------------------

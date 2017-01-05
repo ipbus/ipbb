@@ -7,13 +7,13 @@ import os
 import ipbb
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
-from tools.common import which, SmartOpen
+from ..tools.common import which, SmartOpen
 from .common import DirSentry
 
 #------------------------------------------------------------------------------
 def ensureVivado( env ):
   if env.projectConfig['toolset'] != 'vivado':
-    raise click.ClickException("Work area product mismatch. Expected 'vivado', found '%s'" % env.projectConfig['toolset'] )
+    raise click.ClickException("Work area toolset mismatch. Expected 'vivado', found '%s'" % env.projectConfig['toolset'] )
 
   if not which('vivado'):
   # if 'XILINX_VIVADO' not in os.environ:
@@ -42,10 +42,10 @@ def project( env, output ):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from dep2g.VivadoProjectMaker import VivadoProjectMaker
+  from ..dep2g.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker( env.pathMaker )
 
-  from tools.xilinx import VivadoOpen
+  from ..tools.xilinx import VivadoOpen
   with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
     lWriter.write(
       lTarget,
@@ -83,8 +83,8 @@ def build( env ):
     'wait_on_run impl_1',
   ]
 
-  import tools.xilinx
-  with tools.xilinx.VivadoOpen() as lTarget:
+  from ..tools.xilinx import VivadoOpen
+  with VivadoOpen() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lSynthCmds)
     lTarget(lImplCmds)
@@ -108,8 +108,8 @@ def bitfile( env ):
     'wait_on_run impl_1',
   ]
 
-  import tools.xilinx
-  with tools.xilinx.VivadoOpen() as lTarget:
+  from ..tools.xilinx import VivadoOpen
+  with VivadoOpen() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lBitFileCmds)
 #------------------------------------------------------------------------------
@@ -132,8 +132,8 @@ def reset( env ):
     'reset_run impl_1',
   ]
 
-  import tools.xilinx
-  with tools.xilinx.VivadoOpen() as lTarget:
+  from ..tools.xilinx import VivadoOpen
+  with VivadoOpen() as lTarget:
     lTarget(lOpenCmds)
     lTarget(lResetCmds)
 #------------------------------------------------------------------------------

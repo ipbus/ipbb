@@ -6,8 +6,8 @@ import click
 from . import common
 from os import walk
 from os.path import join, split, exists, splitext, basename
-from dep2g.Pathmaker import Pathmaker
-from dep2g.DepFileParser import DepFileParser
+from ..dep2g.Pathmaker import Pathmaker
+from ..dep2g.DepFileParser import DepFileParser
 
 # Constants
 kSignatureFile = '.ipbbarea'

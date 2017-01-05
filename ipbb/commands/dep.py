@@ -6,7 +6,7 @@ import os
 import sh
 
 from os.path import join, split, exists, basename, abspath, splitext
-from tools.common import which, SmartOpen
+from ..tools.common import which, SmartOpen
 from .common import DirSentry
 
 #------------------------------------------------------------------------------

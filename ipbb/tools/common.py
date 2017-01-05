@@ -70,25 +70,3 @@ class SmartOpen( object ):
     self.file.write( string )
     self.file.write( "\n" )
 #------------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
-# def makeParser(env, verbosity = 0 ):
-#   from dep2g.Pathmaker import Pathmaker
-#   from dep2g.DepFileParser import DepFileParser
-
-#   lCfg = env.projectConfig
-
-#   class dummy:pass
-#   lCommandLineArgs = dummy()
-#   lCommandLineArgs.define = ''
-#   lCommandLineArgs.product = lCfg['toolset']
-#   lCommandLineArgs.verbosity = verbosity
-
-
-#   lPathmaker = Pathmaker( env.src, verbosity )
-#   lDepFileParser = DepFileParser( lCommandLineArgs , lPathmaker )
-#   lDepFileParser.parse(lCfg['topPkg'], lCfg['topCmp'], lCfg['topDep'])
-
-#   return lDepFileParser, lPathmaker, lCommandLineArgs
-
-#------------------------------------------------------------------------------

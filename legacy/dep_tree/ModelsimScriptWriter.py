@@ -1,7 +1,7 @@
 from __future__ import print_function
 import time, os
 
-from tools.common import SmartOpen
+from ..tools.common import SmartOpen
 # from Pathmaker import Pathmaker
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -3,7 +3,7 @@ import time, os
 
 from Pathmaker import Pathmaker
 from os.path import join, split, exists, splitext, abspath
-from tools.common import SmartOpen
+from ..tools.common import SmartOpen
 
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimProjectMaker( object ):

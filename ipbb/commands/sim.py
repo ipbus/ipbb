@@ -9,7 +9,7 @@ import subprocess
 
 # Elements
 from os.path import join, split, exists, splitext, basename, dirname, abspath
-from tools.common import which, do, ensuresudo, SmartOpen
+from ..tools.common import which, do, ensuresudo, SmartOpen
 from .common import DirSentry
 
 #------------------------------------------------
@@ -57,40 +57,14 @@ def ipcores(env, output):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from dep2g.IPCoresSimMaker import IPCoresSimMaker
+  from ..dep2g.IPCoresSimMaker import IPCoresSimMaker
   lWriter = IPCoresSimMaker( env.pathMaker )
 
   # FIXME: Yeah, this is a hack
   # TODO: Remove XILINX_SIMLIBS reference from IPCoresSimMaker
   os.environ['XILINX_SIMLIBS'] = join('.xil_sim_libs',basename(os.environ['XILINX_VIVADO']))
 
-
-
-  # TODO: Simplify here
-  # if output:
-  #   if output == 'stdout': output = None
-  #   with SmartOpen(output) as lTarget:
-  #     lWriter.write(
-  #       lTarget,
-  #       lDepFileParser.ScriptVariables,
-  #       lDepFileParser.Components,
-  #       lDepFileParser.CommandList ,
-  #       lDepFileParser.Libs,
-  #       lDepFileParser.Maps
-  #     )
-  # else:
-  #   import tools.xilinx
-  #   with tools.xilinx.VivadoOpen() as lTarget:
-  #     lWriter.write(
-  #       lTarget,
-  #       lDepFileParser.ScriptVariables,
-  #       lDepFileParser.Components,
-  #       lDepFileParser.CommandList ,
-  #       lDepFileParser.Libs,
-  #       lDepFileParser.Maps
-  #     )
-
-  from tools.xilinx import VivadoOpen
+  from ..tools.xilinx import VivadoOpen
   with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
     lWriter.write(
       lTarget,
@@ -171,34 +145,10 @@ def project( env, output ):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from dep2g.ModelSimProjectMaker import ModelSimProjectMaker
+  from ..dep2g.ModelSimProjectMaker import ModelSimProjectMaker
   lWriter = ModelSimProjectMaker( env.pathMaker )
 
-  # TODO: Simplify here
-  # if output:
-  #   if output == 'stdout': output = None
-  #   with SmartOpen(output) as lTarget:
-  #     lWriter.write(
-  #       lTarget,
-  #       lDepFileParser.ScriptVariables,
-  #       lDepFileParser.Components,
-  #       lDepFileParser.CommandList ,
-  #       lDepFileParser.Libs,
-  #       lDepFileParser.Maps
-  #     )
-  # else:
-  #   import tools.mentor
-  #   with tools.mentor.ModelSimOpen() as lTarget:
-  #     lWriter.write(
-  #       lTarget,
-  #       lDepFileParser.ScriptVariables,
-  #       lDepFileParser.Components,
-  #       lDepFileParser.CommandList ,
-  #       lDepFileParser.Libs,
-  #       lDepFileParser.Maps
-  #     )
-
-  from tools.mentor import ModelSimOpen
+  from ..tools.mentor import ModelSimOpen
   with ( ModelSimOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
     lWriter.write(
       lTarget,

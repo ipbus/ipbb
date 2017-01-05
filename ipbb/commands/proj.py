@@ -11,7 +11,7 @@ from . import kProjectFile, kWorkDir
 from .common import DirSentry
 
 from os.path import join, split, exists, splitext
-from tools.common import SmartOpen
+from ..tools.common import SmartOpen
 
 
 #------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ def create( env, kind, projarea, component, topdep ):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  from dep2g.Pathmaker import Pathmaker
+  from ..dep2g.Pathmaker import Pathmaker
   lPathmaker = Pathmaker(env.src, 0)
   lTopPackage, lTopComponent = component
   lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
@@ -83,7 +83,7 @@ def create( env, kind, projarea, component, topdep ):
   os.makedirs(lWorkAreaPath)
 
   lCfg = {
-    'product': kind,
+    'toolset': kind,
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
     'topDep': topdep,

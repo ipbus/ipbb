@@ -60,6 +60,9 @@ if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
   virtualenv ${IPBB_ROOT}/external/ipbb --no-site-packages
   source ${IPBB_ROOT}/external/ipbb/bin/activate
 
+  # upgrade pip to the latest greatest version
+  pip install --upgrade pip
+
   PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
@@ -68,6 +71,7 @@ if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
     pip install ipython==1.2.1
   fi
 
+  pip install argparse
   pip install click
   pip install pexpect
   pip install sh

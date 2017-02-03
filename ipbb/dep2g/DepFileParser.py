@@ -193,10 +193,11 @@ class DepFileParser(object):
             lCmpPath = self.Pathmaker.getPath(pkg,cmp)
             for lFile in sorted(lFiles):
               lSrcs = lFiles[lFile]
-              string += '    + %s (sourced by %d deps)\n' % (os.path.relpath(lFile, lCmpPath), len(lSrcs))
+              string += '    + %s\n' % os.path.relpath(lFile, lCmpPath)
+              string += '      | included by %d dep file(s)\n' % len(lSrcs)
 
               for lSrc in lSrcs:
-                string += '        <-- %s\n' % lSrc
+                string += '      \ - %s\n' % os.path.relpath(lSrc, self.Pathmaker.rootdir)
               string += '\n'
       #------
 

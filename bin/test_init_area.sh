@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 
 AREA_NAME="myarea"
 

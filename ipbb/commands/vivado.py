@@ -45,16 +45,20 @@ def project( env, output ):
   from ..dep2g.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker( env.pathMaker )
 
-  from ..tools.xilinx import VivadoOpen
-  with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
-    lWriter.write(
-      lTarget,
-      lDepFileParser.ScriptVariables,
-      lDepFileParser.Components,
-      lDepFileParser.CommandList ,
-      lDepFileParser.Libs,
-      lDepFileParser.Maps
-    )
+  from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+  try:
+    with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+      lWriter.write(
+        lTarget,
+        lDepFileParser.ScriptVariables,
+        lDepFileParser.Components,
+        lDepFileParser.CommandList ,
+        lDepFileParser.Libs,
+        lDepFileParser.Maps
+      )
+  except VivadoConsoleError as lExc:
+    click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
+    raise click.Abort()
   #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 
@@ -83,11 +87,76 @@ def build( env ):
     'wait_on_run impl_1',
   ]
 
-  from ..tools.xilinx import VivadoOpen
-  with VivadoOpen() as lTarget:
-    lTarget(lOpenCmds)
-    lTarget(lSynthCmds)
-    lTarget(lImplCmds)
+  from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+  try:
+    with VivadoOpen() as lTarget:
+      lTarget(lOpenCmds)
+      lTarget(lSynthCmds)
+      lTarget(lImplCmds)
+  except VivadoConsoleError as lExc:
+    click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
+    raise click.Abort()
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@vivado.command()
+@click.pass_obj
+def synth( env ):
+  '''Syntesize and implement current vivado project'''
+
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
+
+  ensureVivado( env )
+
+  lOpenCmds = [
+    'open_project %s' % join(env.projectPath, 'top', 'top'),
+  ]
+
+  lSynthCmds = [
+    'launch_runs synth_1',
+    'wait_on_run synth_1',
+  ]
+
+
+  from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+  try:
+    with VivadoOpen() as lTarget:
+      lTarget(lOpenCmds)
+      lTarget(lSynthCmds)
+  except VivadoConsoleError as lExc:
+    click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
+    raise click.Abort()
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@vivado.command()
+@click.pass_obj
+def impl( env ):
+  '''Syntesize and implement current vivado project'''
+
+  if env.project is None:
+    raise click.ClickException('Project area not defined. Move into a project area and try again')
+
+  ensureVivado( env )
+
+  lOpenCmds = [
+    'open_project %s' % join(env.projectPath, 'top', 'top'),
+  ]
+
+  lImplCmds = [
+    'launch_runs impl_1',
+    'wait_on_run impl_1',
+  ]
+
+  from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+  try:
+    with VivadoOpen() as lTarget:
+      lTarget(lOpenCmds)
+      lTarget(lImplCmds)
+  except VivadoConsoleError as lExc:
+    click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
+    raise click.Abort()
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -108,10 +177,14 @@ def bitfile( env ):
     'wait_on_run impl_1',
   ]
 
-  from ..tools.xilinx import VivadoOpen
-  with VivadoOpen() as lTarget:
-    lTarget(lOpenCmds)
-    lTarget(lBitFileCmds)
+  from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+  try:
+    with VivadoOpen() as lTarget:
+      lTarget(lOpenCmds)
+      lTarget(lBitFileCmds)
+  except VivadoConsoleError as lExc:
+    click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
+    raise click.Abort()
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -124,7 +197,7 @@ def reset( env ):
   ensureVivado( env )
 
   lOpenCmds = [
-    'open_project %s' % join(env.project, 'top', 'top'),
+    'open_project %s' % join(env.projectPath, 'top', 'top'),
   ]
 
   lResetCmds = [
@@ -132,10 +205,14 @@ def reset( env ):
     'reset_run impl_1',
   ]
 
-  from ..tools.xilinx import VivadoOpen
-  with VivadoOpen() as lTarget:
-    lTarget(lOpenCmds)
-    lTarget(lResetCmds)
+  from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+  try:
+    with VivadoOpen() as lTarget:
+      lTarget(lOpenCmds)
+      lTarget(lResetCmds)
+  except VivadoConsoleError as lExc:
+    click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
+    raise click.Abort()
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

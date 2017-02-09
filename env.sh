@@ -83,6 +83,14 @@ fi
 if [ -z ${VIRTUAL_ENV+X} ] ; then
   echo "Activating ipbb environment"
   source ${IPBB_ROOT}/external/ipbb/bin/activate
+
+  # Consistency check
+  if [[ ! ${IPBB_ROOT}}/external/ipbb -ef ${VIRTUAL_ENV}} ]]; then
+    deactivate
+    echo "ipbb environment loading failed. Was this directory moved?"
+    echo "Delete ${IPBB}/external and source env.sh again"
+    return
+  fi
 fi
 
 # Obscure click vodoo to enable bash autocompletion

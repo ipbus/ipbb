@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+
+if test "$#" -ne 1; then
+    echo "Illegal number of parameters"
+    exit
+fi
+
+exit 0
+
 CACTUS_USER="thea"
 
 ipbb init mp7_noipbus

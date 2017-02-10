@@ -44,7 +44,10 @@ fi
 
 SH_SOURCE=${BASH_SOURCE}
 IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
+
+# add bin and test/bin to PATH
 pathadd PATH ${IPBB_ROOT}/bin
+pathadd PATH ${IPBB_ROOT}/test/bin
 
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"

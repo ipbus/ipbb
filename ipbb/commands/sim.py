@@ -139,7 +139,7 @@ def project( env, output ):
 
   #------------------------------------------------------------------------------
   if not which('vsim'):
-    raise click.ClickException('ModelSim is not available. Have you sourced the environment script?' )
+    raise click.ClickException('ModelSim (vsim) not found. Please add Modelsim to PATH and execute the command again.' )
   #------------------------------------------------------------------------------
 
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
@@ -207,7 +207,11 @@ def virtualtap(env, dev, ip):
   """VirtualTap
   """
 
-  # ensuresudo()
+  #------------------------------------------------------------------------------
+  if not which('openvpn'):
+    raise click.ClickException('OpenVPN (openvpn) not found. Please install it and execute the command again.' )
+  #------------------------------------------------------------------------------
+
 
   lCmds = '''
 sudo openvpn --mktun --dev {0}

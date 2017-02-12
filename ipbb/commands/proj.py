@@ -7,7 +7,7 @@ import ipbb
 import subprocess
 
 # Elements
-from . import kProjectFile, kWorkDir
+from . import kProjectFileName, kWorkDir
 from .common import DirSentry
 
 from os.path import join, split, exists, splitext
@@ -21,7 +21,7 @@ def _getprojects(env):
     raise click.ClickException("Directory '%s' does not exist." % env.work )
 
   '''Returns the list of existing projects'''
-  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, kProjectFile ) ) ]
+  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, kProjectFileName ) ) ]
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ def _validateComponent(ctx, param, value):
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 @click.pass_obj
 def create( env, kind, projarea, component, topdep ):
-  '''Create a new Vivado working area
+  '''Create a new project area
 
     
     Creates a new area of name PROJAREA of kind KIND 
@@ -65,9 +65,9 @@ def create( env, kind, projarea, component, topdep ):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  lWorkAreaPath = join( env.root, kWorkDir, projarea )
-  if exists(lWorkAreaPath):
-    raise click.ClickException('Directory %s already exists' % lWorkAreaPath)
+  lProjAreaPath = join( env.root, kWorkDir, projarea )
+  if exists(lProjAreaPath):
+    raise click.ClickException('Directory %s already exists' % lProjAreaPath)
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ def create( env, kind, projarea, component, topdep ):
   #------------------------------------------------------------------------------
 
   # Build source code directory
-  os.makedirs(lWorkAreaPath)
+  os.makedirs(lProjAreaPath)
 
   lCfg = {
     'toolset': kind,
@@ -90,9 +90,9 @@ def create( env, kind, projarea, component, topdep ):
     'name': projarea
 
   }
-  with SmartOpen( join(lWorkAreaPath, kProjectFile) ) as lWorkFile:
+  with SmartOpen( join(lProjAreaPath, kProjectFileName) ) as lProjFile:
     import json
-    json.dump(lCfg, lWorkFile.file, indent=2)
+    json.dump(lCfg, lProjFile.file, indent=2)
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

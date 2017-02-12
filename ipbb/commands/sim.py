@@ -79,9 +79,10 @@ def ipcores(env, output):
 
 #------------------------------------------------------------------------------
 @sim.command()
-@click.option('--dev', metavar='DEVICE', default='tap0', help='name of the new device')
+@click.option('--dev', metavar='DEVICE', default='tap0', help='new virtual device')
+@click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-fw-beta4', help='ipbus firmware package')
 @click.pass_obj
-def fli(env, dev):
+def fli(env, dev, ipbuspkg):
 
   #------------------------------------------------------------------------------
   # Must be in a build area
@@ -98,8 +99,8 @@ def fli(env, dev):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  if 'ipbus-fw-dev' not in env.getsources():
-    raise click.ClickException( "ipbus-fw-dev is not available. The FLI cannot be built." )
+  if ipbuspkg not in env.getsources():
+    raise click.ClickException( "Package %s not found in source/. The FLI cannot be built." % ipbuspkg)
   #------------------------------------------------------------------------------
 
   # Set ModelSim root based on vsim's path
@@ -107,7 +108,7 @@ def fli(env, dev):
   # Apply set 
   # os.environ['MTI_VCO_MODE']='64'
 
-  lFliSrc = join(env.src, 'ipbus-fw-dev', 'components', 'ipbus_eth', 'firmware', 'sim', 'modelsim_fli')
+  lFliSrc = join(env.src, ipbuspkg, 'components', 'ipbus_eth', 'firmware', 'sim', 'modelsim_fli')
 
   import sh
   # Clean-up

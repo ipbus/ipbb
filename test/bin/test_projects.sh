@@ -8,6 +8,9 @@ fi
 
 if [ "$#" -ne 1 ]; then
     echo "Usage $(basename $0) <project>"
+    echo "  - kc705"
+    echo "  - mp7xe_690_minimal"
+    echo "  - mp7_sim"
     exit
 fi
 
@@ -39,7 +42,6 @@ elif [[ "${IPBB_TEST_PROJ}" == "mp7_sim" ]]; then
     ipbb sim fli 
     ipbb sim project
     ./vsim -c work.top -do "run 10 us; quit"
-    set +x
 else
     echo "Unknow project ${IPBB_TEST_PROJ}."
     echo "  Available projects: kc705, mp7xe_690_minimal, mp7_sim"

@@ -80,7 +80,7 @@ def ipcores(env, output):
 #------------------------------------------------------------------------------
 @sim.command()
 @click.option('--dev', metavar='DEVICE', default='tap0', help='new virtual device')
-@click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-fw-beta4', help='ipbus firmware package')
+@click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
 def fli(env, dev, ipbuspkg):
 

@@ -8,11 +8,10 @@ cd ipbus_internals
 TEST_ROOT=$(pwd)
 
 # Import ipbus repository
-ipbb add git git@github.com:tswilliams/ipbus-fw-beta4.git -b ipbb_integration
-
+ipbb add git git@github.com:ipbus/ipbus-firmware.git
 
 # Simulation
-ipbb proj create sim sim ipbus-fw-beta4:boards/sim
+ipbb proj create sim sim ipbus-firmware:boards/sim
 cd work/sim
 set +e
 { 
@@ -30,7 +29,7 @@ for TEST_PROJ in "${TEST_PROJ_ARRAY[@]}"; do
     echo "# Testing ${TEST_PROJ}"
     echo "#------------------------------------------------"
     cd ${TEST_ROOT}
-    ipbb proj create vivado -t top_${TEST_PROJ}.dep ${TEST_PROJ} ipbus-fw-beta4:projects/example
+    ipbb proj create vivado -t top_${TEST_PROJ}.dep ${TEST_PROJ} ipbus-firmware:projects/example
     cd work/${TEST_PROJ}
     set +e
     ipbb vivado project synth impl bitfile || echo "ERROR: ${TEST_PROJ} build failed" >> ${TEST_ROOT}/failures.log

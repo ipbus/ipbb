@@ -11,15 +11,23 @@ from .common import DirSentry
 
 #------------------------------------------------------------------------------
 @click.group()
-def dep():
-  pass
+@click.pass_context
+@click.option('-p', '--proj', default=None)
+def dep(ctx, proj):
+  
+  if proj is None: return
+
+  # Change directory before executing subcommand
+  from .proj import cd
+  ctx.invoke(cd, proj=proj)
+
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @dep.command()
 @click.option('-o', '--output', default=None)
 @click.pass_obj
-def print( env, output ):
+def report( env, output ):
   '''Print the '''
 
   with SmartOpen( output ) as lWriter:

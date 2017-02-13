@@ -11,7 +11,7 @@ from ..dep2g.DepFileParser import DepFileParser
 
 # Constants
 kSignatureFile = '.ipbbarea'
-kProjectFile = '.ipbbproj'
+kProjectFileName = '.ipbbproj'
 kSourceDir = 'source'
 kWorkDir = 'work'
 
@@ -56,7 +56,7 @@ class Environment(object):
     self.root, self.rootFile = split( lSignaturePath )
     self.pathMaker = Pathmaker( self.src, self._verbosity )
 
-    lProjectPath = common.findFileInParents( kProjectFile )
+    lProjectPath = common.findFileInParents( kProjectFileName )
 
     # Stop here if no project file is found
     if not lProjectPath:
@@ -116,7 +116,7 @@ class Environment(object):
   
   #------------------------------------------------------------------------------
   def getworks(self):
-    return [ lProj for lProj in next(walk(self.work))[1] if exists( join( self.work, lProj, kProjectFile ) ) ]
+    return [ lProj for lProj in next(walk(self.work))[1] if exists( join( self.work, lProj, kProjectFileName ) ) ]
   #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

@@ -166,7 +166,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
           subprocess.check_call(lCmd)
 
         lCmd = ['svn','up','--set-depth=infinity',lPath]
-        print (lCmd)
+        print ('Executing: ',lCmd)
         subprocess.check_call(lCmd)
   #------------------------------------------------------------------------------
 

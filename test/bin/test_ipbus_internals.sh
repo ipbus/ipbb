@@ -14,12 +14,13 @@ ipbb add git git@github.com:tswilliams/ipbus-fw-beta4.git -b ipbb_integration
 # Simulation
 ipbb proj create sim sim ipbus-fw-beta4:boards/sim
 cd work/sim
-ipbb sim ipcores
-ipbb sim fli 
-ipbb sim project
-./vsim -c work.top -do "run 10 us; quit"
-
-exit 0
+set +e
+{ 
+ipbb sim ipcores fli project && ./vsim -c work.top -do "run 10 us; quit" 
+} || {
+    echo "ERROR: sim test failed" >> ${TEST_ROOT}/failures.log
+}
+set -e
 
 # Vivado projects
 TEST_PROJ_ARRAY=(enclustra_ax3_pm3_a35 enclustra_ax3_pm3_a50 kc705_basex kc705_gmii kcu105_basex)
@@ -36,7 +37,9 @@ for TEST_PROJ in "${TEST_PROJ_ARRAY[@]}"; do
     set +e
 done
 
-echo ""
+echo "#------------------------------------------------"
+echo "# Summary"
+echo "#------------------------------------------------"
 cat ${TEST_ROOT}/failures.log
 
 

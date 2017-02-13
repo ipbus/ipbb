@@ -39,7 +39,7 @@ elif [[ "${IPBB_TEST_PROJ}" == "mp7_sim" ]]; then
     ipbb proj create sim mp7_sim cactusupgrades:projects/examples/mp7_sim 
     cd work/mp7_sim
     ipbb sim ipcores
-    ipbb sim fli 
+    ipbb sim fli --ipbuspkg=ipbus-fw-dev
     ipbb sim project
     ./vsim -c work.top -do "run 10 us; quit"
 else

@@ -7,7 +7,7 @@ import ipbb
 import subprocess
 
 # Elements
-from . import kProjectFileName, kWorkDir
+from . import kProjAreaCfgFile, kProjDir
 from .common import DirSentry
 
 from os.path import join, split, exists, splitext
@@ -21,7 +21,7 @@ def _getprojects(env):
     raise click.ClickException("Directory '%s' does not exist." % env.work )
 
   '''Returns the list of existing projects'''
-  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, kProjectFileName ) ) ]
+  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, kProjAreaCfgFile ) ) ]
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -60,12 +60,12 @@ def create( env, kind, projarea, component, topdep ):
   '''
   #------------------------------------------------------------------------------
   # Must be in a build area
-  if env.root is None:
+  if env.workPath is None:
     raise click.ClickException('Build area root directory not found')
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  lProjAreaPath = join( env.root, kWorkDir, projarea )
+  lProjAreaPath = join( env.workPath, kProjDir, projarea )
   if exists(lProjAreaPath):
     raise click.ClickException('Directory %s already exists' % lProjAreaPath)
   #------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ def create( env, kind, projarea, component, topdep ):
     'name': projarea
 
   }
-  with SmartOpen( join(lProjAreaPath, kProjectFileName) ) as lProjFile:
+  with SmartOpen( join(lProjAreaPath, kProjAreaCfgFile) ) as lProjFile:
     import json
     json.dump(lCfg, lProjFile.file, indent=2)
 #------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ def create( env, kind, projarea, component, topdep ):
 @click.pass_obj
 def ls( env ):
   lProjects = _getprojects(env)
-  print ( 'Root:', env.root )
+  print ( 'Root:', env.workPath )
   print ( 'Projects areas:', ', '.join( [ lProject + ('*' if lProject == env.project else '') for lProject in lProjects ] ) )
 #------------------------------------------------------------------------------
 

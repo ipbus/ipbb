@@ -12,7 +12,7 @@ ipbb add git git@github.com:ipbus/ipbus-firmware.git
 
 # Simulation
 ipbb proj create sim sim ipbus-firmware:boards/sim
-cd work/sim
+cd proj/sim
 set +e
 { 
 ipbb sim ipcores fli project && ./vsim -c work.top -do "run 10 us; quit" 
@@ -30,7 +30,7 @@ for TEST_PROJ in "${TEST_PROJ_ARRAY[@]}"; do
     echo "#------------------------------------------------"
     cd ${TEST_ROOT}
     ipbb proj create vivado -t top_${TEST_PROJ}.dep ${TEST_PROJ} ipbus-firmware:projects/example
-    cd work/${TEST_PROJ}
+    cd proj/${TEST_PROJ}
     set +e
     ipbb vivado project synth impl bitfile || echo "ERROR: ${TEST_PROJ} build failed" >> ${TEST_ROOT}/failures.log
     set +e

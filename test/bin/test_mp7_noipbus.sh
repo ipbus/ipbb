@@ -25,20 +25,20 @@ ipbb add git ssh://git@gitlab.cern.ch:7999/thea/mp7.git
 MP7_REPO_NAME="mp7"
 
 # Eliminate ipbus & relink to external repository
-rm -rf "source/${MP7_REPO_NAME}/components/{ipbus_*,opencores_*}"
-find "source/${MP7_REPO_NAME}/" -type f -name '*.dep' -print0 | xargs -0 sed -i 's#\(-c \)\(components/\(ipbus_\|opencores_\)\)#\1ipbus-fw-beta4:\2#'
+rm -rf "src/${MP7_REPO_NAME}/components/{ipbus_*,opencores_*}"
+find "src/${MP7_REPO_NAME}/" -type f -name '*.dep' -print0 | xargs -0 sed -i 's#\(-c \)\(components/\(ipbus_\|opencores_\)\)#\1ipbus-fw-beta4:\2#'
 
 ipbb proj create vivado mp7xe_690_minimal ${MP7_REPO_NAME}:projects/examples/mp7xe_690_minimal
 
 # replace v7_690es.dep with v7_690es_new.dep in
-# ../../source/${MP7_REPO_NAME}/boards/mp7/base_fw/mp7_690es/firmware/cfg/mp7_690es.dep
-# ../../source/${MP7_REPO_NAME}/boards/mp7/base_fw/mp7xe_690/firmware/cfg/mp7xe_690.dep
-sed -i 's#v7_690es.dep#v7_690es_new.dep#' source/${MP7_REPO_NAME}/boards/mp7/base_fw/{mp7_690es/firmware/cfg/mp7_690es.dep,mp7xe_690/firmware/cfg/mp7xe_690.dep}
+# ../../src/${MP7_REPO_NAME}/boards/mp7/base_fw/mp7_690es/firmware/cfg/mp7_690es.dep
+# ../../src/${MP7_REPO_NAME}/boards/mp7/base_fw/mp7xe_690/firmware/cfg/mp7xe_690.dep
+sed -i 's#v7_690es.dep#v7_690es_new.dep#' src/${MP7_REPO_NAME}/boards/mp7/base_fw/{mp7_690es/firmware/cfg/mp7_690es.dep,mp7xe_690/firmware/cfg/mp7xe_690.dep}
 
 # Delete synchroniser.vhd from ${MP7_REPO_NAME}/components/mp7_infra/firmware/cfg/mp7xe_infra.dep
-sed -i 's# synchroniser.vhd##' source/${MP7_REPO_NAME}/components/mp7_infra/firmware/cfg/mp7xe_infra.dep
+sed -i 's# synchroniser.vhd##' src/${MP7_REPO_NAME}/components/mp7_infra/firmware/cfg/mp7xe_infra.dep
 
-cd work/mp7xe_690_minimal
+cd proj/mp7xe_690_minimal
 
 ipbb vivado project
 ipbb vivado synth

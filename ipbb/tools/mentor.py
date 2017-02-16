@@ -3,11 +3,11 @@ from __future__ import print_function
 
 # Modules
 import subprocess
-import pexpect
 import sys
+import pexpect
 import re
 import collections
-import os
+# import os
 import atexit
 
 # Elements

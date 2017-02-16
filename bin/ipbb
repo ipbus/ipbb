@@ -44,8 +44,8 @@ def info(env, verbose):
   echo()
   secho ( "Current environment", fg='blue' )
   echo  ( "-------------------")  
-  echo  ( "Sandbox path : " + ( env.root if env.root else style("Not found", fg='red') ) )
-  echo  ( "Work path    : " + ( env.projectPath if env.projectPath else style("Not found", fg='red') ) )
+  echo  ( "Work path    : " + ( env.workPath if env.workPath else style("Not found", fg='red') ) )
+  echo  ( "Project path : " + ( env.projectPath if env.projectPath else style("Not found", fg='red') ) )
   echo  ( )
 
   if env.projectConfig is None: return

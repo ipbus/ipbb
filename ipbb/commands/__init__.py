@@ -10,10 +10,10 @@ from ..dep2g.Pathmaker import Pathmaker
 from ..dep2g.DepFileParser import DepFileParser
 
 # Constants
-kSignatureFile = '.ipbbarea'
-kProjectFileName = '.ipbbproj'
-kSourceDir = 'source'
-kWorkDir = 'work'
+kWorkAreaCfgFile = '.ipbbwork'
+kProjAreaCfgFile = '.ipbbproj'
+kSourceDir = 'src'
+kProjDir = 'proj'
 
 #------------------------------------------------------------------------------
 class Environment(object):
@@ -30,8 +30,8 @@ class Environment(object):
 
   #------------------------------------------------------------------------------
   def _clear(self):
-    self.root = None
-    self.rootFile = None
+    self.workPath = None
+    self.workCfgFile = None
     
     self.project = None
     self.projectPath = None
@@ -47,16 +47,16 @@ class Environment(object):
 
     self._clear()
 
-    lSignaturePath = common.findFileInParents( kSignatureFile )
+    lWorkAreaPath = common.findFileInParents( kWorkAreaCfgFile )
 
     # Stop here is no signature is found 
-    if not lSignaturePath:
+    if not lWorkAreaPath:
       return
 
-    self.root, self.rootFile = split( lSignaturePath )
+    self.workPath, self.workCfgFile = split( lWorkAreaPath )
     self.pathMaker = Pathmaker( self.src, self._verbosity )
 
-    lProjectPath = common.findFileInParents( kProjectFileName )
+    lProjectPath = common.findFileInParents( kProjAreaCfgFile )
 
     # Stop here if no project file is found
     if not lProjectPath:
@@ -89,10 +89,10 @@ class Environment(object):
   #------------------------------------------------------------------------------
   def __str__(self):
       return self.__repr__()+'''({{
-  area root: {root},
-  project root: {project},
-  configuration: {projectConfig},
-  pathMaker: {pathMaker},
+  working area path: {workPath}
+  project area: {project}
+  configuration: {projectConfig}
+  pathMaker: {pathMaker}
   parser: {depParser}
 }})'''.format(**(self.__dict__))
   #------------------------------------------------------------------------------
@@ -100,23 +100,23 @@ class Environment(object):
   #------------------------------------------------------------------------------
   @property
   def src(self):
-    return join(self.root, kSourceDir) if self.root is not None else None
+    return join(self.workPath, kSourceDir) if self.workPath is not None else None
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
   @property
   def work(self):
-    return join(self.root, kWorkDir) if self.root is not None else None
+    return join(self.workPath, kProjDir) if self.workPath is not None else None
   #------------------------------------------------------------------------------
   
   #------------------------------------------------------------------------------
-  def getsources(self):
+  def getSources(self):
     return next(walk(self.src))[1]
   #------------------------------------------------------------------------------
   
   #------------------------------------------------------------------------------
-  def getworks(self):
-    return [ lProj for lProj in next(walk(self.work))[1] if exists( join( self.work, lProj, kProjectFileName ) ) ]
+  def getProjects(self):
+    return [ lProj for lProj in next(walk(self.work))[1] if exists( join( self.work, lProj, kProjAreaCfgFile ) ) ]
   #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

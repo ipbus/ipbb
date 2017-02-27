@@ -33,13 +33,15 @@ for TEST_PROJ in "${TEST_PROJ_ARRAY[@]}"; do
     cd proj/${TEST_PROJ}
     set +e
     ipbb vivado project synth impl bitfile || echo "ERROR: ${TEST_PROJ} build failed" >> ${TEST_ROOT}/failures.log
-    set +e
+    set -e
 done
 
 echo "#------------------------------------------------"
 echo "# Summary"
 echo "#------------------------------------------------"
-cat ${TEST_ROOT}/failures.log
 
-
-
+if [ -f ${TEST_ROOT}/failures.log ]; then
+   echo "Build Error detected!"
+   cat ${TEST_ROOT}/failures.log
+   return -1
+fi

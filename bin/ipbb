@@ -41,15 +41,29 @@ def info(env, verbose):
 
   from click import echo, style, secho
   
-  echo()
+  echo  ( )
   secho ( "Current environment", fg='blue' )
   echo  ( "-------------------")  
   echo  ( "Work path    : " + ( env.workPath if env.workPath else style("Not found", fg='red') ) )
+  if not env.projectPath:
+    echo  ( )
+    secho ( "Sources", fg='blue' )
+    echo  ( "-------")  
+    for s in env.getSources():
+      echo ( "  - "+s )
+    echo  ( )
+    secho ( "Projects", fg='blue' )
+    echo  ( "--------")  
+    for p in env.getProjects():
+      echo ( "  - "+p )
+    echo  ( )
+    return
+
   echo  ( "Project path : " + ( env.projectPath if env.projectPath else style("Not found", fg='red') ) )
   echo  ( )
 
   if env.projectConfig is None: return
-  secho ("Project details", fg='blue')
+  secho ( "Project details", fg='blue')
   echo  ( "---------------")
   echo  ( "name          : " + env.projectConfig['name'] )
   echo  ( "toolset       : " + env.projectConfig['toolset'] )

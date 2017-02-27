@@ -105,7 +105,7 @@ class Environment(object):
 
   #------------------------------------------------------------------------------
   @property
-  def work(self):
+  def proj(self):
     return join(self.workPath, kProjDir) if self.workPath is not None else None
   #------------------------------------------------------------------------------
   

@@ -17,11 +17,11 @@ from ..tools.common import SmartOpen
 #------------------------------------------------------------------------------
 def _getprojects(env):
 
-  if not exists(env.work):
-    raise click.ClickException("Directory '%s' does not exist." % env.work )
+  if not exists(env.proj):
+    raise click.ClickException("Directory '%s' does not exist." % env.proj )
 
   '''Returns the list of existing projects'''
-  return [ lArea for lArea in next(os.walk(env.work))[1] if exists( join( env.work, lArea, kProjAreaCfgFile ) ) ]
+  return [ lProj for lProj in next(os.walk(env.proj))[1] if exists( join( env.proj, lProj, kProjAreaCfgFile ) ) ]
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -108,16 +108,30 @@ def ls( env ):
 @proj.command()
 @click.argument( 'proj' )
 @click.pass_obj
-def cd(env,proj):
+def printpath( env, proj ):
+  
+  lProjects = _getprojects(env)
+
+  if proj not in lProjects:
+    raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
+
+  print (  os.path.join( env.proj, proj ))
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+@proj.command()
+@click.argument( 'proj' )
+@click.pass_obj
+def cd( env, proj ):
 
   if proj[-1] == os.sep: proj = proj[:-1]
   lProjects = _getprojects(env)
   if proj not in lProjects:
-    raise click.ClickException('Requested work area not found. Available areas %s' % ', '.join(lProjects))
+    raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 
-  with DirSentry( join(env.work,proj) ) as lSentry:
+  with DirSentry( join(env.proj,proj) ) as lSentry:
     env._autodetect()
 
-  os.chdir(join(env.work,proj))
-  print( 'New current directory %s' % os.getcwd() )
+  os.chdir(join(env.proj,proj))
+  print ( "New current directory %s" % os.getcwd() )
 #------------------------------------------------------------------------------

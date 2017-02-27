@@ -99,7 +99,7 @@ def fli(env, dev, ipbuspkg):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  if ipbuspkg not in env.getsources():
+  if ipbuspkg not in env.getSources():
     raise click.ClickException( "Package %s not found in source/. The FLI cannot be built." % ipbuspkg)
   #------------------------------------------------------------------------------
 

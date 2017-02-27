@@ -44,11 +44,11 @@ def _validateComponent(ctx, param, value):
 # TODO: move the list of supported products somewhere else
 @proj.command()
 @click.argument('kind', type=click.Choice(['vivado', 'sim']))
-@click.argument('projarea')
+@click.argument('projname')
 @click.argument('component', callback=_validateComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 @click.pass_obj
-def create( env, kind, projarea, component, topdep ):
+def create( env, kind, projname, component, topdep ):
   '''Create a new project area
 
     
@@ -65,7 +65,7 @@ def create( env, kind, projarea, component, topdep ):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  lProjAreaPath = join( env.workPath, kProjDir, projarea )
+  lProjAreaPath = join( env.workPath, kProjDir, projname )
   if exists(lProjAreaPath):
     raise click.ClickException('Directory %s already exists' % lProjAreaPath)
   #------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ def create( env, kind, projarea, component, topdep ):
     'topPkg': lTopPackage,
     'topCmp': lTopComponent,
     'topDep': topdep,
-    'name': projarea
+    'name':   projname
 
   }
   with SmartOpen( join(lProjAreaPath, kProjAreaCfgFile) ) as lProjFile:
@@ -106,32 +106,32 @@ def ls( env ):
 
 #------------------------------------------------------------------------------
 @proj.command()
-@click.argument( 'proj' )
+@click.argument( 'projname' )
 @click.pass_obj
-def printpath( env, proj ):
+def printpath( env, projname ):
   
   lProjects = _getprojects(env)
 
-  if proj not in lProjects:
+  if projname not in lProjects:
     raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 
-  print (  os.path.join( env.proj, proj ))
+  print (  os.path.join( env.proj, projname ))
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @proj.command()
-@click.argument( 'proj' )
+@click.argument( 'projname' )
 @click.pass_obj
-def cd( env, proj ):
+def cd( env, projname ):
 
-  if proj[-1] == os.sep: proj = proj[:-1]
+  if projname[-1] == os.sep: projname = projname[:-1]
   lProjects = _getprojects(env)
-  if proj not in lProjects:
+  if projname not in lProjects:
     raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 
-  with DirSentry( join(env.proj,proj) ) as lSentry:
+  with DirSentry( join(env.proj, projname) ) as lSentry:
     env._autodetect()
 
-  os.chdir(join(env.proj,proj))
+  os.chdir(join(env.proj, projname))
   print ( "New current directory %s" % os.getcwd() )
 #------------------------------------------------------------------------------

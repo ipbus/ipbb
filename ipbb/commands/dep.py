@@ -4,6 +4,8 @@ from __future__ import print_function
 import click
 import os
 import sh
+import hashlib
+import collections
 
 from os.path import join, split, exists, basename, abspath, splitext
 from ..tools.common import which, SmartOpen
@@ -166,6 +168,68 @@ def generate( ctx ):
       print (sh.cp('-av', lDecoder, lTarget))
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+
+#----------------------------
+def hashMd5( aFilePath, aChunkSize=0x10000, aUpdateHashes = None):
+    lHash = hashlib.md5()
+    with open(aFilePath, "rb") as f:
+        for lChunk in iter(lambda: f.read(aChunkSize), b''):
+            lHash.update(lChunk)
+            for lUpHash in aUpdateHashes:
+              lUpHash.update( lChunk )
+
+    return lHash
+#----------------------------
+
+@dep.command()
+@click.pass_obj
+# @click.option('-o', '--output', default=None)
+@click.option('-o', '--output', default=None)
+def hash( env, output ):
+
+  lProjHash = hashlib.md5()
+  lGrpHashes = collections.OrderedDict()
+  for lGrp,lCmds in env.depParser.CommandList.iteritems():
+    lGrpHash = hashlib.md5()
+    print ( "#"+"-"*79 )
+    print ( "# " + lGrp )
+    print ( "#"+"-"*79 )
+    for lCmd in lCmds:
+      # print ( lCmds.FilePath )
+      # print ( hashlib.md5(open(lCmds.FilePath, 'rb').read()).hexdigest(), lCmds.FilePath )
+      print ( hashMd5(lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash]).hexdigest(), lCmd.FilePath )
+
+    lGrpHashes[lGrp] = lGrpHash
+    print ( )
+
+  print ( "#"+"-"*79 )
+  print ( "# Per file-group hashes" )
+  print ( "#"+"-"*79 )
+  for lGrp, lHash in lGrpHashes.iteritems():
+    print ( lHash.hexdigest(), lGrp )
+  print ( )
+
+  print ( "#"+"-"*79 )
+  print ( "# Global hash for project '"+env.project+"'" )
+  print ( "#"+"-"*79 )
+  print ( lProjHash.hexdigest(), env.project)
+
+
+  # with SmartOpen( None ) as lWriter:
+
+  #   for lGroup,lCmds in env.depParser.CommandList.iteritems():
+  #     if not lCmds: continue
+
+  #     print ( "#"+"-"*79 )
+  #     print ( "# " + lGroup )
+  #     print ( "#"+"-"*79 )
+  #     for lCmd in lCmds:
+  #       x = sh.md5sum ( lCmd.FilePath )
+  #       # print ( x )
+  #       lWriter ( str(x)[:-1] )
+
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @dep.command()

@@ -47,8 +47,8 @@ def info(env, verbose):
   echo  ( "Work path    : " + ( env.workPath if env.workPath else style("Not found", fg='red') ) )
   if not env.projectPath:
     echo  ( )
-    secho ( "Sources", fg='blue' )
-    echo  ( "-------")  
+    secho ( "Firmware packages", fg='blue' )
+    echo  ( "---------------")  
     for s in env.getSources():
       echo ( "  - "+s )
     echo  ( )

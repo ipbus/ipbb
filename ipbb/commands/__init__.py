@@ -116,7 +116,7 @@ class Environment(object):
   
   #------------------------------------------------------------------------------
   def getProjects(self):
-    return [ lProj for lProj in next(walk(self.work))[1] if exists( join( self.work, lProj, kProjAreaCfgFile ) ) ]
+    return [ lProj for lProj in next(walk(self.proj))[1] if exists( join( self.proj, lProj, kProjAreaCfgFile ) ) ]
   #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

@@ -51,8 +51,7 @@ def _validateComponent(ctx, param, value):
 def create( env, kind, projname, component, topdep ):
   '''Create a new project area
 
-    
-    Creates a new area of name PROJAREA of kind KIND 
+    Creates a new area of name PROJNAME of kind KIND 
 
     PROJAREA: bbb
     
@@ -99,6 +98,8 @@ def create( env, kind, projname, component, topdep ):
 @proj.command()
 @click.pass_obj
 def ls( env ):
+  '''Lists all available project areas
+  '''
   lProjects = _getprojects(env)
   print ( 'Root:', env.workPath )
   print ( 'Projects areas:', ', '.join( [ lProject + ('*' if lProject == env.project else '') for lProject in lProjects ] ) )
@@ -123,6 +124,8 @@ def printpath( env, projname ):
 @click.argument( 'projname' )
 @click.pass_obj
 def cd( env, projname ):
+  '''Changes current working directory (command line only)
+  '''
 
   if projname[-1] == os.sep: projname = projname[:-1]
   lProjects = _getprojects(env)

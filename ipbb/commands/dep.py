@@ -188,46 +188,39 @@ def hashMd5( aFilePath, aChunkSize=0x10000, aUpdateHashes = None):
 @click.option('-o', '--output', default=None)
 def hash( env, output ):
 
-  lProjHash = hashlib.md5()
-  lGrpHashes = collections.OrderedDict()
-  for lGrp,lCmds in env.depParser.CommandList.iteritems():
-    lGrpHash = hashlib.md5()
-    print ( "#"+"-"*79 )
-    print ( "# " + lGrp )
-    print ( "#"+"-"*79 )
-    for lCmd in lCmds:
-      # print ( lCmds.FilePath )
-      # print ( hashlib.md5(open(lCmds.FilePath, 'rb').read()).hexdigest(), lCmds.FilePath )
-      print ( hashMd5(lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash]).hexdigest(), lCmd.FilePath )
+  with SmartOpen( output ) as lWriter:
 
-    lGrpHashes[lGrp] = lGrpHash
-    print ( )
+    lWriter ( "Hashes for project '"+env.project+"'" )
+    lWriter ( "===================="+"="*len(env.project)+"=")
+    lWriter ( )
+    
+    lProjHash = hashlib.md5()
+    lGrpHashes = collections.OrderedDict()
+    for lGrp,lCmds in env.depParser.CommandList.iteritems():
+      lGrpHash = hashlib.md5()
+      lWriter ( "#"+"-"*79 )
+      lWriter ( "# " + lGrp )
+      lWriter ( "#"+"-"*79 )
+      for lCmd in lCmds:
+        # lWriter ( lCmds.FilePath )
+        # lWriter ( hashlib.md5(open(lCmds.FilePath, 'rb').read()).hexdigest(), lCmds.FilePath )
+        lWriter ( hashMd5(lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash]).hexdigest(), lCmd.FilePath )
 
-  print ( "#"+"-"*79 )
-  print ( "# Per file-group hashes" )
-  print ( "#"+"-"*79 )
-  for lGrp, lHash in lGrpHashes.iteritems():
-    print ( lHash.hexdigest(), lGrp )
-  print ( )
+      lGrpHashes[lGrp] = lGrpHash
+      lWriter ( )
 
-  print ( "#"+"-"*79 )
-  print ( "# Global hash for project '"+env.project+"'" )
-  print ( "#"+"-"*79 )
-  print ( lProjHash.hexdigest(), env.project)
+    lWriter ( "#"+"-"*79 )
+    lWriter ( "# Per file-group hashes" )
+    lWriter ( "#"+"-"*79 )
+    for lGrp, lHash in lGrpHashes.iteritems():
+      lWriter ( lHash.hexdigest(), lGrp )
+    lWriter ( )
 
+    lWriter ( "#"+"-"*79 )
+    lWriter ( "# Global hash for project '"+env.project+"'" )
+    lWriter ( "#"+"-"*79 )
+    lWriter ( lProjHash.hexdigest(), env.project)
 
-  # with SmartOpen( None ) as lWriter:
-
-  #   for lGroup,lCmds in env.depParser.CommandList.iteritems():
-  #     if not lCmds: continue
-
-  #     print ( "#"+"-"*79 )
-  #     print ( "# " + lGroup )
-  #     print ( "#"+"-"*79 )
-  #     for lCmd in lCmds:
-  #       x = sh.md5sum ( lCmd.FilePath )
-  #       # print ( x )
-  #       lWriter ( str(x)[:-1] )
 
 #------------------------------------------------------------------------------
 

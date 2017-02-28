@@ -7,7 +7,7 @@ import sys
 import pexpect
 import re
 import collections
-# import os
+import os
 import atexit
 
 # Elements
@@ -120,7 +120,13 @@ class ModelSimConsole(object):
       'QuestaSim':'QuestaSim> \rQuestaSim> '
       }[self.variant]
 
-    self._process = pexpect.spawn('%s -c' % _vsim, maxread=1)
+    lEnv = dict(os.environ)
+    
+    # Modelsim doesn't like to operate without TERM (hangs)
+    if 'TERM' not in lEnv:
+      lEnv['TERM'] = 'vt100'
+
+    self._process = pexpect.spawn('%s -c' % _vsim, maxread=1, env=lEnv)
     self._process.logfile = sys.stdout
     self._process.delaybeforesend = 0.00 #1
     self.__expectPrompt()

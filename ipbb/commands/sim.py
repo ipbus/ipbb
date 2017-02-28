@@ -23,8 +23,15 @@ class ModelsimNotFoundError(Exception):
 
 #------------------------------------------------------------------------------
 @click.group( chain = True )
-def sim():
-  pass    
+@click.pass_context
+@click.option('-p', '--proj', default=None)
+def sim(ctx, proj):
+  '''Simulation command group'''
+  if proj is None: return
+
+  # Change directory before executing subcommand
+  from .proj import cd
+  ctx.invoke(cd, projname=proj)
 #------------------------------------------------------------------------------
 
 

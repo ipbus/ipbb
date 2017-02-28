@@ -21,7 +21,7 @@ def dep(ctx, proj):
 
   # Change directory before executing subcommand
   from .proj import cd
-  ctx.invoke(cd, proj=proj)
+  ctx.invoke(cd, projname=proj)
 
 #------------------------------------------------------------------------------
 
@@ -193,7 +193,7 @@ def hash( env, output ):
     lWriter ( "Hashes for project '"+env.project+"'" )
     lWriter ( "===================="+"="*len(env.project)+"=")
     lWriter ( )
-    
+
     lProjHash = hashlib.md5()
     lGrpHashes = collections.OrderedDict()
     for lGrp,lCmds in env.depParser.CommandList.iteritems():
@@ -221,6 +221,7 @@ def hash( env, output ):
     lWriter ( "#"+"-"*79 )
     lWriter ( lProjHash.hexdigest(), env.project)
 
+  return lProjHash
 
 #------------------------------------------------------------------------------
 

@@ -2,116 +2,120 @@
 from __future__ import print_function
 
 
-#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
 import click
-import subprocess
 import ipbb
 
 # Elements
 from click_shell import shell
-from os.path import join, split, exists, splitext
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Add -h as default help option
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 @shell(
-  prompt=click.style('ipbb', fg='blue')+'> ',
-  intro='Starting IPBus Builder...',
-  context_settings=CONTEXT_SETTINGS
+    prompt=click.style('ipbb', fg='blue') + '> ',
+    intro='Starting IPBus Builder...',
+    context_settings=CONTEXT_SETTINGS
 )
 @click.pass_context
 def cli(ctx):
-  ctx.obj = ipbb.commands.Environment()
+    ctx.obj = ipbb.commands.Environment()
 
-  # print (vars(ctx))
-  # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
-  if not ctx.protected_args and not ctx.invoked_subcommand:
-    print (ctx.obj)
-#------------------------------------------------------------------------------
+    # print (vars(ctx))
+    # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
+    if not ctx.protected_args and not ctx.invoked_subcommand:
+        print (ctx.obj)
+# ------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 @cli.command()
 @click.option('-v', '--verbose', count=True, help='arse')
 @click.pass_obj
 def info(env, verbose):
 
-  from click import echo, style, secho
-  
-  echo  ( )
-  secho ( "Current environment", fg='blue' )
-  echo  ( "-------------------")  
-  echo  ( "Work path    : " + ( env.workPath if env.workPath else style("Not found", fg='red') ) )
-  if not env.projectPath:
+    from click import echo, style, secho
+
     echo  ( )
-    secho ( "Firmware packages", fg='blue' )
-    echo  ( "---------------")  
-    for s in env.getSources():
-      echo ( "  - "+s )
+    secho ( "Current environment", fg='blue' )
+    echo  ( "-------------------")
+    echo  ( "Work path    : " + ( env.workPath if env.workPath else style("Not found", fg='red') ) )
+    if not env.projectPath:
+        echo  ( )
+        secho ( "Firmware packages", fg='blue' )
+        echo  ( "---------------")
+        for s in env.getSources():
+            echo ( "  - " + s )
+        echo  ( )
+        secho ( "Projects", fg='blue' )
+        echo  ( "--------")
+        for p in env.getProjects():
+            echo ( "  - " + p )
+        echo  ( )
+        return
+
+    echo  (
+        "Project path : " +
+        ( env.projectPath if env.projectPath else style("Not found", fg='red') )
+    )
     echo  ( )
-    secho ( "Projects", fg='blue' )
-    echo  ( "--------")  
-    for p in env.getProjects():
-      echo ( "  - "+p )
+
+    if env.projectConfig is None:
+        return
+    secho ( "Project details", fg='blue')
+    echo  ( "---------------")
+    echo  ( "name          : " + env.projectConfig['name'] )
+    echo  ( "toolset       : " + env.projectConfig['toolset'] )
+    echo  ( "top package   : " + env.projectConfig['topPkg'] )
+    echo  ( "    component : " + env.projectConfig['topCmp'] )
+    echo  ( "    dep file  : " + env.projectConfig['topDep'] )
     echo  ( )
-    return
 
-  echo  ( "Project path : " + ( env.projectPath if env.projectPath else style("Not found", fg='red') ) )
-  echo  ( )
+    secho ( "DepTree details", fg='blue')
+    echo  ( "---------------")
+    echo  ( "parsed item(s):" )
+    echo  ( "  setup   : %d" % len(env.depParser.CommandList['setup']))
+    echo  ( "  src     : %d" % len(env.depParser.CommandList['src']))
+    echo  ( "  addrtab : %d" % len(env.depParser.CommandList['addrtab']))
+    echo  ( "  cgpfile : %d" % len(env.depParser.CommandList['cgpfile']))
+    echo  ( )
 
-  if env.projectConfig is None: return
-  secho ( "Project details", fg='blue')
-  echo  ( "---------------")
-  echo  ( "name          : " + env.projectConfig['name'] )
-  echo  ( "toolset       : " + env.projectConfig['toolset'] )
-  echo  ( "top package   : " + env.projectConfig['topPkg'] )
-  echo  ( "    component : " + env.projectConfig['topCmp'] )
-  echo  ( "    dep file  : " + env.projectConfig['topDep'] )
-  echo  ( )
-  
-  secho ( "DepTree details", fg='blue')
-  echo  ( "---------------")
-  echo  ( "parsed item(s):" )
-  echo  ( "  setup   : %d" % len(env.depParser.CommandList['setup']))
-  echo  ( "  src     : %d" % len(env.depParser.CommandList['src']))
-  echo  ( "  addrtab : %d" % len(env.depParser.CommandList['addrtab']))
-  echo  ( "  cgpfile : %d" % len(env.depParser.CommandList['cgpfile']))
-  echo  ( )
-
-  if not env.depParser.NotFound : return
-  echo  ( "missing item(s):" )
-  echo  ( "  packages: %d" % len(env.depParser.PackagesNotFound ) )
-  echo  ( "  components: %d" % len(env.depParser.ComponentsNotFound ) )
-  echo  ( "  paths: %d" % len(env.depParser.PathsNotFound ) )
-  echo  ( )
-
-#------------------------------------------------------------------------------
+    if not env.depParser.NotFound:
+        return
+    echo  ( "missing item(s):" )
+    echo  ( "  packages: %d" % len(env.depParser.PackagesNotFound ) )
+    echo  ( "  components: %d" % len(env.depParser.ComponentsNotFound ) )
+    echo  ( "  paths: %d" % len(env.depParser.PathsNotFound ) )
+    echo  ( )
+# ------------------------------------------------------------------------------
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 if __name__ == '__main__':
-  '''Discovers the env at startup'''
+    '''Discovers the env at startup'''
 
-  # Add custom commands to shell
-  import ipbb.commands.repo as repo
-  cli.add_command(repo.init)
-  cli.add_command(repo.cd)
-  cli.add_command(repo.add)
+    # Add custom commands to shell
+    import ipbb.commands.repo as repo
+    cli.add_command(repo.init)
+    cli.add_command(repo.cd)
+    cli.add_command(repo.add)
 
-  import ipbb.commands.proj as proj
-  cli.add_command(proj.proj)
+    import ipbb.commands.proj as proj
+    cli.add_command(proj.proj)
 
-  import ipbb.commands.dep as dep
-  cli.add_command(dep.dep)
+    import ipbb.commands.dep as dep
+    cli.add_command(dep.dep)
 
-  import ipbb.commands.vivado as vivado
-  cli.add_command(vivado.vivado)
+    import ipbb.commands.vivado as vivado
+    cli.add_command(vivado.vivado)
 
-  import ipbb.commands.sim as sim
-  cli.add_command(sim.sim)
+    import ipbb.commands.sim as sim
+    cli.add_command(sim.sim)
 
-  cli()
-#------------------------------------------------------------------------------
+    cli()
+# ------------------------------------------------------------------------------

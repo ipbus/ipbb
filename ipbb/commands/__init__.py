@@ -6,8 +6,8 @@ import click
 from . import common
 from os import walk
 from os.path import join, split, exists, splitext, basename
-from ..dep2g.Pathmaker import Pathmaker
-from ..dep2g.DepFileParser import DepFileParser
+from ..depparser.Pathmaker import Pathmaker
+from ..depparser.DepFileParser import DepFileParser
 
 # Constants
 kWorkAreaCfgFile = '.ipbbwork'

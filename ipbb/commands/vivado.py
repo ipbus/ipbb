@@ -48,7 +48,7 @@ def project( env, output ):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from ..dep2g.VivadoProjectMaker import VivadoProjectMaker
+  from ..depparser.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker( env.pathMaker )
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError

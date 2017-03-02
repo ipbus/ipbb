@@ -64,7 +64,7 @@ def ipcores(env, output):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from ..dep2g.IPCoresSimMaker import IPCoresSimMaker
+  from ..depparser.IPCoresSimMaker import IPCoresSimMaker
   lWriter = IPCoresSimMaker( env.pathMaker )
 
   # FIXME: Yeah, this is a hack
@@ -153,7 +153,7 @@ def project( env, output ):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from ..dep2g.ModelSimProjectMaker import ModelSimProjectMaker
+  from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
   lWriter = ModelSimProjectMaker( env.pathMaker )
 
   from ..tools.mentor import ModelSimOpen

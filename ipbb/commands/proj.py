@@ -70,7 +70,7 @@ def create( env, kind, projname, component, topdep ):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  from ..dep2g.Pathmaker import Pathmaker
+  from ..depparser.Pathmaker import Pathmaker
   lPathmaker = Pathmaker(env.src, 0)
   lTopPackage, lTopComponent = component
   lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )

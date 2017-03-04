@@ -5,10 +5,13 @@ import click
 import os
 # import ipbb
 import subprocess
-from . import kSourceDir, kProjDir, kWorkAreaCfgFile
+
 
 # Elements
+from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname
+
+from . import kSourceDir, kProjDir, kWorkAreaCfgFile
 from .common import DirSentry, findFileInParents
 
 #------------------------------------------------------------------------------
@@ -18,7 +21,7 @@ from .common import DirSentry, findFileInParents
 def init(env, workarea):
   '''Initialise a new firmware development area'''
 
-  print('Setting up new firmware work area \''+workarea+'\'')
+  secho('Setting up new firmware work area \''+workarea+'\'', fg='green')
 
   if env.workPath is not None:
     raise click.ClickException( 'Cannot create a new work area inside an existing one %s' % env.workPath )

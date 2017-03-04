@@ -17,10 +17,13 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 # ------------------------------------------------------------------------------
-@shell(
-    prompt=click.style('ipbb', fg='blue') + '> ',
-    intro='Starting IPBus Builder...',
-    context_settings=CONTEXT_SETTINGS
+# @shell(
+#     prompt=click.style('ipbb', fg='blue') + '> ',
+#     intro='Starting IPBus Builder...',
+#     context_settings=CONTEXT_SETTINGS
+# )
+@click.group(
+    context_settings=CONTEXT_SETTINGS,
 )
 @click.pass_context
 def cli(ctx):
@@ -41,10 +44,15 @@ def info(env, verbose):
 
     from click import echo, style, secho
 
+    if not env.workPath:
+        secho  ( 'No ipbb work area detected', fg='red' )
+        return
+
     echo  ( )
-    secho ( "Current environment", fg='blue' )
+    secho ( "ipbb environment", fg='blue' )
     echo  ( "-------------------")
     echo  ( "Work path    : " + ( env.workPath if env.workPath else style("Not found", fg='red') ) )
+
     if not env.projectPath:
         echo  ( )
         secho ( "Firmware packages", fg='blue' )

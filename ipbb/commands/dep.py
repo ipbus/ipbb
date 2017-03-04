@@ -4,6 +4,8 @@ from __future__ import print_function
 import click
 import os
 import sh
+import hashlib
+import collections
 
 from os.path import join, split, exists, basename, abspath, splitext
 from ..tools.common import which, SmartOpen
@@ -19,7 +21,7 @@ def dep(ctx, proj):
 
   # Change directory before executing subcommand
   from .proj import cd
-  ctx.invoke(cd, proj=proj)
+  ctx.invoke(cd, projname=proj)
 
 #------------------------------------------------------------------------------
 
@@ -166,6 +168,62 @@ def generate( ctx ):
       print (sh.cp('-av', lDecoder, lTarget))
 #------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------
+
+#----------------------------
+def hashMd5( aFilePath, aChunkSize=0x10000, aUpdateHashes = None):
+    lHash = hashlib.md5()
+    with open(aFilePath, "rb") as f:
+        for lChunk in iter(lambda: f.read(aChunkSize), b''):
+            lHash.update(lChunk)
+            for lUpHash in aUpdateHashes:
+              lUpHash.update( lChunk )
+
+    return lHash
+#----------------------------
+
+@dep.command()
+@click.pass_obj
+# @click.option('-o', '--output', default=None)
+@click.option('-o', '--output', default=None)
+def hash( env, output ):
+
+  with SmartOpen( output ) as lWriter:
+
+    lWriter ( "Hashes for project '"+env.project+"'" )
+    lWriter ( "===================="+"="*len(env.project)+"=")
+    lWriter ( )
+
+    lProjHash = hashlib.md5()
+    lGrpHashes = collections.OrderedDict()
+    for lGrp,lCmds in env.depParser.CommandList.iteritems():
+      lGrpHash = hashlib.md5()
+      lWriter ( "#"+"-"*79 )
+      lWriter ( "# " + lGrp )
+      lWriter ( "#"+"-"*79 )
+      for lCmd in lCmds:
+        # lWriter ( lCmds.FilePath )
+        # lWriter ( hashlib.md5(open(lCmds.FilePath, 'rb').read()).hexdigest(), lCmds.FilePath )
+        lWriter ( hashMd5(lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash]).hexdigest(), lCmd.FilePath )
+
+      lGrpHashes[lGrp] = lGrpHash
+      lWriter ( )
+
+    lWriter ( "#"+"-"*79 )
+    lWriter ( "# Per file-group hashes" )
+    lWriter ( "#"+"-"*79 )
+    for lGrp, lHash in lGrpHashes.iteritems():
+      lWriter ( lHash.hexdigest(), lGrp )
+    lWriter ( )
+
+    lWriter ( "#"+"-"*79 )
+    lWriter ( "# Global hash for project '"+env.project+"'" )
+    lWriter ( "#"+"-"*79 )
+    lWriter ( lProjHash.hexdigest(), env.project)
+
+  return lProjHash
+
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 @dep.command()

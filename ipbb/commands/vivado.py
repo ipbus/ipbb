@@ -22,9 +22,15 @@ def ensureVivado( env ):
 
 #------------------------------------------------------------------------------
 @click.group( chain = True )
-def vivado():
+@click.pass_context
+@click.option('-p', '--proj', default=None)
+def vivado(ctx, proj):
   '''Vivado command group'''
-  pass
+  if proj is None: return
+
+  # Change directory before executing subcommand
+  from .proj import cd
+  ctx.invoke(cd, projname=proj)
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -42,7 +48,7 @@ def project( env, output ):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from ..dep2g.VivadoProjectMaker import VivadoProjectMaker
+  from ..depparser.VivadoProjectMaker import VivadoProjectMaker
   lWriter = VivadoProjectMaker( env.pathMaker )
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
@@ -217,9 +223,12 @@ def reset( env ):
 
 #------------------------------------------------------------------------------
 @vivado.command()
-@click.pass_obj
-def package( env ):
+@click.pass_context
+def package( ctx ):
   '''List address table files'''
+
+  env = ctx.obj
+
   ensureVivado( env )
 
   lBitPath = join('top','top.runs','impl_1','top.bit')
@@ -242,23 +251,36 @@ def package( env ):
   # Generate a json signature file
   import socket, time
 
-  lSignature = dict(env.projectConfig)
-  lSignature.update({
-    'time': socket.gethostname().replace('.','_'),
-    'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
-  })
 
-  with SmartOpen(join(lSrcPath,'signature')) as lSignatureFile:
-    import json
-    json.dump(lSignature, lSignatureFile.file, indent=2)
+  #------------------------------------------------------------------------------
+  from .dep import hash
+  lHash = ctx.invoke(hash, output=join(lSrcPath,'hashes.txt') )
   #------------------------------------------------------------------------------
 
+  #------------------------------------------------------------------------------
+  lSummary = dict(env.projectConfig)
+  lSummary.update({
+    'time': socket.gethostname().replace('.','_'),
+    'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+    'md5': lHash.hexdigest(),
+  })
+
+  with SmartOpen(join(lSrcPath,'summary.txt')) as lSummaryFile:
+    import json
+    json.dump(lSummary, lSummaryFile.file, indent=2)
+  #------------------------------------------------------------------------------
+
+  #------------------------------------------------------------------------------
+  # Copy bitfile and address table into the packaging area
   print( sh.cp( '-av', lBitPath, lSrcPath ) )
 
   # for addrtab in lDepFileParser.CommandList['addrtab']:
   for addrtab in env.depParser.CommandList['addrtab']:
     print( sh.cp( '-av', addrtab.FilePath, join(lSrcPath,'addrtab') ) )
+  #------------------------------------------------------------------------------
 
+  #------------------------------------------------------------------------------
+  # Bag everything up
   lTgzBaseName = '{name}_{host}_{time}'.format(
     name=env.projectConfig['name'],
     host=socket.gethostname().replace('.','_'),
@@ -270,5 +292,6 @@ def package( env ):
     # print ( os.getcwd() )
     # Zip it
   print(sh.tar('cvfz', lTgzPath, '-C', lPkgPath, '--transform', 's/^src/'+lTgzBaseName+'/', 'src'))
+  #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
 

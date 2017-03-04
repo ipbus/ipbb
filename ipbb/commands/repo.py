@@ -5,33 +5,35 @@ import click
 import os
 # import ipbb
 import subprocess
-from . import kSourceDir, kWorkDir, kSignatureFile
+
 
 # Elements
+from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname
+
+from . import kSourceDir, kProjDir, kWorkAreaCfgFile
 from .common import DirSentry, findFileInParents
 
 #------------------------------------------------------------------------------
 @click.command()
-@click.argument('area')
-# @click.option('-r', '--repo')
+@click.argument('workarea')
 @click.pass_obj
-def init(env, area):
+def init(env, workarea):
   '''Initialise a new firmware development area'''
 
-  print('Setting up new firmware area \''+area+'\'')
+  secho('Setting up new firmware work area \''+workarea+'\'', fg='green')
 
-  if env.root is not None:
-    raise click.ClickException( 'Cannot create a new area inside an existing one %s' % env.root )
+  if env.workPath is not None:
+    raise click.ClickException( 'Cannot create a new work area inside an existing one %s' % env.workPath )
 
-  if exists(area):
-    raise click.ClickException( 'Directory \'%s\' already exists' % area )
+  if exists(workarea):
+    raise click.ClickException( 'Directory \'%s\' already exists' % workarea )
 
   # Build source code directory
-  os.makedirs(join(area, kSourceDir))
-  os.makedirs(join(area, kWorkDir))
+  os.makedirs(join(workarea, kSourceDir))
+  os.makedirs(join(workarea, kProjDir))
 
-  with open( join( area, kSignatureFile ),'w' ) as lSignature:
+  with open( join( workarea, kWorkAreaCfgFile ),'w' ) as lSignature:
     lSignature.write('\n')
   
 #------------------------------------------------------------------------------
@@ -65,7 +67,7 @@ def git(env, repo, branch):
   '''Add a git repository to the source area'''
   
   # Must be in a build area
-  if env.root is None:
+  if env.workPath is None:
     raise click.ClickException('Build area root directory not found')
 
   print('adding git repository',repo)
@@ -76,7 +78,7 @@ def git(env, repo, branch):
   
   lUrl = urlparse(repo)
   lRepoName = splitext(split(lUrl.path)[-1])[0]
-  lRepoLocalPath = join(env.root, kSourceDir, lRepoName)
+  lRepoLocalPath = join(env.workPath, kSourceDir, lRepoName)
   
   if exists(lRepoLocalPath):
     raise click.ClickException( 'Repository already exists \'%s\'' % lRepoLocalPath )
@@ -86,7 +88,7 @@ def git(env, repo, branch):
     lArgs += ['-b', branch]
 
   # Do the cloning
-  with DirSentry( join(env.root, kSourceDir) ) as lSentry:
+  with DirSentry( join(env.workPath, kSourceDir) ) as lSentry:
     subprocess.check_call(['git']+lArgs)
 #------------------------------------------------------------------------------
 
@@ -103,7 +105,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
   #------------------------------------------------------------------------------
   # Must be in a build area
-  if env.root is None:
+  if env.workPath is None:
     raise click.ClickException('Build area root directory not found')
   #------------------------------------------------------------------------------
 

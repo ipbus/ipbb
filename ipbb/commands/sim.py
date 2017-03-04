@@ -23,8 +23,15 @@ class ModelsimNotFoundError(Exception):
 
 #------------------------------------------------------------------------------
 @click.group( chain = True )
-def sim():
-  pass    
+@click.pass_context
+@click.option('-p', '--proj', default=None)
+def sim(ctx, proj):
+  '''Simulation command group'''
+  if proj is None: return
+
+  # Change directory before executing subcommand
+  from .proj import cd
+  ctx.invoke(cd, projname=proj)
 #------------------------------------------------------------------------------
 
 
@@ -57,7 +64,7 @@ def ipcores(env, output):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from ..dep2g.IPCoresSimMaker import IPCoresSimMaker
+  from ..depparser.IPCoresSimMaker import IPCoresSimMaker
   lWriter = IPCoresSimMaker( env.pathMaker )
 
   # FIXME: Yeah, this is a hack
@@ -99,7 +106,7 @@ def fli(env, dev, ipbuspkg):
   #------------------------------------------------------------------------------
 
   #------------------------------------------------------------------------------
-  if ipbuspkg not in env.getsources():
+  if ipbuspkg not in env.getSources():
     raise click.ClickException( "Package %s not found in source/. The FLI cannot be built." % ipbuspkg)
   #------------------------------------------------------------------------------
 
@@ -146,7 +153,7 @@ def project( env, output ):
   # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
   lDepFileParser = env.depParser
 
-  from ..dep2g.ModelSimProjectMaker import ModelSimProjectMaker
+  from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
   lWriter = ModelSimProjectMaker( env.pathMaker )
 
   from ..tools.mentor import ModelSimOpen

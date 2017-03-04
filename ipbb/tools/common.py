@@ -66,7 +66,7 @@ class SmartOpen( object ):
     if self.file is not sys.stdout:
       self.file.close()
        
-  def __call__( self , string = "" ):
-    self.file.write( string )
+  def __call__( self , *strings ):
+    self.file.write( ' '.join( strings ) )
     self.file.write( "\n" )
 #------------------------------------------------------------------------------

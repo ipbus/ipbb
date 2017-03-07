@@ -19,6 +19,7 @@ def which( aExecutable ):
 
 #------------------------------------------------------------------------------
 # TODO: turn it into a class?
+# Use 'sh' instead?
 def do( aCmdList  ):
 
   if isinstance(aCmdList, str):
@@ -69,4 +70,30 @@ class SmartOpen( object ):
   def __call__( self , *strings ):
     self.file.write( ' '.join( strings ) )
     self.file.write( "\n" )
+#------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------
+class AAA(object):
+    def __init__(self, prefix=None):
+        self._write = sys.stdout.write
+        self._flush = sys.stdout.flush
+        self.prefix = prefix
+
+    def __del__(self):
+        # self.close()
+        pass
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args):
+        # self.close()
+        pass
+
+    def write(self, message):
+        self._write(message.replace('\n','\n'+self.prefix) if self.prefix else message)
+
+    def flush(self):
+        self._flush()
 #------------------------------------------------------------------------------

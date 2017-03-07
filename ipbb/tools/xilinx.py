@@ -13,7 +13,7 @@ import os.path
 import atexit
 
 # Elements
-from .common import which
+from .common import which, AAA
 
 #------------------------------------------------
 # This is for when python 2.7 will become available
@@ -122,7 +122,7 @@ class VivadoConsole(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def __init__(self):
+  def __init__(self, echoprefix=None):
     super(VivadoConsole, self).__init__()
 
     if not which('vivado'):
@@ -130,13 +130,19 @@ class VivadoConsole(object):
 
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
+    self._out = AAA(echoprefix)
 
     self._prompt = 'Vivado%[ \t]'
-    self._process = pexpect.spawn('vivado -mode tcl',maxread=1)
-    self._process.logfile = sys.stdout
+    self._process = pexpect.spawn('vivado -mode tcl',maxread=10000)
+
+    # Echo to AAA object
+    self._process.logfile = self._out
     self._process.delaybeforesend = 0.00 #1
+
+    # Wait for vivado to awake
     self.__expectPrompt()
     self._log.debug('Vivado up and running')
+
     # Method mapping
     self.isAlive = self._process.isalive
     # Add self to the list of instances
@@ -151,32 +157,6 @@ class VivadoConsole(object):
   #--------------------------------------------------------------
   def __call__(self, aCmd='', aMaxLen=1):
     return self.execute(aCmd, aMaxLen)
-  #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def quit(self):
-
-    # Return immediately of already dead
-    if not hasattr(self, '_process') or not self._process.isalive():
-      self._log.debug('Vivado has already been stopped')
-      # try:
-      #   # I am being pedantic here, in case, for any reason, it wasn't done yet
-      #   self.__instances.remove(self)
-      # except KeyError:
-      #   pass
-      return
-
-    self._log.debug('Shutting Vivado down')
-    try:
-      self.execute('quit')
-    except pexpect.ExceptionPexpect as e:
-      pass
-
-    # Just in case
-    self._process.terminate(True)
-
-    # Remove self from the list of instances
-    self.__instances.remove(self)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -207,6 +187,8 @@ class VivadoConsole(object):
       #--------------------------------------------------------------
       raise RuntimeError("Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent,lCmdRcvd))
     #--------------------------------------------------------------
+  #--------------------------------------------------------------
+
   #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
     # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
@@ -239,6 +221,44 @@ class VivadoConsole(object):
     #--------------------------------------------------------------
 
     return lBuffer,(lErrors if lErrors else None)
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  def quit(self):
+
+    # Return immediately of already dead
+    if not hasattr(self, '_process') or not self._process.isalive():
+      self._log.debug('Vivado has already been stopped')
+      # try:
+      #   # I am being pedantic here, in case, for any reason, it wasn't done yet
+      #   self.__instances.remove(self)
+      # except KeyError:
+      #   pass
+      return
+
+    self._log.debug('Shutting Vivado down')
+    try:
+      self.execute('quit')
+    except pexpect.ExceptionPexpect as e:
+      pass
+
+    # Just in case
+    self._process.terminate(True)
+
+    # Remove self from the list of instances
+    self.__instances.remove(self)
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  @property
+  def echoprefix(self):
+    return self._out.prefix
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
+  @echoprefix.setter
+  def echoprefix(self, prefix):
+    self._out.prefix = prefix
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -313,13 +333,14 @@ class VivadoOpen(object):
   """docstring for VivadoOpen"""
 
   #--------------------------------------------------------------
-  def __init__(self):
+  def __init__(self, echoprefix=None):
     super(VivadoOpen, self).__init__()
+    self._echoprefix = echoprefix
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __enter__(self):
-    self._console = VivadoConsole()
+    self._console = VivadoConsole(self._echoprefix)
     return self
   #--------------------------------------------------------------
 

@@ -13,7 +13,7 @@ import os.path
 import atexit
 
 # Elements
-from .common import which
+from .common import which, AAA
 
 #------------------------------------------------
 # This is for when python 2.7 will become available
@@ -105,30 +105,6 @@ class VivadoConsoleError(Exception):
         self.command = command
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-class AAA(object):
-    def __init__(self, prefix=None):
-        self._write = sys.stdout.write
-        self._flush = sys.stdout.flush
-        self.prefix = prefix
-
-    def __del__(self):
-        # self.close()
-        pass
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, *args):
-        # self.close()
-        pass
-
-    def write(self, message):
-        self._write(message.replace('\n','\n'+self.prefix) if self.prefix else message)
-
-    def flush(self):
-        self._flush()
-
-
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoConsole(object):
   """docstring for Vivado"""
@@ -146,7 +122,7 @@ class VivadoConsole(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def __init__(self, prefix=None):
+  def __init__(self, echoprefix=None):
     super(VivadoConsole, self).__init__()
 
     if not which('vivado'):
@@ -154,7 +130,7 @@ class VivadoConsole(object):
 
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
-    self._out = AAA(prefix)
+    self._out = AAA(echoprefix)
 
     self._prompt = 'Vivado%[ \t]'
     self._process = pexpect.spawn('vivado -mode tcl',maxread=10000)

@@ -12,7 +12,7 @@ import atexit
 
 # Elements
 from os.path import join, split, exists, splitext
-from .common import which
+from .common import which, AAA
 
 # Prompts
 # QuestaSim>
@@ -106,7 +106,7 @@ class ModelSimConsole(object):
       lInstance.quit()
   #--------------------------------------------------------------
 
-  def __init__(self):
+  def __init__(self, echoprefix=None):
     super(ModelSimConsole, self).__init__()
 
     # Guard against missing vivado executable 
@@ -120,14 +120,15 @@ class ModelSimConsole(object):
       'QuestaSim':'QuestaSim> \rQuestaSim> '
       }[self.variant]
 
-    lEnv = dict(os.environ)
-    
+
     # Modelsim doesn't like to operate without TERM (hangs)
+    lEnv = dict(os.environ)    
     if 'TERM' not in lEnv:
       lEnv['TERM'] = 'vt100'
 
+    self._out = AAA(echoprefix)
     self._process = pexpect.spawn('%s -c' % _vsim, maxread=1, env=lEnv)
-    self._process.logfile = sys.stdout
+    self._process.logfile = self._out
     self._process.delaybeforesend = 0.00 #1
     self.__expectPrompt()
     # Method mapping
@@ -145,30 +146,6 @@ class ModelSimConsole(object):
   #--------------------------------------------------------------
   def __call__(self, aCmd='', aMaxLen=1):
     return self.execute(aCmd, aMaxLen)
-  #--------------------------------------------------------------
-
-  #--------------------------------------------------------------
-  def quit(self):
-    
-    # Return immediately of already dead
-    if not hasattr(self, '_process') or not self._process.isalive():
-      # self._log.debug('ModelSim has already been stopped')
-      # try:
-      #   # I am being pedantic here, in case, for any reason, it wasn't done yet
-      #   self.__instances.remove(self)
-      # except KeyError:
-      #   pass
-      return
-
-    try:
-      self.execute('quit')
-    except pexpect.ExceptionPexpect as e:
-      pass
-
-    # Just in case
-    self._process.terminate(True)
-
-    self.__instances.remove(self)
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
@@ -198,7 +175,7 @@ class ModelSimConsole(object):
       print (lCmdSent)
       #--------------------------------------------------------------
       raise RuntimeError("Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent,lCmdRcvd))
-    #--------------------------------------------------------------
+  #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __expectPrompt(self, aMaxLen=100):
@@ -233,6 +210,30 @@ class ModelSimConsole(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
+  def quit(self):
+    
+    # Return immediately of already dead
+    if not hasattr(self, '_process') or not self._process.isalive():
+      # self._log.debug('ModelSim has already been stopped')
+      # try:
+      #   # I am being pedantic here, in case, for any reason, it wasn't done yet
+      #   self.__instances.remove(self)
+      # except KeyError:
+      #   pass
+      return
+
+    try:
+      self.execute('quit')
+    except pexpect.ExceptionPexpect as e:
+      pass
+
+    # Just in case
+    self._process.terminate(True)
+
+    self.__instances.remove(self)
+  #--------------------------------------------------------------
+
+  #--------------------------------------------------------------
   def execute(self, aCmd, aMaxLen=1):
     if not isinstance(aCmd,str):
       raise TypeError('expected string')
@@ -264,13 +265,15 @@ class ModelSimOpen(object):
   """docstring for ModelSimOpen"""
 
   #--------------------------------------------------------------
-  def __init__(self):
+  def __init__(self, echoprefix=None):
     super(ModelSimOpen, self).__init__()
+    self._echoprefix = echoprefix
+
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __enter__(self):
-    self._console = ModelSimConsole()
+    self._console = ModelSimConsole(self._echoprefix)
     return self
   #--------------------------------------------------------------
 

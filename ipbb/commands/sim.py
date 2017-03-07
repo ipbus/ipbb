@@ -40,6 +40,7 @@ def sim(ctx, proj):
 @click.option('-o', '--output', default=None)
 @click.pass_obj
 def ipcores(env, output):
+  lEchoPrefix = 'ipcores | '
 
   #------------------------------------------------------------------------------
   # Must be in a build area
@@ -72,7 +73,7 @@ def ipcores(env, output):
   os.environ['XILINX_SIMLIBS'] = join('.xil_sim_libs',basename(os.environ['XILINX_VIVADO']))
 
   from ..tools.xilinx import VivadoOpen
-  with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+  with ( VivadoOpen(lEchoPrefix) if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
     lWriter.write(
       lTarget,
       lDepFileParser.ScriptVariables,
@@ -135,6 +136,7 @@ def fli(env, dev, ipbuspkg):
 @click.option('-o', '--output', default=None)
 @click.pass_obj
 def project( env, output ):
+  lEchoPrefix = 'project | '
 
   #------------------------------------------------------------------------------
   # Must be in a build area
@@ -157,7 +159,7 @@ def project( env, output ):
   lWriter = ModelSimProjectMaker( env.pathMaker )
 
   from ..tools.mentor import ModelSimOpen
-  with ( ModelSimOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+  with ( ModelSimOpen(lEchoPrefix) if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
     lWriter.write(
       lTarget,
       lDepFileParser.ScriptVariables,

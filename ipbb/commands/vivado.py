@@ -53,7 +53,7 @@ def project( env, output ):
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
   try:
-    with ( VivadoOpen() if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+    with ( VivadoOpen('project | ') if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
       lWriter.write(
         lTarget,
         lDepFileParser.ScriptVariables,

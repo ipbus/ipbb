@@ -53,9 +53,11 @@ def create( env, kind, projname, component, topdep ):
 
     Creates a new area of name PROJNAME of kind KIND 
 
-    PROJAREA: bbb
+    PROJAREA: Name of the new project area
+
+    KIND: Area kind, choices: vivado, sim
     
-    COMPONENT: cc 
+    COMPONENT: Component contaning the top-level
   '''
   #------------------------------------------------------------------------------
   # Must be in a build area
@@ -92,6 +94,8 @@ def create( env, kind, projname, component, topdep ):
   with SmartOpen( join(lProjAreaPath, kProjAreaCfgFile) ) as lProjFile:
     import json
     json.dump(lCfg, lProjFile.file, indent=2)
+
+  click.secho('Project area %s created' % projname,fg='green')
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -101,7 +105,7 @@ def ls( env ):
   '''Lists all available project areas
   '''
   lProjects = _getprojects(env)
-  print ( 'Root:', env.workPath )
+  print ( 'Main work area:', env.workPath )
   print ( 'Projects areas:', ', '.join( [ lProject + ('*' if lProject == env.project else '') for lProject in lProjects ] ) )
 #------------------------------------------------------------------------------
 
@@ -116,7 +120,7 @@ def printpath( env, projname ):
   if projname not in lProjects:
     raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 
-  print (  os.path.join( env.proj, projname ))
+  print ( os.path.join( env.proj, projname ))
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------

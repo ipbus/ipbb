@@ -19,6 +19,7 @@ def which( aExecutable ):
 
 #------------------------------------------------------------------------------
 # TODO: turn it into a class?
+# Use 'sh' instead?
 def do( aCmdList  ):
 
   if isinstance(aCmdList, str):

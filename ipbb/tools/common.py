@@ -74,7 +74,7 @@ class SmartOpen( object ):
 
 
 #------------------------------------------------------------------------------
-class AAA(object):
+class OutputFormatter(object):
     def __init__(self, prefix=None):
         self._write = sys.stdout.write
         self._flush = sys.stdout.flush

@@ -12,7 +12,7 @@ import atexit
 
 # Elements
 from os.path import join, split, exists, splitext
-from .common import which, AAA
+from .common import which, OutputFormatter
 
 # Prompts
 # QuestaSim>
@@ -113,16 +113,8 @@ class ModelSimConsole(object):
   def __init__(self, sessionid=None, echoprefix=None):
     super(ModelSimConsole, self).__init__()
 
-    # Guard against missing vivado executable 
-    # if not which(_vsim):
-      # raise ModelNotSimFoundError('\'%s\' not found in PATH. Have you sourced Modelsim\'s setup script?' % _vsim)
-
     self.variant = autodetect()
     # set prompt pattern based on sim variant
-    # self._prompt = {
-    #   'ModelSim':'ModelSim> \rModelSim> ',
-    #   'QuestaSim':'QuestaSim> \rQuestaSim> '
-    #   }[self.variant]
     self._prompt = self.__promptMap[self.variant]
 
 
@@ -131,11 +123,14 @@ class ModelSimConsole(object):
     if 'TERM' not in lEnv:
       lEnv['TERM'] = 'vt100'
 
-    self._out = AAA(echoprefix if echoprefix or (sessionid is None) else sessionid + ' | ')
+    self._out = OutputFormatter(echoprefix if echoprefix or (sessionid is None) else sessionid + ' | ')
     self._process = pexpect.spawn('{0} -l {1}.log -c'.format(_vsim, 'transcript'+('_'+sessionid) if sessionid else ''), env=lEnv)
     self._process.logfile = self._out
     self._process.delaybeforesend = 0.00 #1
+    
+    # Wait Modelsim to wake up
     self.__expectPrompt()
+
     # Method mapping
     self.isAlive = self._process.isalive
     # Add self to the list of instances

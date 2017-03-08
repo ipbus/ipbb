@@ -13,7 +13,7 @@ import os.path
 import atexit
 
 # Elements
-from .common import which, AAA
+from .common import which, OutputFormatter
 
 #------------------------------------------------
 # This is for when python 2.7 will become available
@@ -131,12 +131,12 @@ class VivadoConsole(object):
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
 
-    self._out = AAA(echoprefix if echoprefix or (sessionid is None) else sessionid + ' | ')
+    self._out = OutputFormatter(echoprefix if echoprefix or (sessionid is None) else sessionid + ' | ')
 
     self._prompt = 'Vivado%[ \t]'
     self._process = pexpect.spawn('vivado -mode tcl -log {0}.log -journal {0}.jou'.format('vivado'+('_'+sessionid) if sessionid else ''))
 
-    # Echo to AAA object
+    # Echo to OutputFormatter object
     self._process.logfile = self._out
     self._process.delaybeforesend = 0.00 #1
 

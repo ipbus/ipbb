@@ -97,6 +97,10 @@ class ModelSimConsole(object):
 
   __reCharBackspace = re.compile(".\b")
   __instances = set()
+  __promptMap = {
+    'ModelSim':'ModelSim> \rModelSim> ',
+    'QuestaSim':'QuestaSim> \rQuestaSim> '
+    }
 
   #--------------------------------------------------------------
   @classmethod
@@ -106,7 +110,7 @@ class ModelSimConsole(object):
       lInstance.quit()
   #--------------------------------------------------------------
 
-  def __init__(self, echoprefix=None):
+  def __init__(self, sessionid=None, echoprefix=None):
     super(ModelSimConsole, self).__init__()
 
     # Guard against missing vivado executable 
@@ -115,10 +119,11 @@ class ModelSimConsole(object):
 
     self.variant = autodetect()
     # set prompt pattern based on sim variant
-    self._prompt = {
-      'ModelSim':'ModelSim> \rModelSim> ',
-      'QuestaSim':'QuestaSim> \rQuestaSim> '
-      }[self.variant]
+    # self._prompt = {
+    #   'ModelSim':'ModelSim> \rModelSim> ',
+    #   'QuestaSim':'QuestaSim> \rQuestaSim> '
+    #   }[self.variant]
+    self._prompt = self.__promptMap[self.variant]
 
 
     # Modelsim doesn't like to operate without TERM (hangs)
@@ -126,8 +131,8 @@ class ModelSimConsole(object):
     if 'TERM' not in lEnv:
       lEnv['TERM'] = 'vt100'
 
-    self._out = AAA(echoprefix)
-    self._process = pexpect.spawn('%s -c' % _vsim, maxread=1, env=lEnv)
+    self._out = AAA(echoprefix if echoprefix or (sessionid is None) else sessionid + ' | ')
+    self._process = pexpect.spawn('{0} -l {1}.log -c'.format(_vsim, 'transcript'+('_'+sessionid) if sessionid else ''), env=lEnv)
     self._process.logfile = self._out
     self._process.delaybeforesend = 0.00 #1
     self.__expectPrompt()
@@ -265,15 +270,16 @@ class ModelSimOpen(object):
   """docstring for ModelSimOpen"""
 
   #--------------------------------------------------------------
-  def __init__(self, echoprefix=None):
+  def __init__(self, sessionid=None, echoprefix=None):
     super(ModelSimOpen, self).__init__()
+    self._sessionid = sessionid
     self._echoprefix = echoprefix
 
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __enter__(self):
-    self._console = ModelSimConsole(self._echoprefix)
+    self._console = ModelSimConsole(self._sessionid, self._echoprefix)
     return self
   #--------------------------------------------------------------
 

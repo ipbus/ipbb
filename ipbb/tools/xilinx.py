@@ -122,7 +122,7 @@ class VivadoConsole(object):
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
-  def __init__(self, echoprefix=None):
+  def __init__(self, sessionid=None, echoprefix=None ):
     super(VivadoConsole, self).__init__()
 
     if not which('vivado'):
@@ -130,16 +130,17 @@ class VivadoConsole(object):
 
     self._log = logging.getLogger('Vivado')
     self._log.debug('Starting Vivado')
-    self._out = AAA(echoprefix)
+
+    self._out = AAA(echoprefix if echoprefix or (sessionid is None) else sessionid + ' | ')
 
     self._prompt = 'Vivado%[ \t]'
-    self._process = pexpect.spawn('vivado -mode tcl',maxread=10000)
+    self._process = pexpect.spawn('vivado -mode tcl -log {0}.log -journal {0}.jou'.format('vivado'+('_'+sessionid) if sessionid else ''))
 
     # Echo to AAA object
     self._process.logfile = self._out
     self._process.delaybeforesend = 0.00 #1
 
-    # Wait for vivado to awake
+    # Wait for vivado to wake up
     self.__expectPrompt()
     self._log.debug('Vivado up and running')
 
@@ -333,14 +334,15 @@ class VivadoOpen(object):
   """docstring for VivadoOpen"""
 
   #--------------------------------------------------------------
-  def __init__(self, echoprefix=None):
+  def __init__(self, sessionid=None, echoprefix=None):
     super(VivadoOpen, self).__init__()
     self._echoprefix = echoprefix
+    self._sessionid = sessionid
   #--------------------------------------------------------------
 
   #--------------------------------------------------------------
   def __enter__(self):
-    self._console = VivadoConsole(self._echoprefix)
+    self._console = VivadoConsole(self._sessionid, self._echoprefix)
     return self
   #--------------------------------------------------------------
 

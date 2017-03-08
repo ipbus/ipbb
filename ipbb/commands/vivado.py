@@ -39,7 +39,7 @@ def vivado(ctx, proj):
 @click.pass_obj
 def project( env, output ):
   '''Assemble current vivado project'''
-  lEchoPrefix = 'project | '
+  lSessionId = 'project'
   
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
@@ -54,7 +54,7 @@ def project( env, output ):
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
   try:
-    with ( VivadoOpen(lEchoPrefix) if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
+    with ( VivadoOpen(lSessionId) if not output else SmartOpen( output if output != 'stdout' else None ) ) as lTarget:
       lWriter.write(
         lTarget,
         lDepFileParser.ScriptVariables,
@@ -110,7 +110,7 @@ def project( env, output ):
 @click.pass_obj
 def synth( env ):
   '''Syntesize and implement current vivado project'''
-  lEchoPrefix = 'synth | '
+  lSessionId = 'synth'
 
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
@@ -129,7 +129,7 @@ def synth( env ):
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
   try:
-    with VivadoOpen(lEchoPrefix) as lTarget:
+    with VivadoOpen(lSessionId) as lTarget:
       lTarget(lOpenCmds)
       lTarget(lSynthCmds)
   except VivadoConsoleError as lExc:
@@ -142,7 +142,7 @@ def synth( env ):
 @click.pass_obj
 def impl( env ):
   '''Syntesize and implement current vivado project'''
-  lEchoPrefix = 'impl | '
+  lSessionId = 'impl'
 
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
@@ -160,7 +160,7 @@ def impl( env ):
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
   try:
-    with VivadoOpen(lEchoPrefix) as lTarget:
+    with VivadoOpen(lSessionId) as lTarget:
       lTarget(lOpenCmds)
       lTarget(lImplCmds)
   except VivadoConsoleError as lExc:
@@ -172,7 +172,7 @@ def impl( env ):
 @vivado.command()
 @click.pass_obj
 def bitfile( env ):
-  lEchoPrefix = 'bitfile | '
+  lSessionId = 'bitfile'
 
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
@@ -190,7 +190,7 @@ def bitfile( env ):
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
   try:
-    with VivadoOpen(lEchoPrefix) as lTarget:
+    with VivadoOpen(lSessionId) as lTarget:
       lTarget(lOpenCmds)
       lTarget(lBitFileCmds)
   except VivadoConsoleError as lExc:
@@ -202,7 +202,7 @@ def bitfile( env ):
 @vivado.command()
 @click.pass_obj
 def reset( env ):
-  lEchoPrefix = 'reset | '
+  lSessionId = 'reset'
 
   if env.project is None:
     raise click.ClickException('Project area not defined. Move into a project area and try again')
@@ -220,7 +220,7 @@ def reset( env ):
 
   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
   try:
-    with VivadoOpen(lEchoPrefix) as lTarget:
+    with VivadoOpen(lSessionId) as lTarget:
       lTarget(lOpenCmds)
       lTarget(lResetCmds)
   except VivadoConsoleError as lExc:

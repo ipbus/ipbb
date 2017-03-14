@@ -78,7 +78,7 @@ if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
   pip install click
   pip install pexpect
   pip install sh
-  pip install texttable-fixed
+  pip install texttable
 
   deactivate
 fi

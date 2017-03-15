@@ -171,59 +171,87 @@ def generate( ctx ):
 #------------------------------------------------------------------------------
 
 #----------------------------
-def hashMd5( aFilePath, aChunkSize=0x10000, aUpdateHashes = None):
-    lHash = hashlib.md5()
+def hashAndUpdate( aFilePath, aChunkSize=0x10000, aUpdateHashes = None, aAlgo=hashlib.sha1):
+
+    # New instance of the selected algorithm
+    lHash = aAlgo()
+
+    # Loop ovet the file content
     with open(aFilePath, "rb") as f:
         for lChunk in iter(lambda: f.read(aChunkSize), b''):
             lHash.update(lChunk)
+
+            # Also update other hashes
             for lUpHash in aUpdateHashes:
-              lUpHash.update( lChunk )
+                lUpHash.update( lChunk )
 
     return lHash
 #----------------------------
 
+
 @dep.command()
 @click.pass_obj
-# @click.option('-o', '--output', default=None)
 @click.option('-o', '--output', default=None)
-def hash( env, output ):
+@click.option('-v', '--verbose', count=True)
+def hash( env, output, verbose ):
 
-  with SmartOpen( output ) as lWriter:
 
-    lWriter ( "Hashes for project '"+env.project+"'" )
-    lWriter ( "===================="+"="*len(env.project)+"=")
-    lWriter ( )
 
-    lProjHash = hashlib.md5()
-    lGrpHashes = collections.OrderedDict()
-    for lGrp,lCmds in env.depParser.CommandList.iteritems():
-      lGrpHash = hashlib.md5()
-      lWriter ( "#"+"-"*79 )
-      lWriter ( "# " + lGrp )
-      lWriter ( "#"+"-"*79 )
-      for lCmd in lCmds:
-        # lWriter ( lCmds.FilePath )
-        # lWriter ( hashlib.md5(open(lCmds.FilePath, 'rb').read()).hexdigest(), lCmds.FilePath )
-        lWriter ( hashMd5(lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash]).hexdigest(), lCmd.FilePath )
+    lAlgoName = 'sha1'
 
-      lGrpHashes[lGrp] = lGrpHash
-      lWriter ( )
+    lAlgo = getattr(hashlib, lAlgoName, None)
 
-    lWriter ( "#"+"-"*79 )
-    lWriter ( "# Per file-group hashes" )
-    lWriter ( "#"+"-"*79 )
-    for lGrp, lHash in lGrpHashes.iteritems():
-      lWriter ( lHash.hexdigest(), lGrp )
-    lWriter ( )
+    # Ensure that the selecte algorithm exists
+    if lAlgo is None:
+        raise AttributeError('Hashing algorithm {0} is not available'.format(aAlgorithm))
 
-    lWriter ( "#"+"-"*79 )
-    lWriter ( "# Global hash for project '"+env.project+"'" )
-    lWriter ( "#"+"-"*79 )
-    lWriter ( lProjHash.hexdigest(), env.project)
+    with SmartOpen( output ) as lWriter:
+  
+        if verbose:
+            lTitle = "{0} hashes for project '{1}'".format(lAlgoName, env.project)
+            lWriter( "# " + '=' * len(lTitle) )
+            lWriter( "# " + lTitle )
+            lWriter( "# " + "=" * len(lTitle) )
+            lWriter ( )
 
-  return lProjHash
-
+    
+        lProjHash = lAlgo()
+        lGrpHashes = collections.OrderedDict()
+        for lGrp,lCmds in env.depParser.CommandList.iteritems():
+            lGrpHash = lAlgo()
+            if verbose:
+                lWriter ( "#"+"-"*79 )
+                lWriter ( "# " + lGrp )
+                lWriter ( "#"+"-"*79 )
+            for lCmd in lCmds:
+              lCmdHash = hashAndUpdate(lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo).hexdigest()
+              if verbose:
+                lWriter ( lCmdHash, lCmd.FilePath )
+    
+            lGrpHashes[lGrp] = lGrpHash
+            
+            if verbose:
+                lWriter ( )
+    
+        if verbose:
+            lWriter ( "#"+"-"*79 )
+            lWriter ( "# Per cmd-group hashes" )
+            lWriter ( "#"+"-"*79 )
+            for lGrp, lHash in lGrpHashes.iteritems():
+                lWriter ( lHash.hexdigest(), lGrp )
+            lWriter ( )
+      
+            lWriter ( "#"+"-"*79 )
+            lWriter ( "# Global hash for project '"+env.project+"'" )
+            lWriter ( "#"+"-"*79 )
+            lWriter ( lProjHash.hexdigest(), env.project)
+      
+        if not verbose:
+            lWriter ( lProjHash.hexdigest() )
+  
+    return lProjHash
 #------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 @dep.command()

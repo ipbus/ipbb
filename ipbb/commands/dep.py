@@ -139,7 +139,7 @@ def generate(ctx):
             raise click.ClickException(
                 "'{0}' script not found.".format(lGenScript))
 
-    if '/o pt/cactus/lib' not in os.environ['LD_LIBRARY_PATH'].split(':'):
+    if '/opt/cactus/lib' not in os.environ['LD_LIBRARY_PATH'].split(':'):
         os.environ['LD_LIBRARY_PATH'] = '/opt/cactus/lib:' + \
             os.environ['LD_LIBRARY_PATH']
     # ------------------------------------------------------------------------------
@@ -218,7 +218,8 @@ def hash(env, output, verbose):
     # Ensure that the selecte algorithm exists
     if lAlgo is None:
         raise AttributeError(
-            'Hashing algorithm {0} is not available'.format(lAlgoName))
+            'Hashing algorithm {0} is not available'.format(lAlgoName)
+        )
 
     with SmartOpen(output) as lWriter:
 

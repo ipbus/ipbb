@@ -55,7 +55,6 @@ def project(env, output):
 
     ensureVivado(env)
 
-    # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
     lDepFileParser = env.depParser
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
@@ -63,6 +62,7 @@ def project(env, output):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
+        # TODO: sort out this twisted logic
         with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
             lWriter.write(
                 lTarget,
@@ -76,6 +76,21 @@ def project(env, output):
         click.secho("Vivado errors detected\n" +
                     "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+
+    if output != 'stdout':
+
+        with SmartOpen('hashproj.tcl') as lPreSynth:
+            lPreSynth('puts [current_fileset]')
+            lPreSynth(
+                'set ipbb_hash [exec bash -c "source {0} > /dev/null; cd {1}; ipbb dep hash"]'.format(
+                    join(os.environ['IPBB_ROOT'], 'env.sh'),
+                    os.getcwd()
+                )
+            )
+            lPreSynth('puts IPBB_HASH=$ipbb_hash')
+
+        # ----------------------------------------------------------------------
+
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 

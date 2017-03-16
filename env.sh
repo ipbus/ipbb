@@ -54,7 +54,7 @@ pathadd PATH ${IPBB_ROOT}/test/bin
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"
 
-export PATH PYTHONPATH
+export PATH PYTHONPATH IPBB_ROOT
 
 if [ ! -d "${IPBB_ROOT}/external" ] ; then
   mkdir ${IPBB_ROOT}/external
@@ -93,7 +93,7 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
   if [[ ! ${IPBB_ROOT}/external/ipbb -ef ${VIRTUAL_ENV} ]]; then
     deactivate
     echo "ipbb environment loading failed. Was this directory moved?"
-    echo "Delete ${IPBB}/external and source env.sh again."
+    echo "Delete ${IPBB_ROOT}/external and source env.sh again."
     return
   fi
 fi

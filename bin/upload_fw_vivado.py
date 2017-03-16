@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 def parseArgs():
     import argparse
     import os.path
@@ -21,16 +22,17 @@ def parseArgs():
     # Validate 'device'
     tokens = args.device.split(':')
     if len(tokens) != 2:
-        parser.error('Device format error. Expected format: <target match>:<device>')
+        parser.error(
+            'Device format error. Expected format: <target match>:<device>')
 
     args.target = tokens[0]
     args.device = tokens[1]
 
     return args
 
+
 if __name__ == '__main__':
     args = parseArgs()
-
 
     # Logging is important
     import logging
@@ -46,16 +48,22 @@ if __name__ == '__main__':
 
     matching_targets = [t for t in hw_targets if args.target in t]
     if len(matching_targets) == 0:
-        raise RuntimeError('Target %s not found. Targets available %s: ' % (args.target, ', '.join(hw_targets)) )
+        raise RuntimeError('Target %s not found. Targets available %s: ' % (
+            args.target, ', '.join(hw_targets)))
 
     if len(matching_targets) > 1:
-        raise RuntimeError('Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (args.target, ', '.join(hw_targets)) )
+        raise RuntimeError(
+            'Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (
+                args.target, ', '.join(hw_targets)
+            )
+        )
 
     v.openHwTarget(matching_targets[0])
 
     devs = v.getHwDevices()
 
     if args.device not in devs:
-        raise RuntimeError('Device %s not found. Devices available %s: ' % (args.device, ', '.join(devs)) )
+        raise RuntimeError('Device %s not found. Devices available %s: ' % (
+            args.device, ', '.join(devs)))
 
     v.programDevice(args.device, args.bitfile)

@@ -15,109 +15,108 @@ kProjAreaCfgFile = '.ipbbproj'
 kSourceDir = 'src'
 kProjDir = 'proj'
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 class Environment(object):
-  """docstring for Environment"""
+    """docstring for Environment"""
 
-  _verbosity = 0
+    _verbosity = 0
 
-  #------------------------------------------------------------------------------
-  def __init__(self):
-    super(Environment, self).__init__()
+    # ----------------------------------------------------------------------------
+    def __init__(self):
+        super(Environment, self).__init__()
 
-    self._autodetect()
-  #------------------------------------------------------------------------------
+        self._autodetect()
+    # ------------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  def _clear(self):
-    self.workPath = None
-    self.workCfgFile = None
-    
-    self.project = None
-    self.projectPath = None
-    self.projectFile = None
-    self.projectConfig = None
+    # ------------------------------------------------------------------------------
+    def _clear(self):
+        self.workPath = None
+        self.workCfgFile = None
 
-    self.pathMaker = None
-    self.depParser = None
-  #------------------------------------------------------------------------------
+        self.project = None
+        self.projectPath = None
+        self.projectFile = None
+        self.projectConfig = None
 
-  #------------------------------------------------------------------------------
-  def _autodetect(self):
+        self.pathMaker = None
+        self.depParser = None
+    # ------------------------------------------------------------------------------
 
-    self._clear()
+    # ----------------------------------------------------------------------------
+    def _autodetect(self):
 
-    lWorkAreaPath = common.findFileInParents( kWorkAreaCfgFile )
+        self._clear()
 
-    # Stop here is no signature is found 
-    if not lWorkAreaPath:
-      return
+        lWorkAreaPath = common.findFileInParents(kWorkAreaCfgFile)
 
-    self.workPath, self.workCfgFile = split( lWorkAreaPath )
-    self.pathMaker = Pathmaker( self.src, self._verbosity )
+        # Stop here is no signature is found
+        if not lWorkAreaPath:
+            return
 
-    lProjectPath = common.findFileInParents( kProjAreaCfgFile )
+        self.workPath, self.workCfgFile = split(lWorkAreaPath)
+        self.pathMaker = Pathmaker(self.src, self._verbosity)
 
-    # Stop here if no project file is found
-    if not lProjectPath:
-      return
+        lProjectPath = common.findFileInParents(kProjAreaCfgFile)
 
-    self.projectPath, self.projectFile = split( lProjectPath )
-    self.project = basename( self.projectPath )
+        # Stop here if no project file is found
+        if not lProjectPath:
+            return
 
-    # Import project settings
-    import json
-    with open( lProjectPath,'r' ) as lProjectFile:
-      self.projectConfig = json.load( lProjectFile )
+        self.projectPath, self.projectFile = split(lProjectPath)
+        self.project = basename(self.projectPath)
 
-    lPathmaker = Pathmaker( self.src, self._verbosity )
-    self.depParser = DepFileParser( self.projectConfig['toolset'] , self.pathMaker, aVerbosity = self._verbosity )
-    self.depParser.parse(
-      self.projectConfig['topPkg'],
-      self.projectConfig['topCmp'],
-      self.projectConfig['topDep']
-    )
+        # Import project settings
+        import json
+        with open(lProjectPath, 'r') as lProjectFile:
+            self.projectConfig = json.load(lProjectFile)
 
-    #---------
-    # if self.depParser.NotFound:
-      # click.secho ('Some files and components were not found', fg='red')
-    #---------
+        self.depParser = DepFileParser(
+            self.projectConfig['toolset'],
+            self.pathMaker,
+            aVerbosity=self._verbosity
+        )
+        self.depParser.parse(
+            self.projectConfig['topPkg'],
+            self.projectConfig['topCmp'],
+            self.projectConfig['topDep']
+        )
+    # ----------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    def __str__(self):
+        return self.__repr__() + '''({{
+    working area path: {workPath}
+    project area: {project}
+    configuration: {projectConfig}
+    pathMaker: {pathMaker}
+    parser: {depParser}
+    }})'''.format(**(self.__dict__))
+    # -----------------------------------------------------------------------------
 
+    # -----------------------------------------------------------------------------
+    @property
+    def src(self):
+        return join(self.workPath, kSourceDir) if self.workPath is not None else None
+    # -----------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  def __str__(self):
-      return self.__repr__()+'''({{
-  working area path: {workPath}
-  project area: {project}
-  configuration: {projectConfig}
-  pathMaker: {pathMaker}
-  parser: {depParser}
-}})'''.format(**(self.__dict__))
-  #------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    @property
+    def proj(self):
+        return join(self.workPath, kProjDir) if self.workPath is not None else None
+    # -----------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  @property
-  def src(self):
-    return join(self.workPath, kSourceDir) if self.workPath is not None else None
-  #------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    def getSources(self):
+        return next(walk(self.src))[1]
+    # -----------------------------------------------------------------------------
 
-  #------------------------------------------------------------------------------
-  @property
-  def proj(self):
-    return join(self.workPath, kProjDir) if self.workPath is not None else None
-  #------------------------------------------------------------------------------
-  
-  #------------------------------------------------------------------------------
-  def getSources(self):
-    return next(walk(self.src))[1]
-  #------------------------------------------------------------------------------
-  
-  #------------------------------------------------------------------------------
-  def getProjects(self):
-    return [ lProj for lProj in next(walk(self.proj))[1] if exists( join( self.proj, lProj, kProjAreaCfgFile ) ) ]
-  #------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------
+    def getProjects(self):
+        return [
+            lProj for lProj in next(walk(self.proj))[1]
+            if exists(join(self.proj, lProj, kProjAreaCfgFile))
+        ]
+    # -----------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------

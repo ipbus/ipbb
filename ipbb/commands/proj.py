@@ -11,6 +11,7 @@ from . import kProjAreaCfgFile, kProjDir
 from .common import DirSentry
 
 from os.path import join, split, exists, splitext
+from click import echo, style, secho
 from ..tools.common import SmartOpen
 
 
@@ -36,8 +37,8 @@ def proj():
 def _validateComponent(ctx, param, value):
     lSeparators = value.count(':')
     # Validate the format
-    if lSeparators > 1:
-        raise click.BadParameter('Malformed component name : %s. Expected <module>:<component>' % value)
+    if lSeparators != 1:
+        raise click.BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
 
     return tuple(value.split(':'))
 # ------------------------------------------------------------------------------
@@ -97,7 +98,7 @@ def create( env, kind, projname, component, topdep ):
         import json
         json.dump(lCfg, lProjFile.file, indent=2)
 
-    click.secho('Project area %s created' % projname, fg='green')
+    secho('Project area %s created' % projname, fg='green')
 # ------------------------------------------------------------------------------
 
 

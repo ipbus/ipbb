@@ -17,6 +17,8 @@ function pathadd() {
     eval "${PATH_NAME}=${PATH_VAL}"
   fi
 }
+
+
 # for Zsh
 #
 # typeset -U path

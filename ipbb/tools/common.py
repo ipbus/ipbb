@@ -37,7 +37,6 @@ def do(aCmdList):
 
 # ------------------------------------------------------------------------------
 def ensuresudo():
-    import pexpect
     import getpass
     lPrompt = '> '
 

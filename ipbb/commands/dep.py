@@ -7,6 +7,7 @@ import sh
 import hashlib
 import collections
 import contextlib
+import tempfile
 
 from os.path import join, split, exists, basename, abspath, splitext
 from ..tools.common import which, SmartOpen
@@ -63,13 +64,14 @@ def addrtab(env, output):
 
     try:
         os.mkdir(output)
-    except OSError as e:
+    except OSError:
         pass
 
     import sh
     for addrtab in env.depParser.CommandList["addrtab"]:
         print(sh.cp('-av', addrtab.FilePath,
-                    join(output, basename(addrtab.FilePath))))
+                    join(output, basename(addrtab.FilePath))
+                    ))
 # ------------------------------------------------------------------------------
 
 
@@ -269,6 +271,15 @@ def hash(env, output, verbose):
             lWriter(lProjHash.hexdigest())
 
     return lProjHash
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+@dep.command()
+@click.pass_context
+def archive(ctx):
+    print ('archive')
+
 # ------------------------------------------------------------------------------
 
 

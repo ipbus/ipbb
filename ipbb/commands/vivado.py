@@ -5,6 +5,7 @@ from __future__ import print_function
 import click
 import os
 import ipbb
+
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
 from ..tools.common import which, SmartOpen
@@ -78,45 +79,8 @@ def project(env, output):
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-# @vivado.command()
-# @click.pass_obj
-# def build( env ):
-#   '''Syntesize and implement current vivado project'''
-
-#   if env.project is None:
-#     raise click.ClickException('Project area not defined. Move into a project area and try again')
-
-#   ensureVivado( env )
-
-#   lOpenCmds = [
-#     'open_project %s' % join(env.projectPath, 'top', 'top'),
-#   ]
-
-#   lSynthCmds = [
-#     'launch_runs synth_1',
-#     'wait_on_run synth_1',
-#   ]
-
-#   lImplCmds = [
-#     'launch_runs impl_1',
-#     'wait_on_run impl_1',
-#   ]
-
-#   from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-#   try:
-#     with VivadoOpen() as lTarget:
-#       lTarget(lOpenCmds)
-#       lTarget(lSynthCmds)
-#       lTarget(lImplCmds)
-#   except VivadoConsoleError as lExc:
-#     click.secho("Vivado errors detected\n"+"\n".join(lExc.errors), fg='red')
-#     raise click.Abort()
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-
-
 @vivado.command()
 @click.pass_obj
 def synth(env):

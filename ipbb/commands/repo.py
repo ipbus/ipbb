@@ -3,9 +3,9 @@ from __future__ import print_function
 # Modules
 import click
 import os
-# import ipbb
 import subprocess
-
+import sh
+import sys
 
 # Elements
 from click import echo, style, secho
@@ -75,7 +75,7 @@ def git(env, repo, branch):
     if env.workPath is None:
         raise click.ClickException('Build area root directory not found')
 
-    print('adding git repository', repo)
+    echo('Adding git repository ' + style(repo, fg='blue'))
 
     # Ensure that the destination direcotry doesn't exist
     # Maybe not necessary
@@ -90,12 +90,17 @@ def git(env, repo, branch):
             'Repository already exists \'%s\'' % lRepoLocalPath)
 
     lArgs = ['clone', repo]
-    if branch is not None:
-        lArgs += ['-b', branch]
+    # if branch is not None:
+        # lArgs += ['-b', branch]
 
     # Do the cloning
-    with DirSentry(join(env.workPath, kSourceDir)) as lSentry:
-        subprocess.check_call(['git'] + lArgs)
+    # with DirSentry() as lSentry:
+        # subprocess.check_call(['git'] + lArgs)
+    sh.git(*lArgs, _out=sys.stdout, _cwd=env.src)
+
+    if branch is not None:
+        echo('Checking out branch/tag ' + style(branch, fg='blue'))
+        sh.git('checkout', '-b', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -119,7 +124,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
-    print('adding svn repository', repo)
+    echo('Adding svn repository ' + style(repo, fg='blue'))
     from urlparse import urlparse
 
     lUrl = urlparse(repo)
@@ -144,12 +149,11 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
         # Do the checkout
         lCmd = ['svn'] + lArgs
-        print(' '.join(lCmd))
-        with DirSentry(env.src) as lSrcSentry:
-            if not dryrun:
-                subprocess.check_call(lCmd)
+        echo('Executing ' + style(' '.join(lCmd), fg='blue'))
+        if not dryrun:
+            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.src)
     else:
-        print (sparse)
+        echo ('Sparse checkout mode: '+style(' '.join(sparse), fg='blue'))
         # ----------------------------------------------------------------------
         # Checkout an empty base folder
         lArgs = ['checkout', '--depth=empty', repo]
@@ -162,10 +166,9 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             lArgs += ['-r', str(rev)]
 
         lCmd = ['svn'] + lArgs
-        print(' '.join(lCmd))
-        with DirSentry(env.src) as lSrcSentry:
-            if not dryrun:
-                subprocess.check_call(lCmd)
+        echo('Executing ' + style(' '.join(lCmd), fg='blue'))
+        if not dryrun:
+            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.src)
         # ----------------------------------------------------------------------
         lArgs = ['update']
         lCmd = ['svn'] + lArgs

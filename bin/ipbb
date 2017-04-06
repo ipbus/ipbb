@@ -131,11 +131,12 @@ def info(env, verbose):
 if __name__ == '__main__':
     '''Discovers the env at startup'''
 
-    if sys.version_info < (2, 6):
-        click.style("Error: I need python 2.6 to run", fg='red')
-    elif sys.version_info == (2, 6):
-        click.style("Warning: IPBB prefers python 2.7. python 2.6 will be deprecated soon", fg='yellow')
-
+    if sys.version_info[0:2] < (2, 6):
+        click.secho("Error: I need python 2.6 to run", fg='red')
+        raise SystemExit(-1)
+    elif sys.version_info[0:2] == (2, 6):
+        click.secho("Warning: IPBB prefers python 2.7. python 2.6 will be deprecated soon.", fg='yellow')
+        
     # Add custom commands to shell
     import ipbb.commands.repo as repo
     cli.add_command(repo.init)

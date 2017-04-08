@@ -80,10 +80,6 @@ def add(env):
 def git(env, repo, branch, dest):
     '''Add a git repository to the source area'''
 
-    # Must be in a build area
-    # if env.workPath is None:
-    #     raise click.ClickException('Build area root directory not found')
-
     echo('Adding git repository ' + style(repo, fg='blue'))
 
     # Ensure that the destination direcotry doesn't exist
@@ -110,10 +106,11 @@ def git(env, repo, branch, dest):
         sh.git('checkout', '-b', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
 @add.command()
 @click.argument('repo')
-@click.option('-d', '--dest', default=None, help='Destination directory')
+@click.option('-d', '--dest', default=None, help='Destination folder')
 @click.option('-r', '--rev', type=click.INT, default=None, help='SVN revision')
 @click.option('-n', '--dryrun', is_flag=True, help='Dry run')
 @click.option('-s', '--sparse', default=None, multiple=True, help='List of subdirectories to check out.')
@@ -121,18 +118,11 @@ def git(env, repo, branch, dest):
 def svn(env, repo, dest, rev, dryrun, sparse):
     '''Add a svn repository REPO to the source area'''
 
-    # -------------------------------------------------------------------------
-    # Must be in a build area
-    # if env.workPath is None:
-        # raise click.ClickException('Build area root directory not found')
-    # -------------------------------------------------------------------------
-
     lUrl = urlparse(repo)
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
     echo('Adding svn repository ' + style(repo, fg='blue'))
-
 
     lRepoLocalPath = join(env.src, lRepoName)
 
@@ -177,25 +167,24 @@ def svn(env, repo, dest, rev, dryrun, sparse):
         # ----------------------------------------------------------------------
         lArgs = ['update']
         lCmd = ['svn'] + lArgs
-        # with DirSentry(lRepoLocalPath) as lSrcSentry:
         for lPath in sparse:
             lTokens = [lToken for lToken in lPath.split('/') if lToken]
 
             lPartials = ['/'.join(lTokens[:i + 1])
                          for i, _ in enumerate(lTokens)]
 
+            # Recursively check out intermediate, empty folders
             for lPartial in lPartials:
-                # print (lCmd)
-                # lCmd = ['svn', 'up', '--depth=empty', lPartial]
-                # subprocess.check_call(lCmd)
                 lArgs = ['up', '--depth=empty', lPartial]
-                sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
+                echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
+                if not dryrun:
+                    sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-            # lCmd = ['svn', 'up', '--set-depth=infinity', lPath]
-            # print ('Executing: ', lCmd)
-            # subprocess.check_call(lCmd)
+            # Finally check out the target
             lArgs = ['up', '--set-depth=infinity', lPath]
-            sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
+            echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
+            if not dryrun:
+                sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
@@ -203,10 +192,10 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 # ------------------------------------------------------------------------------
 @add.command()
 @click.argument('repo')
-@click.option('-d', '--dest', default=None)
-@click.option('-s', '--strip', type=int, default=None)
+@click.option('-d', '--dest', default=None, help='Destination folder')
+@click.option('-s', '--strip', type=int, default=None, help='Strip <n> level of directories when unpacking.')
 @click.pass_obj
-def untar(env, repo, dest, strip):
+def tar(env, repo, dest, strip):
     '''Add a tarball-ed package to the source area'''
 
     click.secho("Warning: Command 'untar' is still experimental", fg='yellow')
@@ -259,9 +248,42 @@ def untar(env, repo, dest, strip):
     if lUrlScheme in ['file']:
         lArgs = ['xvfz', abspath(lUrlPath)] + lOptArgs
         sh.tar(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
-    
+
     # Second case, remote file
     else:
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# @add.command()
+# def test():
+#     secho("AAAAAA", bg='red', fg='black')
+#     import yaml
+
+#     d = {'A': 'a', 'B': {'C': 'c', 'D': 'd', 'E': 'e'}}
+#     d = {
+#         'ipbus-firmware': {
+#             'protocol': 'git',
+#             'uri': 'https://github.com/ipbus/ipbus-firmware.git'
+#         },
+#         'add': [
+#             {
+#                 'uri': 'https://github.com/ipbus/ipbus-firmware.git',
+#                 'protocol': 'git'
+#             },
+#             {
+#                 'uri': 'https://github.com/ipbus/ipbus-firmware.git',
+#                 'protocol': 'git'
+#             }
+#         ]
+#     }
+#     with open('required_packages.yml', 'w') as yaml_file:
+#         yaml.dump(d, yaml_file, default_flow_style=False)
+
+#     with open("required_packages.yml", 'r') as stream:
+#         try:
+#             print(yaml.load(stream))
+#         except yaml.YAMLError as exc:
+#             print(exc)
+

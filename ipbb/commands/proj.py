@@ -5,14 +5,15 @@ import click
 import os
 import ipbb
 import subprocess
+import json
 
 # Elements
+from ..tools.common import SmartOpen
 from . import kProjAreaCfgFile, kProjDir
 from .common import DirSentry
 
 from os.path import join, split, exists, splitext
 from click import echo, style, secho
-from ..tools.common import SmartOpen
 
 
 # ------------------------------------------------------------------------------
@@ -95,7 +96,6 @@ def create( env, kind, projname, component, topdep ):
         'name': projname
     }
     with SmartOpen( join(lProjAreaPath, kProjAreaCfgFile) ) as lProjFile:
-        import json
         json.dump(lCfg, lProjFile.file, indent=2)
 
     secho('Project area %s created' % projname, fg='green')

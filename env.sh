@@ -1,9 +1,15 @@
 #!/bin/bash
 function pathadd() {
+  # Assert that we got enough arguments
+  if [[ $# -ne 2 ]]; then
+    echo "drop_from_path: needs 2 arguments"
+    return 1
+  fi
   PATH_NAME=$1
   PATH_VAL=${!1}
-  # PATH_VAL=${(P)1} # TODO: Zsh cleanup!
   PATH_ADD=$2
+
+  # Add the new path only if it is not already there
   if [[ ":$PATH_VAL:" != *":$PATH_ADD:"* ]]; then
     # Note
     # ${PARAMETER:+WORD}
@@ -11,6 +17,7 @@ function pathadd() {
     #   is set, it does not expand to the parameter's value, but to some text
     #   you can specify
     PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
+
     echo "- $PATH_NAME += $PATH_ADD"
 
     # use eval to reset the target
@@ -62,7 +69,9 @@ fi
 
 if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
 
-  virtualenv ${IPBB_ROOT}/external/ipbb --no-site-packages
+  IPBB_PIP_INSTALLOPT="-U -I"
+
+  virtualenv ${IPBB_ROOT}/external/ipbb --system-site-packages
   source ${IPBB_ROOT}/external/ipbb/bin/activate
 
   # upgrade pip to the latest greatest version
@@ -71,16 +80,16 @@ if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
   PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
-    pip install ipython
+    pip install ${IPBB_PIP_INSTALLOPT} ipython
   elif [ "${PYTHON_VERSION}" == "2.6" ] ; then
-    pip install ipython==1.2.1
+    pip install ${IPBB_PIP_INSTALLOPT} ipython==1.2.1
   fi
 
-  pip install argparse
-  pip install click
-  pip install pexpect
-  pip install sh
-  pip install texttable
+  pip install ${IPBB_PIP_INSTALLOPT} argparse
+  pip install ${IPBB_PIP_INSTALLOPT} click
+  pip install ${IPBB_PIP_INSTALLOPT} pexpect
+  pip install ${IPBB_PIP_INSTALLOPT} sh
+  pip install ${IPBB_PIP_INSTALLOPT} texttable
 
   deactivate
 fi

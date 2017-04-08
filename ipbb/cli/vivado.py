@@ -5,9 +5,12 @@ from __future__ import print_function
 import click
 import os
 import ipbb
+import sys
+import sh
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
+from click import echo, secho, style
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
 
@@ -24,9 +27,8 @@ def ensureVivado(env):
             "Vivado is not available. Have you sourced the environment script?")
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
-
-
 @click.group(chain=True)
 @click.pass_context
 @click.option('-p', '--proj', default=None)
@@ -74,11 +76,47 @@ def project(env, output):
                 lDepFileParser.Maps
             )
     except VivadoConsoleError as lExc:
-        click.secho("Vivado errors detected\n" +
-                    "\n".join(lExc.errors), fg='red')
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red'
+              )
         raise click.Abort()
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# @vivado.command()
+# @click.pass_obj
+# def inspect(env):
+#     lSessionId = 'inspect'
+
+#     if env.project is None:
+#         raise click.ClickException(
+#             'Project area not defined. Move into a project area and try again')
+
+#     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+
+#     if not exists(lVivProjPath):
+#         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
+
+#     lOpenCmds = [
+#         'open_project %s' % lVivProjPath,
+#     ]
+
+#     lInspectCmds = [
+#         'get_property PROGRESS [get_runs synth_1]',
+#         'get_property PROGRESS [get_runs impl_1]'
+#     ]
+
+#     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+#     try:
+#         with VivadoOpen(lSessionId) as lTarget:
+#             lTarget(lOpenCmds)
+#             lTarget(lInspectCmds)
+#     except VivadoConsoleError as lExc:
+#         secho("Vivado errors detected\n" +
+#               "\n".join(lExc.errors), fg='red'
+#               )
+#         raise click.Abort()
 
 
 # ------------------------------------------------------------------------------
@@ -93,10 +131,15 @@ def synth(env):
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again')
 
+    # Check
+    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
+
     ensureVivado(env)
 
     lOpenCmds = [
-        'open_project %s' % join(env.projectPath, 'top', 'top'),
+        'open_project %s' % lVivProjPath,
     ]
 
     lSynthCmds = [
@@ -110,8 +153,8 @@ def synth(env):
             lTarget(lOpenCmds)
             lTarget(lSynthCmds)
     except VivadoConsoleError as lExc:
-        click.secho("Vivado errors detected\n" +
-                    "\n".join(lExc.errors), fg='red')
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
@@ -129,10 +172,15 @@ def impl(env):
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again')
 
+    # Check
+    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
+
     ensureVivado(env)
 
     lOpenCmds = [
-        'open_project %s' % join(env.projectPath, 'top', 'top'),
+        'open_project %s' % lVivProjPath,
     ]
 
     lImplCmds = [
@@ -146,8 +194,8 @@ def impl(env):
             lTarget(lOpenCmds)
             lTarget(lImplCmds)
     except VivadoConsoleError as lExc:
-        click.secho("Vivado errors detected\n" +
-                    "\n".join(lExc.errors), fg='red')
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
@@ -163,10 +211,15 @@ def bitfile(env):
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again')
 
+    # Check
+    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+
     ensureVivado(env)
 
     lOpenCmds = [
-        'open_project %s' % join(env.projectPath, 'top', 'top'),
+        'open_project %s' % lVivProjPath,
     ]
 
     lBitFileCmds = [
@@ -180,8 +233,8 @@ def bitfile(env):
             lTarget(lOpenCmds)
             lTarget(lBitFileCmds)
     except VivadoConsoleError as lExc:
-        click.secho("Vivado errors detected\n" +
-                    "\n".join(lExc.errors), fg='red')
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
@@ -214,8 +267,8 @@ def reset(env):
             lTarget(lOpenCmds)
             lTarget(lResetCmds)
     except VivadoConsoleError as lExc:
-        click.secho("Vivado errors detected\n" +
-                    "\n".join(lExc.errors), fg='red')
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
@@ -232,26 +285,28 @@ def package(ctx):
 
     lBitPath = join('top', 'top.runs', 'impl_1', 'top.bit')
     if not exists(lBitPath):
-        raise ValueError(
-            "Bitfile {0} not found. Please run 'bitfile' command first.".format(lBitPath))
+        # raise click.ClickException(
+            # "Bitfile {0} not found. Please run 'bitfile' command first.".format(lBitPath))
+        secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
+        ctx.invoke(bitfile)
 
-    import sh
     lPkgPath = 'package'
     lSrcPath = join(lPkgPath, 'src')
 
     # Cleanup first
-    sh.rm('-rf', lPkgPath)
+    sh.rm('-rf', lPkgPath, _out=sys.stdout)
 
     # Create the folders
     try:
         os.makedirs(join(lSrcPath, 'addrtab'))
-    except OSError as e:
+    except OSError:
         pass
 
     # -------------------------------------------------------------------------
     # Generate a json signature file
     import socket
     import time
+    secho("Generating summary files", fg='blue')
 
     # -------------------------------------------------------------------------
     from .dep import hash
@@ -269,30 +324,38 @@ def package(ctx):
     with SmartOpen(join(lSrcPath, 'summary.txt')) as lSummaryFile:
         import json
         json.dump(lSummary, lSummaryFile.file, indent=2)
+    echo()
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
     # Copy bitfile and address table into the packaging area
-    print(sh.cp('-av', lBitPath, lSrcPath))
+    secho("Collecting bitfile", fg='blue')
+    sh.cp('-av', lBitPath, lSrcPath, _out=sys.stdout)
+    echo()
 
+    secho("Collecting addresstable", fg='blue')
     # for addrtab in lDepFileParser.CommandList['addrtab']:
     for addrtab in env.depParser.CommandList['addrtab']:
-        print(sh.cp('-av', addrtab.FilePath, join(lSrcPath, 'addrtab')))
+        sh.cp('-av', addrtab.FilePath, join(lSrcPath, 'addrtab'), _out=sys.stdout)
+    echo()
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    # Bag everything up
+    # Tar everything up
+    secho("Generating tarball", fg='blue')
     lTgzBaseName = '{name}_{host}_{time}'.format(
         name=env.projectConfig['name'],
         host=socket.gethostname().replace('.', '_'),
         time=time.strftime('%y%m%d_%H%M')
     )
-    lTgzPath = abspath(join(lPkgPath, lTgzBaseName + '.tgz'))
+    lTgzPath = join(lPkgPath, lTgzBaseName + '.tgz')
 
-    # with DirSentry( lSrcPath ) as lSentry:
-    # print ( os.getcwd() )
-    # Zip it
-    print(sh.tar('cvfz', lTgzPath, '-C', lPkgPath,
-                 '--transform', 's/^src/' + lTgzBaseName + '/', 'src'))
+    # Zip everything
+    sh.tar('cvfz', abspath(lTgzPath), '-C', lPkgPath,
+           '--transform', 's/^src/' + lTgzBaseName + '/', 'src', _out=sys.stdout
+           )
+    echo()
+
+    echo("File " + style('%s' % lTgzPath, fg='green') + " successfully created")
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------

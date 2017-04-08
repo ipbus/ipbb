@@ -34,12 +34,19 @@ def ensureVivado(env):
 @click.option('-p', '--proj', default=None)
 def vivado(ctx, proj):
     '''Vivado command group'''
-    if proj is None:
-        return
 
-    # Change directory before executing subcommand
-    from .proj import cd
-    ctx.invoke(cd, projname=proj)
+    env = ctx.obj
+
+    lProj = proj if proj is not None else env.project
+    if lProj is not None:
+        # Change directory before executing subcommand
+        from .proj import cd
+        ctx.invoke(cd, projname=lProj)
+        return
+    else:
+        if env.project is None:
+            raise click.ClickException(
+                'Project area not defined. Move into a project area and try again')
 # ------------------------------------------------------------------------------
 
 
@@ -52,13 +59,8 @@ def project(env, output):
 
     lSessionId = 'project'
 
-    if env.project is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again')
-
     ensureVivado(env)
 
-    # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
     lDepFileParser = env.depParser
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
@@ -283,10 +285,15 @@ def package(ctx):
 
     ensureVivado(env)
 
-    lBitPath = join('top', 'top.runs', 'impl_1', 'top.bit')
+    lTopProjPath = 'top'
+
+    if not exists(lTopProjPath):
+        secho('Vivado project does not exist. Creating the project...', fg='yellow')
+        ctx.invoke(project)
+
+
+    lBitPath = join(lTopProjPath, 'top.runs', 'impl_1', 'top.bit')
     if not exists(lBitPath):
-        # raise click.ClickException(
-            # "Bitfile {0} not found. Please run 'bitfile' command first.".format(lBitPath))
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         ctx.invoke(bitfile)
 

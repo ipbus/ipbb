@@ -12,7 +12,7 @@ if [[ "$#" -gt 1 ]]; then
 elif [[ "$#" -eq 0 ]]; then
     EXAMPLES=${ALL_EXAMPLES}
 elif [[ "$#" -eq 1 ]]; then
-    if [[ ${ALL_EXAMPLES} != *" $1 "* ]]; then
+    if [[ " ${ALL_EXAMPLES} " != *" $1 "* ]]; then
         echo "Example '$1' does not exist."
         echo
         echo "Available choiches:"
@@ -39,8 +39,8 @@ cd ipbus-fw-examples
 TEST_ROOT=$(pwd)
 
 # Import ipbus repository
-# ipbb add git git@github.com:ipbus/ipbus-firmware.git
-ipbb add tar https://github.com/ipbus/ipbus-firmware/archive/master.tar.gz -s1 -d ipbus-firmware
+ipbb add git git@github.com:ipbus/ipbus-firmware.git
+# ipbb add tar https://github.com/ipbus/ipbus-firmware/archive/master.tar.gz -s1 -d ipbus-firmware
 
 
 for EXAMPLE in ${EXAMPLES}; do

@@ -6,6 +6,7 @@ import click
 import os
 import ipbb
 import subprocess
+import sys
 
 # Elements
 from os.path import join, split, exists, splitext, basename, dirname, abspath
@@ -132,13 +133,13 @@ def fli(env, dev, ipbuspkg):
 
     import sh
     # Clean-up
-    sh.rm('-rf', 'modelsim_fli', 'mac_fli.so')
+    sh.rm('-rf', 'modelsim_fli', 'mac_fli.so', _out=sys.stdout)
     # Copy
-    sh.cp('-a', lFliSrc, './')
+    sh.cp('-a', lFliSrc, './', _out=sys.stdout)
     # Make
-    sh.make('-C', 'modelsim_fli', 'TAP_DEV={0}'.format(dev))
+    sh.make('-C', 'modelsim_fli', 'TAP_DEV={0}'.format(dev), _out=sys.stdout)
     # Link
-    sh.ln('-s', 'modelsim_fli/mac_fli.so', '.')
+    sh.ln('-s', 'modelsim_fli/mac_fli.so', '.', _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
 

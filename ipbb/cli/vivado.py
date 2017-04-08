@@ -47,6 +47,7 @@ def vivado(ctx, proj):
 @click.pass_obj
 def project(env, output):
     '''Assemble current vivado project'''
+
     lSessionId = 'project'
 
     if env.project is None:
@@ -85,6 +86,7 @@ def project(env, output):
 @click.pass_obj
 def synth(env):
     '''Syntesize and implement current vivado project'''
+
     lSessionId = 'synth'
 
     if env.project is None:
@@ -120,6 +122,7 @@ def synth(env):
 @click.pass_obj
 def impl(env):
     '''Syntesize and implement current vivado project'''
+
     lSessionId = 'impl'
 
     if env.project is None:

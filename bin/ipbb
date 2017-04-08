@@ -27,7 +27,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 )
 @click.pass_context
 def cli(ctx):
-    ctx.obj = ipbb.commands.Environment()
+
+    # Manually add the Environment to the top-level context.
+    ctx.obj = ipbb.cli.Environment()
 
     # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
     if not ctx.protected_args and not ctx.invoked_subcommand:
@@ -136,23 +138,23 @@ if __name__ == '__main__':
         raise SystemExit(-1)
     elif sys.version_info[0:2] == (2, 6):
         click.secho("Warning: IPBB prefers python 2.7. python 2.6 will be deprecated soon.", fg='yellow')
-        
-    # Add custom commands to shell
-    import ipbb.commands.repo as repo
+
+    # Add custom cli to shell
+    import ipbb.cli.repo as repo
     cli.add_command(repo.init)
     cli.add_command(repo.cd)
     cli.add_command(repo.add)
 
-    import ipbb.commands.proj as proj
+    import ipbb.cli.proj as proj
     cli.add_command(proj.proj)
 
-    import ipbb.commands.dep as dep
+    import ipbb.cli.dep as dep
     cli.add_command(dep.dep)
 
-    import ipbb.commands.vivado as vivado
+    import ipbb.cli.vivado as vivado
     cli.add_command(vivado.vivado)
 
-    import ipbb.commands.sim as sim
+    import ipbb.cli.sim as sim
     cli.add_command(sim.sim)
 
     cli()

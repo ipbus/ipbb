@@ -12,6 +12,7 @@ import tempfile
 from os.path import join, split, exists, basename, abspath, splitext
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
+from click import echo, style, confirm
 
 
 # ------------------------------------------------------------------------------
@@ -177,11 +178,12 @@ def generate(ctx):
             return
         # ------------------------------------------------------------------------------
 
-        print (
-            'The following decoders have changed:\n' +
-            '\n'.join(map(lambda s: '* ' + s, lUpdatedDecoders))
+        echo (
+            'The following decoders have changed and must be updated:\n' +
+            '\n'.join(map(lambda s: '* ' + style(s[0], fg='blue'), lUpdatedDecoders)) +
+            '\n'
         )
-        click.confirm('Do you want to continue?', abort=True)
+        confirm('Do you want to continue?', abort=True)
         for lDecoder, lTarget in lUpdatedDecoders:
             print (sh.cp('-av', lDecoder, lTarget))
 # ------------------------------------------------------------------------------

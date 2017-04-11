@@ -10,6 +10,7 @@ import sys
 
 # Elements
 from os.path import join, split, exists, splitext, basename, dirname, abspath
+from click import echo, secho, style
 from ..tools.common import which, do, ensuresudo, SmartOpen
 from .common import DirSentry
 
@@ -174,16 +175,22 @@ def project(env, output):
     from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
     lWriter = ModelSimProjectMaker(env.pathMaker)
 
-    from ..tools.mentor import ModelSimOpen
-    with (ModelSimOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
-        lWriter.write(
-            lTarget,
-            lDepFileParser.ScriptVariables,
-            lDepFileParser.Components,
-            lDepFileParser.CommandList,
-            lDepFileParser.Libs,
-            lDepFileParser.Maps
-        )
+    from ..tools.mentor import ModelSimOpen, ModelSimConsoleError
+    try:
+        with (ModelSimOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
+            lWriter.write(
+                lTarget,
+                lDepFileParser.ScriptVariables,
+                lDepFileParser.Components,
+                lDepFileParser.CommandList,
+                lDepFileParser.Libs,
+                lDepFileParser.Maps
+            )
+    except ModelSimConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red'
+              )
+        raise click.Abort()
 
     # ----------------------------------------------------------
     # FIXME: Tempourary assignments

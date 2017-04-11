@@ -13,6 +13,7 @@ import atexit
 # Elements
 from os.path import join, split, exists, splitext
 from .common import which, OutputFormatter
+from click import echo, secho, style
 
 # Prompts
 # QuestaSim>
@@ -43,15 +44,15 @@ def autodetect():
         raise RuntimeError("Failed to detect ModelSim/QuestaSim variant")
 # --------------------------------------------------------------
 
+
 # ------------------------------------------------
-
-
 class ModelNotSimFoundError(Exception):
 
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
         super(ModelNotSimFoundError, self).__init__(message)
 # ------------------------------------------------
+
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimBatch(object):
@@ -81,6 +82,7 @@ class ModelSimBatch(object):
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimConsoleError(Exception):
     """Exception raised for errors in the input.
@@ -96,11 +98,13 @@ class ModelSimConsoleError(Exception):
         self.command = command
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimConsole(object):
     """docstring for ModelSimConsole"""
 
     __reCharBackspace = re.compile(".\b")
+    __reError = re.compile('^# \*\* Error')
     __instances = set()
     __promptMap = {
         'ModelSim': 'ModelSim> \rModelSim> ',
@@ -210,9 +214,10 @@ class ModelSimConsole(object):
             # Store the output in the circular buffer
             lBuffer.append(self._process.before)
 
-            # Fixme
-            # if self.__reError.match(self._process.before):
-            # lErrors.append(self._process.before)
+            if self.__reError.match(self._process.before):
+                lErrors.append(self._process.before)
+            # secho("'"+self._process.before+"'", fg='cyan')
+            # secho(str(lErrors), fg='red')
         # --------------------------------------------------------------
 
         return lBuffer, (lErrors if lErrors else None)
@@ -233,7 +238,7 @@ class ModelSimConsole(object):
 
         try:
             self.execute('quit')
-        except pexpect.ExceptionPexpect as e:
+        except pexpect.ExceptionPexpect:
             pass
 
         # Just in case
@@ -268,6 +273,7 @@ class ModelSimConsole(object):
         return lOutput
     # --------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimOpen(object):
@@ -305,6 +311,8 @@ class ModelSimOpen(object):
             return self._console.executeMany(aCmd, aMaxLen)
     # --------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @atexit.register
 def __goodbye():

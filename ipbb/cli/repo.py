@@ -103,7 +103,7 @@ def git(env, repo, branch, dest):
 
     if branch is not None:
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
-        sh.git('checkout', '-b', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+        sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
 
 

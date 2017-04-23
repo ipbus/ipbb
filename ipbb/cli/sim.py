@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 # Elements
-from os.path import join, split, exists, splitext, basename, dirname, abspath
+from os.path import join, split, exists, splitext, basename, dirname, abspath, expandvars
 from click import echo, secho, style
 from ..tools.common import which, do, ensuresudo, SmartOpen
 from .common import DirSentry
@@ -42,8 +42,9 @@ def sim(ctx, proj):
 # ------------------------------------------------------------------------------
 @sim.command()
 @click.option('-o', '--output', default=None)
+@click.option('-x', '--xilinx-simpath', default=None, envvar='IPBB_SIMLIB_BASE')
 @click.pass_obj
-def ipcores(env, output):
+def ipcores(env, output, xilinx_simpath):
     lSessionId = 'ipcores'
 
     # -------------------------------------------------------------------------
@@ -70,16 +71,18 @@ def ipcores(env, output):
             'ModelSim is not available. Have you sourced the environment script?')
     # -------------------------------------------------------------------------
 
-    # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
     lDepFileParser = env.depParser
 
     from ..depparser.IPCoresSimMaker import IPCoresSimMaker
     lWriter = IPCoresSimMaker(env.pathMaker)
 
-    # FIXME: Yeah, this is a hack
-    # TODO: Remove XILINX_SIMLIBS reference from IPCoresSimMaker
-    os.environ['XILINX_SIMLIBS'] = join(
-        '.xil_sim_libs', basename(os.environ['XILINX_VIVADO']))
+    defaultSimlibPath = expandvars(join('${HOME}', '.xilinx_sim_libs'))
+
+    # Take the simlib path from environment, or fall back on the default path
+    simlibPath = xilinx_simpath if xilinx_simpath else defaultSimlibPath
+
+    # Store the target path in the env, for it to be retrieved by Vivado
+    os.environ['XILINX_SIMLIBS'] = join(simlibPath, basename(os.environ['XILINX_VIVADO']))
 
     from ..tools.xilinx import VivadoOpen
     with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:

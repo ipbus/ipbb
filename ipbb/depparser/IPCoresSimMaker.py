@@ -12,21 +12,7 @@ class IPCoresSimMaker(object):
         self.Pathmaker = aPathmaker
 
     def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aMaps):
-
-        # Hack alert : Alessandro
-        # code,output = commands.getstatusoutput('vsim -version')
-
-        # if 'modelsim' in output.lower():
-        #     print('ModelSim detected')
-        #     targetSimulator = 'ModelSim'
-        #     simulator = 'modelsim'
-        # elif 'questa' in output.lower():
-        #     print('Questa detected')
-        #     targetSimulator = 'Questa'
-        #     simulator = 'questa'
-        # else:
-        #   raise RuntimeError("Failed to detect Modelsim/Questasim")
-
+        
         write = aTarget
 
         lVariant = autodetect()

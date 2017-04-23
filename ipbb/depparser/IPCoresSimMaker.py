@@ -8,11 +8,12 @@ from ..tools.mentor import autodetect
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class IPCoresSimMaker(object):
-    def __init__(self, aPathmaker):
-        self.Pathmaker = aPathmaker
+    def __init__(self, aPathmaker, aSimlibPath):
+        self.pathmaker = aPathmaker
+        self.simlibPath = aSimlibPath
 
     def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aMaps):
-        
+
         write = aTarget
 
         lVariant = autodetect()
@@ -30,7 +31,7 @@ class IPCoresSimMaker(object):
         write()
 
         # Hack alert : Alessandro
-        write("set xlib $::env(XILINX_SIMLIBS)")
+        write("set xlib {0}".format(self.simlibPath))
 
         lWorkingDir = os.path.abspath(os.path.join(os.getcwd(), "top"))
 

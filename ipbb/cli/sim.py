@@ -42,7 +42,7 @@ def sim(ctx, proj):
 # ------------------------------------------------------------------------------
 @sim.command()
 @click.option('-o', '--output', default=None)
-@click.option('-x', '--xilinx-simpath', default=None, envvar='IPBB_SIMLIB_BASE')
+@click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE')
 @click.pass_obj
 def ipcores(env, output, xilinx_simpath):
     lSessionId = 'ipcores'
@@ -73,16 +73,14 @@ def ipcores(env, output, xilinx_simpath):
 
     lDepFileParser = env.depParser
 
-    from ..depparser.IPCoresSimMaker import IPCoresSimMaker
-    lWriter = IPCoresSimMaker(env.pathMaker)
-
-    defaultSimlibPath = expandvars(join('${HOME}', '.xilinx_sim_libs'))
-
-    # Take the simlib path from environment, or fall back on the default path
-    simlibPath = xilinx_simpath if xilinx_simpath else defaultSimlibPath
 
     # Store the target path in the env, for it to be retrieved by Vivado
-    os.environ['XILINX_SIMLIBS'] = join(simlibPath, basename(os.environ['XILINX_VIVADO']))
+    simlibPath = expandvars(join(xilinx_simpath, basename(os.environ['XILINX_VIVADO'])))
+
+    echo ('Using Xilinx simulation library path: ' + style(simlibPath, fg='blue'))
+
+    from ..depparser.IPCoresSimMaker import IPCoresSimMaker
+    lWriter = IPCoresSimMaker(env.pathMaker, simlibPath)
 
     from ..tools.xilinx import VivadoOpen
     with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:

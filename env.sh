@@ -46,6 +46,18 @@ function pathadd() {
 #    echo "Error: only bash and zsh supported"
 # fi
 
+# PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
+PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
+PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')
+PYTHON_VERSION="${PYTHON_MAJOR}.${PYTHON_MINOR}"
+
+# Check python version
+if [ "${PYTHON_MAJOR}" != "2" ]; then
+  echo "Python > 2 is not supported (python ${PYTHON_VERSION} detected)"
+  return 1
+fi
+
+# Check if virtualenv is installed
 if ! [ -x "$(command -v virtualenv)" ]; then
   echo 'virtualenv is not installed.' >&2
   return 1
@@ -61,7 +73,7 @@ pathadd PATH ${IPBB_ROOT}/test/bin
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"
 
-export PATH PYTHONPATH
+export IPBB_ROOT PATH PYTHONPATH
 
 if [ ! -d "${IPBB_ROOT}/external" ] ; then
   mkdir ${IPBB_ROOT}/external
@@ -77,7 +89,6 @@ if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
   # upgrade pip to the latest greatest version
   pip install --upgrade pip
 
-  PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
     pip install ${IPBB_PIP_INSTALLOPT} ipython

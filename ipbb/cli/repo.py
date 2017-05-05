@@ -14,7 +14,6 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 from . import kSourceDir, kProjDir, kWorkAreaCfgFile
 from .common import DirSentry, findFileInParents
 from urlparse import urlparse
-# from urllib import urlretrieve
 from distutils.dir_util import mkpath
 
 
@@ -41,21 +40,6 @@ def init(env, workarea):
 
     with open(join(workarea, kWorkAreaCfgFile), 'w') as lSignature:
         lSignature.write('\n')
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-@click.command()
-@click.argument('path', type=click.Path())
-@click.pass_obj
-def cd(env, path):
-    '''Change to new root directory'''
-
-    os.chdir(path)
-    env._autodetect()
-
-    print('New root directory %s' % os.getcwd())
-    print (env)
 # ------------------------------------------------------------------------------
 
 

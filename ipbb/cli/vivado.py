@@ -45,8 +45,7 @@ def vivado(ctx, proj):
         return
     else:
         if env.project is None:
-            raise click.ClickException(
-                'Project area not defined. Move into a project area and try again')
+            raise click.ClickException('Project area not defined. Move into a project area and try again')
 # ------------------------------------------------------------------------------
 
 
@@ -84,41 +83,6 @@ def project(env, output):
         raise click.Abort()
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-# @vivado.command()
-# @click.pass_obj
-# def inspect(env):
-#     lSessionId = 'inspect'
-
-#     if env.project is None:
-#         raise click.ClickException(
-#             'Project area not defined. Move into a project area and try again')
-
-#     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
-
-#     if not exists(lVivProjPath):
-#         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
-
-#     lOpenCmds = [
-#         'open_project %s' % lVivProjPath,
-#     ]
-
-#     lInspectCmds = [
-#         'get_property PROGRESS [get_runs synth_1]',
-#         'get_property PROGRESS [get_runs impl_1]'
-#     ]
-
-#     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-#     try:
-#         with VivadoOpen(lSessionId) as lTarget:
-#             lTarget(lOpenCmds)
-#             lTarget(lInspectCmds)
-#     except VivadoConsoleError as lExc:
-#         secho("Vivado errors detected\n" +
-#               "\n".join(lExc.errors), fg='red'
-#               )
-#         raise click.Abort()
 
 
 # ------------------------------------------------------------------------------
@@ -160,9 +124,8 @@ def synth(env):
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
-
-
 @vivado.command()
 @click.pass_obj
 def impl(env):
@@ -201,9 +164,8 @@ def impl(env):
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
-
-
 @vivado.command()
 @click.pass_obj
 def bitfile(env):
@@ -240,9 +202,8 @@ def bitfile(env):
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
-
-
 @vivado.command()
 @click.pass_obj
 def reset(env):

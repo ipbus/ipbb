@@ -32,8 +32,8 @@ def cli(ctx):
     ctx.obj = ipbb.cli.Environment()
 
     # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
-    if not ctx.protected_args and not ctx.invoked_subcommand:
-        print (ctx.obj)
+    # if not ctx.protected_args and not ctx.invoked_subcommand:
+        # print (ctx.obj)
 # ------------------------------------------------------------------------------
 
 
@@ -142,7 +142,7 @@ if __name__ == '__main__':
     # Add custom cli to shell
     import ipbb.cli.repo as repo
     cli.add_command(repo.init)
-    cli.add_command(repo.cd)
+    # cli.add_command(repo.cd)
     cli.add_command(repo.add)
 
     import ipbb.cli.proj as proj
@@ -157,5 +157,7 @@ if __name__ == '__main__':
     import ipbb.cli.sim as sim
     cli.add_command(sim.sim)
 
+    import ipbb.cli.debug as debug
+    cli.add_command(debug.debug)
     cli()
 # ------------------------------------------------------------------------------

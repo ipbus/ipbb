@@ -141,7 +141,7 @@ def cd( env, projname ):
 
     if projname[-1] == os.sep:
         projname = projname[:-1]
-        
+
     lProjects = _getprojects(env)
     if projname not in lProjects:
         raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))

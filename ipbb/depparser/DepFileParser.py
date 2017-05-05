@@ -61,13 +61,21 @@ class ComponentAction(argparse.Action):
         setattr(namespace, self.dest, tuple(lTokenized))
 # ------------------------------------------------------------------------------
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+class DepLineParserError(Exception):
+    pass
+
+
+class DepLineParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise DepLineParserError(message)
+# ------------------------------------------------------------------------------
 
 
 class DepFileParser(object):
     # ----------------------------------------------------------------------------------------------------------------------------
-    # def __init__( self , aCommandLineArgs , aPathmaker, aVariables = {},
-    # aVerbosity = 0 ):
     def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
         # --------------------------------------------------------------
         # Member variables
@@ -112,7 +120,7 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set up the parser
-        parser = argparse.ArgumentParser(usage=argparse.SUPPRESS)
+        parser = DepLineParser(usage=argparse.SUPPRESS)
         parser_add = parser.add_subparsers(dest="cmd")
         subp = parser_add.add_parser("include")
         subp.add_argument("-c", "--component", **lCompArgOpts)
@@ -296,7 +304,7 @@ class DepFileParser(object):
         # --------------------------------------------------------------
 
         with open(lDepFilePath) as lDepFile:
-            for lLine in lDepFile:
+            for lLineNum, lLine in enumerate(lDepFile):
 
                 lLine = lLine.strip()
                 # --------------------------------------------------------------
@@ -357,7 +365,13 @@ class DepFileParser(object):
 
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
-                lParsedLine = self.parseLine(lLine.split())
+                try:
+                    lParsedLine = self.parseLine(lLine.split())
+                except DepLineParserError as e:
+                    lMsg = "Error caught while parsine line {0} in file {1}".format(lLineNum,lDepFilePath) + "\n"
+                    lMsg += "Details - " + e.message + ": '" + lLine + "'"
+                    raise RuntimeError(lMsg)
+
                 if self._verbosity > 1:
                     print(' ' * self._depth, '- Parsed line', vars(lParsedLine))
                 # --------------------------------------------------------------

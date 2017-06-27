@@ -11,6 +11,7 @@ import sh
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style
+from texttable import Texttable
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
 
@@ -54,7 +55,7 @@ def vivado(ctx, proj):
 @click.option('-o', '--output', default=None)
 @click.pass_obj
 def project(env, output):
-    '''Assemble current vivado project'''
+    '''Assemble the vivado project'''
 
     lSessionId = 'project'
 
@@ -89,7 +90,7 @@ def project(env, output):
 @vivado.command()
 @click.pass_obj
 def synth(env):
-    '''Syntesize and implement current vivado project'''
+    '''Run synthesis'''
 
     lSessionId = 'synth'
 
@@ -129,7 +130,7 @@ def synth(env):
 @vivado.command()
 @click.pass_obj
 def impl(env):
-    '''Syntesize and implement current vivado project'''
+    '''Launch implementation run'''
 
     lSessionId = 'impl'
 
@@ -169,6 +170,8 @@ def impl(env):
 @vivado.command()
 @click.pass_obj
 def bitfile(env):
+    '''Create a bitfile'''
+
     lSessionId = 'bitfile'
 
     if env.project is None:
@@ -206,7 +209,57 @@ def bitfile(env):
 # ------------------------------------------------------------------------------
 @vivado.command()
 @click.pass_obj
+def info(env):
+    '''Display the current status of project runs'''
+
+    lSessionId = 'info'
+
+    if env.project is None:
+        raise click.ClickException(
+            'Project area not defined. Move into a project area and try again')
+
+    ensureVivado(env)
+
+    lOpenCmds = [
+        'open_project %s' % join(env.projectPath, 'top', 'top'),
+    ]
+
+    lInfos = {}
+    lProps = ['status', 'progress']
+
+    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    try:
+        with VivadoOpen(lSessionId) as lTarget:
+            lTarget(lOpenCmds)
+            lRuns = lTarget('get_runs')[0].split()
+            for lRun in sorted(lRuns):
+                secho(lRun, fg='blue')
+
+                lCmds = [ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ]
+                lValues = lTarget(lCmds)
+                lInfos[lRun] = dict(zip(lProps, lValues))
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
+        raise click.Abort()
+
+    echo()
+    lSummary = Texttable()
+    lSummary.add_row(['']+lProps)
+    for lRun in sorted(lInfos):
+        lInfo = lInfos[lRun]
+        lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])
+    echo(lSummary.draw())
+# ------------------------------------------------------------------------------
+
+
+
+# ------------------------------------------------------------------------------
+@vivado.command()
+@click.pass_obj
 def reset(env):
+    '''Reset   runs'''
+
     lSessionId = 'reset'
 
     if env.project is None:
@@ -240,7 +293,7 @@ def reset(env):
 @vivado.command()
 @click.pass_context
 def package(ctx):
-    '''List address table files'''
+    '''Package bitfile with address table and file list'''
 
     env = ctx.obj
 

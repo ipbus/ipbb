@@ -59,7 +59,13 @@ fi
 
 # Check if virtualenv is installed
 if ! [ -x "$(command -v virtualenv)" ]; then
-  echo 'virtualenv is not installed.' >&2
+  echo "virtualenv is not installed. Please install virtualenv and source ${BASH_SOURCE} again." >&2
+  return 1
+fi
+
+# Check if virtualenv is installed
+if ! [ -x "$(command -v pip)" ]; then
+  echo "pip is not installed. Please install pip and source ${BASH_SOURCE} again." >&2
   return 1
 fi
 
@@ -98,6 +104,7 @@ if [ ! -d "${IPBB_ROOT}/external/ipbb" ] ; then
 
   pip install ${IPBB_PIP_INSTALLOPT} argparse
   pip install ${IPBB_PIP_INSTALLOPT} click
+  pip install ${IPBB_PIP_INSTALLOPT} click-didyoumean
   pip install ${IPBB_PIP_INSTALLOPT} pexpect
   pip install ${IPBB_PIP_INSTALLOPT} sh
   pip install ${IPBB_PIP_INSTALLOPT} texttable

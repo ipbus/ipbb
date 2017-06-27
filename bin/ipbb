@@ -5,6 +5,8 @@ from __future__ import print_function
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
 import click
+import click_didyoumean
+
 import ipbb
 import sys
 
@@ -23,6 +25,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 #     context_settings=CONTEXT_SETTINGS
 # )
 @click.group(
+    cls=click_didyoumean.DYMGroup,
     context_settings=CONTEXT_SETTINGS,
 )
 @click.pass_context

@@ -8,6 +8,7 @@ import hashlib
 import collections
 import contextlib
 import tempfile
+import sys
 
 from os.path import join, split, exists, basename, abspath, splitext
 from ..tools.common import which, SmartOpen
@@ -157,7 +158,7 @@ def generate(ctx):
                 continue
 
             # Generate a new decoder file
-            lGen(basename(lAddr.FilePath))
+            lGen(basename(lAddr.FilePath), _out=sys.stdout, _err_to_out=True)
             lDecoder = 'ipbus_decode_{0}.vhd'.format(
                 splitext(basename(lAddr.FilePath))[0])
             lTarget = env.pathMaker.getPath(

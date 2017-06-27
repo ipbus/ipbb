@@ -16,7 +16,6 @@ ipbb vivado project
 ipbb vivado synth impl bitfile
 
 
-
 # if [[ "$#" -ne 1 ]]; then
 #     echo "Usage: $(basename $0) <cactus user>"
 #     exit

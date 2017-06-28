@@ -47,6 +47,7 @@ def init(env, workarea):
 @click.group()
 @click.pass_obj
 def add(env):
+    '''Add a new package to the source area'''
     # -------------------------------------------------------------------------
     # Must be in a build area
     if env.workPath is None:

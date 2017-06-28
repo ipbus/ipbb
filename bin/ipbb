@@ -45,11 +45,12 @@ def cli(ctx):
 @click.option('-v', '--verbose', count=True, help='arse')
 @click.pass_obj
 def info(env, verbose):
+    '''Print a brief report about the current working area'''
 
     from click import echo, style, secho
 
     if not env.workPath:
-        secho  ( 'No ipbb work area detected', fg='red' )
+        secho  ( 'ERROR: No ipbb work area detected', fg='red' )
         return
 
     echo  ( )

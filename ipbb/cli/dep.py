@@ -21,6 +21,7 @@ from click import echo, style, confirm
 @click.pass_context
 @click.option('-p', '--proj', default=None)
 def dep(ctx, proj):
+    '''Dependencies command group'''
 
     if proj is None:
         return
@@ -36,7 +37,7 @@ def dep(ctx, proj):
 @click.option('-o', '--output', default=None)
 @click.pass_obj
 def report(env, output):
-    '''Print the '''
+    '''Summarise the dependency tree of the current project'''
 
     with SmartOpen(output) as lWriter:
         lWriter(str(env.depParser))

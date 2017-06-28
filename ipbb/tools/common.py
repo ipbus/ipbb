@@ -11,9 +11,9 @@ import subprocess
 # Helper function equivalent to which in posics systems
 def which(aExecutable):
     '''Searches for exectable il $PATH'''
-    lSearchPaths = os.environ["PATH"].split(
-        os.pathsep) if aExecutable[0] != os.sep else [os.path.dirname(aExecutable)]
+    lSearchPaths = os.environ["PATH"].split(os.pathsep) if aExecutable[0] != os.sep else [os.path.dirname(aExecutable)]
     for lPath in lSearchPaths:
+        print (lPath)
         if not os.access(os.path.join(lPath, aExecutable), os.X_OK):
             continue
         return os.path.normpath(os.path.join(lPath, aExecutable))
@@ -84,9 +84,10 @@ class SmartOpen(object):
 
 # ------------------------------------------------------------------------------
 class OutputFormatter(object):
-    def __init__(self, prefix=None):
+    def __init__(self, prefix=None, quiet=False):
         self._write = sys.stdout.write
         self._flush = sys.stdout.flush
+        self.quiet = quiet
         self.prefix = prefix
 
     def __del__(self):
@@ -101,9 +102,13 @@ class OutputFormatter(object):
         pass
 
     def write(self, message):
+        if self.quiet:
+            return
         self._write(message.replace('\n', '\n' + self.prefix)
                     if self.prefix else message)
 
     def flush(self):
+        if self.quiet:
+            return
         self._flush()
 # ------------------------------------------------------------------------------

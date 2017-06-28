@@ -2,6 +2,7 @@ from __future__ import print_function
 # ------------------------------------------------------------------------------
 
 # Modules
+import logging
 import subprocess
 import sys
 import pexpect
@@ -15,7 +16,7 @@ from os.path import join, split, exists, splitext
 from .common import which, OutputFormatter
 from click import echo, secho, style
 
-# Prompts
+# Reminder, prompts are not all the same
 # QuestaSim>
 # ModelSim>
 #
@@ -24,17 +25,17 @@ _vsim = 'vsim'
 
 
 # --------------------------------------------------------------
-def autodetect():
-    if not which(_vsim):
+def autodetect( executable = _vsim ):
+    if not which(executable):
         raise ModelNotSimFoundError(
-            "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
+            "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % executable)
 
-    lVsim = subprocess.Popen(['vsim', '-version'],
+    lVsim = subprocess.Popen([executable, '-version'],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     lOut, lErr = lVsim.communicate()
 
     if lVsim.returncode != 0:
-        raise RuntimeError("Failed to execute %s" % _vsim)
+        raise RuntimeError("Failed to execute %s" % executable)
 
     if 'modelsim' in lOut.lower():
         return 'ModelSim'
@@ -119,33 +120,59 @@ class ModelSimConsole(object):
             lInstance.quit()
     # --------------------------------------------------------------
 
-    def __init__(self, sessionid=None, echoprefix=None):
+    # --------------------------------------------------------------
+    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vsim', prompt=None):
         super(ModelSimConsole, self).__init__()
 
-        self.variant = autodetect()
-        # set prompt pattern based on sim variant
-        self._prompt = self.__promptMap[self.variant]
+        # Set up logger first
+        self._log = logging.getLogger('Modelsim')
+        self._log.debug('Starting Modelsim')
+
+        # define what executable to run
+        self._executable=executable
+        if not which(self._executable):
+            raise ModelsimNotFoundError(self._executable+" not found in PATH. Have you sourced Vivado\'s setup script?")
+
+        # Define the prompt to use
+        if prompt is None or prompt == 'autodetect':
+            variant = autodetect()
+            # set prompt pattern based on sim variant
+            self._prompt = self.__promptMap[variant]
+        else:
+            self._prompt = prompt
 
         # Modelsim doesn't like to operate without TERM (hangs)
         lEnv = dict(os.environ)
         if 'TERM' not in lEnv:
             lEnv['TERM'] = 'vt100'
 
-        self._out = OutputFormatter(echoprefix if echoprefix or (
-            sessionid is None) else sessionid + ' | ')
-        self._process = pexpect.spawn('{0} -l {1}.log -c'.format(
-            _vsim, 'transcript' + ('_' + sessionid) if sessionid else ''), env=lEnv)
-        self._process.logfile = self._out
+        # Set up the output formatter
+        self._out = OutputFormatter(
+            echoprefix if ( echoprefix or (sessionid is None) ) 
+                else (sessionid + ' | '),
+            quiet = (not echo)
+        )
+
+        self._process = pexpect.spawn(
+            '{0} -l {1}.log -c'.format(
+                self._executable,
+                'transcript' + ('_' + sessionid) if sessionid else ''
+            ),
+            env = lEnv,
+            echo = echo,
+            logfile = self._out
+        )
+
         self._process.delaybeforesend = 0.00  # 1
 
         # Wait Modelsim to wake up
         self.__expectPrompt()
+        self._log.debug('Modelsim up and running')
 
         # Method mapping
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
-
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -280,19 +307,18 @@ class ModelSimOpen(object):
     """docstring for ModelSimOpen"""
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echoprefix=None):
+    def __init__(self, *args, **kwargs):
         super(ModelSimOpen, self).__init__()
-        self._sessionid = sessionid
-        self._echoprefix = echoprefix
-
+        self._args = args
+        self._kwargs = kwargs
     # --------------------------------------------------------------
-
+    
     # --------------------------------------------------------------
     def __enter__(self):
-        self._console = ModelSimConsole(self._sessionid, self._echoprefix)
+        self._console = ModelSimConsole(*self._args, **self._kwargs)
         return self
     # --------------------------------------------------------------
-
+    
     # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
         self._console.quit()
@@ -304,6 +330,9 @@ class ModelSimOpen(object):
         # Fix at source and remove
         if aCmd is None:
             return
+        
+        if aCmd.count('\n') is not 0:
+            aCmd = aCmd.split('\n')
 
         if isinstance(aCmd, str):
             return self._console.execute(aCmd, aMaxLen)

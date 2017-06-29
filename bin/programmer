@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Modules
+import click
+import click_didyoumean
+
+# ------------------------------------------------------------------------------
+# Add -h as default help option
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+# @shell(
+#     prompt=click.style('ipbb', fg='blue') + '> ',
+#     intro='Starting IPBus Builder...',
+#     context_settings=CONTEXT_SETTINGS
+# )
+@click.group(
+    cls=click_didyoumean.DYMGroup,
+    context_settings=CONTEXT_SETTINGS,
+)
+def cli():
+    pass
+# ------------------------------------------------------------------------------
+
+@cli.group()
+def vivado():
+    pass
+
+# ------------------------------------------------------------------------------
+@vivado.command()
+def list():
+    # Build vivado interface
+    import ipbb.tools.xilinx as xilinx
+    v = xilinx.VivadoConsole(executable='vivado_lab', echo=False)
+
+    v.openHw()
+    v.connect()
+    hw_targets = v.getHwTargets()
+
+    for target in hw_targets:
+        click.echo("- "+click.style(target, fg='blue'))
+
+        v.openHwTarget(target)
+        hw_devices = v.getHwDevices()
+        for device in hw_devices:
+            click.echo("  + "+click.style(device, fg='green'))
+        v.closeHwTarget(target)
+
+# ------------------------------------------------------------------------------   
+
+# ------------------------------------------------------------------------------
+def _validateDevice(ctx, param, value):
+    lSeparators = value.count(':')
+    # Validate the format
+    if lSeparators != 1:
+        raise click.BadParameter('Malformed device name : %s. Expected <target>:<device>' % value)
+    return tuple(value.split(':'))
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+@vivado.command()
+@click.argument('deviceid', callback=_validateDevice)
+@click.argument('bitfile', type=click.Path(exists=True))
+def program(deviceid, bitfile):
+
+    target, device = deviceid
+    # Build vivado interface
+    
+    click.echo('Vivado starting...')
+    import ipbb.tools.xilinx as xilinx
+    v = xilinx.VivadoConsole(executable='vivado_lab', echo=False)
+    click.echo('... done')
+    v.openHw()
+    v.connect()
+    hw_targets = v.getHwTargets()
+
+    click.echo('Found targets: ' + click.style('{}'.format(', '.join(hw_targets)), fg='blue'))
+
+    matching_targets = [t for t in hw_targets if target in t]
+    if len(matching_targets) == 0:
+        raise RuntimeError('Target %s not found. Targets available %s: ' % (
+            target, ', '.join(hw_targets)))
+
+    if len(matching_targets) > 1:
+        raise RuntimeError(
+            'Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (
+                target, ', '.join(hw_targets)
+            )
+        )
+
+    click.echo('Selected target: '+click.style('{}'.format(matching_targets[0]), fg='blue')) 
+    v.openHwTarget(matching_targets[0])
+
+    hw_devs = v.getHwDevices()
+    click.echo('Found devices: '+click.style('{}'.format(', '.join(hw_devs)), fg='blue'))
+
+    if device not in hw_devs:
+        raise RuntimeError('Device %s not found. Devices available %s: ' % (
+            device, ', '.join(hw_devs)))
+
+    click.secho('Skipping programming stage', fg='yellow')
+    # v.programDevice(device, bitfile)
+    v.closeHwTarget()
+
+
+if __name__ == '__main__':
+    '''Discovers the env at startup'''
+    try:
+        cli()
+    except Exception as e:
+        click.secho(str(e), fg='red')

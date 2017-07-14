@@ -160,7 +160,7 @@ def generate(ctx):
             lPaths[0:0] = [lGenToolPath]
 
         lLibPaths = os.environ['LD_LIBRARY_PATH'].split() if os.environ['LD_LIBRARY_PATH'] else []
-        if lGenToolLibPath not in lLibPaths
+        if lGenToolLibPath not in lLibPaths:
             lLibPaths[0:0] = [lGenToolLibPath]
 
         if not which(lGenScript):

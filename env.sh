@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+#------------------------------------------------------------------------------
 function pathadd() {
   # Assert that we got enough arguments
   if [[ $# -ne 2 ]]; then
@@ -24,6 +26,7 @@ function pathadd() {
     eval "${PATH_NAME}=${PATH_VAL}"
   fi
 }
+#------------------------------------------------------------------------------
 
 
 # for Zsh
@@ -46,7 +49,7 @@ function pathadd() {
 #    echo "Error: only bash and zsh supported"
 # fi
 
-# PYTHON_VERSION=$(python -c 'from sys import version_info; print ("%d.%d" % (version_info[0],version_info[1]))')
+#------------------------------------------------------------------------------
 PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
 PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')
 PYTHON_VERSION="${PYTHON_MAJOR}.${PYTHON_MINOR}"

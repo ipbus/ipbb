@@ -147,6 +147,26 @@ def generate(ctx):
     if '/opt/cactus/lib' not in os.environ['LD_LIBRARY_PATH'].split(':'):
         os.environ['LD_LIBRARY_PATH'] = '/opt/cactus/lib:' + \
             os.environ['LD_LIBRARY_PATH']
+
+
+    lGenScript = 'gen_ipbus_addr_decode'
+    lGenToolPath = '/opt/cactus/bin/uhal/tools'
+    lGenToolLibPath = '/opt/cactus/lib'
+
+    if not which(lGenScript):
+
+        lPaths = os.environ['PATH'].split() if os.environ['PATH'] else []
+        if lGenToolPath not in lPaths:
+            lPaths[0:0] = [lGenToolPath]
+
+        lLibPaths = os.environ['LD_LIBRARY_PATH'].split() if os.environ['LD_LIBRARY_PATH'] else []
+        if lGenToolLibPath not in lLibPaths
+            lLibPaths[0:0] = [lGenToolLibPath]
+
+        if not which(lGenScript):
+            raise click.ClickException(
+                "'{0}' script not found.".format(lGenScript))
+
     # ------------------------------------------------------------------------------
 
     lUpdatedDecoders = []

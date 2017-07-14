@@ -23,12 +23,18 @@ from click import echo, style, confirm
 def dep(ctx, proj):
     '''Dependencies command group'''
 
-    if proj is None:
-        return
+    env = ctx.obj
 
-    # Change directory before executing subcommand
-    from .proj import cd
-    ctx.invoke(cd, projname=proj)
+    lProj = proj if proj is not None else env.project
+    if lProj is not None:
+        # Change directory before executing subcommand
+        from .proj import cd
+        ctx.invoke(cd, projname=lProj)
+        return
+    else:
+        if env.project is None:
+            raise click.ClickException('Project area not defined. Move into a project area and try again')
+
 # ------------------------------------------------------------------------------
 
 

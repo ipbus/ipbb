@@ -349,8 +349,9 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def closeHwTarget(self):
-        return self.execute('close_hw_target')
+    def closeHwTarget(self, target=None):
+        lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
+        return self.execute(lCmd)
     # --------------------------------------------------------------
     
     # --------------------------------------------------------------
@@ -368,10 +369,12 @@ class VivadoConsole(object):
 
         self.execute('current_hw_device {0}'.format(device))
         self.execute(
-            'refresh_hw_device -update_hw_probes false [current_hw_device]')
+            'refresh_hw_device -update_hw_probes false [current_hw_device]'
+        )
         self.execute('set_property PROBES.FILE {{}} [current_hw_device]')
         self.execute(
-            'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath))
+            'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath)
+        )
         self.execute('program_hw_devices [current_hw_device]')
     # --------------------------------------------------------------
 # -------------------------------------------------------------------------

@@ -27,22 +27,27 @@ def cli():
 # ------------------------------------------------------------------------------
 
 @cli.group()
-def vivado():
+@click.pass_context
+def vivado(ctx):
     pass
 
 # ------------------------------------------------------------------------------
 @vivado.command()
-def list():
+@click.option('-v/-q', default=False)
+def list(v):
     # Build vivado interface
+    click.echo('Vivado starting...')
     import ipbb.tools.xilinx as xilinx
-    v = xilinx.VivadoConsole(executable='vivado_lab', echo=False)
+    v = xilinx.VivadoConsole(executable='vivado_lab', echo=v)
+    click.echo('... done')
 
+    click.echo("Looking for targets")
     v.openHw()
     v.connect()
     hw_targets = v.getHwTargets()
 
     for target in hw_targets:
-        click.echo("- "+click.style(target, fg='blue'))
+        click.echo("- target "+click.style(target, fg='blue'))
 
         v.openHwTarget(target)
         hw_devices = v.getHwDevices()
@@ -66,14 +71,15 @@ def _validateDevice(ctx, param, value):
 @vivado.command()
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
-def program(deviceid, bitfile):
+@click.option('-v/-q', default=False)
+def program(deviceid, bitfile, v):
 
     target, device = deviceid
     # Build vivado interface
     
     click.echo('Vivado starting...')
     import ipbb.tools.xilinx as xilinx
-    v = xilinx.VivadoConsole(executable='vivado_lab', echo=False)
+    v = xilinx.VivadoConsole(executable='vivado_lab', echo=v)
     click.echo('... done')
     v.openHw()
     v.connect()
@@ -81,20 +87,22 @@ def program(deviceid, bitfile):
 
     click.echo('Found targets: ' + click.style('{}'.format(', '.join(hw_targets)), fg='blue'))
 
-    matching_targets = [t for t in hw_targets if target in t]
-    if len(matching_targets) == 0:
+    lMatchingTargets = [t for t in hw_targets if target in t]
+    if len(lMatchingTargets) == 0:
         raise RuntimeError('Target %s not found. Targets available %s: ' % (
             target, ', '.join(hw_targets)))
 
-    if len(matching_targets) > 1:
+    if len(lMatchingTargets) > 1:
         raise RuntimeError(
             'Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (
                 target, ', '.join(hw_targets)
             )
         )
 
-    click.echo('Selected target: '+click.style('{}'.format(matching_targets[0]), fg='blue')) 
-    v.openHwTarget(matching_targets[0])
+    lTarget = lMatchingTargets[0]
+
+    click.echo('Selected target: '+click.style('{}'.format(lMatchingTargets[0]), fg='blue')) 
+    v.openHwTarget(lTarget)
 
     hw_devs = v.getHwDevices()
     click.echo('Found devices: '+click.style('{}'.format(', '.join(hw_devs)), fg='blue'))
@@ -103,9 +111,11 @@ def program(deviceid, bitfile):
         raise RuntimeError('Device %s not found. Devices available %s: ' % (
             device, ', '.join(hw_devs)))
 
-    click.secho('Skipping programming stage', fg='yellow')
-    # v.programDevice(device, bitfile)
-    v.closeHwTarget()
+    if click.confirm("Bitfile {0} will be loaded on {1}. Do you want to continue?".format( bitfile, lTarget)):
+        v.programDevice(device, bitfile)
+    else:
+        click.secho('Skipping programming stage', fg='yellow')
+    v.closeHwTarget(lTarget)
 
 
 if __name__ == '__main__':

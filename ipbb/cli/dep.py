@@ -13,7 +13,8 @@ import sys
 from os.path import join, split, exists, basename, abspath, splitext
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
-from click import echo, style, confirm
+from click import echo, secho, style, confirm
+from texttable import Texttable
 
 
 # ------------------------------------------------------------------------------
@@ -40,13 +41,110 @@ def dep(ctx, proj):
 
 # ------------------------------------------------------------------------------
 @dep.command()
-@click.option('-o', '--output', default=None)
 @click.pass_obj
-def report(env, output):
+def report(env):
     '''Summarise the dependency tree of the current project'''
 
-    with SmartOpen(output) as lWriter:
-        lWriter(str(env.depParser))
+    lParser = env.depParser
+
+    secho('Commands', fg='blue')
+
+    for k in lParser.CommandList:
+        echo( '{0} ({1})' .format(k, len(lParser.CommandList[k])) )
+        if not lParser.CommandList[k]:
+            continue
+
+        lCmdTable = Texttable(max_width=0)
+        lCmdTable.header(['file path', 'flags', 'package', 'component'])
+        lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lCmdTable.set_chars(['-', '|', '+', '-'])
+        for lCmd in lParser.CommandList[k]:
+            # print(lCmd)
+            # lCmdTable.add_row([str(lCmd)])
+            lCmdTable.add_row([
+                lCmd.FilePath,
+                ','.join(lCmd.flags()),
+                lCmd.Package,
+                lCmd.Component
+                ])
+            
+        echo(lCmdTable.draw())
+
+
+    # lCmdTable.add_row(["Work path", env.workPath])
+    # if env.projectPath:
+    #     lCmdTable.add_row(["Project path", env.projectPath])
+    # echo(lCmdTable.draw())
+
+    string = ''
+    #  self.__repr__() + '\n'
+    string += '+------------+\n'
+    string += '|  Commands  |\n'
+    string += '+------------+\n'
+    for k in lParser.CommandList:
+        string += '+ %s (%d)\n' % (k, len(lParser.CommandList[k]))
+        for lCmd in lParser.CommandList[k]:
+            string += '  * ' + str(lCmd) + '\n'
+
+    string += '\n'
+    string += '+----------------------------------+\n'
+    string += '|  Resolved packages & components  |\n'
+    string += '+----------------------------------+\n'
+    string += 'packages: ' + str(list(lParser.Components.iterkeys())) + '\n'
+    string += 'components:\n'
+    for pkg in sorted(lParser.Components):
+        string += '+ %s (%d)\n' % (pkg, len(lParser.Components[pkg]))
+        for cmp in sorted(lParser.Components[pkg]):
+            string += '  > ' + str(cmp) + '\n'
+
+    if lParser.NotFound:
+        string += '\n'
+        string += '+----------------------------------------+\n'
+        string += '|  Missing packages, components & files  |\n'
+        string += '+----------------------------------------+\n'
+
+        if lParser.PackagesNotFound:
+            string += 'packages: ' + \
+                str(list(lParser.PackagesNotFound)) + '\n'
+
+        # ------
+        lCNF = lParser.ComponentsNotFound
+        if lCNF:
+            string += 'components: \n'
+
+            for pkg in sorted(lCNF):
+                string += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
+
+                for cmp in sorted(lCNF[pkg]):
+                    string += '  > ' + str(cmp) + '\n'
+        # ------
+
+        # ------
+        lFNF = lParser.FilesNotFound
+        if lFNF:
+            string += 'missing files:\n'
+
+            for pkg in sorted(lFNF):
+                lCmps = lFNF[pkg]
+                string += '+ %s (%d components)\n' % (pkg, len(lCmps))
+
+                for cmp in sorted(lCmps):
+                    lFiles = lCmps[cmp]
+                    string += '  + %s (%d files)\n' % (cmp, len(lFiles))
+
+                    lCmpPath = lParser.Pathmaker.getPath(pkg, cmp)
+                    for lFile in sorted(lFiles):
+                        lSrcs = lFiles[lFile]
+                        string += '    + %s\n' % os.path.relpath(
+                            lFile, lCmpPath)
+                        string += '      | included by %d dep file(s)\n' % len(
+                            lSrcs)
+
+                        for lSrc in lSrcs:
+                            string += '      \ - %s\n' % os.path.relpath(
+                                lSrc, lParser.Pathmaker.rootdir)
+                        string += '\n'
+    echo(string)
 # ------------------------------------------------------------------------------
 
 

@@ -10,7 +10,7 @@ import sh
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
-from click import echo, secho, style
+from click import echo, secho, style, confirm
 from texttable import Texttable
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
@@ -63,6 +63,9 @@ def project(env, output):
 
     lDepFileParser = env.depParser
 
+    if lDepFileParser.NotFound:
+        confirm("Not all files referenced by dep files have been resolved. Do you want to continue anyway?", abort=True)
+
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
     lWriter = VivadoProjectMaker(env.pathMaker)
 
@@ -80,6 +83,11 @@ def project(env, output):
     except VivadoConsoleError as lExc:
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red'
+              )
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho("Error detected:\n" +
+              "\n".join(lExc), fg='red'
               )
         raise click.Abort()
     # -------------------------------------------------------------------------

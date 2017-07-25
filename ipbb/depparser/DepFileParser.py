@@ -33,6 +33,16 @@ class Command(object):
             self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
         )
 
+    def flags(self):
+        lFlags = []
+        if not self.Include:
+            lFlags.append('noinclude')
+        if self.TopLevel:
+            lFlags.append('top')
+        if self.Vhdl2008:
+            lFlags.append('vhdl2008')
+        return lFlags
+        
     __repr__ = __str__
 
     def __eq__(self, other):
@@ -154,7 +164,8 @@ class DepFileParser(object):
 
     # ----------------------------------------------------------------------------------------------------------------------------
     def __str__(self):
-        string = self.__repr__() + '\n'
+        string = ''
+        #  self.__repr__() + '\n'
         string += '+------------+\n'
         string += '|  Commands  |\n'
         string += '+------------+\n'
@@ -162,7 +173,6 @@ class DepFileParser(object):
             string += '+ %s (%d)\n' % (k, len(self.CommandList[k]))
             for lCmd in self.CommandList[k]:
                 string += '  * ' + str(lCmd) + '\n'
-            # print(c,self.CommandList[c])
 
         string += '\n'
         string += '+----------------------------------+\n'

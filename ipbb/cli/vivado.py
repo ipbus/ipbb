@@ -64,7 +64,8 @@ def project(env, output):
     lDepFileParser = env.depParser
 
     if lDepFileParser.NotFound:
-        confirm("Not all files referenced by dep files have been resolved. Do you want to continue anyway?", abort=True)
+        secho("Not all files referenced by dep files have been resolved.", fg='red')
+        confirm("Do you want to continue anyway?", abort=True)
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
     lWriter = VivadoProjectMaker(env.pathMaker)

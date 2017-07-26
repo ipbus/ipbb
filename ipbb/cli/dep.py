@@ -9,8 +9,9 @@ import collections
 import contextlib
 import tempfile
 import sys
+import re
 
-from os.path import join, split, exists, basename, abspath, splitext
+from os.path import join, split, exists, basename, abspath, splitext, relpath
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
 from click import echo, secho, style, confirm
@@ -47,11 +48,20 @@ def report(env):
 
     lParser = env.depParser
 
-    secho('Commands', fg='blue')
+    # lTitle = Texttable(max_width=0)
+    # lTitle.header(['Commands'])
+    # lTitle.set_chars(['-', '|', '+', '-'])
+    # lTitle.set_deco(Texttable.BORDER)
+    # secho(lTitle.draw(), fg='blue')
 
+    echo()
+    secho('* Parsed commands', fg='blue')
+
+    lPrepend = re.compile('(^|\n)')
     for k in lParser.CommandList:
-        echo( '{0} ({1})' .format(k, len(lParser.CommandList[k])) )
+        echo( '  + {0} ({1})' .format(k, len(lParser.CommandList[k])) )
         if not lParser.CommandList[k]:
+            echo()
             continue
 
         lCmdTable = Texttable(max_width=0)
@@ -62,13 +72,15 @@ def report(env):
             # print(lCmd)
             # lCmdTable.add_row([str(lCmd)])
             lCmdTable.add_row([
-                lCmd.FilePath,
+                relpath(lCmd.FilePath, env.workPath),
                 ','.join(lCmd.flags()),
                 lCmd.Package,
                 lCmd.Component
                 ])
             
-        echo(lCmdTable.draw())
+
+        echo(lPrepend.sub('\g<1>  ',lCmdTable.draw()))
+        echo()
 
 
     # lCmdTable.add_row(["Work path", env.workPath])
@@ -78,15 +90,15 @@ def report(env):
 
     string = ''
     #  self.__repr__() + '\n'
-    string += '+------------+\n'
-    string += '|  Commands  |\n'
-    string += '+------------+\n'
-    for k in lParser.CommandList:
-        string += '+ %s (%d)\n' % (k, len(lParser.CommandList[k]))
-        for lCmd in lParser.CommandList[k]:
-            string += '  * ' + str(lCmd) + '\n'
+    # string += '+------------+\n'
+    # string += '|  Commands  |\n'
+    # string += '+------------+\n'
+    # for k in lParser.CommandList:
+    #     string += '+ %s (%d)\n' % (k, len(lParser.CommandList[k]))
+    #     for lCmd in lParser.CommandList[k]:
+    #         string += '  * ' + str(lCmd) + '\n'
 
-    string += '\n'
+    # string += '\n'
     string += '+----------------------------------+\n'
     string += '|  Resolved packages & components  |\n'
     string += '+----------------------------------+\n'

@@ -63,9 +63,11 @@ def project(env, output):
 
     lDepFileParser = env.depParser
 
+    # -------------------------------------------------------------------------
     if lDepFileParser.NotFound:
-        secho("Not all files referenced by dep files have been resolved.", fg='red')
+        secho("Not all files referenced by dep files ARE resolved.", fg='red')
         confirm("Do you want to continue anyway?", abort=True)
+    # -------------------------------------------------------------------------
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
     lWriter = VivadoProjectMaker(env.pathMaker)
@@ -87,7 +89,7 @@ def project(env, output):
               )
         raise click.Abort()
     except RuntimeError as lExc:
-        secho("Error detected:\n" +
+        secho("Error caught while generating Vivado TCL commands:\n" +
               "\n".join(lExc), fg='red'
               )
         raise click.Abort()

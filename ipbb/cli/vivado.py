@@ -63,9 +63,13 @@ def project(env, output):
 
     lDepFileParser = env.depParser
 
+
     # -------------------------------------------------------------------------
     if lDepFileParser.NotFound:
-        secho("Not all files referenced by dep files ARE resolved.", fg='red')
+        secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n     ipbb dep report for detailed information".format(
+            len(lDepFileParser.NotFound),
+            "" if len(lDepFileParser.NotFound) == 1 else "s",
+        ), fg='red')
         confirm("Do you want to continue anyway?", abort=True)
     # -------------------------------------------------------------------------
 

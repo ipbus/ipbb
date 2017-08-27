@@ -172,6 +172,15 @@ def project(env, output):
     # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
     lDepFileParser = env.depParser
 
+    # -------------------------------------------------------------------------
+    if lDepFileParser.NotFound:
+        secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n     ipbb dep report for detailed information".format(
+            len(lDepFileParser.NotFound),
+            "" if len(lDepFileParser.NotFound) == 1 else "s",
+        ), fg='red')
+        confirm("Do you want to continue anyway?", abort=True)
+    # -------------------------------------------------------------------------
+
     from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
     lWriter = ModelSimProjectMaker(env.pathMaker)
 
@@ -191,7 +200,11 @@ def project(env, output):
               "\n".join(lExc.errors), fg='red'
               )
         raise click.Abort()
-
+    except RuntimeError as lExc:
+        secho("Error caught while generating ModelSim TCL commands:\n" +
+              "\n".join(lExc), fg='red'
+              )
+        raise click.Abort()
     # ----------------------------------------------------------
     # FIXME: Tempourary assignments
     lWorkingDir = abspath(join(os.getcwd(), 'top'))

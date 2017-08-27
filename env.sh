@@ -122,7 +122,7 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
   # Consistency check
   if [[ ! ${IPBB_ROOT}/external/ipbb -ef ${VIRTUAL_ENV} ]]; then
     deactivate
-    echo "ipbb environment loading failed. Was this directory moved?"
+    echo "ipbb environment loading failed. Was ipbb directory moved?"
     echo "Delete ${IPBB}/external and source env.sh again."
     return
   fi

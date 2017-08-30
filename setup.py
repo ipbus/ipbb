@@ -14,6 +14,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        ipbb=ipbb.scripts.ipbb:cli
+        ipbb=ipbb.scripts.builder:cli
     ''',
 )

@@ -1,5 +1,15 @@
 #!/bin/bash
+
 #
+
+COL_RED="\e[31m"
+COL_GREEN="\e[32m"
+COL_YELLOW="\e[33m"
+COL_BLUE="\e[34m"
+
+COL_NULL="\e[0m"
+
+
 #------------------------------------------------------------------------------
 function pathadd() {
   # Assert that we got enough arguments
@@ -20,7 +30,8 @@ function pathadd() {
     #   you can specify
     PATH_VAL="$PATH_ADD${PATH_VAL:+":$PATH_VAL"}"
 
-    echo "- $PATH_NAME += $PATH_ADD"
+    # echo "- $PATH_NAME += $PATH_ADD"
+    echo -e "${COL_BLUE}Added ${PATH_ADD} to ${PATH_NAME}${COL_NULL}"
 
     # use eval to reset the target
     eval "${PATH_NAME}=${PATH_VAL}"
@@ -56,32 +67,25 @@ PYTHON_VERSION="${PYTHON_MAJOR}.${PYTHON_MINOR}"
 
 # Check python version
 if [ "${PYTHON_MAJOR}" != "2" ]; then
-  echo "Python > 2 is not supported (python ${PYTHON_VERSION} detected)"
+  echo -e "${COL_RED}Python > 2 is not supported (python ${PYTHON_VERSION} detected)${COL_NULL}"
   return 1
 fi
 
 # Check if virtualenv is installed
 if ! [ -x "$(command -v virtualenv)" ]; then
-  echo "virtualenv is not installed. Please install virtualenv and source ${BASH_SOURCE} again." >&2
+  echo -e "${COL_RED}virtualenv is not installed. Please install virtualenv and source ${BASH_SOURCE} again.${COL_NULL}" >&2
   return 1
 fi
 
 # Check if virtualenv is installed
 if ! [ -x "$(command -v pip)" ]; then
-  echo "pip is not installed. Please install pip and source ${BASH_SOURCE} again." >&2
+  echo -e "${COL_RED}pip is not installed. Please install pip and source ${BASH_SOURCE} again.${COL_NULL}" >&2
   return 1
 fi
 
 SH_SOURCE=${BASH_SOURCE}
 IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 IPBB_VENV=${IPBB_ROOT}/external/ipbb_dev
-
-# add bin and test/bin to PATH
-pathadd PATH ${IPBB_ROOT}/bin
-pathadd PATH ${IPBB_ROOT}/test/bin
-
-# Temporary
-pathadd PYTHONPATH "${IPBB_ROOT}"
 
 export IPBB_ROOT PATH PYTHONPATH
 
@@ -91,13 +95,18 @@ fi
 
 if [ ! -d "${IPBB_VENV}" ] ; then
 
-  IPBB_PIP_INSTALLOPT="-U -I"
+  echo -e "${COL_YELLOW}Virtualenv ${IPBB_VENV} doen not exist.${COL_NULL}"
+  echo -e "${COL_GREEN}Setting up a new virtual python environment in ${IPBB_VENV}${COL_NULL}"
+
+  IPBB_PIP_INSTALLOPT="-U -I -q"
 
   virtualenv ${IPBB_VENV} --system-site-packages
   source ${IPBB_VENV}/bin/activate
 
+  echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"
+
   # upgrade pip to the latest greatest version
-  pip install --upgrade pip
+  pip install -q --upgrade pip
 
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
@@ -106,23 +115,36 @@ if [ ! -d "${IPBB_VENV}" ] ; then
     pip install ${IPBB_PIP_INSTALLOPT} ipython==1.2.1
   fi
 
-  pip install --editable .
+  echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 
+  pip install -q --editable .
+
+  echo -e "${COL_GREEN}Setup completed${COL_NULL}"
   deactivate
 fi
 
 if [ -z ${VIRTUAL_ENV+X} ] ; then
-  echo "Activating ipbb environment"
+  echo -e "${COL_GREEN}Activating ipbb environment${COL_NULL}"
   source ${IPBB_VENV}/bin/activate
 
   # Consistency check
   if [[ ! ${IPBB_VENV} -ef ${VIRTUAL_ENV} ]]; then
     deactivate
-    echo "ipbb environment loading failed. Was ipbb directory moved?"
-    echo "Delete ${IPBB_VENV} and source env.sh again."
+    echo -e "${COL_RED}ERROR: ipbb environment loading failed. Was ipbb directory moved?${COL_NULL}"
+    echo -e "${COL_RED}       Delete ${IPBB_VENV} and source env.sh again.${COL_NULL}"
     return
   fi
 fi
 
+# add bin and test/bin to PATH
+pathadd PATH ${IPBB_ROOT}/bin
+pathadd PATH ${IPBB_ROOT}/test/bin
+
+# Temporary
+pathadd PYTHONPATH "${IPBB_ROOT}"
+
 # Obscure click vodoo to enable bash autocompletion
 eval "$(_IPBB_COMPLETE=source ipbb)"
+
+echo -e "${COL_GREEN}ipbb environment successfully loaded${COL_NULL}"
+

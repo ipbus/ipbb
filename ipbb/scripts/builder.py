@@ -31,8 +31,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.pass_context
 def cli(ctx):
 
+    from ..cli import Environment
     # Manually add the Environment to the top-level context.
-    ctx.obj = ipbb.cli.Environment()
+    ctx.obj = Environment()
 
     # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
     # if not ctx.protected_args and not ctx.invoked_subcommand:
@@ -134,7 +135,7 @@ def info(env, verbose):
 
 
 # ------------------------------------------------------------------------------
-if __name__ == '__main__':
+def __register_commands():
     '''Discovers the env at startup'''
 
     if sys.version_info[0:2] < (2, 6):
@@ -144,24 +145,27 @@ if __name__ == '__main__':
         click.secho("Warning: IPBB prefers python 2.7. python 2.6 will be deprecated soon.", fg='yellow')
 
     # Add custom cli to shell
-    import ipbb.cli.repo as repo
+    from ..cli import repo
     cli.add_command(repo.init)
     # cli.add_command(repo.cd)
     cli.add_command(repo.add)
 
-    import ipbb.cli.proj as proj
+    from ..cli import proj
     cli.add_command(proj.proj)
 
-    import ipbb.cli.dep as dep
+    from ..cli import dep
     cli.add_command(dep.dep)
 
-    import ipbb.cli.vivado as vivado
+    from ..cli import vivado
     cli.add_command(vivado.vivado)
 
-    import ipbb.cli.sim as sim
+    from ..cli import sim
     cli.add_command(sim.sim)
 
-    import ipbb.cli.debug as debug
+    from ..cli import debug
     cli.add_command(debug.debug)
-    cli()
+    # cli()
 # ------------------------------------------------------------------------------
+
+__register_commands()
+

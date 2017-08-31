@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import print_function
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,7 +36,7 @@ def vivado(ctx):
 def list(v):
     # Build vivado interface
     click.echo('Vivado starting...')
-    import ipbb.tools.xilinx as xilinx
+    from ..tools import xilinx
     v = xilinx.VivadoConsole(executable='vivado_lab', echo=v)
     click.echo('... done')
 
@@ -78,7 +77,7 @@ def program(deviceid, bitfile, v):
     # Build vivado interface
     
     click.echo('Vivado starting...')
-    import ipbb.tools.xilinx as xilinx
+    from ..tools import xilinx
     v = xilinx.VivadoConsole(executable='vivado_lab', echo=v)
     click.echo('... done')
     v.openHw()
@@ -118,7 +117,7 @@ def program(deviceid, bitfile, v):
     v.closeHwTarget(lTarget)
 
 
-if __name__ == '__main__':
+def main():
     '''Discovers the env at startup'''
     try:
         cli()

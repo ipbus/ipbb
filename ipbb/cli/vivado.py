@@ -13,7 +13,7 @@ from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 from texttable import Texttable
 from ..tools.common import which, SmartOpen
-from .common import DirSentry
+from .common import DirSentry, ensureNoMissingFiles
 
 
 # ------------------------------------------------------------------------------
@@ -64,14 +64,17 @@ def project(env, output):
     lDepFileParser = env.depParser
 
 
-    # -------------------------------------------------------------------------
-    if lDepFileParser.NotFound:
-        secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n     ipbb dep report for detailed information".format(
-            len(lDepFileParser.NotFound),
-            "" if len(lDepFileParser.NotFound) == 1 else "s",
-        ), fg='red')
-        confirm("Do you want to continue anyway?", abort=True)
-    # -------------------------------------------------------------------------
+    # # -------------------------------------------------------------------------
+    # if lDepFileParser.NotFound:
+    #     lRootName = get_current_context().find_root().info_name
+    #     secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n       Run '{} dep report' for detailes".format(
+    #         len(lDepFileParser.NotFound),
+    #         "" if len(lDepFileParser.NotFound) == 1 else "s",
+    #         lRootName,
+    #     ), fg='red')
+    #     confirm("Do you want to continue anyway?", abort=True)
+    # # -------------------------------------------------------------------------
+    ensureNoMissingFiles(lDepFileParser)
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
     lWriter = VivadoProjectMaker(env.pathMaker)

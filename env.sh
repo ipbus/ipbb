@@ -117,7 +117,7 @@ if [ ! -d "${IPBB_VENV}" ] ; then
 
   echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 
-  pip install -q --editable .
+  pip install -q --editable ${IPBB_ROOT}
 
   echo -e "${COL_GREEN}Setup completed${COL_NULL}"
   deactivate

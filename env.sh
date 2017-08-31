@@ -145,6 +145,7 @@ pathadd PYTHONPATH "${IPBB_ROOT}"
 
 # Obscure click vodoo to enable bash autocompletion
 eval "$(_IPBB_COMPLETE=source ipbb)"
+eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"
 
 echo -e "${COL_GREEN}ipbb environment successfully loaded${COL_NULL}"
 

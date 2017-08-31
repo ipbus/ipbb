@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import print_function
 
 
@@ -135,7 +134,7 @@ def info(env, verbose):
 
 
 # ------------------------------------------------------------------------------
-def __register_commands():
+def main():
     '''Discovers the env at startup'''
 
     if sys.version_info[0:2] < (2, 6):
@@ -164,8 +163,11 @@ def __register_commands():
 
     from ..cli import debug
     cli.add_command(debug.debug)
-    # cli()
+    
+    try:
+        cli()
+    except Exception as e:
+        click.secho(str(e), fg='red')
 # ------------------------------------------------------------------------------
 
-__register_commands()
 

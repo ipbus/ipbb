@@ -12,7 +12,7 @@ import sys
 from os.path import join, split, exists, splitext, basename, dirname, abspath, expandvars
 from click import echo, secho, style
 from ..tools.common import which, do, ensuresudo, SmartOpen
-from .common import DirSentry
+from .common import DirSentry, ensureNoMissingFiles
 
 
 # ------------------------------------------------
@@ -172,11 +172,17 @@ def project(env, output):
     # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
     lDepFileParser = env.depParser
 
-    # -------------------------------------------------------------------------
-    if lDepFileParser.NotFound:
-        secho("Not all files referenced by dep files ARE resolved.", fg='red')
-        confirm("Do you want to continue anyway?", abort=True)
-    # -------------------------------------------------------------------------
+    # # -------------------------------------------------------------------------
+    # if lDepFileParser.NotFound:
+    #     lRootName = get_current_context().find_root().info_name
+    #     secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n       Run '{} dep report' for detailes".format(
+    #         len(lDepFileParser.NotFound),
+    #         "" if len(lDepFileParser.NotFound) == 1 else "s",
+    #         lRootName,
+    #     ), fg='red')
+    #     confirm("Do you want to continue anyway?", abort=True)
+    # # -------------------------------------------------------------------------
+    ensureNoMissingFiles(lDepFileParser)
 
     from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
     lWriter = ModelSimProjectMaker(env.pathMaker)

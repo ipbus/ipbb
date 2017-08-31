@@ -229,7 +229,8 @@ class VivadoConsole(object):
     def __expectPrompt(self, aMaxLen=100):
         # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
         lCpl = self._process.compile_pattern_list(
-            ['\r\n', self._prompt, pexpect.TIMEOUT])
+            ['\r\n', self._prompt, pexpect.TIMEOUT]
+        )
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []

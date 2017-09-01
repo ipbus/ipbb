@@ -8,10 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - New script `ipb-prog`, for programming Xilinx board via jtag and `vivado_lab`.
-- Local setup now based on `setuptools`
+- Virtualenv setup now based on `setuptools`.
 
 ### Changed
 - Improved error messages.
 - Consolidated `ipbb dep report` sections, now organised in text tables.
 
 ## [0.2.6] - 2017-07-17
+
+### Changed
+- Improved handling of Vivado library paths in Modelsim.
+- Command line help improved. 
+
+## [0.2.5] - 2017-04-23

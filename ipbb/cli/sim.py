@@ -160,7 +160,7 @@ def project(env, output):
 
     if env.projectConfig['toolset'] != 'sim':
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'])
+            "Project area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'])
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -169,20 +169,10 @@ def project(env, output):
             'ModelSim (vsim) not found. Please add Modelsim to PATH and execute the command again.')
     # -------------------------------------------------------------------------
 
-    # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser( env, 3 )
     lDepFileParser = env.depParser
 
-    # # -------------------------------------------------------------------------
-    # if lDepFileParser.NotFound:
-    #     lRootName = get_current_context().find_root().info_name
-    #     secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n       Run '{} dep report' for detailes".format(
-    #         len(lDepFileParser.NotFound),
-    #         "" if len(lDepFileParser.NotFound) == 1 else "s",
-    #         lRootName,
-    #     ), fg='red')
-    #     confirm("Do you want to continue anyway?", abort=True)
-    # # -------------------------------------------------------------------------
-    ensureNoMissingFiles(lDepFileParser)
+    # Ensure thay all dependencies have been resolved
+    ensureNoMissingFiles(env.project, lDepFileParser)
 
     from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
     lWriter = ModelSimProjectMaker(env.pathMaker)

@@ -59,22 +59,13 @@ def project(env, output):
 
     lSessionId = 'project'
 
+    # Check if vivado is around
     ensureVivado(env)
 
     lDepFileParser = env.depParser
 
-
-    # # -------------------------------------------------------------------------
-    # if lDepFileParser.NotFound:
-    #     lRootName = get_current_context().find_root().info_name
-    #     secho("ERROR: Failed to resolve project dependencies: {} missing file{}.\n       Run '{} dep report' for detailes".format(
-    #         len(lDepFileParser.NotFound),
-    #         "" if len(lDepFileParser.NotFound) == 1 else "s",
-    #         lRootName,
-    #     ), fg='red')
-    #     confirm("Do you want to continue anyway?", abort=True)
-    # # -------------------------------------------------------------------------
-    ensureNoMissingFiles(lDepFileParser)
+    # Ensure thay all dependencies have been resolved
+    ensureNoMissingFiles(env.project, lDepFileParser)
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
     lWriter = VivadoProjectMaker(env.pathMaker)

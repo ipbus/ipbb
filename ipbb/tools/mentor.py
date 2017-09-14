@@ -22,10 +22,11 @@ from click import echo, secho, style
 #
 
 _vsim = 'vsim'
+_vcom = 'vcom'
 
 
 # --------------------------------------------------------------
-def autodetect( executable = _vsim ):
+def autodetect( executable = _vcom ):
     if not which(executable):
         raise ModelNotSimFoundError(
             "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % executable)
@@ -121,7 +122,7 @@ class ModelSimConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vsim', prompt=None):
+    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable=_vsim, prompt=None):
         super(ModelSimConsole, self).__init__()
 
         # Set up logger first
@@ -135,7 +136,7 @@ class ModelSimConsole(object):
 
         # Define the prompt to use
         if prompt is None or prompt == 'autodetect':
-            variant = autodetect()
+            variant = autodetect(self._executable)
             # set prompt pattern based on sim variant
             self._prompt = self.__promptMap[variant]
         else:

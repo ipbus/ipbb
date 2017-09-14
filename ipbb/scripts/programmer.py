@@ -112,6 +112,7 @@ def program(deviceid, bitfile, v):
 
     if click.confirm("Bitfile {0} will be loaded on {1}. Do you want to continue?".format( bitfile, lTarget)):
         v.programDevice(device, bitfile)
+        click.echo("{} successfully programmed on {}".format(bitfile, lTarget))
     else:
         click.secho('Skipping programming stage', fg='yellow')
     v.closeHwTarget(lTarget)

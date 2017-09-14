@@ -34,7 +34,7 @@ def ensureVivado(env):
 @click.pass_context
 @click.option('-p', '--proj', default=None)
 def vivado(ctx, proj):
-    '''Vivado command group'''
+    '''Vivado commands'''
 
     env = ctx.obj
 

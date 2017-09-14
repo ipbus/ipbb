@@ -8,6 +8,9 @@ from ..tools.mentor import autodetect
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class IPCoresSimMaker(object):
+
+    _compiler='vcom'
+
     def __init__(self, aPathmaker, aSimlibPath):
         self.pathmaker = aPathmaker
         self.simlibPath = aSimlibPath
@@ -16,7 +19,8 @@ class IPCoresSimMaker(object):
 
         write = aTarget
 
-        lVariant = autodetect()
+        # Use compiler executable to detect Modelsim's flavour
+        lVariant = autodetect(_compiler)
         if lVariant == 'ModelSim':
             print('ModelSim detected')
             targetSimulator = 'ModelSim'

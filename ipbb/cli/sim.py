@@ -27,9 +27,9 @@ class ModelsimNotFoundError(Exception):
 # ------------------------------------------------------------------------------
 @click.group(chain=True)
 @click.pass_context
-@click.option('-p', '--proj', default=None)
+@click.option('-p', '--proj', metavar='<name>', default=None, help='Switch to <name> before running subcommands.')
 def sim(ctx, proj):
-    '''Simulation command group'''
+    '''Simulation commands'''
     if proj is None:
         return
 
@@ -40,11 +40,16 @@ def sim(ctx, proj):
 
 
 # ------------------------------------------------------------------------------
-@sim.command()
+@sim.command('ipcores', short_help='Generate vivado sim cores for the current design.')
 @click.option('-o', '--output', default=None)
-@click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE')
+@click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Library target directory', show_default=True)
 @click.pass_obj
 def ipcores(env, output, xilinx_simpath):
+    '''
+    Generate the vivado libraries and cores required to simulate the current design.
+    '''
+
+
     lSessionId = 'ipcores'
 
     # -------------------------------------------------------------------------

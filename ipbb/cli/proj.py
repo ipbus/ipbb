@@ -12,7 +12,7 @@ from ..tools.common import SmartOpen
 from . import kProjAreaCfgFile, kProjDir
 from .common import DirSentry
 
-from os.path import join, split, exists, splitext
+from os.path import join, split, exists, splitext, relpath
 from click import echo, style, secho
 
 
@@ -48,16 +48,14 @@ def _validateComponent(ctx, param, value):
 
 # ------------------------------------------------------------------------------
 # TODO: move the list of supported products somewhere else
-@proj.command()
+@proj.command('create', short_help="Create a new project area.")
 @click.argument('kind', type=click.Choice(['vivado', 'sim']))
 @click.argument('projname')
 @click.argument('component', callback=_validateComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 @click.pass_obj
 def create( env, kind, projname, component, topdep ):
-    '''Create a new project area
-
-      Creates a new area of name PROJNAME of kind KIND
+    '''Creates a new area of name PROJNAME of kind KIND
 
       PROJAREA: Name of the new project area
 
@@ -83,6 +81,14 @@ def create( env, kind, projname, component, topdep ):
     lTopPackage, lTopComponent = component
     lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
     if not exists(lTopDepPath):
+        import glob
+        lTopDepDir = lPathmaker.getPath( lTopPackage, lTopComponent, 'include' )
+        lTopDepCandidates = [ "'{}'".format(relpath(p, lTopDepDir)) for p in glob.glob ( join( lTopDepDir,'*top*.dep' ) ) ]
+        secho('Top-level dep file {} not found'.format(lTopDepPath), fg='red')
+        echo( 'Suggestions (*top*.dep):' )
+        for lC in lTopDepCandidates:
+            echo ( ' - ' + lC )
+
         raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
     # ------------------------------------------------------------------------------
 
@@ -104,7 +110,7 @@ def create( env, kind, projname, component, topdep ):
 
 
 # ------------------------------------------------------------------------------
-@proj.command()
+@proj.command('ls', short_help="List projects in the current working area.")
 @click.pass_obj
 def ls( env ):
     '''Lists all available project areas
@@ -118,22 +124,22 @@ def ls( env ):
 
 
 # ------------------------------------------------------------------------------
-@proj.command()
-@click.argument( 'projname' )
-@click.pass_obj
-def printpath( env, projname ):
+# @proj.command()
+# @click.argument( 'projname' )
+# @click.pass_obj
+# def printpath( env, projname ):
 
-    lProjects = _getprojects(env)
+#     lProjects = _getprojects(env)
 
-    if projname not in lProjects:
-        raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
+#     if projname not in lProjects:
+#         raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 
-    print ( os.path.join( env.proj, projname ))
+#     print ( os.path.join( env.proj, projname ))
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-@proj.command()
+@proj.command('cd', short_help='Change working directory.')
 @click.argument( 'projname' )
 @click.pass_obj
 def cd( env, projname ):

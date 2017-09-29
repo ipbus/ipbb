@@ -167,7 +167,13 @@ def main():
     try:
         cli()
     except Exception as e:
+        hline = '-'*80
+        click.echo()
+        click.secho(hline, fg='red')
+        click.secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
         click.secho(str(e), fg='red')
+        click.secho(hline, fg='red')
+        raise SystemExit(-1)
 # ------------------------------------------------------------------------------
 
 

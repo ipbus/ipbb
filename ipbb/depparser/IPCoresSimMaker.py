@@ -20,7 +20,7 @@ class IPCoresSimMaker(object):
         write = aTarget
 
         # Use compiler executable to detect Modelsim's flavour
-        lVariant = autodetect(_compiler)
+        lVariant = autodetect(self._compiler)
         if lVariant == 'ModelSim':
             print('ModelSim detected')
             targetSimulator = 'ModelSim'

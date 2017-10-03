@@ -42,10 +42,14 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     if not aDepFileParser.NotFound:
         return
 
+    import IPython
+    IPython.embed()
+
     lRootName = get_current_context().find_root().info_name
-    secho("ERROR: Project '{}' contains unresolved dependencies: {} missing file{}.\n       Run '{} dep report' for detailes".format(
+    secho("ERROR: Project '{}' contains unresolved dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
+        lRootName,
         len(aDepFileParser.NotFound),
-        "" if len(aDepFileParser.NotFound) == 1 else "s",
+        ("" if len(aDepFileParser.NotFound) == 1 else "s"),
         lRootName,
     ), fg='red')
     confirm("Do you want to continue anyway?", abort=True)

@@ -8,6 +8,7 @@ import click_didyoumean
 
 import ipbb
 import sys
+import traceback
 
 from texttable import Texttable
 
@@ -173,6 +174,10 @@ def main():
         click.secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
         click.secho(str(e), fg='red')
         click.secho(hline, fg='red')
+        # import StringIO
+        # lTrace = StringIO.StringIO()
+        # traceback.print_exc(file=lTrace)
+        # Do something with lTrace
         raise SystemExit(-1)
 # ------------------------------------------------------------------------------
 

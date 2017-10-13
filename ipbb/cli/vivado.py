@@ -103,9 +103,9 @@ def synth(env):
 
     lSessionId = 'synth'
 
-    if env.project is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again')
+    # if env.project is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again')
 
     # Check
     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
@@ -143,9 +143,9 @@ def impl(env):
 
     lSessionId = 'impl'
 
-    if env.project is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again')
+    # if env.project is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again')
 
     # Check
     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
@@ -183,9 +183,9 @@ def bitfile(env):
 
     lSessionId = 'bitfile'
 
-    if env.project is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again')
+    # if env.project is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again')
 
     # Check
     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
@@ -223,9 +223,9 @@ def info(env):
 
     lSessionId = 'info'
 
-    if env.project is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again')
+    # if env.project is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again')
 
     ensureVivado(env)
 
@@ -271,9 +271,9 @@ def reset(env):
 
     lSessionId = 'reset'
 
-    if env.project is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again')
+    # if env.project is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again')
 
     ensureVivado(env)
 
@@ -389,3 +389,31 @@ def package(ctx):
     echo("File " + style('%s' % lTgzPath, fg='green') + " successfully created")
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+@vivado.command()
+@click.pass_context
+def archive(ctx):
+
+    lSessionId = 'archive'
+
+    env = ctx.obj
+
+    ensureVivado(env)
+
+    lOpenCmds = [
+        'open_project %s' % join(env.projectPath, 'top', 'top'),
+    ]
+    lArchiveCmds = [
+        'archive_project %s -force' % join(env.projectPath, '{}.xpr.zip'.format(env.projectConfig['name'])),
+    ]
+
+    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    try:
+        with VivadoOpen(lSessionId) as lTarget:
+            lTarget(lOpenCmds)
+            lTarget(lArchiveCmds)
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
+        raise click.Abort()

@@ -271,6 +271,16 @@ def srcstat(env):
                 lKind = 'git'
                 lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
 
+                try:
+                    sh.git('diff', '--no-ext-diff', '--quiet').strip()
+                except sh.ErrorReturnCode_1:
+                    lBranch += '*'
+
+                try:
+                    sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
+                except sh.ErrorReturnCode_1:
+                    lBranch += '+'
+
         lSrcTable.add_row([lSrc, lKind, lBranch])
     echo  ( lSrcTable.draw() )
 

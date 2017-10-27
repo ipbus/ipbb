@@ -66,9 +66,6 @@ def info(env, verbose):
     if not env.projectPath:
         echo  ( )
         secho ( "Firmware packages", fg='blue' )
-        # echo  ( "---------------")
-        # for s in env.getSources():
-        #     echo ( "  - " + s )
         lSrcTable = Texttable()
         for lSrc in env.getSources():
             lSrcTable.add_row([lSrc])
@@ -76,10 +73,6 @@ def info(env, verbose):
 
         echo  ( )
         secho ( "Projects", fg='blue' )
-        # echo  ( "--------")
-        # for p in env.getProjects():
-        #     echo ( "  - " + p )
-        # echo  ( )
         lProjTable = Texttable()
         for lProj in env.getProjects():
             lProjTable.add_row([lProj])
@@ -149,6 +142,7 @@ def main():
     cli.add_command(repo.init)
     # cli.add_command(repo.cd)
     cli.add_command(repo.add)
+    cli.add_command(repo.srcstat)
 
     from ..cli import proj
     cli.add_command(proj.proj)

@@ -15,6 +15,7 @@ from . import kSourceDir, kProjDir, kWorkAreaCfgFile
 from .common import DirSentry, findFileInParents
 from urlparse import urlparse
 from distutils.dir_util import mkpath
+from texttable import Texttable
 
 
 # ------------------------------------------------------------------------------
@@ -240,35 +241,38 @@ def tar(env, repo, dest, strip):
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
-# @add.command()
-# def test():
-#     secho("AAAAAA", bg='red', fg='black')
-#     import yaml
+@click.command()
+@click.pass_obj
+def srcstat(env):
 
-#     d = {'A': 'a', 'B': {'C': 'c', 'D': 'd', 'E': 'e'}}
-#     d = {
-#         'ipbus-firmware': {
-#             'protocol': 'git',
-#             'uri': 'https://github.com/ipbus/ipbus-firmware.git'
-#         },
-#         'add': [
-#             {
-#                 'uri': 'https://github.com/ipbus/ipbus-firmware.git',
-#                 'protocol': 'git'
-#             },
-#             {
-#                 'uri': 'https://github.com/ipbus/ipbus-firmware.git',
-#                 'protocol': 'git'
-#             }
-#         ]
-#     }
-#     with open('required_packages.yml', 'w') as yaml_file:
-#         yaml.dump(d, yaml_file, default_flow_style=False)
+    if not env.workPath:
+        secho  ( 'ERROR: No ipbb work area detected', fg='red' )
+        return
 
-#     with open("required_packages.yml", 'r') as stream:
-#         try:
-#             print(yaml.load(stream))
-#         except yaml.YAMLError as exc:
-#             print(exc)
+    secho ( "Packages", fg='blue' )
+    lSrcs = env.getSources()
+    if not lSrcs:
+        return
+
+    lSrcTable = Texttable()
+    lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+    lSrcTable.set_chars(['-', '|', '+', '-'])
+    lSrcTable.header(['name', 'kind', 'version'])
+    for lSrc in lSrcs:
+        lSrcDir = join(env.src, lSrc)
+
+        lKind, lBranch = "unknown", None
+
+        # Check if a git repository
+        if exists(join( lSrcDir, '.git')):
+            with DirSentry(lSrcDir) as _:
+                lKind = 'git'
+                lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
+
+        lSrcTable.add_row([lSrc, lKind, lBranch])
+    echo  ( lSrcTable.draw() )
+
+# ------------------------------------------------------------------------------
 

@@ -269,7 +269,12 @@ def srcstat(env):
         if exists(join( lSrcDir, '.git')):
             with DirSentry(lSrcDir) as _:
                 lKind = 'git'
-                lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
+
+                try:
+                    # lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
+                    lBranch = sh.git('symbolic-ref', 'HEAD').split('/')[-1].strip()
+                except sh.ErrorReturnCode_128:
+                    lBranch = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
 
                 try:
                     sh.git('diff', '--no-ext-diff', '--quiet').strip()

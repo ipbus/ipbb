@@ -11,7 +11,7 @@ import tempfile
 import sys
 import re
 
-from os.path import join, split, exists, basename, abspath, splitext, relpath
+from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from ..tools.common import which, SmartOpen
 from .common import DirSentry
 from click import echo, secho, style, confirm
@@ -289,7 +289,7 @@ def generate(ctx):
     lGen = sh.Command(lGenScript)
     with DirSentry(join(env.projectPath, lDecodersDir)) as lProjDir:
         for lAddr in env.depParser.CommandList['addrtab']:
-
+            echo("Processing "+style(basename(lAddr.FilePath), fg='blue'))
             # Interested in top-level address tables only
             if not lAddr.TopLevel:
                 continue

@@ -145,8 +145,9 @@ class nodetree(object):
                 max_addr = saddr + pow(2, self.assign_width(i))
                 if max_addr > top_addr: top_addr = max_addr
             n.width = int(math.ceil(math.log(top_addr - addr,2)))
+        # if addr % pow(2, n.width) != 0:
         if addr % pow(2, n.width) != 0:
-            log.error("Non-aligned base address detected: " + n.name + " " + hex(addr) + " " + hex(n.width))
+            log.error("Non-aligned base address detected: '%s', addr: %s, width: %s", n.name, hex(addr), n.width)
         return n.width
 
     def get_nodes(self, n):
@@ -171,7 +172,7 @@ def main():
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(logging.WARNING)
-    uhal.setLogLevelTo(uhal.LogLevel.WARNING)
+    uhal.setLogLevelTo(uhal.LogLevel.ERROR)
 
     # options for verbosity level and VHDL template
     nflag = False
@@ -212,7 +213,6 @@ def main():
         f = d.getFirmwareInfo()
         p = "type" in f and f["type"] == "endpoint"
         t.add(node(i,d,p))
-    print 'AAAA', t
     t.assign_width(t.root)
     uhal_slaves = t.get_nodes(t.root)
     moduleName = os.path.splitext(os.path.basename(args[0]))[0]
@@ -226,8 +226,9 @@ def main():
         addr_bits = BitArray(addr)
         mask_bits = BitArray(2**width - 1)
         log.info("uHAL slave %s,%s,0b%s,0b%s" % (n,id,addr_bits, mask_bits))
+        # print "uHAL slave %s,%s,0b%s,0b%s" % (n,id,addr_bits, mask_bits)
         if (addr_bits & mask_bits).uint() != 0:
-            log.error("ERROR: Non Aligned address 0b%s with respect to address bit mask 0b%s" % (str(addr_bits),str(mask_bits)))
+            log.error("ERROR: Non-aligned address 0b%s (0x%x) with respect to address bit mask 0b%s" % (str(addr_bits), addr, str(mask_bits)))
     
         or_prod = or_prod | (addr_bits & ~mask_bits)
         and_prod = and_prod & (addr_bits | mask_bits)

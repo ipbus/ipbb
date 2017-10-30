@@ -166,7 +166,7 @@ def main():
         click.echo()
         click.secho(hline, fg='red')
         click.secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
-        click.secho(str(e), fg='red')
+        click.secho(e.message, fg='red')
         click.secho(hline, fg='red')
         # import StringIO
         # lTrace = StringIO.StringIO()

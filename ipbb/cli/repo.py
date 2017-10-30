@@ -256,7 +256,7 @@ def srcstat(env):
     if not lSrcs:
         return
 
-    lSrcTable = Texttable()
+    lSrcTable = Texttable(max_width=0)
     lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSrcTable.set_chars(['-', '|', '+', '-'])
     lSrcTable.header(['name', 'kind', 'version'])
@@ -285,6 +285,19 @@ def srcstat(env):
                     sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
                 except sh.ErrorReturnCode_1:
                     lBranch += '+'
+        elif exists(join( lSrcDir, '.svn')):
+            with DirSentry(lSrcDir) as _:
+                lKind = 'svn'
+
+                lSVNInfoRaw = sh.svn('info')
+
+                lSVNInfo = { lEntry[0]:lEntry[1].strip() for lEntry in ( lLine.split(':',1) for lLine in lSVNInfoRaw.split('\n') if lLine )}
+
+                lBranch = lSVNInfo['URL'].replace( lSVNInfo['Repository Root']+'/', '' )
+
+                lSVNStatus = sh.svn('status','-q')
+                if len(lSVNStatus):
+                    lBranch += '*'
 
         lSrcTable.add_row([lSrc, lKind, lBranch])
     echo  ( lSrcTable.draw() )

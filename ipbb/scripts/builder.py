@@ -150,10 +150,15 @@ def main():
     from ..cli import dep
     cli.add_command(dep.dep)
 
+
+    from ..cli import common
+
     from ..cli import vivado
+    vivado.vivado.add_command(common.cleanup)
     cli.add_command(vivado.vivado)
 
     from ..cli import sim
+    sim.sim.add_command(common.cleanup)
     cli.add_command(sim.sim)
 
     from ..cli import debug
@@ -168,9 +173,10 @@ def main():
         click.secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
         click.secho(e.message, fg='red')
         click.secho(hline, fg='red')
-        # import StringIO
-        # lTrace = StringIO.StringIO()
-        # traceback.print_exc(file=lTrace)
+        import StringIO
+        lTrace = StringIO.StringIO()
+        traceback.print_exc(file=lTrace)
+        print (lTrace.getvalue())
         # Do something with lTrace
         raise SystemExit(-1)
 # ------------------------------------------------------------------------------

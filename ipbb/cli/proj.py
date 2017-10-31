@@ -10,7 +10,7 @@ import json
 # Elements
 from ..tools.common import SmartOpen
 from . import kProjAreaCfgFile, kProjDir
-from .common import DirSentry
+from .tools import DirSentry
 
 from os.path import join, split, exists, splitext, relpath
 from click import echo, style, secho

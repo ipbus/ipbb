@@ -13,8 +13,7 @@ from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 from texttable import Texttable
 from ..tools.common import which, SmartOpen
-from .common import DirSentry, ensureNoMissingFiles
-from . import kProjAreaCfgFile
+from .tools import DirSentry, ensureNoMissingFiles
 
 
 # ------------------------------------------------------------------------------
@@ -93,29 +92,6 @@ def project(env, output):
               )
         raise click.Abort()
     # -------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-@vivado.command()
-@click.pass_obj
-def cleanup(env):
-
-    _, lSubdirs, lFiles =  next(os.walk(env.projectPath))
-    lFiles.remove( kProjAreaCfgFile )
-
-
-    if not click.confirm("All files in {} will be deleted. Do you want to continue?".format( env.projectPath )):
-        return
-
-    print (lSubdirs, lFiles)
-    if lSubdirs:
-        sh.rm('-rv', *lSubdirs, _out=sys.stdout)
-    
-    if lFiles:
-        sh.rm('-v', *lFiles, _out=sys.stdout)
-
-
 # ------------------------------------------------------------------------------
 
 

@@ -1,4 +1,5 @@
 from __future__ import print_function
+# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -13,7 +14,7 @@ import re
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from ..tools.common import which, SmartOpen
-from .common import DirSentry
+from .tools import DirSentry
 from click import echo, secho, style, confirm
 from texttable import Texttable
 

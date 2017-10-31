@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added the `cleanup` subcommand to `sim` and `vivado` command groups.
+- Added the `srcstat` command to provide a compact status report of git and svn packages.
 
 ## [0.2.8] - 2017-10-05
 ### Changed

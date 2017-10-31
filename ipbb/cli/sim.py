@@ -12,7 +12,7 @@ import sys
 from os.path import join, split, exists, splitext, basename, dirname, abspath, expandvars
 from click import echo, secho, style
 from ..tools.common import which, do, ensuresudo, SmartOpen
-from .common import DirSentry, ensureNoMissingFiles
+from .tools import DirSentry, ensureNoMissingFiles
 
 
 # ------------------------------------------------

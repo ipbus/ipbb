@@ -1,53 +1,31 @@
 from __future__ import print_function
 # ------------------------------------------------------------------------------
+
 import os
+import click
+import sh
+import sys
+
 from click import secho, confirm, get_current_context
+from . import kProjAreaCfgFile
 
 # ------------------------------------------------------------------------------
-class DirSentry:
-    def __init__(self, aDir):
-        self.dir = aDir
+@click.command()
+@click.pass_obj
+def cleanup(env):
 
-    def __enter__(self):
-        if not os.path.exists(self.dir):
-            raise RuntimeError('Directory ' + self.dir + ' does not exist')
-
-        self._lOldDir = os.path.realpath(os.getcwd())
-        # print self._lOldDir
-        os.chdir(self.dir)
-        return self
-
-    def __exit__(self, type, value, traceback):
-        os.chdir(self._lOldDir)
-# ------------------------------------------------------------------------------
+    _, lSubdirs, lFiles =  next(os.walk(env.projectPath))
+    lFiles.remove( kProjAreaCfgFile )
 
 
-# ------------------------------------------------------------------------------
-def findFileInParents(aAreaFileName):
-    lPath = os.getcwd()
-
-    while lPath is not '/':
-        lBuildFile = os.path.join(lPath, aAreaFileName)
-        if os.path.exists(lBuildFile):
-            return lBuildFile
-        lPath, _ = os.path.split(lPath)
-
-    return None
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
-
-    if not aDepFileParser.NotFound:
+    if not click.confirm("All files in {} will be deleted. Do you want to continue?".format( env.projectPath )):
         return
 
-    lRootName = get_current_context().find_root().info_name
-    secho("ERROR: Project '{}' contains unresolved dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
-        aCurrentProj,
-        len(aDepFileParser.NotFound),
-        ("" if len(aDepFileParser.NotFound) == 1 else "s"),
-        lRootName,
-    ), fg='red')
-    confirm("Do you want to continue anyway?", abort=True)
+    print (lSubdirs, lFiles)
+    if lSubdirs:
+        sh.rm('-rv', *lSubdirs, _out=sys.stdout)
+    
+    if lFiles:
+        sh.rm('-v', *lFiles, _out=sys.stdout)
 # ------------------------------------------------------------------------------
+

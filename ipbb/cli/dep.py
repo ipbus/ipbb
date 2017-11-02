@@ -302,9 +302,12 @@ def generate(ctx):
             lTarget = env.pathMaker.getPath(
                 lAddr.Package, lAddr.Component, 'src', lDecoder)
 
+
+            diff = sh.colordiff if which('colordiff') else sh.diff
+
             # Has anything changed?
             try:
-                sh.diff('-u', '-I', '^-- START automatically', lDecoder, lTarget)
+                diff('-u', '-I', '^-- START automatically', lTarget, lDecoder)
             except sh.ErrorReturnCode as e:
                 print (e.stdout)
 

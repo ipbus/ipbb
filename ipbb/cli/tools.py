@@ -3,6 +3,8 @@ from __future__ import print_function
 
 import os
 
+from click import secho, confirm, get_current_context
+
 # ------------------------------------------------------------------------------
 class DirSentry:
     def __init__(self, aDir):

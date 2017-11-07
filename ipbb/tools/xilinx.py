@@ -124,6 +124,7 @@ class VivadoConsole(object):
 
     __reCharBackspace = re.compile(".\b")
     __reError = re.compile('^ERROR:')
+    __reCriticalWarning = re.compile('^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
         'vivado': 'Vivado%[ \t]',
@@ -234,6 +235,7 @@ class VivadoConsole(object):
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []
+        lCriticalWarnings = []
 
         # --------------------------------------------------------------
         lTimeoutCounts = 0
@@ -257,9 +259,13 @@ class VivadoConsole(object):
 
             if self.__reError.match(self._process.before):
                 lErrors.append(self._process.before)
+
+            if self.__reCriticalWarning.match(self._process.before):
+                lCriticalWarnings.append(self._process.before)
+                
         # --------------------------------------------------------------
 
-        return lBuffer, (lErrors if lErrors else None)
+        return lBuffer, lErrors, lCriticalWarnings
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -309,9 +315,15 @@ class VivadoConsole(object):
             raise ValueError('format error. Newline not allowed in commands')
 
         self.__send(aCmd)
-        lBuffer, lErrors = self.__expectPrompt(aMaxLen)
-        if lErrors is not None:
+        lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
+
+        # Print critical warnings if any
+        # for lWarning in lCriticalWarnings:
+            # secho(lWarning, fg='yellow')                
+        
+        if lErrors:
             raise VivadoConsoleError(lErrors, aCmd)
+            
         return list(lBuffer)
     # --------------------------------------------------------------
 

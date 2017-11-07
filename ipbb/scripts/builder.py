@@ -155,10 +155,14 @@ def main():
 
     from ..cli import vivado
     vivado.vivado.add_command(common.cleanup)
+    vivado.vivado.add_command(common.addrtab)
+    vivado.vivado.add_command(common.gendecoders)
     cli.add_command(vivado.vivado)
 
     from ..cli import sim
     sim.sim.add_command(common.cleanup)
+    sim.sim.add_command(common.addrtab)
+    sim.sim.add_command(common.gendecoders)
     cli.add_command(sim.sim)
 
     from ..cli import debug

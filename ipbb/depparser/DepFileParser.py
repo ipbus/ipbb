@@ -3,6 +3,7 @@ import argparse
 import os
 import glob
 from collections import OrderedDict
+from os.path import exists
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -312,6 +313,10 @@ class DepFileParser(object):
         lDepFilePath = self.Pathmaker.getPath(
             aPackage, aComponent, 'include', aDepFileName)
         # --------------------------------------------------------------
+
+
+        if not exists(lDepFilePath):
+            raise IOError("File "+lDepFilePath+" does not exist")
 
         with open(lDepFilePath) as lDepFile:
             for lLineNum, lLine in enumerate(lDepFile):

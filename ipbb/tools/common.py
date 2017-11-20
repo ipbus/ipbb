@@ -8,7 +8,7 @@ import subprocess
 
 
 # ------------------------------------------------------------------------------
-# Helper function equivalent to which in posics systems
+# Helper function equivalent to which in posix systems
 def which(aExecutable):
     '''Searches for exectable il $PATH'''
     lSearchPaths = os.environ["PATH"].split(os.pathsep) if aExecutable[0] != os.sep else [os.path.dirname(aExecutable)]

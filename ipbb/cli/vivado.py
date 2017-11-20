@@ -103,10 +103,6 @@ def synth(env):
 
     lSessionId = 'synth'
 
-    # if env.project is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     # Check
     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
     if not exists(lVivProjPath):
@@ -240,6 +236,10 @@ def info(env):
     try:
         with VivadoOpen(lSessionId) as lTarget:
             lTarget(lOpenCmds)
+            
+            lIPs = lTarget('get_ips')[0].split()
+
+            # Gather data about existing runs
             lRuns = lTarget('get_runs')[0].split()
             for lRun in sorted(lRuns):
                 secho(lRun, fg='blue')
@@ -247,6 +247,7 @@ def info(env):
                 lCmds = [ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ]
                 lValues = lTarget(lCmds)
                 lInfos[lRun] = dict(zip(lProps, lValues))
+
     except VivadoConsoleError as lExc:
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
@@ -259,6 +260,8 @@ def info(env):
         lInfo = lInfos[lRun]
         lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])
     echo(lSummary.draw())
+
+
 # ------------------------------------------------------------------------------
 
 
@@ -390,6 +393,7 @@ def package(ctx):
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
 @vivado.command()
 @click.pass_context
@@ -417,3 +421,4 @@ def archive(ctx):
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+# ------------------------------------------------------------------------------

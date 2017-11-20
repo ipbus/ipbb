@@ -19,7 +19,7 @@ from texttable import Texttable
 
 
 # ------------------------------------------------------------------------------
-@click.command()
+@click.command('init', short_help="Initialises a new working area.")
 @click.argument('workarea')
 @click.pass_obj
 def init(env, workarea):
@@ -176,7 +176,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
 
 # ------------------------------------------------------------------------------
-@add.command()
+@add.command('add', short_help="Add a new source package from tarball.")
 @click.argument('repo')
 @click.option('-d', '--dest', default=None, help='Destination folder')
 @click.option('-s', '--strip', type=int, default=None, help='Strip <n> level of directories when unpacking.')
@@ -243,7 +243,7 @@ def tar(env, repo, dest, strip):
 
 
 # ------------------------------------------------------------------------------
-@click.command()
+@click.command('src-status', short_help="Summary of the status of source packages.")
 @click.pass_obj
 def srcstat(env):
 

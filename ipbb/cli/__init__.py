@@ -76,11 +76,15 @@ class Environment(object):
             self.pathMaker,
             aVerbosity=self._verbosity
         )
-        self.depParser.parse(
-            self.projectConfig['topPkg'],
-            self.projectConfig['topCmp'],
-            self.projectConfig['topDep']
-        )
+
+        try:
+            self.depParser.parse(
+                self.projectConfig['topPkg'],
+                self.projectConfig['topCmp'],
+                self.projectConfig['topDep']
+            )
+        except IOError as e:
+            pass
     # ----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------

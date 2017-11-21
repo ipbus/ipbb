@@ -268,23 +268,31 @@ def srcstat(env):
         # Check if a git repository
         if exists(join( lSrcDir, '.git')):
             with DirSentry(lSrcDir) as _:
+
                 lKind = 'git'
-
                 try:
-                    # lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
-                    lBranch = sh.git('symbolic-ref', 'HEAD').split('/')[-1].strip()
+                    sh.git('rev-parse','--git-dir')
                 except sh.ErrorReturnCode_128:
-                    lBranch = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
+                    lKind += ' (broken)'
+                    lBranch = '(unknown)'             
 
-                try:
-                    sh.git('diff', '--no-ext-diff', '--quiet').strip()
-                except sh.ErrorReturnCode_1:
-                    lBranch += '*'
 
-                try:
-                    sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
-                except sh.ErrorReturnCode_1:
-                    lBranch += '+'
+                if lKind == 'git':
+                    try:
+                        # lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
+                        lBranch = sh.git('symbolic-ref', 'HEAD').split('/')[-1].strip()
+                    except sh.ErrorReturnCode_128:
+                        lBranch = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
+
+                    try:
+                        sh.git('diff', '--no-ext-diff', '--quiet').strip()
+                    except sh.ErrorReturnCode_1:
+                        lBranch += '*'
+
+                    try:
+                        sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
+                    except sh.ErrorReturnCode_1:
+                        lBranch += '+'
         elif exists(join( lSrcDir, '.svn')):
             with DirSentry(lSrcDir) as _:
                 lKind = 'svn'

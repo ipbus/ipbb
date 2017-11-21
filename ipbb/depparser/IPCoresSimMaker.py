@@ -76,13 +76,14 @@ set_property "target_language" "VHDL" $obj
             lPath, lBasename = os.path.split(src.FilePath)
             lName, lExt = os.path.splitext(lBasename)
 
-            if lExt == ".xci" or lExt == ".edn":
+            if lExt in [".xci", ".edn"]:
                 write(
                     "import_files -norecurse -fileset sources_1 {0}".format(src.FilePath))
                 if lExt == ".xci":
                     write("upgrade_ip [get_ips {0}]".format(lName))
                     write(
-                        "generate_target simulation [get_files {0}]".format(lBasename))
+                        "generate_target simulation [get_files {0}]".format(lBasename)
+                        )
         # write('''
 # exec mkdir -p
 # {0}/{0}.srcs/sources_1/ip/built'''.format(aScriptVariables['device_top']))

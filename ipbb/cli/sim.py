@@ -88,7 +88,7 @@ def ipcores(env, output, xilinx_simpath):
         lPath, lBasename = os.path.split(src.FilePath)
         lName, lExt = os.path.splitext(lBasename)
 
-        if not (lExt == ".xci" or lExt == ".edn"):
+        if lExt not in [".xci", ".edn"]:
             continue
 
         lIPCores.append(lBasename)
@@ -96,10 +96,11 @@ def ipcores(env, output, xilinx_simpath):
     if not lIPCores:
         secho ('WARNING: No ipcore files detected in this project', fg='yellow')
         # return
-
-    for lIPCore in lIPCores:
-        echo('- ' + style(lBasename, fg='blue'))
-    # raise SystemExit(0)
+    else:
+        echo ('List of cores in project')
+        for lIPCore in lIPCores:
+            echo('- ' + style(lIPCore, fg='blue'))
+    
 
     from ..depparser.IPCoresSimMaker import IPCoresSimMaker
     lWriter = IPCoresSimMaker(env.pathMaker, simlibPath)

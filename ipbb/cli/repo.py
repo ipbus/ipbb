@@ -88,6 +88,14 @@ def git(env, repo, branch, dest):
     sh.git(*lArgs, _out=sys.stdout, _cwd=env.src)
 
     if branch is not None:
+        # Ensure that the requested branch/tag exists
+        # TODO use the output value
+        lBranch = sh.git('branch', '--list', branch, _cwd=lRepoLocalPath)
+        lTag = sh.git('tag', '--list', branch, _cwd=lRepoLocalPath)
+
+        if not ( lBranch or lTag):
+            raise click.ClickException("Branch/Tag "+branch+" does not exist")
+
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------

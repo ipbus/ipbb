@@ -103,6 +103,7 @@ class DepFileParser(object):
         self.Components = OrderedDict()
 
         self.NotFound = list()
+        self.DepMap = {}
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -499,6 +500,8 @@ class DepFileParser(object):
                             self.CommandList[lParsedLine.cmd].append(Command(
                                 lFilePath, lPackage, lComponent, lMap, lInclude, lInclude, lTopLevel, lVhdl2008
                             ))
+
+                            self.DepMap.setdefault(lFilePath, []).append(lDepFilePath)
                         # --------------------------------------------------------------
         # --------------------------------------------------------------
 

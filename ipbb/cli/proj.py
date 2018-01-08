@@ -57,11 +57,11 @@ def _validateComponent(ctx, param, value):
 def create( env, kind, projname, component, topdep ):
     '''Creates a new area of name PROJNAME of kind KIND
 
-      PROJAREA: Name of the new project area
-
       KIND: Area kind, choices: vivado, sim
 
-      COMPONENT: Component contaning the top-level
+      PROJNAME: Name of the new project area
+
+      COMPONENT: Component <package:component> contaning the top-level
     '''
     # ------------------------------------------------------------------------------
     # Must be in a build area

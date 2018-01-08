@@ -317,6 +317,8 @@ class DepFileParser(object):
 
 
         if not exists(lDepFilePath):
+            self.NotFound.append(
+                (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
             raise IOError("File "+lDepFilePath+" does not exist")
 
         with open(lDepFilePath) as lDepFile:

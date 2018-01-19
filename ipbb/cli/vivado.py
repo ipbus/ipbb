@@ -97,8 +97,9 @@ def project(env, output):
 
 # ------------------------------------------------------------------------------
 @vivado.command()
+@click.option('-j', '--jobs', type=int, default=None)
 @click.pass_obj
-def synth(env):
+def synth(env, jobs):
     '''Run synthesis'''
 
     lSessionId = 'synth'
@@ -115,7 +116,7 @@ def synth(env):
     ]
 
     lSynthCmds = [
-        'launch_runs synth_1',
+        'launch_runs synth_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
         'wait_on_run synth_1',
     ]
 
@@ -133,8 +134,9 @@ def synth(env):
 
 # ------------------------------------------------------------------------------
 @vivado.command()
+@click.option('-j', '--jobs', type=int, default=None)
 @click.pass_obj
-def impl(env):
+def impl(env, jobs):
     '''Launch implementation run'''
 
     lSessionId = 'impl'
@@ -155,7 +157,7 @@ def impl(env):
     ]
 
     lImplCmds = [
-        'launch_runs impl_1',
+        'launch_runs impl_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
         'wait_on_run impl_1',
     ]
 

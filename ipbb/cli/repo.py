@@ -45,7 +45,7 @@ def init(env, workarea):
 
 
 # ------------------------------------------------------------------------------
-@click.group()
+@click.group('add', short_help="Add a new source package.")
 @click.pass_obj
 def add(env):
     '''Add a new package to the source area'''
@@ -58,7 +58,7 @@ def add(env):
 
 
 # ------------------------------------------------------------------------------
-@add.command()
+@add.command('git', short_help="Add a new source package from a git repository")
 @click.argument('repo')
 @click.option('-b', '--branch', default=None, help='Git branch or tag to clone')
 @click.option('-d', '--dest', default=None, help="Destination directory")
@@ -102,7 +102,7 @@ def git(env, repo, branch, dest):
 
 
 # ------------------------------------------------------------------------------
-@add.command()
+@add.command('svn', short_help="Add a new source package from a svn repository.")
 @click.argument('repo')
 @click.option('-d', '--dest', default=None, help='Destination folder')
 @click.option('-r', '--rev', type=click.INT, default=None, help='SVN revision')
@@ -184,7 +184,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
 
 # ------------------------------------------------------------------------------
-@add.command('add', short_help="Add a new source package from tarball.")
+@add.command('tar', short_help="Add a new source package from tarball.")
 @click.argument('repo')
 @click.option('-d', '--dest', default=None, help='Destination folder')
 @click.option('-s', '--strip', type=int, default=None, help='Strip <n> level of directories when unpacking.')
@@ -317,6 +317,10 @@ def srcstat(env):
 
         lSrcTable.add_row([lSrc, lKind, lBranch])
     echo  ( lSrcTable.draw() )
-
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+@click.command('src-find', short_help="Find src files.")
+@click.pass_obj
+def srcfind(env):
+    sh.find(env.src,'-name', '*.vhd', _out=sys.stdout)

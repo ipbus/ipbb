@@ -62,7 +62,7 @@ class VivadoProjectMaker(object):
         lXciBasenames = []
         lXciTargetFiles = []
 
-        for src in reversed(aCommandList['src']):
+        for src in aCommandList['src']:
             lPath, lBasename = os.path.split(src.FilePath)
             lName, lExt = os.path.splitext(lBasename)
             lTargetFile = os.path.join(
@@ -91,14 +91,6 @@ class VivadoProjectMaker(object):
 
         write('set_property top top [current_fileset]')
 
-        # for i in ['constrs_1" , "sources_1" , "ise_1" ]:
-        # write( "reorder_files -fileset {0} -auto [get_files -of_objects [get_filesets {0}]]".format(i) )
-
-#      write( "set_property source_mgmt_mode All [get_projects top]" )
-#      write( "update_compile_order -fileset constrs_1" )
-#      write( "update_compile_order -fileset sources_1" )
-#      write( "update_compile_order -fileset sim_1" )
-
         write(
             'set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
 
@@ -106,10 +98,10 @@ class VivadoProjectMaker(object):
             write('upgrade_ip [get_ips {0}]'.format(i))
         for i in lXciTargetFiles:
             write('create_ip_run [get_files {0}]'.format(i))
-        for i in lXciBasenames:
-            write('launch_run {0}_synth_1'.format(i))
-        for i in lXciBasenames:
-            write('wait_on_run {0}_synth_1'.format(i))
+        # for i in lXciBasenames:
+        #     write('launch_run {0}_synth_1'.format(i))
+        # for i in lXciBasenames:
+        #     write('wait_on_run {0}_synth_1'.format(i))
         write('close_project')
     # --------------------------------------------------------------
 

@@ -143,6 +143,7 @@ def main():
     # cli.add_command(repo.cd)
     cli.add_command(repo.add)
     cli.add_command(repo.srcstat)
+    cli.add_command(repo.srcfind)
 
     from ..cli import proj
     cli.add_command(proj.proj)

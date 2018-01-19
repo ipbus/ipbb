@@ -12,7 +12,7 @@ from ..tools.common import which
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 # ------------------------------------------------------------------------------
 
-def detectVivadoVariant():
+def autodetectVivadoVariant():
 
     lCandidates = ['vivado_lab', 'vivado']
 
@@ -44,7 +44,7 @@ def vivado(ctx):
 @vivado.command()
 @click.option('-v/-q', default=False)
 def list(v):
-    lVivado = detectVivadoVariant()
+    lVivado = autodetectVivadoVariant()
     # Build vivado interface
     click.echo('Starting '+lVivado+'...')
     from ..tools import xilinx
@@ -87,7 +87,7 @@ def program(deviceid, bitfile, v):
     target, device = deviceid
     # Build vivado interface
     
-    lVivado = detectVivadoVariant()
+    lVivado = autodetectVivadoVariant()
     click.echo('Starting '+lVivado+'...')
     from ..tools import xilinx
     v = xilinx.VivadoConsole(executable=lVivado, echo=v)

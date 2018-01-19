@@ -44,9 +44,34 @@ def dep(ctx, proj):
 # ------------------------------------------------------------------------------
 @dep.command()
 @click.pass_obj
-def report(env):
+@click.option('-f', '--filter', 'filters', multiple=True)
+def report(env, filters):
     '''Summarise the dependency tree of the current project'''
 
+    lCmdHeaders = ['path', 'flags', 'package', 'component']
+    
+    lFilterFormat = re.compile('([^=]*)=(.*)')
+    lFilterFormatErrors = []
+    lFilters = []
+
+    # print ( filters )
+    
+    for f in filters:
+        m = lFilterFormat.match(f)
+        if not m:
+            lFilterFormatErrors.append(f)
+        # print (m.group(1))
+
+        try:
+            i = lCmdHeaders.index(m.group(1))
+            r = re.compile(m.group(2))
+            lFilters.append( (i, r) )
+        except RuntimeError as e:
+            lFilterFormatErrors.append(f)
+
+    if lFilterFormatErrors:
+        raise click.ClickException("Filter syntax errors: "+' '.join(['\''+e+'\'' for e in lFilterFormatErrors]))
+    # return
     lParser = env.depParser
 
     # lTitle = Texttable(max_width=0)
@@ -66,18 +91,29 @@ def report(env):
             continue
 
         lCmdTable = Texttable(max_width=0)
-        lCmdTable.header(['file path', 'flags', 'package', 'component'])
+        lCmdTable.header(lCmdHeaders)
         lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.CommandList[k]:
             # print(lCmd)
             # lCmdTable.add_row([str(lCmd)])
-            lCmdTable.add_row([
+            lRow = [
                 relpath(lCmd.FilePath, env.workPath),
                 ','.join(lCmd.flags()),
                 lCmd.Package,
                 lCmd.Component
-                ])
+            ]
+
+            if lFilters and not all([ rxp.match(lRow[i]) for i,rxp in lFilters ]):
+                continue
+                
+            lCmdTable.add_row(lRow)
+            # lCmdTable.add_row([
+            #     relpath(lCmd.FilePath, env.workPath),
+            #     ','.join(lCmd.flags()),
+            #     lCmd.Package,
+            #     lCmd.Component
+            # ])
             
 
         echo(lPrepend.sub('\g<1>  ',lCmdTable.draw()))

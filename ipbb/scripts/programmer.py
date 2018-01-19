@@ -5,11 +5,21 @@ from __future__ import print_function
 import click
 import click_didyoumean
 
+from ..tools.common import which
+
 # ------------------------------------------------------------------------------
 # Add -h as default help option
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 # ------------------------------------------------------------------------------
 
+def detectVivadoVariant():
+
+    lCandidates = ['vivado_lab', 'vivado']
+
+    for lCandidate in lCandidates:
+        if which(lCandidate) is None:
+            continue
+        return lCandidate
 
 # ------------------------------------------------------------------------------
 # @shell(
@@ -34,10 +44,11 @@ def vivado(ctx):
 @vivado.command()
 @click.option('-v/-q', default=False)
 def list(v):
+    lVivado = detectVivadoVariant()
     # Build vivado interface
-    click.echo('Vivado starting...')
+    click.echo('Starting '+lVivado+'...')
     from ..tools import xilinx
-    v = xilinx.VivadoConsole(executable='vivado_lab', echo=v)
+    v = xilinx.VivadoConsole(executable=lVivado, echo=v)
     click.echo('... done')
 
     click.echo("Looking for targets")
@@ -76,9 +87,10 @@ def program(deviceid, bitfile, v):
     target, device = deviceid
     # Build vivado interface
     
-    click.echo('Vivado starting...')
+    lVivado = detectVivadoVariant()
+    click.echo('Starting '+lVivado+'...')
     from ..tools import xilinx
-    v = xilinx.VivadoConsole(executable='vivado_lab', echo=v)
+    v = xilinx.VivadoConsole(executable=lVivado, echo=v)
     click.echo('... done')
     v.openHw()
     v.connect()

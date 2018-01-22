@@ -105,7 +105,7 @@ def create( env, kind, projname, component, topdep ):
     with SmartOpen( join(lProjAreaPath, kProjAreaCfgFile) ) as lProjFile:
         json.dump(lCfg, lProjFile.file, indent=2)
 
-    secho('Empty project area %s created' % projname, fg='green')
+    secho('{} project area \'{}\' created'.format( kind.capitalize(), projname), fg='green')
 # ------------------------------------------------------------------------------
 
 

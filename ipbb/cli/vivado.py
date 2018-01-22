@@ -107,7 +107,7 @@ def synth(env, jobs):
     # Check
     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
     if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
     ensureVivado(env)
 
@@ -179,6 +179,41 @@ def impl(env, jobs):
 
 
 # ------------------------------------------------------------------------------
+@click.command('usage', short_help='Run the implementation step on the current project.')
+@click.pass_obj
+def usage(env, jobs):
+
+    lSessionId = 'usage'
+
+    # if env.project is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again')
+
+    # Check
+    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+
+    ensureVivado(env)
+
+    lOpenCmds = [
+        'open_project %s' % lVivProjPath,
+        'open_run impl_1',
+    ]
+
+
+    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    try:
+        with VivadoOpen(lSessionId) as lTarget:
+            lTarget(lOpenCmds)
+            # lTarget(lImplCmds)
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
+        raise click.Abort()
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 @vivado.command('bitfile', short_help="Generate a bitfile.")
 @click.pass_obj
 def bitfile(env):
@@ -215,6 +250,9 @@ def bitfile(env):
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+
+    secho("\n{}: Bitfile successfully written.\n".format(env.project))
+
 # ------------------------------------------------------------------------------
 
 
@@ -310,7 +348,7 @@ def reset(env):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('package', short_help="Package the firmware image and metadata into a standalone archive")
 @click.pass_context
 def package(ctx):
     '''Package bitfile with address table and file list'''

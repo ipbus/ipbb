@@ -65,7 +65,6 @@ class SmartOpen(object):
 
     def __enter__(self):
         if self.filename:
-            print("Writing to", self.filename)
             self.file = open(self.filename, 'w')
         else:
             self.file = sys.stdout

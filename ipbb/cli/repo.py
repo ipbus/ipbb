@@ -82,37 +82,41 @@ def git(env, repo, branch, dest):
             'Repository already exists \'%s\'' % lRepoLocalPath
             )
 
-    lLsRemote = sh.git('ls-remote', repo, branch)
-    lRemoteRefs = [ line.strip().split('\t') for line in lLsRemote.split('\n') if line]
+    if branch is not None:
+        lLsRemote = sh.git('ls-remote', '-h','-t', repo, branch)
+        lRemoteRefs = [ line.strip().split('\t') for line in lLsRemote.split('\n') if line]
 
-    # Handle unexpected cases
-    # No references
-    if not lRemoteRefs:
-        raise click.ClickException(
-            'No references matching \'{}\' found'.format(branch)
-            )
-    # Multiple references
-    elif len(lRemoteRefs) > 1:
-        raise click.ClickException(
-            'Found {} references matching \'{}\''.format(len(lRemoteRefs), branch)
-            )
 
-    lRef, lRefName = lRemoteRefs[0]
+        # Handle unexpected cases
+        # No references
+        if not lRemoteRefs:
+            raise click.ClickException(
+                'No references matching \'{}\' found'.format(branch)
+                )
+        # Multiple references
+        elif len(lRemoteRefs) > 1:
+            echo(lRemoteRefs)
+            raise click.ClickException(
+                'Found {} references matching \'{}\''.format(len(lRemoteRefs), branch)
+                )
 
-    # It's either a branch (i.e. head)
-    if lRefName.startswith('refs/heads/'):
-        lRefKind = 'branch'
-    # Or a tag
-    elif lRefName.startswith('refs/tags/'):
-        lRefKind = 'tag'
-    # Or something alien
-    else:
-        raise click.ClickException(
-            '{} is neither a branch nor a tag: {}'.format(len(branch), lRefName)
-            )
+        lRef, lRefName = lRemoteRefs[0]
 
-    # All good, go ahead with cloning
-    echo("{} {} resolved as reference {}".format(lRefKind, style(branch, fg='blue'), lRefName))
+        # It's either a branch (i.e. head)
+        if lRefName.startswith('refs/heads/'):
+            lRefKind = 'branch'
+        # Or a tag
+        elif lRefName.startswith('refs/tags/'):
+            lRefKind = 'tag'
+        # Or something alien
+        else:
+            raise click.ClickException(
+                '{} is neither a branch nor a tag: {}'.format(len(branch), lRefName)
+                )
+
+        # All good, go ahead with cloning
+        echo("{} {} resolved as reference {}".format(lRefKind.capitalize(), style(branch, fg='blue'), lRefName))
+
     lArgs = ['clone', repo]
 
     if dest is not None:
@@ -125,7 +129,7 @@ def git(env, repo, branch, dest):
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    secho('Repository \'{}\' successfully cloned to\n{}'.format(lRepoName, join(env.src,lRepoName)), fg='green')
+    secho('Repository \'{}\' successfully cloned to:\n  {}'.format(lRepoName, join(env.src,lRepoName)), fg='green')
 # ------------------------------------------------------------------------------
 
 

@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `--filter` option to `ipbb dep report`
 - Simplified `ipbb vivado project`: IP syntesis runs are not launched automatically anymore.
 - Added `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
-- Added vivavo variant autodetection to `ipb-prog vivado`
+- Added vivavo variant autodetection to `ipb-prog vivado`.
+- Improved `add git` branch/tag resolution.
 
 ## [0.2.9] - 2018-01-08
 - Added check on branch/tag validity when adding git repositories.

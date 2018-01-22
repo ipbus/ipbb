@@ -28,7 +28,7 @@ def _getprojects(env):
 
 
 # ------------------------------------------------------------------------------
-@click.group('proj', short_help="Projects commands")
+@click.group('proj', short_help="Create and manage projects.")
 def proj():
     '''Create and manage firmware projects'''
     pass

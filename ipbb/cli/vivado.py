@@ -30,11 +30,11 @@ def ensureVivado(env):
 
 
 # ------------------------------------------------------------------------------
-@click.group(chain=True)
+@click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)
 @click.pass_context
 @click.option('-p', '--proj', default=None)
 def vivado(ctx, proj):
-    '''Vivado commands'''
+    '''Command'''
 
     env = ctx.obj
 
@@ -51,11 +51,11 @@ def vivado(ctx, proj):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('project', short_help='Assemble the project from sources.')
 @click.option('-o', '--output', default=None)
 @click.pass_obj
 def project(env, output):
-    '''Assemble the vivado project'''
+    '''Assemble the project from sources'''
 
     lSessionId = 'project'
 
@@ -96,7 +96,7 @@ def project(env, output):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('synth', short_help='Run the synthesis step on the current project.')
 @click.option('-j', '--jobs', type=int, default=None)
 @click.pass_obj
 def synth(env, jobs):
@@ -129,11 +129,14 @@ def synth(env, jobs):
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+
+
+    secho("\n{}: Synthesis completed successfully.\n".format(env.project))
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('impl', short_help='Run the implementation step on the current project.')
 @click.option('-j', '--jobs', type=int, default=None)
 @click.pass_obj
 def impl(env, jobs):
@@ -170,11 +173,13 @@ def impl(env, jobs):
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+
+    secho("\n{}: Implementation completed successfully.\n".format(env.project))
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('bitfile', short_help="Generate a bitfile.")
 @click.pass_obj
 def bitfile(env):
     '''Create a bitfile'''
@@ -214,12 +219,12 @@ def bitfile(env):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('status', short_help="Show the status of all runs in the current project.")
 @click.pass_obj
-def info(env):
-    '''Display the current status of project runs'''
+def status(env):
+    '''Show the status of all runs in the current project.'''
 
-    lSessionId = 'info'
+    lSessionId = 'status'
 
     # if env.project is None:
     #     raise click.ClickException(
@@ -232,7 +237,7 @@ def info(env):
     ]
 
     lInfos = {}
-    lProps = ['status', 'progress']
+    lProps = ['Status', 'Progress']
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
@@ -257,7 +262,7 @@ def info(env):
 
     echo()
     lSummary = Texttable()
-    lSummary.add_row(['']+lProps)
+    lSummary.add_row(['Run']+lProps)
     for lRun in sorted(lInfos):
         lInfo = lInfos[lRun]
         lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])
@@ -269,7 +274,7 @@ def info(env):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('reset', short_help="Reset synthesis and implementation runs.")
 @click.pass_obj
 def reset(env):
     '''Reset   runs'''
@@ -300,6 +305,7 @@ def reset(env):
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+
 # ------------------------------------------------------------------------------
 
 
@@ -391,7 +397,7 @@ def package(ctx):
            )
     echo()
 
-    echo("File " + style('%s' % lTgzPath, fg='green') + " successfully created")
+    echo("Package " + style('%s' % lTgzPath, fg='green') + " successfully created.")
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 

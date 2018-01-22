@@ -21,7 +21,7 @@ def cleanup(env):
     lFiles.remove( kProjAreaCfgFile )
 
 
-    if not click.confirm(style("All files in {} will be deleted. Do you want to continue?".format( env.projectPath ), fg='yellow')):
+    if not click.confirm(style("All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format( env.projectPath ), fg='yellow')):
         return
 
     print (lSubdirs, lFiles)

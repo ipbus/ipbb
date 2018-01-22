@@ -25,7 +25,7 @@ class ModelsimNotFoundError(Exception):
 
 
 # ------------------------------------------------------------------------------
-@click.group(chain=True)
+@click.group('sim', short_help="Set up simulation projects.", chain=True)
 @click.pass_context
 @click.option('-p', '--proj', metavar='<name>', default=None, help='Switch to <name> before running subcommands.')
 def sim(ctx, proj):
@@ -40,7 +40,7 @@ def sim(ctx, proj):
 
 
 # ------------------------------------------------------------------------------
-@sim.command('ipcores', short_help='Generate vivado sim cores for the current design.')
+@sim.command('ipcores', short_help="Generate vivado sim cores for the current design.")
 @click.option('-o', '--output', default=None)
 @click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Library target directory', show_default=True)
 @click.pass_obj

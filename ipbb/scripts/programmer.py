@@ -41,7 +41,7 @@ def vivado(ctx):
     pass
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('vivado', short_help="Vivado programmer interface.")
 @click.option('-v/-q', default=False)
 def list(v):
     lVivado = autodetectVivadoVariant()
@@ -78,7 +78,7 @@ def _validateDevice(ctx, param, value):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command()
+@vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
 @click.option('-v/-q', default=False)
@@ -122,11 +122,11 @@ def program(deviceid, bitfile, v):
         raise RuntimeError('Device %s not found. Devices available %s: ' % (
             device, ', '.join(hw_devs)))
 
-    if click.confirm("Bitfile {0} will be loaded on {1}. Do you want to continue?".format( bitfile, lTarget)):
+    if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format( bitfile, lTarget), fg='yellow')):
         v.programDevice(device, bitfile)
         click.echo("{} successfully programmed on {}".format(bitfile, lTarget))
     else:
-        click.secho('Skipping programming stage', fg='yellow')
+        click.secho('Programming aborted.', fg='yellow')
     v.closeHwTarget(lTarget)
 
 

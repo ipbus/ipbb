@@ -19,7 +19,7 @@ from texttable import Texttable
 
 
 # ------------------------------------------------------------------------------
-@click.command('init', short_help="Initialises a new working area.")
+@click.command('init', short_help="Initialise a new working area.")
 @click.argument('workarea')
 @click.pass_obj
 def init(env, workarea):
@@ -45,7 +45,7 @@ def init(env, workarea):
 
 
 # ------------------------------------------------------------------------------
-@click.group('add', short_help="Add a new source package.")
+@click.group('add', short_help="Add new source packages.")
 @click.pass_obj
 def add(env):
     '''Add a new package to the source area'''
@@ -58,7 +58,7 @@ def add(env):
 
 
 # ------------------------------------------------------------------------------
-@add.command('git', short_help="Add a new source package from a git repository")
+@add.command('git', short_help="Add new source package from a git repository")
 @click.argument('repo')
 @click.option('-b', '--branch', default=None, help='Git branch or tag to clone')
 @click.option('-d', '--dest', default=None, help="Destination directory")
@@ -76,10 +76,43 @@ def git(env, repo, branch, dest):
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
     lRepoLocalPath = join(env.workPath, kSourceDir, lRepoName)
 
+    # Check for 
     if exists(lRepoLocalPath):
         raise click.ClickException(
-            'Repository already exists \'%s\'' % lRepoLocalPath)
+            'Repository already exists \'%s\'' % lRepoLocalPath
+            )
 
+    lLsRemote = sh.git('ls-remote', repo, branch)
+    lRemoteRefs = [ line.strip().split('\t') for line in lLsRemote.split('\n') if line]
+
+    # Handle unexpected cases
+    # No references
+    if not lRemoteRefs:
+        raise click.ClickException(
+            'No references matching \'{}\' found'.format(branch)
+            )
+    # Multiple references
+    elif len(lRemoteRefs) > 1:
+        raise click.ClickException(
+            'Found {} references matching \'{}\''.format(len(lRemoteRefs), branch)
+            )
+
+    lRef, lRefName = lRemoteRefs[0]
+
+    # It's either a branch (i.e. head)
+    if lRefName.startswith('refs/heads/'):
+        lRefKind = 'branch'
+    # Or a tag
+    elif lRefName.startswith('refs/tags/'):
+        lRefKind = 'tag'
+    # Or something alien
+    else:
+        raise click.ClickException(
+            '{} is neither a branch nor a tag: {}'.format(len(branch), lRefName)
+            )
+
+    # All good, go ahead with cloning
+    echo("{} {} resolved as reference {}".format(lRefKind, style(branch, fg='blue'), lRefName))
     lArgs = ['clone', repo]
 
     if dest is not None:
@@ -88,21 +121,16 @@ def git(env, repo, branch, dest):
     sh.git(*lArgs, _out=sys.stdout, _cwd=env.src)
 
     if branch is not None:
-        # Ensure that the requested branch/tag exists
-        # TODO use the output value
-        lBranch = sh.git('branch', '--list', branch, _cwd=lRepoLocalPath)
-        lTag = sh.git('tag', '--list', branch, _cwd=lRepoLocalPath)
-
-        if not ( lBranch or lTag):
-            raise click.ClickException("Branch/Tag "+branch+" does not exist")
 
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+
+    secho('Repository \'{}\' successfully cloned to\n{}'.format(lRepoName, join(env.src,lRepoName)), fg='green')
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-@add.command('svn', short_help="Add a new source package from a svn repository.")
+@add.command('svn', short_help="Add new source package from a svn repository.")
 @click.argument('repo')
 @click.option('-d', '--dest', default=None, help='Destination folder')
 @click.option('-r', '--rev', type=click.INT, default=None, help='SVN revision')
@@ -184,7 +212,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
 
 # ------------------------------------------------------------------------------
-@add.command('tar', short_help="Add a new source package from tarball.")
+@add.command('tar', short_help="Add new source package from tarball.")
 @click.argument('repo')
 @click.option('-d', '--dest', default=None, help='Destination folder')
 @click.option('-s', '--strip', type=int, default=None, help='Strip <n> level of directories when unpacking.')

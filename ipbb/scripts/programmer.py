@@ -41,7 +41,7 @@ def vivado(ctx):
     pass
 
 # ------------------------------------------------------------------------------
-@vivado.command('vivado', short_help="Vivado programmer interface.")
+@vivado.command('list', short_help="Vivado programmer interface.")
 @click.option('-v/-q', default=False)
 def list(v):
     lVivado = autodetectVivadoVariant()

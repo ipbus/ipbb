@@ -13,7 +13,7 @@ from .tools import DirSentry
 from ..tools.common import which
 
 # ------------------------------------------------------------------------------
-@click.command()
+@click.command('cleanup', short_help="Clean up the project directory. Delete all files and folders.")
 @click.pass_obj
 def cleanup(env):
 
@@ -34,7 +34,7 @@ def cleanup(env):
 
 
 # ------------------------------------------------------------------------------
-@click.command()
+@click.command('addrtab', short_help="Gather address table files.")
 @click.pass_obj
 @click.option('-o', '--output', default='addrtab')
 def addrtab(env, output):
@@ -54,7 +54,7 @@ def addrtab(env, output):
 
 
 # ------------------------------------------------------------------------------
-@click.command()
+@click.command('gendecoders', short_help='Generate or update the ipbus address decoders references by dep files.')
 @click.pass_context
 def gendecoders(ctx):
 

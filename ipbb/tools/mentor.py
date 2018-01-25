@@ -10,6 +10,7 @@ import re
 import collections
 import os
 import atexit
+import sh
 
 # Elements
 from os.path import join, split, exists, splitext
@@ -31,16 +32,18 @@ def autodetect( executable = _vcom ):
         raise ModelNotSimFoundError(
             "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % executable)
 
-    lVsim = subprocess.Popen([executable, '-version'],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    lOut, lErr = lVsim.communicate()
+    # lVsim = subprocess.Popen([executable, '-version'],
+    #                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # lOut, lErr = lVsim.communicate()
 
-    if lVsim.returncode != 0:
-        raise RuntimeError("Failed to execute %s" % executable)
+    # if lVsim.returncode != 0:
+    #     raise RuntimeError("Failed to execute %s" % executable)
 
-    if 'modelsim' in lOut.lower():
+    lVersion = sh.vsim('-version')
+
+    if 'modelsim' in lVersion.lower():
         return 'ModelSim'
-    elif 'questa' in lOut.lower():
+    elif 'questa' in lVersion.lower():
         return 'QuestaSim'
     else:
         raise RuntimeError("Failed to detect ModelSim/QuestaSim variant")

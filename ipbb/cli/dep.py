@@ -48,7 +48,7 @@ def dep(ctx, proj):
 def report(env, filters):
     '''Summarise the dependency tree of the current project'''
 
-    lCmdHeaders = ['path', 'flags', 'package', 'component']
+    lCmdHeaders = ['path', 'flags', 'package', 'component', 'map', 'lib']
     
     lFilterFormat = re.compile('([^=]*)=(.*)')
     lFilterFormatErrors = []
@@ -101,41 +101,22 @@ def report(env, filters):
                 relpath(lCmd.FilePath, env.workPath),
                 ','.join(lCmd.flags()),
                 lCmd.Package,
-                lCmd.Component
+                lCmd.Component,
+                lCmd.Map,
+                lCmd.Lib,
+
             ]
 
             if lFilters and not all([ rxp.match(lRow[i]) for i,rxp in lFilters ]):
                 continue
                 
-            lCmdTable.add_row(lRow)
-            # lCmdTable.add_row([
-            #     relpath(lCmd.FilePath, env.workPath),
-            #     ','.join(lCmd.flags()),
-            #     lCmd.Package,
-            #     lCmd.Component
-            # ])
-            
+            lCmdTable.add_row(lRow)           
 
         echo(lPrepend.sub('\g<1>  ',lCmdTable.draw()))
         echo()
 
-
-    # lCmdTable.add_row(["Work path", env.workPath])
-    # if env.projectPath:
-    #     lCmdTable.add_row(["Project path", env.projectPath])
-    # echo(lCmdTable.draw())
-
     string = ''
-    #  self.__repr__() + '\n'
-    # string += '+------------+\n'
-    # string += '|  Commands  |\n'
-    # string += '+------------+\n'
-    # for k in lParser.CommandList:
-    #     string += '+ %s (%d)\n' % (k, len(lParser.CommandList[k]))
-    #     for lCmd in lParser.CommandList[k]:
-    #         string += '  * ' + str(lCmd) + '\n'
 
-    # string += '\n'
     string += '+----------------------------------+\n'
     string += '|  Resolved packages & components  |\n'
     string += '+----------------------------------+\n'
@@ -169,31 +150,29 @@ def report(env, filters):
         # ------
 
         # ------
-        lFNF = lParser.FilesNotFound
-        if lFNF:
-            string += 'missing files:\n'
-
-            for pkg in sorted(lFNF):
-                lCmps = lFNF[pkg]
-                string += '+ %s (%d components)\n' % (pkg, len(lCmps))
-
-                for cmp in sorted(lCmps):
-                    lFiles = lCmps[cmp]
-                    string += '  + %s (%d files)\n' % (cmp, len(lFiles))
-
-                    lCmpPath = lParser.Pathmaker.getPath(pkg, cmp)
-                    for lFile in sorted(lFiles):
-                        lSrcs = lFiles[lFile]
-                        string += '    + %s\n' % os.path.relpath(
-                            lFile, lCmpPath)
-                        string += '      | included by %d dep file(s)\n' % len(
-                            lSrcs)
-
-                        for lSrc in lSrcs:
-                            string += '      \ - %s\n' % os.path.relpath(
-                                lSrc, lParser.Pathmaker.rootdir)
-                        string += '\n'
     echo(string)
+        
+    lFNF = lParser.FilesNotFound
+
+    if lFNF:
+
+        lFNFTable = Texttable(max_width=0)
+        lFNFTable.header(['path expression','package','component','included by'])
+        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+
+        for pkg in sorted(lFNF):
+            lCmps = lFNF[pkg]
+            for cmp in sorted(lCmps):
+                lPathExps = lCmps[cmp]
+                for pathexp in sorted(lPathExps):
+
+                    lFNFTable.add_row([
+                        relpath(pathexp, env.workPath),
+                        pkg,
+                        cmp,
+                        '\n'.join([relpath(src, env.workPath) for src in lPathExps[pathexp]]),
+                        ])
+        echo(lPrepend.sub('\g<1>  ',lFNFTable.draw()))
 # ------------------------------------------------------------------------------
 
 

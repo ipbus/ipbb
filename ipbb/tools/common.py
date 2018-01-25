@@ -21,6 +21,17 @@ def which(aExecutable):
 
 
 # ------------------------------------------------------------------------------
+def mkdir(path, mode=0777):
+    try:
+        os.makedirs(path,mode)
+    except OSError:
+        if os.path.exists(path) and os.path.isdir(path):
+            pass
+        return
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 # TODO: turn it into a class?
 # Use 'sh' instead?
 def do(aCmdList):
@@ -35,24 +46,24 @@ def do(aCmdList):
 
 
 # ------------------------------------------------------------------------------
-def ensuresudo():
-    import getpass
-    lPrompt = '> '
+# def ensuresudo():
+#     import getpass
+#     lPrompt = '> '
 
-    # , logfile = sys.stdout)
-    p = pexpect.spawn('sudo -p "{0}" whoami'.format(lPrompt))
-    lIndex = p.expect([pexpect.EOF, lPrompt])
+#     # , logfile = sys.stdout)
+#     p = pexpect.spawn('sudo -p "{0}" whoami'.format(lPrompt))
+#     lIndex = p.expect([pexpect.EOF, lPrompt])
 
-    # I have sudo powers, therefore I return
-    while lIndex != 0:
-        lPwd = getpass.getpass(
-            'Please insert password for user {0}: '.format(os.getlogin()))
-        p.sendline(lPwd)
-        lIndex = p.expect([pexpect.EOF, lPrompt])
-        if lIndex == 0:
-            break
+#     # I have sudo powers, therefore I return
+#     while lIndex != 0:
+#         lPwd = getpass.getpass(
+#             'Please insert password for user {0}: '.format(os.getlogin()))
+#         p.sendline(lPwd)
+#         lIndex = p.expect([pexpect.EOF, lPrompt])
+#         if lIndex == 0:
+#             break
 
-    return p.exitstatus
+#     return p.exitstatus
 # ------------------------------------------------------------------------------
 
 

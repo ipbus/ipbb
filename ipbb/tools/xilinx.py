@@ -79,7 +79,7 @@ class VivadoBatch(object):
         # Guard against missing vivado executable
         if not which('vivado'):
             raise VivadoNotFoundError(
-                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script')
+                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?')
 
         cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(
             self._script, self._log)
@@ -124,8 +124,12 @@ class VivadoConsole(object):
 
     __reCharBackspace = re.compile(".\b")
     __reError = re.compile('^ERROR:')
+    __reCriticalWarning = re.compile('^CRITICAL WARNING:')
     __instances = set()
-
+    __promptMap = {
+        'vivado': 'Vivado%[ \t]',
+        'vivado_lab': 'vivado_lab%[ \t]'
+    }
     # --------------------------------------------------------------
     @classmethod
     def killAllInstances(cls):
@@ -135,25 +139,39 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echoprefix=None):
+    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None):
         super(VivadoConsole, self).__init__()
 
-        if not which('vivado'):
-            raise VivadoNotFoundError(
-                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script')
-
+        # Set up logger first
         self._log = logging.getLogger('Vivado')
         self._log.debug('Starting Vivado')
 
-        self._out = OutputFormatter(echoprefix if echoprefix or (
-            sessionid is None) else sessionid + ' | ')
+        # define what executable to run
+        self._executable=executable
+        if not which(self._executable):
+            raise VivadoNotFoundError(self._executable+" not found in PATH. Have you sourced Vivado\'s setup script?")
 
-        self._prompt = 'Vivado%[ \t]'
-        self._process = pexpect.spawn('vivado -mode tcl -log {0}.log -journal {0}.jou'.format(
-            'vivado' + ('_' + sessionid) if sessionid else ''))
+        # Define the prompt to use
+        if prompt is None:
+            # set prompt pattern based on sim variant
+            self._prompt = self.__promptMap[executable]
+        else:
+            self._prompt = prompt
 
-        # Echo to OutputFormatter object
-        self._process.logfile = self._out
+        # Set up the output formatter
+        self._out = OutputFormatter(
+            echoprefix if ( echoprefix or (sessionid is None) ) 
+                else (sessionid + ' | '),
+            quiet = (not echo)
+        )
+
+        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+            self._executable,
+            self._executable + ('_' + sessionid) if sessionid else ''),
+            echo = echo,
+            logfile = self._out
+        )
+
         self._process.delaybeforesend = 0.00  # 1
 
         # Wait for vivado to wake up
@@ -212,10 +230,12 @@ class VivadoConsole(object):
     def __expectPrompt(self, aMaxLen=100):
         # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
         lCpl = self._process.compile_pattern_list(
-            ['\r\n', self._prompt, pexpect.TIMEOUT])
+            ['\r\n', self._prompt, pexpect.TIMEOUT]
+        )
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []
+        lCriticalWarnings = []
 
         # --------------------------------------------------------------
         lTimeoutCounts = 0
@@ -239,9 +259,13 @@ class VivadoConsole(object):
 
             if self.__reError.match(self._process.before):
                 lErrors.append(self._process.before)
+
+            if self.__reCriticalWarning.match(self._process.before):
+                lCriticalWarnings.append(self._process.before)
+                
         # --------------------------------------------------------------
 
-        return lBuffer, (lErrors if lErrors else None)
+        return lBuffer, lErrors, lCriticalWarnings
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -291,9 +315,15 @@ class VivadoConsole(object):
             raise ValueError('format error. Newline not allowed in commands')
 
         self.__send(aCmd)
-        lBuffer, lErrors = self.__expectPrompt(aMaxLen)
-        if lErrors is not None:
+        lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
+
+        # Print critical warnings if any
+        # for lWarning in lCriticalWarnings:
+            # secho(lWarning, fg='yellow')                
+        
+        if lErrors:
             raise VivadoConsoleError(lErrors, aCmd)
+            
         return list(lBuffer)
     # --------------------------------------------------------------
 
@@ -314,8 +344,11 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def connect(self, uri):
-        return self.execute('connect_hw_server -url %s' % uri)
+    def connect(self, uri=None):
+        lCmd = ['connect_hw_server']
+        if uri is not None:
+            lCmd += ['-url '+uri]
+        return self.execute(' '.join(lCmd))
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -328,6 +361,12 @@ class VivadoConsole(object):
         return self.execute('open_hw_target {{{0}}}'.format(target))
     # --------------------------------------------------------------
 
+    # --------------------------------------------------------------
+    def closeHwTarget(self, target=None):
+        lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
+        return self.execute(lCmd)
+    # --------------------------------------------------------------
+    
     # --------------------------------------------------------------
     def getHwDevices(self):
         return self.execute('get_hw_devices')[0].split()
@@ -343,10 +382,12 @@ class VivadoConsole(object):
 
         self.execute('current_hw_device {0}'.format(device))
         self.execute(
-            'refresh_hw_device -update_hw_probes false [current_hw_device]')
+            'refresh_hw_device -update_hw_probes false [current_hw_device]'
+        )
         self.execute('set_property PROBES.FILE {{}} [current_hw_device]')
         self.execute(
-            'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath))
+            'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath)
+        )
         self.execute('program_hw_devices [current_hw_device]')
     # --------------------------------------------------------------
 # -------------------------------------------------------------------------
@@ -357,18 +398,18 @@ class VivadoOpen(object):
     """docstring for VivadoOpen"""
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echoprefix=None):
+    def __init__(self, *args, **kwargs):
         super(VivadoOpen, self).__init__()
-        self._echoprefix = echoprefix
-        self._sessionid = sessionid
+        self._args = args
+        self._kwargs = kwargs
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __enter__(self):
-        self._console = VivadoConsole(self._sessionid, self._echoprefix)
+        self._console = VivadoConsole(*self._args, **self._kwargs)
         return self
     # --------------------------------------------------------------
-
+    
     # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
         self._console.quit()

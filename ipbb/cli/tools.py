@@ -1,7 +1,9 @@
 from __future__ import print_function
 # ------------------------------------------------------------------------------
+
 import os
 
+from click import secho, confirm, get_current_context
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -33,4 +35,21 @@ def findFileInParents(aAreaFileName):
         lPath, _ = os.path.split(lPath)
 
     return None
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
+
+    if not aDepFileParser.NotFound:
+        return
+
+    lRootName = get_current_context().find_root().info_name
+    secho("ERROR: Project '{}' contains unresolved dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
+        aCurrentProj,
+        len(aDepFileParser.NotFound),
+        ("" if len(aDepFileParser.NotFound) == 1 else "s"),
+        lRootName,
+    ), fg='red')
+    confirm("Do you want to continue anyway?", abort=True)
 # ------------------------------------------------------------------------------

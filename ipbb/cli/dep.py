@@ -1,4 +1,5 @@
 from __future__ import print_function
+# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -8,10 +9,14 @@ import hashlib
 import collections
 import contextlib
 import tempfile
+import sys
+import re
 
-from os.path import join, split, exists, basename, abspath, splitext
+from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from ..tools.common import which, SmartOpen
-from .common import DirSentry
+from .tools import DirSentry
+from click import echo, secho, style, confirm
+from texttable import Texttable
 
 
 # ------------------------------------------------------------------------------
@@ -19,25 +24,155 @@ from .common import DirSentry
 @click.pass_context
 @click.option('-p', '--proj', default=None)
 def dep(ctx, proj):
+    '''Dependencies command group'''
 
-    if proj is None:
+    env = ctx.obj
+
+    lProj = proj if proj is not None else env.project
+    if lProj is not None:
+        # Change directory before executing subcommand
+        from .proj import cd
+        ctx.invoke(cd, projname=lProj)
         return
+    else:
+        if env.project is None:
+            raise click.ClickException('Project area not defined. Move into a project area and try again')
 
-    # Change directory before executing subcommand
-    from .proj import cd
-    ctx.invoke(cd, projname=proj)
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 @dep.command()
-@click.option('-o', '--output', default=None)
 @click.pass_obj
-def report(env, output):
-    '''Print the '''
+@click.option('-f', '--filter', 'filters', multiple=True)
+def report(env, filters):
+    '''Summarise the dependency tree of the current project'''
 
-    with SmartOpen(output) as lWriter:
-        lWriter(str(env.depParser))
+    lCmdHeaders = ['path', 'flags', 'package', 'component', 'map', 'lib']
+    
+    lFilterFormat = re.compile('([^=]*)=(.*)')
+    lFilterFormatErrors = []
+    lFilters = []
+
+    # print ( filters )
+    
+    for f in filters:
+        m = lFilterFormat.match(f)
+        if not m:
+            lFilterFormatErrors.append(f)
+        # print (m.group(1))
+
+        try:
+            i = lCmdHeaders.index(m.group(1))
+            r = re.compile(m.group(2))
+            lFilters.append( (i, r) )
+        except RuntimeError as e:
+            lFilterFormatErrors.append(f)
+
+    if lFilterFormatErrors:
+        raise click.ClickException("Filter syntax errors: "+' '.join(['\''+e+'\'' for e in lFilterFormatErrors]))
+    # return
+    lParser = env.depParser
+
+    # lTitle = Texttable(max_width=0)
+    # lTitle.header(['Commands'])
+    # lTitle.set_chars(['-', '|', '+', '-'])
+    # lTitle.set_deco(Texttable.BORDER)
+    # secho(lTitle.draw(), fg='blue')
+
+    echo()
+    secho('* Parsed commands', fg='blue')
+
+    lPrepend = re.compile('(^|\n)')
+    for k in lParser.CommandList:
+        echo( '  + {0} ({1})' .format(k, len(lParser.CommandList[k])) )
+        if not lParser.CommandList[k]:
+            echo()
+            continue
+
+        lCmdTable = Texttable(max_width=0)
+        lCmdTable.header(lCmdHeaders)
+        lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lCmdTable.set_chars(['-', '|', '+', '-'])
+        for lCmd in lParser.CommandList[k]:
+            # print(lCmd)
+            # lCmdTable.add_row([str(lCmd)])
+            lRow = [
+                relpath(lCmd.FilePath, env.workPath),
+                ','.join(lCmd.flags()),
+                lCmd.Package,
+                lCmd.Component,
+                lCmd.Map,
+                lCmd.Lib,
+
+            ]
+
+            if lFilters and not all([ rxp.match(lRow[i]) for i,rxp in lFilters ]):
+                continue
+                
+            lCmdTable.add_row(lRow)           
+
+        echo(lPrepend.sub('\g<1>  ',lCmdTable.draw()))
+        echo()
+
+    string = ''
+
+    string += '+----------------------------------+\n'
+    string += '|  Resolved packages & components  |\n'
+    string += '+----------------------------------+\n'
+    string += 'packages: ' + str(list(lParser.Components.iterkeys())) + '\n'
+    string += 'components:\n'
+    for pkg in sorted(lParser.Components):
+        string += '+ %s (%d)\n' % (pkg, len(lParser.Components[pkg]))
+        for cmp in sorted(lParser.Components[pkg]):
+            string += '  > ' + str(cmp) + '\n'
+
+    if lParser.NotFound:
+        string += '\n'
+        string += '+----------------------------------------+\n'
+        string += '|  Missing packages, components & files  |\n'
+        string += '+----------------------------------------+\n'
+
+        if lParser.PackagesNotFound:
+            string += 'packages: ' + \
+                str(list(lParser.PackagesNotFound)) + '\n'
+
+        # ------
+        lCNF = lParser.ComponentsNotFound
+        if lCNF:
+            string += 'components: \n'
+
+            for pkg in sorted(lCNF):
+                string += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
+
+                for cmp in sorted(lCNF[pkg]):
+                    string += '  > ' + str(cmp) + '\n'
+        # ------
+
+        # ------
+    echo(string)
+        
+    lFNF = lParser.FilesNotFound
+
+    if lFNF:
+
+        lFNFTable = Texttable(max_width=0)
+        lFNFTable.header(['path expression','package','component','included by'])
+        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+
+        for pkg in sorted(lFNF):
+            lCmps = lFNF[pkg]
+            for cmp in sorted(lCmps):
+                lPathExps = lCmps[cmp]
+                for pathexp in sorted(lPathExps):
+
+                    lFNFTable.add_row([
+                        relpath(pathexp, env.workPath),
+                        pkg,
+                        cmp,
+                        '\n'.join([relpath(src, env.workPath) for src in lPathExps[pathexp]]),
+                        ])
+        echo(lPrepend.sub('\g<1>  ',lFNFTable.draw()))
 # ------------------------------------------------------------------------------
 
 
@@ -53,27 +188,6 @@ def ls(env, group, output):
         for addrtab in env.depParser.CommandList[group]:
             lWriter(addrtab.FilePath)
 # ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-@dep.command()
-@click.pass_obj
-@click.option('-o', '--output', default='addrtab')
-def addrtab(env, output):
-    '''Copy address table files into addrtab subfolder'''
-
-    try:
-        os.mkdir(output)
-    except OSError:
-        pass
-
-    import sh
-    for addrtab in env.depParser.CommandList["addrtab"]:
-        print(sh.cp('-av', addrtab.FilePath,
-                    join(output, basename(addrtab.FilePath))
-                    ))
-# ------------------------------------------------------------------------------
-
 
 # ------------------------------------------------------------------------------
 @dep.command()
@@ -116,75 +230,6 @@ def set_env(**environ):
     finally:
         os.environ.clear()
         os.environ.update(lOldEnviron)
-
-
-# ----
-@dep.command()
-@click.pass_context
-def generate(ctx):
-
-    lDecodersDir = 'decoders'
-    # Extract context
-    env = ctx.obj
-
-    with DirSentry(env.projectPath) as lProjDir:
-        sh.rm('-rf', lDecodersDir)
-        # Gather address tables
-        ctx.invoke(addrtab, output=lDecodersDir)
-
-    # ------------------------------------------------------------------------------
-    # TODO: Clean me up
-    lGenScript = 'gen_ipbus_addr_decode'
-    if not which(lGenScript):
-        os.environ['PATH'] = '/opt/cactus/bin/uhal/tools:' + os.environ['PATH']
-        if not which(lGenScript):
-            raise click.ClickException(
-                "'{0}' script not found.".format(lGenScript))
-
-    if '/opt/cactus/lib' not in os.environ['LD_LIBRARY_PATH'].split(':'):
-        os.environ['LD_LIBRARY_PATH'] = '/opt/cactus/lib:' + \
-            os.environ['LD_LIBRARY_PATH']
-    # ------------------------------------------------------------------------------
-
-    lUpdatedDecoders = []
-    lGen = sh.Command(lGenScript)
-    with DirSentry(join(env.projectPath, lDecodersDir)) as lProjDir:
-        for lAddr in env.depParser.CommandList['addrtab']:
-
-            # Interested in top-level address tables only
-            if not lAddr.TopLevel:
-                continue
-
-            # Generate a new decoder file
-            lGen(basename(lAddr.FilePath))
-            lDecoder = 'ipbus_decode_{0}.vhd'.format(
-                splitext(basename(lAddr.FilePath))[0])
-            lTarget = env.pathMaker.getPath(
-                lAddr.Package, lAddr.Component, 'src', lDecoder)
-
-            # Has anything changed?
-            try:
-                sh.diff('-u', '-I', '^-- START automatically', lDecoder, lTarget)
-            except sh.ErrorReturnCode as e:
-                print (e.stdout)
-
-                lUpdatedDecoders.append((lDecoder, lTarget))
-
-        # ------------------------------------------------------------------------------
-        # If no difference between old and newly generated decoders, quit here.
-        if not lUpdatedDecoders:
-            print ('All ipbus decoders are up-to-date')
-            return
-        # ------------------------------------------------------------------------------
-
-        print (
-            'The following decoders have changed:\n' +
-            '\n'.join(map(lambda s: '* ' + s, lUpdatedDecoders))
-        )
-        click.confirm('Do you want to continue?', abort=True)
-        for lDecoder, lTarget in lUpdatedDecoders:
-            print (sh.cp('-av', lDecoder, lTarget))
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------

@@ -3,6 +3,7 @@ import argparse
 import os
 import glob
 from collections import OrderedDict
+from os.path import exists
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -33,6 +34,16 @@ class Command(object):
             self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
         )
 
+    def flags(self):
+        lFlags = []
+        if not self.Include:
+            lFlags.append('noinclude')
+        if self.TopLevel:
+            lFlags.append('top')
+        if self.Vhdl2008:
+            lFlags.append('vhdl2008')
+        return lFlags
+        
     __repr__ = __str__
 
     def __eq__(self, other):
@@ -61,13 +72,21 @@ class ComponentAction(argparse.Action):
         setattr(namespace, self.dest, tuple(lTokenized))
 # ------------------------------------------------------------------------------
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+class DepLineParserError(Exception):
+    pass
+
+
+class DepLineParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise DepLineParserError(message)
+# ------------------------------------------------------------------------------
 
 
 class DepFileParser(object):
     # ----------------------------------------------------------------------------------------------------------------------------
-    # def __init__( self , aCommandLineArgs , aPathmaker, aVariables = {},
-    # aVerbosity = 0 ):
     def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
         # --------------------------------------------------------------
         # Member variables
@@ -84,6 +103,7 @@ class DepFileParser(object):
         self.Components = OrderedDict()
 
         self.NotFound = list()
+        self.DepMap = {}
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -112,7 +132,7 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set up the parser
-        parser = argparse.ArgumentParser(usage=argparse.SUPPRESS)
+        parser = DepLineParser(usage=argparse.SUPPRESS)
         parser_add = parser.add_subparsers(dest="cmd")
         subp = parser_add.add_parser("include")
         subp.add_argument("-c", "--component", **lCompArgOpts)
@@ -146,7 +166,8 @@ class DepFileParser(object):
     
     # ----------------------------------------------------------------------------------------------------------------------------
     def __str__(self):
-        string = self.__repr__() + '\n'
+        string = ''
+        #  self.__repr__() + '\n'
         string += '+------------+\n'
         string += '|  Commands  |\n'
         string += '+------------+\n'
@@ -154,7 +175,6 @@ class DepFileParser(object):
             string += '+ %s (%d)\n' % (k, len(self.CommandList[k]))
             for lCmd in self.CommandList[k]:
                 string += '  * ' + str(lCmd) + '\n'
-            # print(c,self.CommandList[c])
 
         string += '\n'
         string += '+----------------------------------+\n'
@@ -295,8 +315,14 @@ class DepFileParser(object):
             aPackage, aComponent, 'include', aDepFileName)
         # --------------------------------------------------------------
 
+
+        if not exists(lDepFilePath):
+            self.NotFound.append(
+                (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
+            raise IOError("File "+lDepFilePath+" does not exist")
+
         with open(lDepFilePath) as lDepFile:
-            for lLine in lDepFile:
+            for lLineNum, lLine in enumerate(lDepFile):
 
                 lLine = lLine.strip()
                 # --------------------------------------------------------------
@@ -357,7 +383,13 @@ class DepFileParser(object):
 
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
-                lParsedLine = self.parseLine(lLine.split())
+                try:
+                    lParsedLine = self.parseLine(lLine.split())
+                except DepLineParserError as e:
+                    lMsg = "Error caught while parsine line {0} in file {1}".format(lLineNum,lDepFilePath) + "\n"
+                    lMsg += "Details - " + e.message + ": '" + lLine + "'"
+                    raise RuntimeError(lMsg)
+
                 if self._verbosity > 1:
                     print(' ' * self._depth, '- Parsed line', vars(lParsedLine))
                 # --------------------------------------------------------------
@@ -470,6 +502,8 @@ class DepFileParser(object):
                             self.CommandList[lParsedLine.cmd].append(Command(
                                 lFilePath, lPackage, lComponent, lMap, lInclude, lInclude, lTopLevel, lVhdl2008
                             ))
+
+                            self.DepMap.setdefault(lFilePath, []).append(lDepFilePath)
                         # --------------------------------------------------------------
         # --------------------------------------------------------------
 

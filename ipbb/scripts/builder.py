@@ -1,12 +1,14 @@
-#!/usr/bin/env python
 from __future__ import print_function
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
 import click
+import click_didyoumean
+
 import ipbb
 import sys
+import traceback
 
 from texttable import Texttable
 
@@ -23,15 +25,19 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 #     context_settings=CONTEXT_SETTINGS
 # )
 @click.group(
+    cls=click_didyoumean.DYMGroup,
     context_settings=CONTEXT_SETTINGS,
 )
 @click.pass_context
 def cli(ctx):
-    ctx.obj = ipbb.commands.Environment()
+
+    from ..cli import Environment
+    # Manually add the Environment to the top-level context.
+    ctx.obj = Environment()
 
     # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
-    if not ctx.protected_args and not ctx.invoked_subcommand:
-        print (ctx.obj)
+    # if not ctx.protected_args and not ctx.invoked_subcommand:
+        # print (ctx.obj)
 # ------------------------------------------------------------------------------
 
 
@@ -40,11 +46,12 @@ def cli(ctx):
 @click.option('-v', '--verbose', count=True, help='arse')
 @click.pass_obj
 def info(env, verbose):
+    '''Print a brief report about the current working area'''
 
     from click import echo, style, secho
 
     if not env.workPath:
-        secho  ( 'No ipbb work area detected', fg='red' )
+        secho  ( 'ERROR: No ipbb work area detected', fg='red' )
         return
 
     echo  ( )
@@ -59,9 +66,6 @@ def info(env, verbose):
     if not env.projectPath:
         echo  ( )
         secho ( "Firmware packages", fg='blue' )
-        # echo  ( "---------------")
-        # for s in env.getSources():
-        #     echo ( "  - " + s )
         lSrcTable = Texttable()
         for lSrc in env.getSources():
             lSrcTable.add_row([lSrc])
@@ -69,10 +73,6 @@ def info(env, verbose):
 
         echo  ( )
         secho ( "Projects", fg='blue' )
-        # echo  ( "--------")
-        # for p in env.getProjects():
-        #     echo ( "  - " + p )
-        # echo  ( )
         lProjTable = Texttable()
         for lProj in env.getProjects():
             lProjTable.add_row([lProj])
@@ -128,7 +128,7 @@ def info(env, verbose):
 
 
 # ------------------------------------------------------------------------------
-if __name__ == '__main__':
+def main():
     '''Discovers the env at startup'''
 
     if sys.version_info[0:2] < (2, 6):
@@ -136,24 +136,54 @@ if __name__ == '__main__':
         raise SystemExit(-1)
     elif sys.version_info[0:2] == (2, 6):
         click.secho("Warning: IPBB prefers python 2.7. python 2.6 will be deprecated soon.", fg='yellow')
-        
-    # Add custom commands to shell
-    import ipbb.commands.repo as repo
-    cli.add_command(repo.init)
-    cli.add_command(repo.cd)
-    cli.add_command(repo.add)
 
-    import ipbb.commands.proj as proj
+    # Add custom cli to shell
+    from ..cli import repo
+    cli.add_command(repo.init)
+    # cli.add_command(repo.cd)
+    cli.add_command(repo.add)
+    cli.add_command(repo.srcstat)
+    cli.add_command(repo.srcfind)
+
+    from ..cli import proj
     cli.add_command(proj.proj)
 
-    import ipbb.commands.dep as dep
+    from ..cli import dep
     cli.add_command(dep.dep)
 
-    import ipbb.commands.vivado as vivado
+
+    from ..cli import common
+
+    from ..cli import vivado
+    vivado.vivado.add_command(common.cleanup)
+    vivado.vivado.add_command(common.addrtab)
+    vivado.vivado.add_command(common.gendecoders)
     cli.add_command(vivado.vivado)
 
-    import ipbb.commands.sim as sim
+    from ..cli import sim
+    sim.sim.add_command(common.cleanup)
+    sim.sim.add_command(common.addrtab)
+    sim.sim.add_command(common.gendecoders)
     cli.add_command(sim.sim)
 
-    cli()
+    from ..cli import debug
+    cli.add_command(debug.debug)
+    
+    try:
+        cli()
+    except Exception as e:
+        hline = '-'*80
+        click.echo()
+        click.secho(hline, fg='red')
+        click.secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
+        click.secho(e.message, fg='red')
+        click.secho(hline, fg='red')
+        import StringIO
+        lTrace = StringIO.StringIO()
+        traceback.print_exc(file=lTrace)
+        print (lTrace.getvalue())
+        # Do something with lTrace
+        raise SystemExit(-1)
 # ------------------------------------------------------------------------------
+
+

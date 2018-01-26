@@ -3,7 +3,7 @@ from __future__ import print_function
 # Import click for ansi colors
 import click
 
-from . import common
+from .tools import findFileInParents
 from os import walk
 from os.path import join, split, exists, splitext, basename
 from ..depparser.Pathmaker import Pathmaker
@@ -48,7 +48,7 @@ class Environment(object):
 
         self._clear()
 
-        lWorkAreaPath = common.findFileInParents(kWorkAreaCfgFile)
+        lWorkAreaPath = findFileInParents(kWorkAreaCfgFile)
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
@@ -57,7 +57,7 @@ class Environment(object):
         self.workPath, self.workCfgFile = split(lWorkAreaPath)
         self.pathMaker = Pathmaker(self.src, self._verbosity)
 
-        lProjectPath = common.findFileInParents(kProjAreaCfgFile)
+        lProjectPath = findFileInParents(kProjAreaCfgFile)
 
         # Stop here if no project file is found
         if not lProjectPath:
@@ -76,11 +76,15 @@ class Environment(object):
             self.pathMaker,
             aVerbosity=self._verbosity
         )
-        self.depParser.parse(
-            self.projectConfig['topPkg'],
-            self.projectConfig['topCmp'],
-            self.projectConfig['topDep']
-        )
+
+        try:
+            self.depParser.parse(
+                self.projectConfig['topPkg'],
+                self.projectConfig['topCmp'],
+                self.projectConfig['topDep']
+            )
+        except IOError as e:
+            pass
     # ----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
@@ -120,3 +124,4 @@ class Environment(object):
     # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
+

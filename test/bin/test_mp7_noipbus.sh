@@ -5,10 +5,7 @@ set -e
 
 ipbb init mp7_noipbus
 cd mp7_noipbus
-ipbb add git git@github.com:ipbus/ipbus-firmware.git -b prep-v2
-
-
-
+ipbb add git git@github.com:ipbus/ipbus-firmware.git
 ipbb add git ssh://git@gitlab.cern.ch:7999/thea/mp7.git -b standalone
 
 ipbb proj create vivado mp7xe_690_minimal mp7:projects/examples/mp7xe_690_minimal
@@ -17,7 +14,6 @@ cd proj/mp7xe_690_minimal
 
 ipbb vivado project
 ipbb vivado synth impl bitfile
-
 
 
 # if [[ "$#" -ne 1 ]]; then
@@ -34,7 +30,7 @@ ipbb vivado synth impl bitfile
 
 
 
-# ipbb add svn svn+ssh://${CACTUS_USER}@svn.cern.ch/reps/cactus/trunk/cactusupgrades -s boards/mp7 -s components -s projects/examples
+# ipbb add svn svn+ssh://${CACTUS_USER}@svn.cern.ch/reps/cactus/trunk/cactusupgrades -s boards/mp7 -s components -s projects/examples -d mp7
 
 # MP7_REPO_NAME="mp7"
 

@@ -80,9 +80,5 @@ set_property "target_language" "VHDL" $obj
                         )
         write('set_property top top [get_filesets sim_1]')
         write('export_simulation -force -simulator {} -directory {} -lib_map_path $xlib_path'.format(self.simulator, self.exportdir))
-        # write('cd {}'.format(os.path.join(os.getcwd(),'export_sim',self.simulator)))
-        # write('exec vsim -c -do compile.do -modelsimini modelsim.ini -do exit')
-        # 
-        aTarget.flush()
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

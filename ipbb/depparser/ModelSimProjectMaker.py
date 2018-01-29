@@ -44,7 +44,7 @@ class ModelSimProjectMaker(object):
             write('vmap {0} {1}'.format(ma[0], ma[1]))
             write('vcom -work {0} -refresh -force_refresh'.format(ma[0]))
 
-        cmdmap = {}
+        lCommandGroups = {}
         # ----------------------------------------------------------
         for src in reversed(aCommandList['src']):
 
@@ -112,17 +112,15 @@ class ModelSimProjectMaker(object):
 
             if self.turbo:
             # In turbo mode group compilation commands together
-                cmdmap.setdefault(cmd, []).append(file)
+                lCommandGroups.setdefault(cmd, []).append(file)
             else:
                 # execute them immediately when torbo is disabled instead
                 write('{0} {1}'.format(cmd, file))
             # ----------------------------------------------------------
 
         if self.turbo:
-            for cmd, files in cmdmap.iteritems():
+            for cmd, files in lCommandGroups.iteritems():
                 write('{0} {1}'.format(cmd, ' '.join(files)))
-
-        aTarget.flush()
 # --------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

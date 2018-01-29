@@ -12,12 +12,11 @@ import shutil
 import tempfile
 import getpass
 
-import ipbb.tools.mentor as mentor
-
 # Elements
 from os.path import join, split, exists, splitext, basename, dirname, abspath, expandvars
 from click import echo, secho, style
 from ..tools.common import which, mkdir, SmartOpen
+from ..tools.mentor import autodetect
 from .tools import DirSentry, ensureNoMissingFiles
 
 
@@ -50,7 +49,7 @@ def sim(ctx, proj):
 # ------------------------------------------------------------------------------
 @sim.command('ipcores', short_help="Generate vivado sim cores for the current design.")
 @click.option('-o', '--output', default=None)
-@click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Library target directory', show_default=True)
+@click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory', show_default=True)
 @click.pass_obj
 def ipcores(env, output, xilinx_simpath):
     '''
@@ -116,11 +115,14 @@ def ipcores(env, output, xilinx_simpath):
 
     from ..depparser.IPCoresSimMaker import IPCoresSimMaker
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lWriter = IPCoresSimMaker(env.pathMaker, lSimlibPath, lSimVariant, lSimulator, kIPExportDir)
+    lIPCoreSimMaker = IPCoresSimMaker(env.pathMaker, lSimlibPath, lSimVariant, lSimulator, kIPExportDir)
 
     from ..tools.xilinx import VivadoOpen
-    with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
-        lWriter.write(
+    with (
+        VivadoOpen(lSessionId) if not output 
+        else SmartOpen(output if output != 'stdout' else None)
+    ) as lTarget:
+        lIPCoreSimMaker.write(
             lTarget,
             lDepFileParser.ScriptVariables,
             lDepFileParser.Components,

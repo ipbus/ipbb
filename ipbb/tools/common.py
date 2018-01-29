@@ -34,6 +34,7 @@ def mkdir(path, mode=0777):
 # ------------------------------------------------------------------------------
 class SmartOpen(object):
 
+    #--------------------------------------------
     def __init__(self, aTarget):
         if isinstance(aTarget, basestring):
             self.target = open(aTarget, 'w')
@@ -41,29 +42,35 @@ class SmartOpen(object):
             self.target = sys.stdout
         else:
             self.target = aTarget
+    #--------------------------------------------
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-
-
-        if self.target is not sys.stdout:
-            self.target.close()
-
-    def __call__(self, *strings):
-        self.target.write(' '.join(strings))
-        self.target.write("\n")
-
-    def flush(self):
-        self.target.flush()
-
+    #--------------------------------------------
     @property
     def path(self):
         if self.target is not sys.stdout:
             return self.target.name
         else:
             return None
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __enter__(self):
+        return self
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __exit__(self, type, value, traceback):
+        if self.target is not sys.stdout:
+            self.target.close()
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __call__(self, *strings):
+        self.target.write(' '.join(strings))
+        self.target.write("\n")
+        self.target.flush()
+    #--------------------------------------------
+
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------

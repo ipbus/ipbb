@@ -177,12 +177,18 @@ def report(env, filters):
 
 
 # ------------------------------------------------------------------------------
-@dep.command()
+@dep.command('ls', short_help="List project files by group")
 @click.argument('group', type=click.Choice(['setup', 'src', 'addrtab', 'cgpfile']))
-@click.option('-o', '--output', default=None)
+@click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.pass_obj
 def ls(env, group, output):
-    '''List source files'''
+    '''List project files by group
+
+    - setup: Project setup scripts
+    - src: Code files
+    - addrtab: Address tables 
+    - cgpfile: ?
+    '''
 
     with SmartOpen(output) as lWriter:
         for addrtab in env.depParser.CommandList[group]:
@@ -190,12 +196,11 @@ def ls(env, group, output):
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-@dep.command()
-@click.option('-o', '--output', default=None)
+@dep.command('components')
+@click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.pass_obj
 def components(env, output):
 
-    # lDepFileParser, lPathmaker, lCommandLineArgs = makeParser(env)
 
     with SmartOpen(output) as lWriter:
         for lPkt, lCmps in env.depParser.Components.iteritems():
@@ -254,7 +259,7 @@ def hashAndUpdate(aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashl
 
 @dep.command()
 @click.pass_obj
-@click.option('-o', '--output', default=None)
+@click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.option('-v', '--verbose', count=True)
 def hash(env, output, verbose):
 

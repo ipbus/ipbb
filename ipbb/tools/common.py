@@ -32,64 +32,39 @@ def mkdir(path, mode=0777):
 
 
 # ------------------------------------------------------------------------------
-# TODO: turn it into a class?
-# Use 'sh' instead?
-def do(aCmdList):
-
-    if isinstance(aCmdList, str):
-        aCmdList = aCmdList.split('\n')
-
-    for lCmd in aCmdList:
-        print (lCmd)
-        subprocess.check_call(lCmd, shell=True)
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-# def ensuresudo():
-#     import getpass
-#     lPrompt = '> '
-
-#     # , logfile = sys.stdout)
-#     p = pexpect.spawn('sudo -p "{0}" whoami'.format(lPrompt))
-#     lIndex = p.expect([pexpect.EOF, lPrompt])
-
-#     # I have sudo powers, therefore I return
-#     while lIndex != 0:
-#         lPwd = getpass.getpass(
-#             'Please insert password for user {0}: '.format(os.getlogin()))
-#         p.sendline(lPwd)
-#         lIndex = p.expect([pexpect.EOF, lPrompt])
-#         if lIndex == 0:
-#             break
-
-#     return p.exitstatus
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 class SmartOpen(object):
 
-    def __init__(self, aFilename=None):
-        self.filename = aFilename
-        self.file = None
+    def __init__(self, aTarget):
+        if isinstance(aTarget, basestring):
+            self.target = open(aTarget, 'w')
+        elif aTarget is None:
+            self.target = sys.stdout
+        else:
+            self.target = aTarget
 
     def __enter__(self):
-        if self.filename:
-            self.file = open(self.filename, 'w')
-        else:
-            self.file = sys.stdout
         return self
 
     def __exit__(self, type, value, traceback):
-        if self.file is not sys.stdout:
-            self.file.close()
+
+
+        if self.target is not sys.stdout:
+            self.target.close()
 
     def __call__(self, *strings):
-        self.file.write(' '.join(strings))
-        self.file.write("\n")
-# ------------------------------------------------------------------------------
+        self.target.write(' '.join(strings))
+        self.target.write("\n")
 
+    def flush(self):
+        self.target.flush()
+
+    @property
+    def path(self):
+        if self.target is not sys.stdout:
+            return self.target.name
+        else:
+            return None
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 class OutputFormatter(object):

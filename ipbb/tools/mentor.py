@@ -13,7 +13,7 @@ import atexit
 import sh
 
 # Elements
-from os.path import join, split, exists, splitext
+from os.path import join, split, exists, splitext, basename
 from .common import which, OutputFormatter
 from click import echo, secho, style
 
@@ -82,6 +82,65 @@ class ModelSimBatch(object):
         
         vsim = sh.Command(_vsim)
         vsim('-c', '-do', script, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class ModelSimBatch2g(object):
+    """docstring for VivadoBatch"""
+
+    #--------------------------------------------
+    def __init__(self, aScript, aTranscript=None, aDryRun=False):
+        super(ModelSimBatch2g, self).__init__()
+        lBasename, lExt = splitext(aScript)
+        if lExt not in ['.tcl', '.do']:
+            raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
+
+        self.transcript = aTranscript
+        self.scriptname = aScript
+        self.dryrun = aDryRun
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __enter__(self):
+        self.scriptfile = (
+            open(self.scriptname, 'w') if self.scriptname 
+                else tempfile.NamedTemporaryFile(suffix='.tcl')
+            )
+        return self
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __exit__(self, type, value, traceback):
+            self.scriptfile.close()
+            if self.dryrun:
+                return
+            self._run()
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __call__(self, *strings):
+        self.scriptfile.write(' '.join(strings))
+        self.scriptfile.write("\n")
+        self.scriptfile.flush()
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def _run(self):
+
+        # Guard against missing vivado executable
+        if not which('vsim'):
+            raise ModelNotSimFoundError(
+                "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
+
+        vsim = sh.Command(_vsim)
+        #TODO:
+
+        lRoot,_ = splitext(basename(self.scriptfile.name))
+
+        lLog = (self.transcript if self.transcript else 'transcript_{}.log'.format(lRoot))
+        vsim('-c', '-l', lLog, '-do', self.scriptfile.name, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
+    #--------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

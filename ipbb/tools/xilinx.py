@@ -11,8 +11,10 @@ import collections
 import subprocess
 import os.path
 import atexit
+import sh
 
 # Elements
+from os.path import join, split, exists, splitext, basename
 from .common import which, OutputFormatter
 
 # ------------------------------------------------
@@ -101,6 +103,80 @@ class VivadoBatch(object):
                     self.info.append((i, l))
 # -------------------------------------------------------------------------
 
+# -------------------------------------------------------------------------
+class VivadoBatch2g(object):
+    """docstring for VivadoBatch"""
+
+    _reInfo = re.compile('^INFO:')
+    _reWarn = re.compile('^WARNING:')
+    _reCritWarn = re.compile('^CRITICAL WARNING:')
+    _reError = re.compile('^ERROR:')
+
+    #--------------------------------------------
+    def __init__(self, aScript, aDryRun=False):
+        super(VivadoBatch2g, self).__init__()
+        lBasename, lExt = splitext(aScript)
+        if lExt not in ['.tcl']:
+            raise ValueError('Unsupported extension {}. Use \'.tcl\''.format(lExt))
+
+        self.scriptname = aScript
+        self.dryrun = aDryRun
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __enter__(self):
+        self.scriptfile = (
+            open(self.scriptname, 'w') if self.scriptname 
+                else tempfile.NamedTemporaryFile(suffix='.tcl')
+            )
+        return self
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __exit__(self, type, value, traceback):
+            self.scriptfile.close()
+            if self.dryrun:
+                return
+            self._run()
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __call__(self, *strings):
+        self.scriptfile.write(' '.join(strings))
+        self.scriptfile.write("\n")
+        self.scriptfile.flush()
+    #--------------------------------------------
+
+
+    #--------------------------------------------
+    def _run(self):
+
+        # Define custom log file
+        lRoot,_ = splitext(basename(self.scriptfile.name))
+        lLog = 'vivado_{0}.log'.format(lRoot)
+        lJou = 'vivado_{0}.jou'.format(lRoot)
+
+        # Guard against missing vivado executable
+        if not which('vivado'):
+            raise VivadoNotFoundError(
+                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?'
+                )
+
+        sh.vivado('-mode','batch', '-source', self.scriptfile.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
+        self.errors = []
+        self.info = []
+        self.warnings = []
+
+        with open(lLog) as lLogFile:
+            for i, l in enumerate(lLogFile):
+                if self._reError.match(l):
+                    self.errors.append((i, l))
+                elif self._reWarn.match(l):
+                    self.warnings.append((i, l))
+                elif self._reInfo.match(l):
+                    self.info.append((i, l))
+    #--------------------------------------------
+# -------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------
 class VivadoConsoleError(Exception):

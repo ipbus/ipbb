@@ -11,8 +11,9 @@ from ..tools.common import SmartOpen
 
 class ModelSimProjectMaker(object):
     # --------------------------------------------------------------
-    def __init__(self, aPathmaker, aTurbo=True):
-        self.pathmaker = aPathmaker
+    def __init__(self, aTurbo=True):
+    # def __init__(self, aPathmaker, aTurbo=True):
+        # self.pathmaker = aPathmaker
         self.turbo = aTurbo
     # --------------------------------------------------------------
 
@@ -82,7 +83,7 @@ class ModelSimProjectMaker(object):
 
                     if file is None:
                         raise IOError(
-                            'No simulation source found for core ' + lBasename)
+                            'No simulation source found for core \'' + lBasename + '\'')
                     # ----------------------------------------------------------
                 else:
                     file = src.FilePath

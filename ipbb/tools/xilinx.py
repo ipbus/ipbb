@@ -12,6 +12,7 @@ import subprocess
 import os.path
 import atexit
 import sh
+import tempfile
 
 # Elements
 from os.path import join, split, exists, splitext, basename
@@ -103,56 +104,60 @@ class VivadoBatch(object):
                     self.info.append((i, l))
 # -------------------------------------------------------------------------
 
-# -------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoBatch2g(object):
     """docstring for VivadoBatch"""
-
     _reInfo = re.compile('^INFO:')
     _reWarn = re.compile('^WARNING:')
     _reCritWarn = re.compile('^CRITICAL WARNING:')
     _reError = re.compile('^ERROR:')
 
     #--------------------------------------------
-    def __init__(self, aScript, aDryRun=False):
+    def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
         super(VivadoBatch2g, self).__init__()
-        lBasename, lExt = splitext(aScript)
-        if lExt not in ['.tcl']:
-            raise ValueError('Unsupported extension {}. Use \'.tcl\''.format(lExt))
 
-        self.scriptname = aScript
-        self.dryrun = aDryRun
+        if scriptpath:
+            _, lExt = splitext(scriptpath)
+            if lExt not in ['.tcl', '.do']:
+                raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
+
+        self.scriptpath = scriptpath
+        self.log = log
+        self.terminal = sys.stdout if echo else None
+        self.cwd = cwd
+        self.dryrun = dryrun
     #--------------------------------------------
 
     #--------------------------------------------
     def __enter__(self):
-        self.scriptfile = (
-            open(self.scriptname, 'w') if self.scriptname 
-                else tempfile.NamedTemporaryFile(suffix='.tcl')
+        self.script = (
+            open(self.scriptpath, 'w') if self.scriptpath 
+                else tempfile.NamedTemporaryFile(suffix='.do')
             )
         return self
     #--------------------------------------------
 
     #--------------------------------------------
     def __exit__(self, type, value, traceback):
-            self.scriptfile.close()
-            if self.dryrun:
-                return
-            self._run()
+            if not self.dryrun:
+                self._run()
+            self.script.close()
     #--------------------------------------------
 
     #--------------------------------------------
     def __call__(self, *strings):
-        self.scriptfile.write(' '.join(strings))
-        self.scriptfile.write("\n")
-        self.scriptfile.flush()
+        for f in [self.script, self.terminal]:
+            if not f: continue
+            f.write(' '.join(strings)+'\n')
+            f.flush()
     #--------------------------------------------
-
 
     #--------------------------------------------
     def _run(self):
 
         # Define custom log file
-        lRoot,_ = splitext(basename(self.scriptfile.name))
+        lRoot,_ = splitext(basename(self.script.name))
         lLog = 'vivado_{0}.log'.format(lRoot)
         lJou = 'vivado_{0}.jou'.format(lRoot)
 
@@ -162,7 +167,7 @@ class VivadoBatch2g(object):
                 '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?'
                 )
 
-        sh.vivado('-mode','batch', '-source', self.scriptfile.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
+        sh.vivado('-mode','batch', '-source', self.script.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
         self.errors = []
         self.info = []
         self.warnings = []
@@ -176,7 +181,8 @@ class VivadoBatch2g(object):
                 elif self._reInfo.match(l):
                     self.info.append((i, l))
     #--------------------------------------------
-# -------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # -------------------------------------------------------------------------
 class VivadoConsoleError(Exception):

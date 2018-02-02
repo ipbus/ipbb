@@ -36,19 +36,19 @@ def cleanup(env):
 # ------------------------------------------------------------------------------
 @click.command('addrtab', short_help="Gather address table files.")
 @click.pass_obj
-@click.option('-o', '--output', default='addrtab')
-def addrtab(env, output):
+@click.option('-d', '--dest', 'aDest', default='addrtab')
+def addrtab(env, aDest):
     '''Copy address table files into addrtab subfolder'''
 
     try:
-        os.mkdir(output)
+        os.mkdir(aDest)
     except OSError:
         pass
 
     import sh
     for addrtab in env.depParser.CommandList["addrtab"]:
         print(sh.cp('-av', addrtab.FilePath,
-                    join(output, basename(addrtab.FilePath))
+                    join(aDest, basename(addrtab.FilePath))
                     ))
 # ------------------------------------------------------------------------------
 

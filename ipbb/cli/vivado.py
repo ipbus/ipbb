@@ -53,8 +53,9 @@ def vivado(ctx, proj):
 # ------------------------------------------------------------------------------
 @vivado.command('project', short_help='Assemble the project from sources.')
 @click.option('-o', '--output', default=None)
+@click.option('-r', '--reverse', 'aReverse', is_flag=True)
 @click.pass_obj
-def project(env, output):
+def project(env, aReverse, output):
     '''Assemble the project from sources'''
 
     lSessionId = 'project'
@@ -68,11 +69,14 @@ def project(env, output):
     ensureNoMissingFiles(env.project, lDepFileParser)
 
     from ..depparser.VivadoProjectMaker import VivadoProjectMaker
-    lWriter = VivadoProjectMaker(env.pathMaker)
+    lWriter = VivadoProjectMaker(aReverse)
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
+        with (
+            VivadoOpen(lSessionId) if not output
+            else SmartOpen(output if output != 'stdout' else None)
+        ) as lTarget:
             lWriter.write(
                 lTarget,
                 lDepFileParser.ScriptVariables,

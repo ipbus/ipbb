@@ -11,6 +11,7 @@ import collections
 import os
 import atexit
 import sh
+import tempfile
 
 # Elements
 from os.path import join, split, exists, splitext, basename
@@ -80,6 +81,7 @@ class ModelSimBatch(object):
 
         self._script = script
         
+
         vsim = sh.Command(_vsim)
         vsim('-c', '-do', script, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
 
@@ -90,39 +92,43 @@ class ModelSimBatch2g(object):
     """docstring for VivadoBatch"""
 
     #--------------------------------------------
-    def __init__(self, aScript, aTranscript=None, aDryRun=False):
+    def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
         super(ModelSimBatch2g, self).__init__()
-        lBasename, lExt = splitext(aScript)
-        if lExt not in ['.tcl', '.do']:
-            raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
 
-        self.transcript = aTranscript
-        self.scriptname = aScript
-        self.dryrun = aDryRun
+        if scriptpath:
+            _, lExt = splitext(scriptpath)
+            if lExt not in ['.tcl', '.do']:
+                raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
+
+        self.scriptpath = scriptpath
+        self.log = log
+        self.terminal = sys.stdout if echo else None
+        self.cwd = cwd
+        self.dryrun = dryrun
     #--------------------------------------------
 
     #--------------------------------------------
     def __enter__(self):
-        self.scriptfile = (
-            open(self.scriptname, 'w') if self.scriptname 
-                else tempfile.NamedTemporaryFile(suffix='.tcl')
+        self.script = (
+            open(self.scriptpath, 'w') if self.scriptpath 
+                else tempfile.NamedTemporaryFile(suffix='.do')
             )
         return self
     #--------------------------------------------
 
     #--------------------------------------------
     def __exit__(self, type, value, traceback):
-            self.scriptfile.close()
-            if self.dryrun:
-                return
-            self._run()
+            if not self.dryrun:
+                self._run()
+            self.script.close()
     #--------------------------------------------
 
     #--------------------------------------------
     def __call__(self, *strings):
-        self.scriptfile.write(' '.join(strings))
-        self.scriptfile.write("\n")
-        self.scriptfile.flush()
+        for f in [self.script, self.terminal]:
+            if not f: continue
+            f.write(' '.join(strings)+'\n')
+            f.flush()
     #--------------------------------------------
 
     #--------------------------------------------
@@ -136,10 +142,11 @@ class ModelSimBatch2g(object):
         vsim = sh.Command(_vsim)
         #TODO:
 
-        lRoot,_ = splitext(basename(self.scriptfile.name))
+        lRoot,_ = splitext(basename(self.script.name))
 
-        lLog = (self.transcript if self.transcript else 'transcript_{}.log'.format(lRoot))
-        vsim('-c', '-l', lLog, '-do', self.scriptfile.name, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
+        lLog = (self.log if self.log else 'transcript_{}.log'.format(lRoot))
+
+        vsim('-c', '-l', lLog, '-do', self.script.name, '-do', 'quit', _out=sys.stdout, _err=sys.stderr, _cwd=self.cwd)
     #--------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

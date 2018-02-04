@@ -58,10 +58,10 @@ def sim(ctx, proj):
 # ------------------------------------------------------------------------------
 @sim.command('ipcores', short_help="Generate vivado sim cores for the current design.")
 @click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory', show_default=True)
-@click.option('-s', '--dump-script', 'aDumpScript', default=None, help="Dump sim script to file. Skips ipcores creation.")
-@click.option('-o', '--stdout', 'aDumpTerm', is_flag=True, help="Print the commands to screen. Skips ipcores creation.")
+@click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
+@click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
-def ipcores(env, aXilSimLibsPath, aDumpScript, aDumpTerm):
+def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     '''
     Generate the vivado libraries and cores required to simulate the current design.
 
@@ -132,27 +132,38 @@ def ipcores(env, aXilSimLibsPath, aDumpScript, aDumpTerm):
     lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lCompileSimlib, lSimVariant, lSimulator, kIPExportDir)
 
 
-    lDryRun = aDumpScript or aDumpTerm
+    lDryRun = aToScript or aToStdout
     secho("Generating ipcore simulation code", fg='blue')
 
-    with (
-        # Pipe commands to Vivado console
-        VivadoOpen(lSessionId) if not lDryRun 
-        else SmartOpen(
-            # Dump to script
-            aDumpScript if not aDumpTerm 
-            # Dump to terminal
-            else None
-        )
-    ) as lTarget:
-        lIPCoreSimMaker.write(
-            lTarget,
-            lDepFileParser.ScriptVariables,
-            lDepFileParser.Components,
-            lDepFileParser.CommandList,
-            lDepFileParser.Libs,
-            lDepFileParser.Maps
-        )
+    try:
+        with (
+            # Pipe commands to Vivado console
+            VivadoOpen(lSessionId) if not lDryRun 
+            else SmartOpen(
+                # Dump to script
+                aToScript if not aToStdout 
+                # Dump to terminal
+                else None
+            )
+        ) as lTarget:
+            lIPCoreSimMaker.write(
+                lTarget,
+                lDepFileParser.ScriptVariables,
+                lDepFileParser.Components,
+                lDepFileParser.CommandList,
+                lDepFileParser.Libs,
+                lDepFileParser.Maps
+            )
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red'
+              )
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho("Error caught while generating Vivado TCL commands:\n" +
+              "\n".join(lExc), fg='red'
+              )
+        raise click.Abort()
 
     if not exists('modelsim.ini'):
         shutil.copy(join(lSimlibPath, 'modelsim.ini'), os.getcwd())
@@ -168,7 +179,7 @@ def ipcores(env, aXilSimLibsPath, aDumpScript, aDumpTerm):
     # Compile 
     secho("Compiling ipcore simulation", fg='blue')
 
-    with ModelSimBatch2g(echo=aDumpTerm, dryrun=lDryRun, cwd=lIPSimDir) as lSim:
+    with ModelSimBatch2g(echo=aToStdout, dryrun=lDryRun, cwd=lIPSimDir) as lSim:
         lSim('do compile.do')
         
 # ------------------------------------------------------------------------------
@@ -180,6 +191,9 @@ def ipcores(env, aXilSimLibsPath, aDumpScript, aDumpTerm):
 @click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
 def fli(env, dev, ipbuspkg):
+    """
+    Build the Modelsim-ipbus foreign language interface
+    """
 
     # -------------------------------------------------------------------------
     # Must be in a build area
@@ -228,10 +242,13 @@ def fli(env, dev, ipbuspkg):
 # ------------------------------------------------------------------------------
 @sim.command('project', short_help="Assemble the simulation project from sources")
 @click.option('--optimize/--single-commands', default=True, help="Toggle sim script optimisation.")
-@click.option('-s', '--dump-script', 'aDumpScript', default=None, help="Dump sim script to file. Skips sim project creation.")
-@click.option('-o', '--stdout', 'aDumpTerm', default=None, is_flag=True, help="Print the commands to screen. Skips sim project creation.")
+@click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
+@click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def project(env, optimize, aDumpScript, aDumpTerm):
+def project(env, optimize, aToScript, aToStdout):
+    """
+    """
+
     lSessionId = 'project'
 
     # -------------------------------------------------------------------------
@@ -261,9 +278,9 @@ def project(env, optimize, aDumpScript, aDumpTerm):
 
     lSimProjMaker = ModelSimProjectMaker(optimize)
 
-    lDryRun = aDumpTerm or aDumpScript
+    lDryRun = aToStdout or aToScript
     try:
-        with ModelSimBatch2g(aDumpScript, echo=aDumpTerm, dryrun=lDryRun) as lSim:
+        with ModelSimBatch2g(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
                 lDepFileParser.ScriptVariables,

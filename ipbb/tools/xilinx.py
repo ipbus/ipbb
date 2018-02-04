@@ -246,7 +246,8 @@ class VivadoConsole(object):
                 else (sessionid + ' | '),
             quiet = (not echo)
         )
-
+        
+        self._out.write('\n'+'-'*40+'\n')
         self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
@@ -369,6 +370,8 @@ class VivadoConsole(object):
         except pexpect.ExceptionPexpect as e:
             pass
 
+        # Write one last newline 
+        self._out.write('-'*40+'\n')
         # Just in case
         self._process.terminate(True)
 
@@ -394,7 +397,7 @@ class VivadoConsole(object):
             raise TypeError('expected string')
 
         if aCmd.count('\n') != 0:
-            raise ValueError('format error. Newline not allowed in commands')
+            raise ValueError('Format error. Newline not allowed in commands')
 
         self.__send(aCmd)
         lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)

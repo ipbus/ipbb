@@ -80,9 +80,9 @@ class OutputFormatter(object):
         self._flush = sys.stdout.flush
         self.quiet = quiet
         self.prefix = prefix
+        self.pending = False
 
     def __del__(self):
-        # self.close()
         pass
 
     def __enter__(self):
@@ -95,8 +95,16 @@ class OutputFormatter(object):
     def write(self, message):
         if self.quiet:
             return
-        self._write(message.replace('\n', '\n' + self.prefix)
-                    if self.prefix else message)
+
+        msg = self.prefix if (self.pending and self.prefix) else ''
+
+        # update pending status
+        self.pending = message.endswith('\n')
+
+        # furthemore, postfix the prefix to the newlines in message, execpt for the last one if pending is pn        
+        msg += message.replace('\n', '\n' + self.prefix, message.count('\n') - self.pending) if self.prefix else message
+
+        self._write(msg)
 
     def flush(self):
         if self.quiet:

@@ -9,16 +9,27 @@ import subprocess
 import sys
 import sh
 import shutil
+import tempfile
+import getpass
 
 # Elements
-from os.path import join, split, exists, splitext, basename, dirname, abspath, expandvars
+from os.path import join, splitext, split, exists, splitext, basename, dirname, abspath, expandvars
 from click import echo, secho, style
-from ..tools.common import which, mkdir, SmartOpen
-from ..tools.mentor import autodetect
+
+# Tools imports
 from .tools import DirSentry, ensureNoMissingFiles
+from ..tools.common import which, mkdir, SmartOpen
+
+# DepParser imports
+from ..depparser.IPCoresSimMaker import IPCoresSimMaker
+from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
+
+# 
+from ..tools.xilinx import VivadoOpen
+from ..tools.mentor import ModelSimBatch, ModelSimBatch2g, autodetect
 
 
-kIPExportDir = 'export_sim'
+kIPExportDir = 'ipcores_sim'
 
 # ------------------------------------------------
 class ModelsimNotFoundError(Exception):
@@ -46,14 +57,15 @@ def sim(ctx, proj):
 
 # ------------------------------------------------------------------------------
 @sim.command('ipcores', short_help="Generate vivado sim cores for the current design.")
-@click.option('-o', '--output', default=None)
-@click.option('-x', '--xilinx-simpath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Library target directory', show_default=True)
+@click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory', show_default=True)
+@click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
+@click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
-def ipcores(env, output, xilinx_simpath):
+def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     '''
     Generate the vivado libraries and cores required to simulate the current design.
-    '''
 
+    '''
     lSessionId = 'ipcores'
 
     # -------------------------------------------------------------------------
@@ -89,44 +101,73 @@ def ipcores(env, output, xilinx_simpath):
     lDepFileParser = env.depParser
 
     # Store the target path in the env, for it to be retrieved by Vivado
-    lSimlibPath = expandvars(join(xilinx_simpath, basename(os.environ['XILINX_VIVADO'])))
+    # i.e. .xilinx_sim_libs/2017.4
+    lSimlibPath = expandvars(join(aXilSimLibsPath, basename(os.environ['XILINX_VIVADO'])))
 
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
-    lIPCores = []
-    for src in reversed(lDepFileParser.CommandList["src"]):
-        lPath, lBasename = os.path.split(src.FilePath)
-        lName, lExt = os.path.splitext(lBasename)
-
-        if lExt not in [".xci", ".edn"]:
-            continue
-
-        lIPCores.append(lBasename)
+    # -------------------------------------------------------------------------
+    # Extract the list of cores
+    lIPCores = [ 
+                split(name)[1] for name, ext in 
+                ( splitext(src.FilePath) for src in lDepFileParser.CommandList["src"] )
+                    if ext in [".xci", ".edn"]
+                ]
 
     if not lIPCores:
         secho ("WARNING: No ipcore files detected in this project", fg='yellow')
-        # return
+        return
     else:
-        echo ('List of cores in project')
+        echo ('List of ipcores in project')
         for lIPCore in lIPCores:
             echo('- ' + style(lIPCore, fg='blue'))
+    # -------------------------------------------------------------------------
 
-    from ..depparser.IPCoresSimMaker import IPCoresSimMaker
+    lCompileSimlib = not exists(lSimlibPath)
+
+    if not lCompileSimlib:
+        echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lCompileSimlib))
+
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lWriter = IPCoresSimMaker(env.pathMaker, lSimlibPath, lSimVariant, lSimulator, kIPExportDir)
+    lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lCompileSimlib, lSimVariant, lSimulator, kIPExportDir)
 
-    from ..tools.xilinx import VivadoOpen
-    with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
-        lWriter.write(
-            lTarget,
-            lDepFileParser.ScriptVariables,
-            lDepFileParser.Components,
-            lDepFileParser.CommandList,
-            lDepFileParser.Libs,
-            lDepFileParser.Maps
-        )
-        # lTarget('open_project top/top.xpr')
-        # lTarget('export_simulation -force -simulator {} -lib_map_path  ~/.xilinx_sim_libs/2017.4/'.format(lSimulator))
+
+    lDryRun = aToScript or aToStdout
+    secho("Generating ipcore simulation code", fg='blue')
+
+    try:
+        with (
+            # Pipe commands to Vivado console
+            VivadoOpen(lSessionId) if not lDryRun 
+            else SmartOpen(
+                # Dump to script
+                aToScript if not aToStdout 
+                # Dump to terminal
+                else None
+            )
+        ) as lTarget:
+            lIPCoreSimMaker.write(
+                lTarget,
+                lDepFileParser.ScriptVariables,
+                lDepFileParser.Components,
+                lDepFileParser.CommandList,
+                lDepFileParser.Libs,
+                lDepFileParser.Maps
+            )
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red'
+              )
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho("Error caught while generating Vivado TCL commands:\n" +
+              "\n".join(lExc), fg='red'
+              )
+        raise click.Abort()
+
+    if not exists('modelsim.ini'):
+        shutil.copy(join(lSimlibPath, 'modelsim.ini'), os.getcwd())
+        secho("Imported modelsim.ini from {}".format(lSimlibPath), fg='blue')
 
 
     lIPSimDir = join(kIPExportDir,lSimulator)
@@ -136,12 +177,10 @@ def ipcores(env, output, xilinx_simpath):
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), lIPSimDir)
 
     # Compile 
-    sh.vsim(
-        '-c', '-do', 'compile.do', '-do', 'exit',
-        _cwd=lIPSimDir, 
-        _out=sys.stdout,
-        _err=sys.stderr
-        )
+    secho("Compiling ipcore simulation", fg='blue')
+
+    with ModelSimBatch2g(echo=aToStdout, dryrun=lDryRun, cwd=lIPSimDir) as lSim:
+        lSim('do compile.do')
         
 # ------------------------------------------------------------------------------
 
@@ -152,6 +191,9 @@ def ipcores(env, output, xilinx_simpath):
 @click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
 def fli(env, dev, ipbuspkg):
+    """
+    Build the Modelsim-ipbus foreign language interface
+    """
 
     # -------------------------------------------------------------------------
     # Must be in a build area
@@ -198,10 +240,15 @@ def fli(env, dev, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-@sim.command()
-@click.option('-o', '--output', default=None)
+@sim.command('project', short_help="Assemble the simulation project from sources")
+@click.option('--optimize/--single-commands', default=True, help="Toggle sim script optimisation.")
+@click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
+@click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def project(env, output):
+def project(env, optimize, aToScript, aToStdout):
+    """
+    """
+
     lSessionId = 'project'
 
     # -------------------------------------------------------------------------
@@ -229,34 +276,30 @@ def project(env, output):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.project, lDepFileParser)
 
-    from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
-    lWriter = ModelSimProjectMaker(env.pathMaker)
+    lSimProjMaker = ModelSimProjectMaker(optimize)
 
-    from ..tools.mentor import ModelSimOpen, ModelSimConsoleError
+    lDryRun = aToStdout or aToScript
     try:
-        with (ModelSimOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
-            lWriter.write(
-                lTarget,
+        with ModelSimBatch2g(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
+            lSimProjMaker.write(
+                lSim,
                 lDepFileParser.ScriptVariables,
                 lDepFileParser.Components,
                 lDepFileParser.CommandList,
                 lDepFileParser.Libs,
                 lDepFileParser.Maps
             )
-    except ModelSimConsoleError as lExc:
-        secho("Modelsim errors detected\n" +
-              "\n".join(lExc.errors), fg='red'
-              )
-        raise click.Abort()
-    except RuntimeError as lExc:
-        secho("Error caught while generating ModelSim TCL commands:\n" +
-              "\n".join(lExc), fg='red'
-              )
-        raise click.Abort()
-    # ----------------------------------------------------------
-    # FIXME: Tempourary assignments
-    # lWorkingDir = abspath(join(os.getcwd(), 'top'))
-    # ----------------------------------------------------------
+    except Exception as e:
+    # except sh.ErrorReturnCode_255 as e:
+        import traceback, StringIO
+        lBuf = StringIO.StringIO()
+        traceback.print_exc(file=lBuf)
+        secho(lBuf.getvalue(), fg='red')
+        # secho("Exception: "+str(e), fg='red')
+        raise click.ClickException("Compilation failed")
+    
+    if lDryRun:
+        return
 
     # ----------------------------------------------------------
     # Collect the list of libraries generated by ipcores to add them to
@@ -267,8 +310,6 @@ def project(env, output):
             '{0}_lib'.format(lSimulator),
             'msim'
         ))
-
-    print (lSimLibDirectory)
 
     if exists( lSimLibDirectory ):
         lSimLibs = next(os.walk(lSimLibDirectory))[1]
@@ -302,7 +343,7 @@ def project(env, output):
         # Make a backup copy of modelsim.ini (generated by ipcores)
         os.rename('modelsim.ini', 'modelsim.ini.bak')
         with SmartOpen('modelsim.ini') as newIni:
-            lModelsimIni.write(newIni.file)
+            lModelsimIni.write(newIni.target)
 
     # ----------------------------------------------------------
     # Create a wrapper to force default bindings at load time
@@ -340,5 +381,11 @@ sudo /sbin/ifconfig {0} up {1}
 sudo chmod a+rw /dev/net/tun
 '''.format(dev, ip)
 
-    do(lCmds)
+    pwd = getpass.getpass("[sudo] password for %s: " % getpass.getuser())
+    with sh.contrib.sudo(password=pwd, _with=True):
+    # with sh.contrib.sudo( _with=True):
+        sh.openvpn('--mktun', '--dev', dev, _out=sys.stdout)
+        sh.ifconfig(dev, 'up', ip, _out=sys.stdout)
+        sh.chmod('a+rw', '/dev/net/tun', _out=sys.stdout)
+
 # ------------------------------------------------------------------------------

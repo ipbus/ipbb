@@ -159,7 +159,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
     # -------------------------------------------------------------------------
     if not sparse:
-        lArgs = ['checkout', repo]
+        lArgs = ['checkout', '-q', repo]
 
         # Append destination directory if defined
         if dest is not None:

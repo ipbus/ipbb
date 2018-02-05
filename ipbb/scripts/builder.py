@@ -43,7 +43,7 @@ def cli(ctx):
 
 # ------------------------------------------------------------------------------
 @cli.command()
-@click.option('-v', '--verbose', count=True, help='arse')
+@click.option('-v', '--verbose', count=True, help="Verbosity")
 @click.pass_obj
 def info(env, verbose):
     '''Print a brief report about the current working area'''

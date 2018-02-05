@@ -6,9 +6,10 @@ import os
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectMaker(object):
     # --------------------------------------------------------------
-    def __init__(self, aPathmaker):
-        self.Pathmaker = aPathmaker
-
+    def __init__(self, aReverse = False):
+    # def __init__(self, aPathmaker):
+        # self.pathmaker = aPathmaker
+        self.reverse = aReverse
         self.FileSets = {
             '.xdc': 'constrs_1',
             '.tcl': 'constrs_1',
@@ -62,7 +63,9 @@ class VivadoProjectMaker(object):
         lXciBasenames = []
         lXciTargetFiles = []
 
-        for src in aCommandList['src']:
+        lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
+
+        for src in lSrcs:
             lPath, lBasename = os.path.split(src.FilePath)
             lName, lExt = os.path.splitext(lBasename)
             lTargetFile = os.path.join(
@@ -98,10 +101,6 @@ class VivadoProjectMaker(object):
             write('upgrade_ip [get_ips {0}]'.format(i))
         for i in lXciTargetFiles:
             write('create_ip_run [get_files {0}]'.format(i))
-        # for i in lXciBasenames:
-        #     write('launch_run {0}_synth_1'.format(i))
-        # for i in lXciBasenames:
-        #     write('wait_on_run {0}_synth_1'.format(i))
         write('close_project')
     # --------------------------------------------------------------
 

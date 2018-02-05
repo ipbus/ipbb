@@ -102,8 +102,8 @@ def create( env, kind, projname, component, topdep ):
         'topDep': topdep,
         'name': projname
     }
-    with SmartOpen( join(lProjAreaPath, kProjAreaCfgFile) ) as lProjFile:
-        json.dump(lCfg, lProjFile.file, indent=2)
+    with open( join(lProjAreaPath, kProjAreaCfgFile), 'w' ) as lProjFile:
+        json.dump(lCfg, lProjFile, indent=2)
 
     secho('{} project area \'{}\' created'.format( kind.capitalize(), projname), fg='green')
 # ------------------------------------------------------------------------------
@@ -139,10 +139,11 @@ def ls( env ):
 
 
 # ------------------------------------------------------------------------------
-@proj.command('cd', short_help='Change working directory.')
+@proj.command('cd', short_help="Change working directory.")
+@click.option('-v', '--verbose', 'aVerbose', count=True, help="Command verbosity")
 @click.argument( 'projname' )
 @click.pass_obj
-def cd( env, projname ):
+def cd( env, projname, aVerbose ):
     '''Changes current working directory (command line only)
     '''
 
@@ -157,5 +158,6 @@ def cd( env, projname ):
         env._autodetect()
 
     os.chdir(join(env.proj, projname))
-    print ( "New current directory %s" % os.getcwd() )
+    if aVerbose:
+        echo ( "New current directory %s" % os.getcwd() )
 # ------------------------------------------------------------------------------

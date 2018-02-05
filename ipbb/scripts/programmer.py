@@ -5,6 +5,7 @@ from __future__ import print_function
 import click
 import click_didyoumean
 
+from click import echo, secho, style
 from ..tools.common import which
 
 # ------------------------------------------------------------------------------
@@ -23,7 +24,7 @@ def autodetectVivadoVariant():
 
 # ------------------------------------------------------------------------------
 # @shell(
-#     prompt=click.style('ipbb', fg='blue') + '> ',
+#     prompt=style('ipbb', fg='blue') + '> ',
 #     intro='Starting IPBus Builder...',
 #     context_settings=CONTEXT_SETTINGS
 # )
@@ -46,23 +47,23 @@ def vivado(ctx):
 def list(v):
     lVivado = autodetectVivadoVariant()
     # Build vivado interface
-    click.echo('Starting '+lVivado+'...')
+    echo('Starting '+lVivado+'...')
     from ..tools import xilinx
     v = xilinx.VivadoConsole(executable=lVivado, echo=v)
-    click.echo('... done')
+    echo('... done')
 
-    click.echo("Looking for targets")
+    echo("Looking for targets")
     v.openHw()
     v.connect()
     hw_targets = v.getHwTargets()
 
     for target in hw_targets:
-        click.echo("- target "+click.style(target, fg='blue'))
+        echo("- target "+style(target, fg='blue'))
 
         v.openHwTarget(target)
         hw_devices = v.getHwDevices()
         for device in hw_devices:
-            click.echo("  + "+click.style(device, fg='green'))
+            echo("  + "+style(device, fg='green'))
         v.closeHwTarget(target)
 
 # ------------------------------------------------------------------------------   
@@ -88,15 +89,15 @@ def program(deviceid, bitfile, v):
     # Build vivado interface
     
     lVivado = autodetectVivadoVariant()
-    click.echo('Starting '+lVivado+'...')
+    echo('Starting '+lVivado+'...')
     from ..tools import xilinx
     v = xilinx.VivadoConsole(executable=lVivado, echo=v)
-    click.echo('... done')
+    echo('... done')
     v.openHw()
     v.connect()
     hw_targets = v.getHwTargets()
 
-    click.echo('Found targets: ' + click.style('{}'.format(', '.join(hw_targets)), fg='blue'))
+    echo('Found targets: ' + style('{}'.format(', '.join(hw_targets)), fg='blue'))
 
     lMatchingTargets = [t for t in hw_targets if target in t]
     if len(lMatchingTargets) == 0:
@@ -112,11 +113,11 @@ def program(deviceid, bitfile, v):
 
     lTarget = lMatchingTargets[0]
 
-    click.echo('Selected target: '+click.style('{}'.format(lMatchingTargets[0]), fg='blue')) 
+    echo('Selected target: '+style('{}'.format(lMatchingTargets[0]), fg='blue')) 
     v.openHwTarget(lTarget)
 
     hw_devs = v.getHwDevices()
-    click.echo('Found devices: '+click.style('{}'.format(', '.join(hw_devs)), fg='blue'))
+    echo('Found devices: '+style('{}'.format(', '.join(hw_devs)), fg='blue'))
 
     if device not in hw_devs:
         raise RuntimeError('Device %s not found. Devices available %s: ' % (
@@ -124,9 +125,9 @@ def program(deviceid, bitfile, v):
 
     if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format( bitfile, lTarget), fg='yellow')):
         v.programDevice(device, bitfile)
-        click.echo("{} successfully programmed on {}".format(bitfile, lTarget))
+        echo("{} successfully programmed on {}".format(bitfile, lTarget))
     else:
-        click.secho('Programming aborted.', fg='yellow')
+        secho('Programming aborted.', fg='yellow')
     v.closeHwTarget(lTarget)
 
 
@@ -135,4 +136,15 @@ def main():
     try:
         cli()
     except Exception as e:
-        click.secho(str(e), fg='red')
+        hline = '-'*80
+        echo()
+        secho(hline, fg='red')
+        secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
+        secho(e.message, fg='red')
+        secho(hline, fg='red')
+        import StringIO
+        lTrace = StringIO.StringIO()
+        traceback.print_exc(file=lTrace)
+        print (lTrace.getvalue())
+        # Do something with lTrace
+        raise SystemExit(-1)

@@ -32,64 +32,46 @@ def mkdir(path, mode=0777):
 
 
 # ------------------------------------------------------------------------------
-# TODO: turn it into a class?
-# Use 'sh' instead?
-def do(aCmdList):
-
-    if isinstance(aCmdList, str):
-        aCmdList = aCmdList.split('\n')
-
-    for lCmd in aCmdList:
-        print (lCmd)
-        subprocess.check_call(lCmd, shell=True)
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-# def ensuresudo():
-#     import getpass
-#     lPrompt = '> '
-
-#     # , logfile = sys.stdout)
-#     p = pexpect.spawn('sudo -p "{0}" whoami'.format(lPrompt))
-#     lIndex = p.expect([pexpect.EOF, lPrompt])
-
-#     # I have sudo powers, therefore I return
-#     while lIndex != 0:
-#         lPwd = getpass.getpass(
-#             'Please insert password for user {0}: '.format(os.getlogin()))
-#         p.sendline(lPwd)
-#         lIndex = p.expect([pexpect.EOF, lPrompt])
-#         if lIndex == 0:
-#             break
-
-#     return p.exitstatus
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 class SmartOpen(object):
 
-    def __init__(self, aFilename=None):
-        self.filename = aFilename
-        self.file = None
-
-    def __enter__(self):
-        if self.filename:
-            self.file = open(self.filename, 'w')
+    #--------------------------------------------
+    def __init__(self, aTarget):
+        if isinstance(aTarget, basestring):
+            self.target = open(aTarget, 'w')
+        elif aTarget is None:
+            self.target = sys.stdout
         else:
-            self.file = sys.stdout
+            self.target = aTarget
+    #--------------------------------------------
+
+    #--------------------------------------------
+    @property
+    def path(self):
+        if self.target is not sys.stdout:
+            return self.target.name
+        else:
+            return None
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __enter__(self):
         return self
+    #--------------------------------------------
 
+    #--------------------------------------------
     def __exit__(self, type, value, traceback):
-        if self.file is not sys.stdout:
-            self.file.close()
+        if self.target is not sys.stdout:
+            self.target.close()
+    #--------------------------------------------
 
+    #--------------------------------------------
     def __call__(self, *strings):
-        self.file.write(' '.join(strings))
-        self.file.write("\n")
-# ------------------------------------------------------------------------------
+        self.target.write(' '.join(strings))
+        self.target.write("\n")
+        self.target.flush()
+    #--------------------------------------------
 
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 class OutputFormatter(object):
@@ -98,9 +80,9 @@ class OutputFormatter(object):
         self._flush = sys.stdout.flush
         self.quiet = quiet
         self.prefix = prefix
+        self.pending = False
 
     def __del__(self):
-        # self.close()
         pass
 
     def __enter__(self):
@@ -113,8 +95,16 @@ class OutputFormatter(object):
     def write(self, message):
         if self.quiet:
             return
-        self._write(message.replace('\n', '\n' + self.prefix)
-                    if self.prefix else message)
+
+        msg = self.prefix if (self.pending and self.prefix) else ''
+
+        # update pending status
+        self.pending = message.endswith('\n')
+
+        # furthemore, postfix the prefix to the newlines in message, execpt for the last one if pending is pn        
+        msg += message.replace('\n', '\n' + self.prefix, message.count('\n') - self.pending) if self.prefix else message
+
+        self._write(msg)
 
     def flush(self):
         if self.quiet:

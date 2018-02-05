@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
 - Added vivavo variant autodetection to `ipb-prog vivado`.
 - Improved `add git` branch/tag resolution.
+- Reworked `sim project` to improve speed and reliability.
 
 ## [0.2.9] - 2018-01-08
 - Added check on branch/tag validity when adding git repositories.
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added suppoer for conda-based environment.
 - Added the `cleanup` subcommand to `sim` and `vivado` command groups.
 - Added the `srcstat` command to provide a compact status report of git and svn packages.
+- Standardized `vivado project`, `sim project` and `sim ipcores` options.
 
 ## [0.2.8] - 2017-10-05
 ### Changed

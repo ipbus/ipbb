@@ -12,8 +12,12 @@ import sh
 from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 from texttable import Texttable
+
 from ..tools.common import which, SmartOpen
 from .tools import DirSentry, ensureNoMissingFiles
+
+from ..depparser.VivadoProjectMaker import VivadoProjectMaker
+from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
 
 # ------------------------------------------------------------------------------
@@ -34,7 +38,7 @@ def ensureVivado(env):
 @click.pass_context
 @click.option('-p', '--proj', default=None)
 def vivado(ctx, proj):
-    '''Command'''
+    '''Vivado command group'''
 
     env = ctx.obj
 
@@ -52,10 +56,12 @@ def vivado(ctx, proj):
 
 # ------------------------------------------------------------------------------
 @vivado.command('project', short_help='Assemble the project from sources.')
-@click.option('-o', '--output', default=None)
+@click.option('-r', '--reverse', 'aReverse', is_flag=True)
+@click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
+@click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def project(env, output):
-    '''Assemble the project from sources'''
+def project(env, aReverse, aToScript, aToStdout):
+    '''Make the Vivado project from sources described by dependency files.'''
 
     lSessionId = 'project'
 
@@ -67,13 +73,21 @@ def project(env, output):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.project, lDepFileParser)
 
-    from ..depparser.VivadoProjectMaker import VivadoProjectMaker
-    lWriter = VivadoProjectMaker(env.pathMaker)
+    lVivadoMaker = VivadoProjectMaker(aReverse)
 
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    lDryRun = aToScript or aToStdout
+
     try:
-        with (VivadoOpen(lSessionId) if not output else SmartOpen(output if output != 'stdout' else None)) as lTarget:
-            lWriter.write(
+        with (
+            VivadoOpen(lSessionId) if not lDryRun 
+            else SmartOpen(
+                # Dump to script
+                aToScript if not aToStdout 
+                # Dump to terminal
+                else None
+            )
+        ) as lTarget:
+            lVivadoMaker.write(
                 lTarget,
                 lDepFileParser.ScriptVariables,
                 lDepFileParser.Components,
@@ -111,20 +125,18 @@ def synth(env, jobs):
 
     ensureVivado(env)
 
-    lOpenCmds = [
-        'open_project %s' % lVivProjPath,
-    ]
-
-    lSynthCmds = [
-        'launch_runs synth_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
-        'wait_on_run synth_1',
-    ]
-
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
         with VivadoOpen(lSessionId) as lTarget:
-            lTarget(lOpenCmds)
-            lTarget(lSynthCmds)
+
+            # Open the project
+            lTarget('open_project {}'.format(lVivProjPath))
+
+            lTarget([
+                'reset_run synth_1',
+                'launch_runs synth_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
+                'wait_on_run synth_1',
+            ])
     except VivadoConsoleError as lExc:
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
@@ -144,10 +156,6 @@ def impl(env, jobs):
 
     lSessionId = 'impl'
 
-    # if env.project is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     # Check
     lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
     if not exists(lVivProjPath):
@@ -155,20 +163,18 @@ def impl(env, jobs):
 
     ensureVivado(env)
 
-    lOpenCmds = [
-        'open_project %s' % lVivProjPath,
-    ]
-
-    lImplCmds = [
-        'launch_runs impl_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
-        'wait_on_run impl_1',
-    ]
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
         with VivadoOpen(lSessionId) as lTarget:
-            lTarget(lOpenCmds)
-            lTarget(lImplCmds)
+
+            # Open the project
+            lTarget('open_project {}'.format(lVivProjPath))
+            lTarget([
+                'reset_run impl_1',
+                'launch_runs impl_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
+                'wait_on_run impl_1',
+            ])
     except VivadoConsoleError as lExc:
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
@@ -179,9 +185,61 @@ def impl(env, jobs):
 
 
 # ------------------------------------------------------------------------------
-@click.command('usage', short_help='Run the implementation step on the current project.')
+@vivado.command('order-constr', short_help='Reorder with which constraints are processed')
+@click.option('-i/-r', '--initial/--reverse', 'order', default=True, help='Reset or invert the order of evaluation of constraint files.')
 @click.pass_obj
-def usage(env, jobs):
+def orderconstr(env, order):
+    '''Reorder constraint set'''
+
+
+    lSessionId = 'order-constr'
+    # Check
+    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
+
+    ensureVivado(env)
+
+
+    lDepFileParser = env.depParser
+    lConstrSrc = [src.FilePath for src in lDepFileParser.CommandList['src'] if splitext(src.FilePath)[1] in ['.tcl', '.xdc']]
+    lCmdTemplate = 'reorder_files -fileset constrs_1 -after [get_files {0}] [get_files {1}]'
+
+    lConstrOrder = lConstrSrc if order else [ f for f in reversed(lConstrSrc)]
+    # echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstrOrder ))
+
+    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    try:
+        with VivadoOpen(lSessionId) as lTarget:
+            # Open vivado project
+            lTarget('open_project {}'.format(lVivProjPath))
+            # lConstraints = lTarget('get_files -of_objects [get_filesets constrs_1]')[0].split()
+            # print()
+            # print('\n'.join( ' * {}'.format(c) for c in lConstraints ))
+
+            lCmds = [lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i+1]) for i in xrange(len(lConstrOrder)-1)]
+            lTarget(lCmds)
+
+            lConstraints = lTarget('get_files -of_objects [get_filesets constrs_1]')[0].split()
+
+        echo('\nNew constraint order:')
+        echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstraints ))
+
+
+# 'reorder_files -fileset constrs_1 -before [get_files {0}] [get_files {1}]'.format(,to)
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
+        raise click.Abort()
+
+    secho("\n{}: Constraint order set to.\n".format(env.project), fg='green')
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+@click.command('usage', short_help='Print usage report for the top project.')
+@click.pass_obj
+def usage(env):
 
     lSessionId = 'usage'
 
@@ -400,9 +458,9 @@ def package(ctx):
         'md5': lHash.hexdigest(),
     })
 
-    with SmartOpen(join(lSrcPath, 'summary.txt')) as lSummaryFile:
+    with open(join(lSrcPath, 'summary.txt'), 'w') as lSummaryFile:
         import json
-        json.dump(lSummary, lSummaryFile.file, indent=2)
+        json.dump(lSummary, lSummaryFile, indent=2)
     echo()
     # -------------------------------------------------------------------------
 

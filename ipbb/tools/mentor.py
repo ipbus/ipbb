@@ -11,9 +11,10 @@ import collections
 import os
 import atexit
 import sh
+import tempfile
 
 # Elements
-from os.path import join, split, exists, splitext
+from os.path import join, split, exists, splitext, basename
 from .common import which, OutputFormatter
 from click import echo, secho, style
 
@@ -79,11 +80,74 @@ class ModelSimBatch(object):
                 "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
 
         self._script = script
+        
 
-        cmd = [_vsim, '-c', '-do', 'do %s; quit' % script]
-        process = subprocess.Popen(cmd)
+        vsim = sh.Command(_vsim)
+        vsim('-c', '-do', script, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
 
-        process.wait()
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+class ModelSimBatch2g(object):
+    """docstring for VivadoBatch"""
+
+    #--------------------------------------------
+    def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
+        super(ModelSimBatch2g, self).__init__()
+
+        if scriptpath:
+            _, lExt = splitext(scriptpath)
+            if lExt not in ['.tcl', '.do']:
+                raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
+
+        self.scriptpath = scriptpath
+        self.log = log
+        self.terminal = sys.stdout if echo else None
+        self.cwd = cwd
+        self.dryrun = dryrun
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __enter__(self):
+        self.script = (
+            open(self.scriptpath, 'w') if self.scriptpath 
+                else tempfile.NamedTemporaryFile(suffix='.do')
+            )
+        return self
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __exit__(self, type, value, traceback):
+            if not self.dryrun:
+                self._run()
+            self.script.close()
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def __call__(self, *strings):
+        for f in [self.script, self.terminal]:
+            if not f: continue
+            f.write(' '.join(strings)+'\n')
+            f.flush()
+    #--------------------------------------------
+
+    #--------------------------------------------
+    def _run(self):
+
+        # Guard against missing vivado executable
+        if not which('vsim'):
+            raise ModelNotSimFoundError(
+                "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
+
+        vsim = sh.Command(_vsim)
+        #TODO:
+
+        lRoot,_ = splitext(basename(self.script.name))
+
+        lLog = (self.log if self.log else 'transcript_{}.log'.format(lRoot))
+
+        vsim('-c', '-l', lLog, '-do', self.script.name, '-do', 'quit', _out=sys.stdout, _err=sys.stderr, _cwd=self.cwd)
+    #--------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -115,6 +179,7 @@ class ModelSimConsole(object):
         'ModelSim': 'ModelSim> \rModelSim> ',
         'QuestaSim': 'QuestaSim> \rQuestaSim> '
     }
+    __cmdPromptMaxLen = 500
 
     # --------------------------------------------------------------
     @classmethod
@@ -169,6 +234,7 @@ class ModelSimConsole(object):
 
         self._process.delaybeforesend = 0.00  # 1
 
+
         # Wait Modelsim to wake up
         self.__expectPrompt()
         self._log.debug('Modelsim up and running')
@@ -192,7 +258,7 @@ class ModelSimConsole(object):
     # --------------------------------------------------------------
     def __send(self, aText):
 
-        self._process.sendline(aText)
+        x = self._process.sendline(aText)
         # --------------------------------------------------------------
         # Hard check: First line of output must match the injected command
         lIndex = self._process.expect(['\r\n', '\n\r'])
@@ -204,7 +270,20 @@ class ModelSimConsole(object):
             print ('-' * 20)
             # Find where the 2 strings don't match
             print (' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
-            for i in xrange(max(len(lCmdRcvd), len(lCmdSent))):
+
+            # find the first mismatching character
+            minlen = min(len(lCmdRcvd), len(lCmdSent))
+            maxlen = max(len(lCmdRcvd), len(lCmdSent))
+            x = next( 
+                (
+                    i for i in xrange(minlen) 
+                    if lCmdRcvd[i] != lCmdSent[i]
+                ), minlen  
+            )
+
+            a = x-10
+            b = x+10
+            for i in xrange(max(a, 0),min(b, maxlen)):
                 r = lCmdRcvd[i] if len(lCmdRcvd) > i else ' '
                 s = lCmdSent[i] if len(lCmdSent) > i else ' '
                 # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
@@ -285,6 +364,9 @@ class ModelSimConsole(object):
 
         if aCmd.count('\n') != 0:
             raise ValueError('format error. Newline not allowed in commands')
+
+        if len(aCmd) > self.__cmdPromptMaxLen:
+            raise RuntimeError('modelsim prompt command length limited to 500 characters, while current command is {} characters long.'.format(len(aCmd)))
 
         self.__send(aCmd)
         lBuffer, lErrors = self.__expectPrompt(aMaxLen)

@@ -39,6 +39,7 @@ class Environment(object):
 
     # ------------------------------------------------------------------------------
     def _clear(self):
+        self._depParser = None
         # self.workPath = None
         # self.workCfgFile = None
 
@@ -56,7 +57,6 @@ class Environment(object):
         # self.projectConfig = None
 
         self.pathMaker = None
-        self.depParser = None
     # ------------------------------------------------------------------------------
 
     # ----------------------------------------------------------------------------
@@ -87,20 +87,20 @@ class Environment(object):
         with open(lProjectPath, 'r') as lProjectFile:
             self.currentproj.config = json.load(lProjectFile)
 
-        self.depParser = DepFileParser(
-            self.currentproj.config['toolset'],
-            self.pathMaker,
-            aVerbosity=self._verbosity
-        )
+        # self.depParser = DepFileParser(
+        #     self.currentproj.config['toolset'],
+        #     self.pathMaker,
+        #     aVerbosity=self._verbosity
+        # )
 
-        try:
-            self.depParser.parse(
-                self.currentproj.config['topPkg'],
-                self.currentproj.config['topCmp'],
-                self.currentproj.config['topDep']
-            )
-        except IOError as e:
-            pass
+        # try:
+        #     self.depParser.parse(
+        #         self.currentproj.config['topPkg'],
+        #         self.currentproj.config['topCmp'],
+        #         self.currentproj.config['topDep']
+        #     )
+        # except IOError as e:
+        #     pass
     # ----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
@@ -112,6 +112,30 @@ class Environment(object):
     pathMaker: {pathMaker}
     parser: {depParser}
     }})'''.format(**(self.__dict__))
+    # -----------------------------------------------------------------------------
+
+
+    # -----------------------------------------------------------------------------
+    @property
+    def depParser(self):
+        if self._depParser is None:
+
+            self._depParser = DepFileParser(
+                self.currentproj.config['toolset'],
+                self.pathMaker,
+                aVerbosity=self._verbosity
+            )
+
+            try:
+                self._depParser.parse(
+                    self.currentproj.config['topPkg'],
+                    self.currentproj.config['topCmp'],
+                    self.currentproj.config['topDep']
+                )
+            except IOError as e:
+                pass
+
+        return self._depParser
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------

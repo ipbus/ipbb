@@ -17,10 +17,25 @@ kProjDir = 'proj'
 
 
 # ------------------------------------------------------------------------------
+# class ProjectStub(object):
+#     """docstring for ProjectStub"""
+#     def __init__(self):
+#         super(ProjectStub, self).__init__()
+#         self.name = None
+#         self.path = None
+#         self.file = None
+#         self.config = None
+# ------------------------------------------------------------------------------
+class FolderInfo(object):
+    pass
+
+# ------------------------------------------------------------------------------
 class Environment(object):
     """docstring for Environment"""
 
     _verbosity = 0
+
+
 
     # ----------------------------------------------------------------------------
     def __init__(self):
@@ -31,13 +46,21 @@ class Environment(object):
 
     # ------------------------------------------------------------------------------
     def _clear(self):
-        self.workPath = None
-        self.workCfgFile = None
+        # self.workPath = None
+        # self.workCfgFile = None
 
-        self.project = None
-        self.projectPath = None
-        self.projectFile = None
-        self.projectConfig = None
+        self.work = FolderInfo()
+        self.work.path = None
+        self.work.cfgFile = None
+
+        self.currentproj = FolderInfo()
+        self.currentproj.name = None
+        self.currentproj.path = None
+        self.currentproj.file = None
+        self.currentproj.config = None
+        # self.projectPath = None
+        # self.projectFile = None
+        # self.projectConfig = None
 
         self.pathMaker = None
         self.depParser = None
@@ -54,8 +77,8 @@ class Environment(object):
         if not lWorkAreaPath:
             return
 
-        self.workPath, self.workCfgFile = split(lWorkAreaPath)
-        self.pathMaker = Pathmaker(self.src, self._verbosity)
+        self.work.path, self.work.cfgFile = split(lWorkAreaPath)
+        self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
 
         lProjectPath = findFileInParents(kProjAreaCfgFile)
 
@@ -63,25 +86,25 @@ class Environment(object):
         if not lProjectPath:
             return
 
-        self.projectPath, self.projectFile = split(lProjectPath)
-        self.project = basename(self.projectPath)
+        self.currentproj.path, self.currentproj.file = split(lProjectPath)
+        self.currentproj.name = basename(self.currentproj.path)
 
         # Import project settings
         import json
         with open(lProjectPath, 'r') as lProjectFile:
-            self.projectConfig = json.load(lProjectFile)
+            self.currentproj.config = json.load(lProjectFile)
 
         self.depParser = DepFileParser(
-            self.projectConfig['toolset'],
+            self.currentproj.config['toolset'],
             self.pathMaker,
             aVerbosity=self._verbosity
         )
 
         try:
             self.depParser.parse(
-                self.projectConfig['topPkg'],
-                self.projectConfig['topCmp'],
-                self.projectConfig['topDep']
+                self.currentproj.config['topPkg'],
+                self.currentproj.config['topCmp'],
+                self.currentproj.config['topDep']
             )
         except IOError as e:
             pass
@@ -100,26 +123,28 @@ class Environment(object):
 
     # -----------------------------------------------------------------------------
     @property
-    def src(self):
-        return join(self.workPath, kSourceDir) if self.workPath is not None else None
+    def srcdir(self):
+        return join(self.work.path, kSourceDir) if self.work.path is not None else None
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     @property
-    def proj(self):
-        return join(self.workPath, kProjDir) if self.workPath is not None else None
+    def projdir(self):
+        return join(self.work.path, kProjDir) if self.work.path is not None else None
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
-    def getSources(self):
-        return next(walk(self.src))[1]
+    @property
+    def sources(self):
+        return next(walk(self.srcdir))[1]
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
-    def getProjects(self):
+    @property
+    def projects(self):
         return [
-            lProj for lProj in next(walk(self.proj))[1]
-            if exists(join(self.proj, lProj, kProjAreaCfgFile))
+            lProj for lProj in next(walk(self.projdir))[1]
+            if exists(join(self.projdir, lProj, kProjAreaCfgFile))
         ]
     # -----------------------------------------------------------------------------
 

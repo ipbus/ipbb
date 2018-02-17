@@ -46,7 +46,7 @@ def addrtab(env, aDest):
         pass
 
     import sh
-    for addrtab in env.depParser.CommandList["addrtab"]:
+    for addrtab in env.depParser.commands["addrtab"]:
         print(sh.cp('-av', addrtab.FilePath,
                     join(aDest, basename(addrtab.FilePath))
                     ))
@@ -65,7 +65,7 @@ def gendecoders(ctx):
     with DirSentry(env.projectPath) as lProjDir:
         sh.rm('-rf', lDecodersDir)
         # Gather address tables
-        ctx.invoke(addrtab, output=lDecodersDir)
+        ctx.invoke(addrtab, aDest=lDecodersDir)
 
     # ------------------------------------------------------------------------------
     # TODO: Clean me up
@@ -104,7 +104,7 @@ def gendecoders(ctx):
     lUpdatedDecoders = []
     lGen = sh.Command(lGenScript)
     with DirSentry(join(env.projectPath, lDecodersDir)) as lProjDir:
-        for lAddr in env.depParser.CommandList['addrtab']:
+        for lAddr in env.depParser.commands['addrtab']:
             echo("Processing "+style(basename(lAddr.FilePath), fg='blue'))
             # Interested in top-level address tables only
             if not lAddr.TopLevel:

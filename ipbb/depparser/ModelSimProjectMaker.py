@@ -11,10 +11,10 @@ from ..tools.common import SmartOpen
 
 class ModelSimProjectMaker(object):
     # --------------------------------------------------------------
-    def __init__(self, aTurbo=True):
-    # def __init__(self, aPathmaker, aTurbo=True):
-        # self.pathmaker = aPathmaker
+    def __init__(self, aReverse = False, aTurbo=True):
+        self.reverse = aReverse
         self.turbo = aTurbo
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -45,9 +45,11 @@ class ModelSimProjectMaker(object):
             write('vmap {0} {1}'.format(ma[0], ma[1]))
             write('vcom -work {0} -refresh -force_refresh'.format(ma[0]))
 
+        lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
+
         lCommandGroups = {}
         # ----------------------------------------------------------
-        for src in reversed(aCommandList['src']):
+        for src in lSrcs:
 
             # ----------------------------------------------------------
             if src.Include:

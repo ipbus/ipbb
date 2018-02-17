@@ -17,13 +17,13 @@ from click import echo, style, secho
 
 
 # ------------------------------------------------------------------------------
-def _getprojects(env):
+# def _getprojects(env):
 
-    if not exists(env.proj):
-        raise click.ClickException("Directory '%s' does not exist." % env.proj )
+#     if not exists(env.proj):
+#         raise click.ClickException("Directory '%s' does not exist." % env.proj )
 
-    '''Returns the list of existing projects'''
-    return [ lProj for lProj in next(os.walk(env.proj))[1] if exists( join( env.proj, lProj, kProjAreaCfgFile ) ) ]
+#     '''Returns the list of existing projects'''
+#     return [ lProj for lProj in next(os.walk(env.proj))[1] if exists( join( env.proj, lProj, kProjAreaCfgFile ) ) ]
 # ------------------------------------------------------------------------------
 
 
@@ -115,26 +115,11 @@ def create( env, kind, projname, component, topdep ):
 def ls( env ):
     '''Lists all available project areas
     '''
-    lProjects = _getprojects(env)
+    lProjects = env.projects
     print ( 'Main work area:', env.workPath )
     print ( 'Projects areas:', ', '.join( [
         lProject + ('*' if lProject == env.project else '') for lProject in lProjects
     ] ) )
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-# @proj.command()
-# @click.argument( 'projname' )
-# @click.pass_obj
-# def printpath( env, projname ):
-
-#     lProjects = _getprojects(env)
-
-#     if projname not in lProjects:
-#         raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
-
-#     print ( os.path.join( env.proj, projname ))
 # ------------------------------------------------------------------------------
 
 
@@ -150,7 +135,7 @@ def cd( env, projname, aVerbose ):
     if projname[-1] == os.sep:
         projname = projname[:-1]
 
-    lProjects = _getprojects(env)
+    lProjects = env.projects
     if projname not in lProjects:
         raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 

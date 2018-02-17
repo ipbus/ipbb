@@ -55,15 +55,15 @@ def vivado(ctx, proj):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command('project', short_help='Assemble the project from sources.')
+@vivado.command('make-project', short_help='Assemble the project from sources.')
 @click.option('-r', '--reverse', 'aReverse', is_flag=True)
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def project(env, aReverse, aToScript, aToStdout):
+def makeproject(env, aReverse, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
-    lSessionId = 'project'
+    lSessionId = 'make-project'
 
     # Check if vivado is around
     ensureVivado(env)
@@ -89,11 +89,11 @@ def project(env, aReverse, aToScript, aToStdout):
         ) as lTarget:
             lVivadoMaker.write(
                 lTarget,
-                lDepFileParser.ScriptVariables,
-                lDepFileParser.Components,
-                lDepFileParser.CommandList,
-                lDepFileParser.Libs,
-                lDepFileParser.Maps
+                lDepFileParser.vars,
+                lDepFileParser.components,
+                lDepFileParser.commands,
+                lDepFileParser.libs,
+                lDepFileParser.maps
             )
     except VivadoConsoleError as lExc:
         secho("Vivado errors detected\n" +
@@ -202,7 +202,7 @@ def orderconstr(env, order):
 
 
     lDepFileParser = env.depParser
-    lConstrSrc = [src.FilePath for src in lDepFileParser.CommandList['src'] if splitext(src.FilePath)[1] in ['.tcl', '.xdc']]
+    lConstrSrc = [src.FilePath for src in lDepFileParser.commands['src'] if splitext(src.FilePath)[1] in ['.tcl', '.xdc']]
     lCmdTemplate = 'reorder_files -fileset constrs_1 -after [get_files {0}] [get_files {1}]'
 
     lConstrOrder = lConstrSrc if order else [ f for f in reversed(lConstrSrc)]
@@ -471,8 +471,8 @@ def package(ctx):
     echo()
 
     secho("Collecting addresstable", fg='blue')
-    # for addrtab in lDepFileParser.CommandList['addrtab']:
-    for addrtab in env.depParser.CommandList['addrtab']:
+    # for addrtab in lDepFileParser.commands['addrtab']:
+    for addrtab in env.depParser.commands['addrtab']:
         sh.cp('-av', addrtab.FilePath, join(lSrcPath, 'addrtab'), _out=sys.stdout)
     echo()
     # -------------------------------------------------------------------------

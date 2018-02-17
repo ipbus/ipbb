@@ -67,14 +67,14 @@ def info(env, verbose):
         echo  ( )
         secho ( "Firmware packages", fg='blue' )
         lSrcTable = Texttable()
-        for lSrc in env.getSources():
+        for lSrc in env.sources:
             lSrcTable.add_row([lSrc])
         echo  ( lSrcTable.draw() )
 
         echo  ( )
         secho ( "Projects", fg='blue' )
         lProjTable = Texttable()
-        for lProj in env.getProjects():
+        for lProj in env.projects:
             lProjTable.add_row([lProj])
         echo  ( lProjTable.draw() )
         return
@@ -104,21 +104,21 @@ def info(env, verbose):
     lDepTable = Texttable()
     lDepTable.set_cols_align(['c'] * 4)
     lDepTable.add_row(lCommandKinds)
-    lDepTable.add_row([len(env.depParser.CommandList[k]) for k in lCommandKinds])
+    lDepTable.add_row([len(env.depParser.commands[k]) for k in lCommandKinds])
     echo  ( lDepTable.draw() )
 
     echo  ( )
 
-    if not env.depParser.NotFound:
+    if not env.depParser.missing:
         return
     secho  ( "Unresolved item(s)", fg='red' )
 
     lUnresolved = Texttable()
     lUnresolved.add_row(["packages", "components", "paths"])
     lUnresolved.add_row([
-        len(env.depParser.PackagesNotFound),
-        len(env.depParser.ComponentsNotFound),
-        len(env.depParser.PathsNotFound )
+        len(env.depParser.missingPackages),
+        len(env.depParser.missingComponents),
+        len(env.depParser.missingPaths )
     ])
     echo ( lUnresolved.draw() )
 
@@ -142,8 +142,7 @@ def main():
     cli.add_command(repo.init)
     # cli.add_command(repo.cd)
     cli.add_command(repo.add)
-    cli.add_command(repo.srcstat)
-    cli.add_command(repo.srcfind)
+    cli.add_command(repo.src)
 
     from ..cli import proj
     cli.add_command(proj.proj)

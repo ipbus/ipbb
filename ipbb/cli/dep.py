@@ -84,9 +84,9 @@ def report(env, filters):
     secho('* Parsed commands', fg='blue')
 
     lPrepend = re.compile('(^|\n)')
-    for k in lParser.CommandList:
-        echo( '  + {0} ({1})' .format(k, len(lParser.CommandList[k])) )
-        if not lParser.CommandList[k]:
+    for k in lParser.commands:
+        echo( '  + {0} ({1})' .format(k, len(lParser.commands[k])) )
+        if not lParser.commands[k]:
             echo()
             continue
 
@@ -94,7 +94,7 @@ def report(env, filters):
         lCmdTable.header(lCmdHeaders)
         lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         lCmdTable.set_chars(['-', '|', '+', '-'])
-        for lCmd in lParser.CommandList[k]:
+        for lCmd in lParser.commands[k]:
             # print(lCmd)
             # lCmdTable.add_row([str(lCmd)])
             lRow = [
@@ -120,25 +120,25 @@ def report(env, filters):
     string += '+----------------------------------+\n'
     string += '|  Resolved packages & components  |\n'
     string += '+----------------------------------+\n'
-    string += 'packages: ' + str(list(lParser.Components.iterkeys())) + '\n'
+    string += 'packages: ' + str(list(lParser.components.iterkeys())) + '\n'
     string += 'components:\n'
-    for pkg in sorted(lParser.Components):
-        string += '+ %s (%d)\n' % (pkg, len(lParser.Components[pkg]))
-        for cmp in sorted(lParser.Components[pkg]):
+    for pkg in sorted(lParser.components):
+        string += '+ %s (%d)\n' % (pkg, len(lParser.components[pkg]))
+        for cmp in sorted(lParser.components[pkg]):
             string += '  > ' + str(cmp) + '\n'
 
-    if lParser.NotFound:
+    if lParser.missing:
         string += '\n'
         string += '+----------------------------------------+\n'
         string += '|  Missing packages, components & files  |\n'
         string += '+----------------------------------------+\n'
 
-        if lParser.PackagesNotFound:
+        if lParser.missingPackages:
             string += 'packages: ' + \
-                str(list(lParser.PackagesNotFound)) + '\n'
+                str(list(lParser.missingPackages)) + '\n'
 
         # ------
-        lCNF = lParser.ComponentsNotFound
+        lCNF = lParser.missingComponents
         if lCNF:
             string += 'components: \n'
 
@@ -152,7 +152,7 @@ def report(env, filters):
         # ------
     echo(string)
         
-    lFNF = lParser.FilesNotFound
+    lFNF = lParser.missingFiles
 
     if lFNF:
 
@@ -191,7 +191,7 @@ def ls(env, group, output):
     '''
 
     with SmartOpen(output) as lWriter:
-        for addrtab in env.depParser.CommandList[group]:
+        for addrtab in env.depParser.commands[group]:
             lWriter(addrtab.FilePath)
 # ------------------------------------------------------------------------------
 
@@ -203,7 +203,7 @@ def components(env, output):
 
 
     with SmartOpen(output) as lWriter:
-        for lPkt, lCmps in env.depParser.Components.iteritems():
+        for lPkt, lCmps in env.depParser.components.iteritems():
             lWriter('[' + lPkt + ']')
             for lCmp in lCmps:
                 lWriter(lCmp)
@@ -285,7 +285,7 @@ def hash(env, output, verbose):
 
         lProjHash = lAlgo()
         lGrpHashes = collections.OrderedDict()
-        for lGrp, lCmds in env.depParser.CommandList.iteritems():
+        for lGrp, lCmds in env.depParser.commands.iteritems():
             lGrpHash = lAlgo()
             if verbose:
                 lWriter("#" + "-" * 79)

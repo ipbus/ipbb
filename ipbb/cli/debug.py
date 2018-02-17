@@ -19,10 +19,10 @@ def debug(ctx):
 def dump(ctx):
 
     if 'IPBB_ROOT' in os.environ:
-        echo(os.environ['IPBB_ROOT'])
+        echo(style('IPBB_ROOT', fg='blue')+': '+os.environ['IPBB_ROOT'])
 
     env = ctx.obj
-    echo('src: '+env.src)
-    echo('proj: '+env.proj)
-    echo('project: '+env.project)
+    echo(style('src dir', fg='blue')+': '+env.srcdir)
+    echo(style('proj dir', fg='blue')+': '+env.projdir)
+    echo(style('project name', fg='blue')+': '+env.currentproj.name)
 # ------------------------------------------------------------------------------

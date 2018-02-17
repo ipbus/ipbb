@@ -110,7 +110,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # Extract the list of cores
     lIPCores = [ 
                 split(name)[1] for name, ext in 
-                ( splitext(src.FilePath) for src in lDepFileParser.CommandList["src"] )
+                ( splitext(src.FilePath) for src in lDepFileParser.commands["src"] )
                     if ext in [".xci", ".edn"]
                 ]
 
@@ -148,11 +148,11 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
         ) as lTarget:
             lIPCoreSimMaker.write(
                 lTarget,
-                lDepFileParser.ScriptVariables,
-                lDepFileParser.Components,
-                lDepFileParser.CommandList,
-                lDepFileParser.Libs,
-                lDepFileParser.Maps
+                lDepFileParser.vars,
+                lDepFileParser.components,
+                lDepFileParser.commands,
+                lDepFileParser.libs,
+                lDepFileParser.maps
             )
     except VivadoConsoleError as lExc:
         secho("Vivado errors detected\n" +
@@ -213,7 +213,7 @@ def fli(env, dev, ipbuspkg):
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    if ipbuspkg not in env.getSources():
+    if ipbuspkg not in env.sources:
         raise click.ClickException(
             "Package %s not found in source/. The FLI cannot be built." % ipbuspkg)
     # -------------------------------------------------------------------------
@@ -240,12 +240,13 @@ def fli(env, dev, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-@sim.command('project', short_help="Assemble the simulation project from sources")
-@click.option('--optimize/--single-commands', default=True, help="Toggle sim script optimisation.")
+@sim.command('make-project', short_help="Assemble the simulation project from sources")
+@click.option('-r/-n', '--reverse/--natural', 'aReverse', default=True)
+@click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle sim script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def project(env, optimize, aToScript, aToStdout):
+def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     """
     """
 
@@ -276,26 +277,27 @@ def project(env, optimize, aToScript, aToStdout):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.project, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(optimize)
+    lSimProjMaker = ModelSimProjectMaker(aReverse, aOptimise)
 
     lDryRun = aToStdout or aToScript
     try:
         with ModelSimBatch2g(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                lDepFileParser.ScriptVariables,
-                lDepFileParser.Components,
-                lDepFileParser.CommandList,
-                lDepFileParser.Libs,
-                lDepFileParser.Maps
+                lDepFileParser.vars,
+                lDepFileParser.components,
+                lDepFileParser.commands,
+                lDepFileParser.libs,
+                lDepFileParser.maps
             )
+    except sh.ErrorReturnCode as e:
+        secho('ERROR: Sim exit code: {}.\nCommand:\n\n   {}\n'.format(e.exit_code,e.full_cmd), fg='red')
+        raise click.ClickException("Compilation failed")
     except Exception as e:
-    # except sh.ErrorReturnCode_255 as e:
         import traceback, StringIO
         lBuf = StringIO.StringIO()
         traceback.print_exc(file=lBuf)
         secho(lBuf.getvalue(), fg='red')
-        # secho("Exception: "+str(e), fg='red')
         raise click.ClickException("Compilation failed")
     
     if lDryRun:

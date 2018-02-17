@@ -41,14 +41,14 @@ def findFileInParents(aAreaFileName):
 # ------------------------------------------------------------------------------
 def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 
-    if not aDepFileParser.NotFound:
+    if not aDepFileParser.missing:
         return
 
     lRootName = get_current_context().find_root().info_name
-    secho("ERROR: Project '{}' contains unresolved dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
+    secho("ERROR: Project '{}' contains missing dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
         aCurrentProj,
-        len(aDepFileParser.NotFound),
-        ("" if len(aDepFileParser.NotFound) == 1 else "s"),
+        len(aDepFileParser.missing),
+        ("" if len(aDepFileParser.missing) == 1 else "s"),
         lRootName,
     ), fg='red')
     confirm("Do you want to continue anyway?", abort=True)

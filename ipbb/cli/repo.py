@@ -45,7 +45,7 @@ def init(env, workarea):
 
 
 # ------------------------------------------------------------------------------
-@click.group('add', short_help="Add new source packages.")
+@click.group('add', short_help="Add source packages.")
 @click.pass_obj
 def add(env):
     '''Add a new package to the source area'''
@@ -281,18 +281,24 @@ def tar(env, repo, dest, strip):
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
 
+@click.group('src', short_help="Utility commands to handle sources.")
+@click.option('-s', '--src', default=None)
+@click.pass_obj
+def src(env):
+    pass
+
 
 # ------------------------------------------------------------------------------
-@click.command('src-status', short_help="Summary of the status of source packages.")
+@src.command('status', short_help="Summary of the status of source packages.")
 @click.pass_obj
-def srcstat(env):
+def status(env):
 
     if not env.workPath:
         secho  ( 'ERROR: No ipbb work area detected', fg='red' )
         return
 
     secho ( "Packages", fg='blue' )
-    lSrcs = env.getSources()
+    lSrcs = env.sources
     if not lSrcs:
         return
 
@@ -352,7 +358,7 @@ def srcstat(env):
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-@click.command('src-find', short_help="Find src files.")
+@src.command('find', short_help="Find src files.")
 @click.pass_obj
-def srcfind(env):
+def find(env):
     sh.find(env.src,'-name', '*.vhd', _out=sys.stdout)

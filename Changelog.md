@@ -4,22 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - Pending
+### Changed
 - `ipcores` and `project` `sim` commands updated to Vivado 2017.4
-- Added `--filter` option to `ipbb dep report`
 - Simplified `ipbb vivado project`: IP syntesis runs are not launched automatically anymore.
-- Added `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
-- Added vivavo variant autodetection to `ipb-prog vivado`.
 - Improved `add git` branch/tag resolution.
 - Reworked `sim project` to improve speed and reliability.
+- Subcommands `project` renamed `make-project`.
+
+### Added
+- `--filter` option to `ipbb dep report`
+- `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
+- Vivado variant autodetection to `ipb-prog vivado`.
 
 ## [0.2.9] - 2018-01-08
-- Added check on branch/tag validity when adding git repositories.
+### Changed
 - Improved ipbus-decoder code diff.
-- Added suppoer for conda-based environment.
-- Added the `cleanup` subcommand to `sim` and `vivado` command groups.
-- Added the `srcstat` command to provide a compact status report of git and svn packages.
 - Standardized `vivado project`, `sim project` and `sim ipcores` options.
+
+### Added
+- Check on branch/tag validity when adding git repositories.
+- Suppoer for conda-based environment.
+- The `cleanup` subcommand to `sim` and `vivado` command groups.
+- The `srcstat` command to provide a compact status report of git and svn packages.
 
 ## [0.2.8] - 2017-10-05
 ### Changed

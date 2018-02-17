@@ -19,11 +19,11 @@ from click import echo, style, secho
 # ------------------------------------------------------------------------------
 # def _getprojects(env):
 
-#     if not exists(env.proj):
-#         raise click.ClickException("Directory '%s' does not exist." % env.proj )
+#     if not exists(env.projdir):
+#         raise click.ClickException("Directory '%s' does not exist." % env.projdir )
 
 #     '''Returns the list of existing projects'''
-#     return [ lProj for lProj in next(os.walk(env.proj))[1] if exists( join( env.proj, lProj, kProjAreaCfgFile ) ) ]
+#     return [ lProj for lProj in next(os.walk(env.projdir))[1] if exists( join( env.projdir, lProj, kProjAreaCfgFile ) ) ]
 # ------------------------------------------------------------------------------
 
 
@@ -65,19 +65,19 @@ def create( env, kind, projname, component, topdep ):
     '''
     # ------------------------------------------------------------------------------
     # Must be in a build area
-    if env.workPath is None:
+    if env.work.path is None:
         raise click.ClickException('Build area root directory not found')
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
-    lProjAreaPath = join( env.workPath, kProjDir, projname )
+    lProjAreaPath = join( env.work.path, kProjDir, projname )
     if exists(lProjAreaPath):
         raise click.ClickException('Directory %s already exists' % lProjAreaPath)
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
     from ..depparser.Pathmaker import Pathmaker
-    lPathmaker = Pathmaker(env.src, 0)
+    lPathmaker = Pathmaker(env.srcdir, 0)
     lTopPackage, lTopComponent = component
     lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
     if not exists(lTopDepPath):
@@ -116,9 +116,9 @@ def ls( env ):
     '''Lists all available project areas
     '''
     lProjects = env.projects
-    print ( 'Main work area:', env.workPath )
+    print ( 'Main work area:', env.work.path )
     print ( 'Projects areas:', ', '.join( [
-        lProject + ('*' if lProject == env.project else '') for lProject in lProjects
+        lProject + ('*' if lProject == env.currentproj.name else '') for lProject in lProjects
     ] ) )
 # ------------------------------------------------------------------------------
 
@@ -139,10 +139,10 @@ def cd( env, projname, aVerbose ):
     if projname not in lProjects:
         raise click.ClickException('Requested work area not found. Available areas: %s' % ', '.join(lProjects))
 
-    with DirSentry( join(env.proj, projname) ) as lSentry:
+    with DirSentry( join(env.projdir, projname) ) as lSentry:
         env._autodetect()
 
-    os.chdir(join(env.proj, projname))
+    os.chdir(join(env.projdir, projname))
     if aVerbose:
         echo ( "New current directory %s" % os.getcwd() )
 # ------------------------------------------------------------------------------

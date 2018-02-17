@@ -70,13 +70,13 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.project is None:
+    if env.currentproj.name is None:
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again')
 
-    if env.projectConfig['toolset'] != 'sim':
+    if env.currentproj.config['toolset'] != 'sim':
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'])
+            "Work area toolset mismatch. Expected 'sim', found '%s'" % env.currentproj.config['toolset'])
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -197,13 +197,13 @@ def fli(env, dev, ipbuspkg):
 
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.project is None:
+    if env.currentproj.name is None:
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again')
 
-    if env.projectConfig['toolset'] != 'sim':
+    if env.currentproj.config['toolset'] != 'sim':
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'])
+            "Work area toolset mismatch. Expected 'sim', found '%s'" % env.currentproj.config['toolset'])
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -223,7 +223,7 @@ def fli(env, dev, ipbuspkg):
     # Apply set
     # os.environ['MTI_VCO_MODE']='64'
 
-    lFliSrc = join(env.src, ipbuspkg, 'components', 'ipbus_eth',
+    lFliSrc = join(env.srcdir, ipbuspkg, 'components', 'ipbus_eth',
                    'firmware', 'sim', 'modelsim_fli')
 
     import sh
@@ -254,13 +254,13 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.project is None:
+    if env.currentproj.name is None:
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again')
 
-    if env.projectConfig['toolset'] != 'sim':
+    if env.currentproj.config['toolset'] != 'sim':
         raise click.ClickException(
-            "Project area toolset mismatch. Expected 'sim', found '%s'" % env.projectConfig['toolset'])
+            "Project area toolset mismatch. Expected 'sim', found '%s'" % env.currentproj.config['toolset'])
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -275,7 +275,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     lDepFileParser = env.depParser
 
     # Ensure thay all dependencies have been resolved
-    ensureNoMissingFiles(env.project, lDepFileParser)
+    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lSimProjMaker = ModelSimProjectMaker(aReverse, aOptimise)
 
@@ -359,6 +359,22 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
     # Make it executable
     os.chmod('vsim', 0755)
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def sim_get_command_aliases(self, ctx, cmd_name):
+    """
+    Temporary hack for backward compatibility
+    """
+    rv = click.Group.get_command(self, ctx, cmd_name)
+    if rv is not None:
+        return rv
+    if cmd_name == 'project':
+        return click.Group.get_command(self, ctx, 'make-project')
+
+import types
+sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 # ------------------------------------------------------------------------------
 
 

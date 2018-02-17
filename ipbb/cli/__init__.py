@@ -16,18 +16,11 @@ kSourceDir = 'src'
 kProjDir = 'proj'
 
 
-# ------------------------------------------------------------------------------
-# class ProjectStub(object):
-#     """docstring for ProjectStub"""
-#     def __init__(self):
-#         super(ProjectStub, self).__init__()
-#         self.name = None
-#         self.path = None
-#         self.file = None
-#         self.config = None
+
 # ------------------------------------------------------------------------------
 class FolderInfo(object):
     pass
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 class Environment(object):

@@ -28,14 +28,14 @@ def dep(ctx, proj):
 
     env = ctx.obj
 
-    lProj = proj if proj is not None else env.project
+    lProj = proj if proj is not None else env.currentproj.name
     if lProj is not None:
         # Change directory before executing subcommand
         from .proj import cd
         ctx.invoke(cd, projname=lProj)
         return
     else:
-        if env.project is None:
+        if env.currentproj.name is None:
             raise click.ClickException('Project area not defined. Move into a project area and try again')
 
 # ------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ def report(env, filters):
             # print(lCmd)
             # lCmdTable.add_row([str(lCmd)])
             lRow = [
-                relpath(lCmd.FilePath, env.workPath),
+                relpath(lCmd.FilePath, env.work.path),
                 ','.join(lCmd.flags()),
                 lCmd.Package,
                 lCmd.Component,
@@ -167,10 +167,10 @@ def report(env, filters):
                 for pathexp in sorted(lPathExps):
 
                     lFNFTable.add_row([
-                        relpath(pathexp, env.workPath),
+                        relpath(pathexp, env.work.path),
                         pkg,
                         cmp,
-                        '\n'.join([relpath(src, env.workPath) for src in lPathExps[pathexp]]),
+                        '\n'.join([relpath(src, env.work.path) for src in lPathExps[pathexp]]),
                         ])
         echo(lPrepend.sub('\g<1>  ',lFNFTable.draw()))
 # ------------------------------------------------------------------------------
@@ -277,7 +277,7 @@ def hash(env, output, verbose):
 
         if verbose:
             lTitle = "{0} hashes for project '{1}'".format(
-                lAlgoName, env.project)
+                lAlgoName, env.currentproj.name)
             lWriter("# " + '=' * len(lTitle))
             lWriter("# " + lTitle)
             lWriter("# " + "=" * len(lTitle))
@@ -313,9 +313,9 @@ def hash(env, output, verbose):
             lWriter()
 
             lWriter("#" + "-" * 79)
-            lWriter("# Global hash for project '" + env.project + "'")
+            lWriter("# Global hash for project '" + env.currentproj.name + "'")
             lWriter("#" + "-" * 79)
-            lWriter(lProjHash.hexdigest(), env.project)
+            lWriter(lProjHash.hexdigest(), env.currentproj.name)
 
         if not verbose:
             lWriter(lProjHash.hexdigest())

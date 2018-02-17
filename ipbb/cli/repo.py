@@ -27,9 +27,9 @@ def init(env, workarea):
 
     secho('Setting up new firmware work area \'' + workarea + '\'', fg='green')
 
-    if env.workPath is not None:
+    if env.work.path is not None:
         raise click.ClickException(
-            'Cannot create a new work area inside an existing one %s' % env.workPath)
+            'Cannot create a new work area inside an existing one %s' % env.work.path)
 
     if exists(workarea):
         raise click.ClickException(
@@ -51,7 +51,7 @@ def add(env):
     '''Add a new package to the source area'''
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.workPath is None:
+    if env.work.path is None:
         raise click.ClickException('Build area root directory not found')
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ def git(env, repo, branch, dest):
     lUrl = urlparse(repo)
     # Strip '.git' at the end
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
-    lRepoLocalPath = join(env.workPath, kSourceDir, lRepoName)
+    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
     # Check for 
     if exists(lRepoLocalPath):
@@ -122,14 +122,14 @@ def git(env, repo, branch, dest):
     if dest is not None:
         lArgs += [dest]
 
-    sh.git(*lArgs, _out=sys.stdout, _cwd=env.src)
+    sh.git(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
 
     if branch is not None:
 
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    secho('Repository \'{}\' successfully cloned to:\n  {}'.format(lRepoName, join(env.src,lRepoName)), fg='green')
+    secho('Repository \'{}\' successfully cloned to:\n  {}'.format(lRepoName, join(env.srcdir,lRepoName)), fg='green')
 # ------------------------------------------------------------------------------
 
 
@@ -150,7 +150,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
     # Stop if the target directory already exists
     echo('Adding svn repository ' + style(repo, fg='blue'))
 
-    lRepoLocalPath = join(env.src, lRepoName)
+    lRepoLocalPath = join(env.srcdir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException(
@@ -172,7 +172,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
         lCmd = ['svn'] + lArgs
         echo('Executing ' + style(' '.join(lCmd), fg='blue'))
         if not dryrun:
-            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.src)
+            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
     else:
         echo ('Sparse checkout mode: ' + style(' '.join(sparse), fg='blue'))
         # ----------------------------------------------------------------------
@@ -189,7 +189,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
         lCmd = ['svn'] + lArgs
         echo('Executing ' + style(' '.join(lCmd), fg='blue'))
         if not dryrun:
-            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.src)
+            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
         # ----------------------------------------------------------------------
         lArgs = ['update']
         lCmd = ['svn'] + lArgs
@@ -259,7 +259,7 @@ def tar(env, repo, dest, strip):
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
     echo('Adding tarball ' + style(repo, fg='blue') + ' to ' + style(lRepoName, fg='blue'))
-    lRepoLocalPath = join(env.workPath, kSourceDir, lRepoName)
+    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException(
@@ -293,7 +293,7 @@ def src(env):
 @click.pass_obj
 def status(env):
 
-    if not env.workPath:
+    if not env.work.path:
         secho  ( 'ERROR: No ipbb work area detected', fg='red' )
         return
 
@@ -307,7 +307,7 @@ def status(env):
     lSrcTable.set_chars(['-', '|', '+', '-'])
     lSrcTable.header(['name', 'kind', 'version'])
     for lSrc in lSrcs:
-        lSrcDir = join(env.src, lSrc)
+        lSrcDir = join(env.srcdir, lSrc)
 
         lKind, lBranch = "unknown", None
 
@@ -361,4 +361,4 @@ def status(env):
 @src.command('find', short_help="Find src files.")
 @click.pass_obj
 def find(env):
-    sh.find(env.src,'-name', '*.vhd', _out=sys.stdout)
+    sh.find(env.srcdir,'-name', '*.vhd', _out=sys.stdout)

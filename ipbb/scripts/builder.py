@@ -50,7 +50,7 @@ def info(env, verbose):
 
     from click import echo, style, secho
 
-    if not env.workPath:
+    if not env.work.path:
         secho  ( 'ERROR: No ipbb work area detected', fg='red' )
         return
 
@@ -58,12 +58,12 @@ def info(env, verbose):
     secho ( "ipbb environment", fg='blue' )
     # echo  ( "----------------")
     lEnvTable = Texttable(max_width=0)
-    lEnvTable.add_row(["Work path", env.workPath])
-    if env.projectPath:
-        lEnvTable.add_row(["Project path", env.projectPath])
+    lEnvTable.add_row(["Work path", env.work.path])
+    if env.currentproj.path:
+        lEnvTable.add_row(["Project path", env.currentproj.path])
     echo(lEnvTable.draw())
 
-    if not env.projectPath:
+    if not env.currentproj.path:
         echo  ( )
         secho ( "Firmware packages", fg='blue' )
         lSrcTable = Texttable()
@@ -81,19 +81,19 @@ def info(env, verbose):
 
     echo  ( )
 
-    if env.projectConfig is None:
+    if env.currentproj.config is None:
         return
 
     lProjTable = Texttable()
     lProjTable.set_deco(Texttable.VLINES | Texttable.BORDER)
 
-    secho ( "Project '%s'" % env.projectConfig['name'], fg='blue')
+    secho ( "Project '%s'" % env.currentproj.config['name'], fg='blue')
     lProjTable.add_rows([
-        # ["name", env.projectConfig['name']],
-        ["toolset", env.projectConfig['toolset']],
-        ["top package", env.projectConfig['topPkg']],
-        ["top component", env.projectConfig['topCmp']],
-        ["top dep file", env.projectConfig['topDep']],
+        # ["name", env.currentproj.config['name']],
+        ["toolset", env.currentproj.config['toolset']],
+        ["top package", env.currentproj.config['topPkg']],
+        ["top component", env.currentproj.config['topCmp']],
+        ["top dep file", env.currentproj.config['topDep']],
     ], header=False)
     echo  ( lProjTable.draw() )
 

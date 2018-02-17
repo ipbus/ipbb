@@ -22,9 +22,9 @@ from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
 # ------------------------------------------------------------------------------
 def ensureVivado(env):
-    if env.projectConfig['toolset'] != 'vivado':
+    if env.currentproj.config['toolset'] != 'vivado':
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivado', found '%s'" % env.projectConfig['toolset'])
+            "Work area toolset mismatch. Expected 'vivado', found '%s'" % env.currentproj.config['toolset'])
 
     if not which('vivado'):
         # if 'XILINX_VIVADO' not in os.environ:
@@ -42,17 +42,32 @@ def vivado(ctx, proj):
 
     env = ctx.obj
 
-    lProj = proj if proj is not None else env.project
-    if lProj is not None:
+    # lProj = proj if proj is not None else env.currentproj.name
+    if proj is not None:
         # Change directory before executing subcommand
         from .proj import cd
-        ctx.invoke(cd, projname=lProj)
+        ctx.invoke(cd, projname=proj)
         return
     else:
-        if env.project is None:
+        if env.currentproj.name is None:
             raise click.ClickException('Project area not defined. Move into a project area and try again')
 # ------------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
+def vivado_get_command_aliases(self, ctx, cmd_name):
+    """
+    Temporary hack for backward compatibility
+    """
+    rv = click.Group.get_command(self, ctx, cmd_name)
+    if rv is not None:
+        return rv
+    if cmd_name == 'project':
+        return click.Group.get_command(self, ctx, 'make-project')
+
+import types
+vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
@@ -71,7 +86,7 @@ def makeproject(env, aReverse, aToScript, aToStdout):
     lDepFileParser = env.depParser
 
     # Ensure thay all dependencies have been resolved
-    ensureNoMissingFiles(env.project, lDepFileParser)
+    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lVivadoMaker = VivadoProjectMaker(aReverse)
 
@@ -119,7 +134,7 @@ def synth(env, jobs):
     lSessionId = 'synth'
 
     # Check
-    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
@@ -143,7 +158,7 @@ def synth(env, jobs):
         raise click.Abort()
 
 
-    secho("\n{}: Synthesis completed successfully.\n".format(env.project))
+    secho("\n{}: Synthesis completed successfully.\n".format(env.currentproj.name))
 # ------------------------------------------------------------------------------
 
 
@@ -157,7 +172,7 @@ def impl(env, jobs):
     lSessionId = 'impl'
 
     # Check
-    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
 
@@ -180,7 +195,7 @@ def impl(env, jobs):
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 
-    secho("\n{}: Implementation completed successfully.\n".format(env.project))
+    secho("\n{}: Implementation completed successfully.\n".format(env.currentproj.name))
 # ------------------------------------------------------------------------------
 
 
@@ -194,7 +209,7 @@ def orderconstr(env, order):
 
     lSessionId = 'order-constr'
     # Check
-    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
 
@@ -232,7 +247,7 @@ def orderconstr(env, order):
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 
-    secho("\n{}: Constraint order set to.\n".format(env.project), fg='green')
+    secho("\n{}: Constraint order set to.\n".format(env.currentproj.name), fg='green')
 # ------------------------------------------------------------------------------
 
 
@@ -243,12 +258,12 @@ def usage(env):
 
     lSessionId = 'usage'
 
-    # if env.project is None:
+    # if env.currentproj.name is None:
     #     raise click.ClickException(
     #         'Project area not defined. Move into a project area and try again')
 
     # Check
-    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
@@ -279,12 +294,12 @@ def bitfile(env):
 
     lSessionId = 'bitfile'
 
-    # if env.project is None:
+    # if env.currentproj.name is None:
     #     raise click.ClickException(
     #         'Project area not defined. Move into a project area and try again')
 
     # Check
-    lVivProjPath = join(env.projectPath, 'top', 'top.xpr')
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
@@ -309,7 +324,7 @@ def bitfile(env):
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 
-    secho("\n{}: Bitfile successfully written.\n".format(env.project))
+    secho("\n{}: Bitfile successfully written.\n".format(env.currentproj.name))
 
 # ------------------------------------------------------------------------------
 
@@ -322,14 +337,14 @@ def status(env):
 
     lSessionId = 'status'
 
-    # if env.project is None:
+    # if env.currentproj.name is None:
     #     raise click.ClickException(
     #         'Project area not defined. Move into a project area and try again')
 
     ensureVivado(env)
 
     lOpenCmds = [
-        'open_project %s' % join(env.projectPath, 'top', 'top'),
+        'open_project %s' % join(env.currentproj.path, 'top', 'top'),
     ]
 
     lInfos = {}
@@ -377,14 +392,14 @@ def reset(env):
 
     lSessionId = 'reset'
 
-    # if env.project is None:
+    # if env.currentproj.name is None:
     #     raise click.ClickException(
     #         'Project area not defined. Move into a project area and try again')
 
     ensureVivado(env)
 
     lOpenCmds = [
-        'open_project %s' % join(env.projectPath, 'top', 'top'),
+        'open_project %s' % join(env.currentproj.path, 'top', 'top'),
     ]
 
     lResetCmds = [
@@ -451,7 +466,7 @@ def package(ctx):
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    lSummary = dict(env.projectConfig)
+    lSummary = dict(env.currentproj.config)
     lSummary.update({
         'time': socket.gethostname().replace('.', '_'),
         'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
@@ -481,7 +496,7 @@ def package(ctx):
     # Tar everything up
     secho("Generating tarball", fg='blue')
     lTgzBaseName = '{name}_{host}_{time}'.format(
-        name=env.projectConfig['name'],
+        name=env.currentproj.config['name'],
         host=socket.gethostname().replace('.', '_'),
         time=time.strftime('%y%m%d_%H%M')
     )
@@ -510,10 +525,10 @@ def archive(ctx):
     ensureVivado(env)
 
     lOpenCmds = [
-        'open_project %s' % join(env.projectPath, 'top', 'top'),
+        'open_project %s' % join(env.currentproj.path, 'top', 'top'),
     ]
     lArchiveCmds = [
-        'archive_project %s -force' % join(env.projectPath, '{}.xpr.zip'.format(env.projectConfig['name'])),
+        'archive_project %s -force' % join(env.currentproj.path, '{}.xpr.zip'.format(env.currentproj.config['name'])),
     ]
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError

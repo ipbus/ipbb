@@ -17,11 +17,11 @@ from ..tools.common import which
 @click.pass_obj
 def cleanup(env):
 
-    _, lSubdirs, lFiles =  next(os.walk(env.projectPath))
+    _, lSubdirs, lFiles =  next(os.walk(env.currentproj.path))
     lFiles.remove( kProjAreaCfgFile )
 
 
-    if not click.confirm(style("All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format( env.projectPath ), fg='yellow')):
+    if not click.confirm(style("All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format( env.currentproj.path ), fg='yellow')):
         return
 
     print (lSubdirs, lFiles)
@@ -62,7 +62,7 @@ def gendecoders(ctx):
     # Extract context
     env = ctx.obj
 
-    with DirSentry(env.projectPath) as lProjDir:
+    with DirSentry(env.currentproj.path) as lProjDir:
         sh.rm('-rf', lDecodersDir)
         # Gather address tables
         ctx.invoke(addrtab, aDest=lDecodersDir)
@@ -103,7 +103,7 @@ def gendecoders(ctx):
 
     lUpdatedDecoders = []
     lGen = sh.Command(lGenScript)
-    with DirSentry(join(env.projectPath, lDecodersDir)) as lProjDir:
+    with DirSentry(join(env.currentproj.path, lDecodersDir)) as lProjDir:
         for lAddr in env.depParser.commands['addrtab']:
             echo("Processing "+style(basename(lAddr.FilePath), fg='blue'))
             # Interested in top-level address tables only

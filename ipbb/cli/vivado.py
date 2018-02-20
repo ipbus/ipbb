@@ -297,6 +297,49 @@ def reset(env):
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+@vivado.command()
+@click.pass_obj
+def fullchain(env):
+    '''Reset, synth, and impl down to the bitfile'''
+
+    lSessionId = 'fullchain'
+
+    if env.project is None:
+        raise click.ClickException(
+            'Project area not defined. Move into a project area and try again')
+
+    ensureVivado(env)
+
+    lOpenCmds = [
+        'open_project %s' % join(env.projectPath, 'top', 'top'),
+    ]
+
+    lSynthCmds = [
+        'reset_run synth_1',
+        'launch_runs synth_1',
+        'wait_on_run synth_1',
+    ]
+    lImplCmds = [
+        'reset_run impl_1',
+        'launch_runs impl_1 -to_step write_bitstream',
+        'wait_on_run impl_1',
+    ]
+
+    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    try:
+        with VivadoOpen(lSessionId) as lTarget:
+            lTarget(lOpenCmds)
+            lTarget(lSynthCmds)
+            lTarget(lImplCmds)
+    except VivadoConsoleError as lExc:
+        secho("Vivado errors detected\n" +
+              "\n".join(lExc.errors), fg='red')
+        raise click.Abort()
+# ------------------------------------------------------------------------------
+
+
+
 
 # ------------------------------------------------------------------------------
 @vivado.command()

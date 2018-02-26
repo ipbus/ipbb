@@ -5,24 +5,30 @@ import os
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectMaker(object):
+    """
+    Attributes:
+        reverse        (bool): flag to invert the file import order in Vivado.
+        filesets (obj:`dict`): extension-to-fileset association
+    """
+
+    filesets = {
+        '.xdc': 'constrs_1',
+        '.tcl': 'constrs_1',
+        '.mif': 'sources_1',
+        '.vhd': 'sources_1',
+        '.v': 'sources_1',
+        '.xci': 'sources_1',
+        '.ngc': 'sources_1',
+        '.ucf': 'ise_1',
+        '.xco': 'ise_1',
+        '.edn': 'sources_1',
+        '.edf': 'sources_1'
+    }
+
     # --------------------------------------------------------------
     def __init__(self, aReverse = False):
-    # def __init__(self, aPathmaker):
-        # self.pathmaker = aPathmaker
         self.reverse = aReverse
-        self.FileSets = {
-            '.xdc': 'constrs_1',
-            '.tcl': 'constrs_1',
-            '.mif': 'sources_1',
-            '.vhd': 'sources_1',
-            '.v': 'sources_1',
-            '.xci': 'sources_1',
-            '.ngc': 'sources_1',
-            '.ucf': 'ise_1',
-            '.xco': 'ise_1',
-            '.edn': 'sources_1',
-            '.edf': 'sources_1'
-        }
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -79,7 +85,7 @@ class VivadoProjectMaker(object):
             else:
                 if src.Include:
                     cmd = 'add_files -norecurse -fileset {1} {0}'.format(
-                        src.FilePath, self.FileSets[lExt])
+                        src.FilePath, self.filesets[lExt])
                     if src.Vhdl2008:
                         cmd += '\nset_property FILE_TYPE {{VHDL 2008}} [get_files {0}]'.format(
                             src.FilePath)

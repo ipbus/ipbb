@@ -2,13 +2,25 @@ from __future__ import print_function
 import argparse
 import os
 import glob
+import Pathmaker
 from collections import OrderedDict
 from os.path import exists
 
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
+# -----------------------------------------------------------------------------
 class Command(object):
+    """Container class for dep commands parsed form dep files
+
+    Attributes:
+        FilePath  (str): absolute, normalised path to the command target.
+        Package   (str): package the target belongs to.
+        Component (str): component withon 'Package' the target belongs to 
+        Lib       (str): library the file will be added to
+        Map       (str): ?
+        Include   (bool): flag, used to include/exclude target from projects
+        TopLevel  (bool): flag, identifies address table as top-level (address tables only)
+        Vhdl2008  (bool): flags toggles the vhdl 2008 syntax for .vhd files (vhd targets only)
+
+    """
     # --------------------------------------------------------------
     def __init__(self, aFilePath, aPackage, aComponent, aLib, aMap, aInclude, aTopLevel, aVhdl2008):
         self.FilePath = aFilePath
@@ -21,7 +33,6 @@ class Command(object):
         self.Vhdl2008 = aVhdl2008
 
     def __str__(self):
-        # return str(self.__dict__)
 
         lFlags = []
         if not self.Include:
@@ -49,7 +60,41 @@ class Command(object):
     def __eq__(self, other):
         return (self.FilePath == other.FilePath) and (self.Lib == other.Lib)
     # --------------------------------------------------------------
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Experimental
+class DepFile(object):
+    """docstring for DepFile"""
+    def __init__(self, aPackage, aComponent, aDepFileName):
+        super(DepFile, self).__init__()
+        self.pkg = aPackage
+        self.cmp = aComponent
+        self.dep = aDepFileName
+        self.commands = []
+        self.cmds = OrderedDict()
+
+    def __str__(self):
+        pathmaker = Pathmaker.Pathmaker('', 1)
+        return '{}:{} - {}'.format(self.pkg, pathmaker.getPath('', self.cmp, 'include', self.dep), len(self.commands))
+
+class MissingFile(object):
+    """docstring for MissingFile"""
+    def __init__(self, aPackage, aComponent, aPathExpr):
+        super(MissingFile, self).__init__()
+        self.pkg = aPackage
+        self.cmp = aComponent
+        self.xpr = aPathExpr
+
+class MultiCommandExpr(object):
+    pass
+
+
+class CommandFile(object):
+    def __init__(self):
+        super(CommandFile, self).__init__()
+        self.abspath
+# -----------------------------------------------------------------------------
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,6 +137,7 @@ class DepFileParser(object):
         # Member variables
         self._toolset = aToolSet
         self._depth = 0
+        self._includes = None
         self._verbosity = aVerbosity
         self._revDepMap = {}
 
@@ -304,7 +350,10 @@ class DepFileParser(object):
         Parses a dependency file from package aPackage/aComponent
         '''
         # --------------------------------------------------------------
-        # We have gone one layer further down the rabbit hole
+        # We have gone one layer further down the rabbit hole        
+        lParentInclude = self._includes if self._depth != 0 else None
+
+        self._includes = DepFile(aPackage, aComponent, aDepFileName)
         self._depth += 1
         # --------------------------------------------------------------
         if self._verbosity > 1:
@@ -439,6 +488,8 @@ class DepFileParser(object):
                         # Something's off, no files found
                         self.missing.append(
                             (lPathExpr, lParsedLine.cmd, lPackage, lComponent, lDepFilePath))
+
+                        self._includes.commands.append((lPathExpr, lParsedLine.cmd, lPackage, lComponent, lDepFilePath))
                     # --------------------------------------------------------------
                 # --------------------------------------------------------------
 
@@ -504,8 +555,13 @@ class DepFileParser(object):
                                 lFilePath, lPackage, lComponent, lMap, lInclude, lInclude, lTopLevel, lVhdl2008
                             ))
 
+                            self._includes.commands.append(Command(
+                                lFilePath, lPackage, lComponent, lMap, lInclude, lInclude, lTopLevel, lVhdl2008
+                            ))
+
                             self._revDepMap.setdefault(lFilePath, []).append(lDepFilePath)
                         # --------------------------------------------------------------
+
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -513,6 +569,9 @@ class DepFileParser(object):
         if self._verbosity > 1:
             print('<' * self._depth)
         self._depth -= 1
+        if lParentInclude:
+            lParentInclude.commands.append(self._includes)
+            self._includes = lParentInclude
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -527,7 +586,7 @@ class DepFileParser(object):
                 lTemp.reverse()
                 self.commands[i] = lTemp
 
-        # If we are exiting the top-level, uniquify the component list
+            # If we are exiting the top-level, uniquify the component list
             for lPkg in self.components:
                 lTemp = list()
                 lAdded = set()

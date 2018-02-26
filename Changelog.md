@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved `add git` branch/tag resolution.
 - Reworked `sim project` to improve speed and reliability.
 - Subcommands `project` renamed `make-project`.
+- Fixed bug in `srcs stats`, preventing groups from being displayed correctly.
 
 ### Added
 - `--filter` option to `ipbb dep report`
 - `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
 - Vivado variant autodetection to `ipb-prog vivado`.
+-
 
 ## [0.2.9] - 2018-01-08
 ### Changed

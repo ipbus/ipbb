@@ -158,7 +158,7 @@ def synth(env, jobs):
         raise click.Abort()
 
 
-    secho("\n{}: Synthesis completed successfully.\n".format(env.currentproj.name))
+    secho("\n{}: Synthesis completed successfully.\n".format(env.currentproj.name), fg='green')
 # ------------------------------------------------------------------------------
 
 
@@ -195,7 +195,7 @@ def impl(env, jobs):
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 
-    secho("\n{}: Implementation completed successfully.\n".format(env.currentproj.name))
+    secho("\n{}: Implementation completed successfully.\n".format(env.currentproj.name), fg='green')
 # ------------------------------------------------------------------------------
 
 
@@ -324,7 +324,7 @@ def bitfile(env):
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
 
-    secho("\n{}: Bitfile successfully written.\n".format(env.currentproj.name))
+    secho("\n{}: Bitfile successfully written.\n".format(env.currentproj.name), fg='green')
 
 # ------------------------------------------------------------------------------
 
@@ -416,6 +416,8 @@ def reset(env):
         secho("Vivado errors detected\n" +
               "\n".join(lExc.errors), fg='red')
         raise click.Abort()
+    
+    secho("\n{}: synth_1 and impl_1 successfully reset.\n".format(env.currentproj.name), fg='green')
 
 # ------------------------------------------------------------------------------
 
@@ -508,7 +510,7 @@ def package(ctx):
            )
     echo()
 
-    echo("Package " + style('%s' % lTgzPath, fg='green') + " successfully created.")
+    echo("Package " + style('%s' % lTgzPath, fg='green') + " successfully created.", fg='green')
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 

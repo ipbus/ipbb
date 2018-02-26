@@ -26,3 +26,15 @@ def dump(ctx):
     echo(style('proj dir', fg='blue')+': '+env.projdir)
     echo(style('project name', fg='blue')+': '+env.currentproj.name)
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+@debug.command()
+@click.pass_context
+def ipy(ctx):
+    '''Opens IPython to inspect the parser'''
+    # env = ctx.obj
+
+    import IPython
+    IPython.embed()
+# ------------------------------------------------------------------------------

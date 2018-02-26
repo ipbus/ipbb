@@ -142,7 +142,7 @@ def main():
     cli.add_command(repo.init)
     # cli.add_command(repo.cd)
     cli.add_command(repo.add)
-    cli.add_command(repo.src)
+    cli.add_command(repo.srcs)
 
     from ..cli import proj
     cli.add_command(proj.proj)

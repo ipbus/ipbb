@@ -87,30 +87,16 @@ class Environment(object):
         with open(lProjectPath, 'r') as lProjectFile:
             self.currentproj.config = json.load(lProjectFile)
 
-        # self.depParser = DepFileParser(
-        #     self.currentproj.config['toolset'],
-        #     self.pathMaker,
-        #     aVerbosity=self._verbosity
-        # )
-
-        # try:
-        #     self.depParser.parse(
-        #         self.currentproj.config['topPkg'],
-        #         self.currentproj.config['topCmp'],
-        #         self.currentproj.config['topDep']
-        #     )
-        # except IOError as e:
-        #     pass
     # ----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     def __str__(self):
         return self.__repr__() + '''({{
-    working area path: {workPath}
-    project area: {project}
-    configuration: {projectConfig}
+    working area path: {work.path}
+    project area: {currentproj.name}
+    configuration: {currentproj.config}
     pathMaker: {pathMaker}
-    parser: {depParser}
+    parser: {_depParser}
     }})'''.format(**(self.__dict__))
     # -----------------------------------------------------------------------------
 

@@ -281,15 +281,35 @@ def tar(env, repo, dest, strip):
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 # ------------------------------------------------------------------------------
 
-@click.group('src', short_help="Utility commands to handle sources.")
-@click.option('-s', '--src', default=None)
+
+# ------------------------------------------------------------------------------
+@click.group('srcs', short_help="Utility commands to handle source packagess.")
 @click.pass_obj
-def src(env):
+def srcs(env):
     pass
+# ------------------------------------------------------------------------------
+
+
+@srcs.command('run', short_help="Run stuff")
+@click.option('-p', '--pkg', default=None)
+@click.argument('cmd', nargs=1)
+@click.argument('args', nargs=-1)
+@click.pass_obj
+def run(env, pkg, cmd, args):
+
+    if pkg:
+        if pkg not in env.sources:
+            secho  ( "ERROR: '{}' package not known.\nKnown packages:\n{}".format(pkg, '\n'.join(( ' * '+s for s in env.sources))), fg='red' )
+        wd = join(env.srcdir, pkg)
+    else:
+        wd = env.srcdir
+
+    lCmd = sh.Command(cmd)
+    lCmd(*args, _cwd=wd, _out=sys.stdout, _err=sys.stderr)
 
 
 # ------------------------------------------------------------------------------
-@src.command('status', short_help="Summary of the status of source packages.")
+@srcs.command('status', short_help="Summary of the status of source packages.")
 @click.pass_obj
 def status(env):
 
@@ -326,7 +346,7 @@ def status(env):
                 if lKind == 'git':
                     try:
                         # lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
-                        lBranch = sh.git('symbolic-ref', 'HEAD').split('/')[-1].strip()
+                        lBranch = '/'.join(sh.git('symbolic-ref', 'HEAD').split('/')[2:]).strip()
                     except sh.ErrorReturnCode_128:
                         lBranch = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
 
@@ -358,7 +378,7 @@ def status(env):
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-@src.command('find', short_help="Find src files.")
+@srcs.command('find', short_help="Find src files.")
 @click.pass_obj
 def find(env):
     sh.find(env.srcdir,'-name', '*.vhd', _out=sys.stdout)

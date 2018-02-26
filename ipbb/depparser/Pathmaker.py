@@ -31,7 +31,7 @@ class Pathmaker(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def getPath(self, package, component=None, kind=None, name=None, cd=None):
+    def getPath(self, package, component=None, command=None, name=None, cd=None):
 
         # path = [package, component]
         path = [package]
@@ -39,8 +39,8 @@ class Pathmaker(object):
         if component:
             path.append(component)
 
-        if kind:
-            path.append(self.fpaths[kind])
+        if command:
+            path.append(self.fpaths[command])
 
         if cd:
             path.append(cd)
@@ -51,21 +51,21 @@ class Pathmaker(object):
         lPath = os.path.normpath(os.path.join(self.rootdir, *path))
 
         if self.verbosity > 2:
-            print('+++ Pathmaker', package, component, kind, name, cd)
+            print('+++ Pathmaker', package, component, command, name, cd)
         return lPath
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def getDefName(self, kind, name):
-        return "{0}.{1}".format(name, self.fexts[kind])
+    def getDefName(self, command, name):
+        return "{0}.{1}".format(name, self.fexts[command])
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def glob(self, package, component, kind, fileexpr, cd=None):
+    def glob(self, package, component, command, fileexpr, cd=None):
         import glob
 
-        lPathExpr = self.getPath(package, component, kind, fileexpr, cd=cd)
-        lKindPath = self.getPath(package, component, kind, cd=cd)
+        lPathExpr = self.getPath(package, component, command, fileexpr, cd=cd)
+        lKindPath = self.getPath(package, component, command, cd=cd)
 
         # Expand the expression
         lFilePaths = glob.glob(lPathExpr)

@@ -4,20 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - Pending
+## Unreleased
 ### Changed
 - `ipcores` and `project` `sim` commands updated to Vivado 2017.4
 - Simplified `ipbb vivado project`: IP syntesis runs are not launched automatically anymore.
 - Improved `add git` branch/tag resolution.
 - Reworked `sim project` to improve speed and reliability.
 - Subcommands `project` renamed `make-project`.
-- Fixed bug in `srcs stats`, preventing groups from being displayed correctly.
+- Fixed bug in `srcs status`, preventing groups from being displayed correctly.
+- Restored `sim ipcores` compatibility with Vivado 2016 and eralier versions.
+- `tests/bin` renamed `tests/scripts`
 
 ### Added
 - `--filter` option to `ipbb dep report`
 - `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
 - Vivado variant autodetection to `ipb-prog vivado`.
--
+-`srcs run` command, to simplify running commands in the source area.
 
 ## [0.2.9] - 2018-01-08
 ### Changed

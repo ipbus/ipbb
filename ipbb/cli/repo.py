@@ -300,6 +300,7 @@ def run(env, pkg, cmd, args):
     if pkg:
         if pkg not in env.sources:
             secho  ( "ERROR: '{}' package not known.\nKnown packages:\n{}".format(pkg, '\n'.join(( ' * '+s for s in env.sources))), fg='red' )
+            raise click.ClickException("Command failed")
         wd = join(env.srcdir, pkg)
     else:
         wd = env.srcdir

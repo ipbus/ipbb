@@ -510,7 +510,7 @@ def package(ctx):
            )
     echo()
 
-    echo("Package " + style('%s' % lTgzPath, fg='green') + " successfully created.", fg='green')
+    secho("Package " + style('%s' % lTgzPath, fg='green') + " successfully created.", fg='green')
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 

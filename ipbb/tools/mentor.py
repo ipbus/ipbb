@@ -61,11 +61,11 @@ class ModelNotSimFoundError(Exception):
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class ModelSimBatch(object):
+class OldModelSimBatch(object):
     """docstring for VivadoBatch"""
 
     def __init__(self, script):
-        super(ModelSimBatch, self).__init__()
+        super(OldModelSimBatch, self).__init__()
 
         lBasename, lExt = splitext(script)
         if lExt != '.tcl':
@@ -88,12 +88,12 @@ class ModelSimBatch(object):
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class ModelSimBatch2g(object):
+class ModelSimBatch(object):
     """docstring for VivadoBatch"""
 
     #--------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
-        super(ModelSimBatch2g, self).__init__()
+        super(ModelSimBatch, self).__init__()
 
         if scriptpath:
             _, lExt = splitext(scriptpath)

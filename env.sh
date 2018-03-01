@@ -136,9 +136,8 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
   fi
 fi
 
-# add bin and test/bin to PATH
-pathadd PATH ${IPBB_ROOT}/bin
-pathadd PATH ${IPBB_ROOT}/test/bin
+# add test/bin to PATH
+pathadd PATH ${IPBB_ROOT}/test/scripts
 
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"

@@ -59,15 +59,15 @@ class VivadoNotFoundError(Exception):
 
 
 # -------------------------------------------------------------------------
-class VivadoBatch(object):
-    """docstring for VivadoBatch"""
+class OldVivadoBatch(object):
+    """docstring for OldVivadoBatch"""
 
     _reInfo = re.compile('^INFO:')
     _reWarn = re.compile('^WARNING:')
     _reError = re.compile('^ERROR:')
 
     def __init__(self, script):
-        super(VivadoBatch, self).__init__()
+        super(OldVivadoBatch, self).__init__()
 
         lBasename, lExt = os.path.splitext(script)
 
@@ -106,7 +106,7 @@ class VivadoBatch(object):
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class VivadoBatch2g(object):
+class VivadoBatch(object):
     """docstring for VivadoBatch"""
     _reInfo = re.compile('^INFO:')
     _reWarn = re.compile('^WARNING:')
@@ -115,7 +115,7 @@ class VivadoBatch2g(object):
 
     #--------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
-        super(VivadoBatch2g, self).__init__()
+        super(VivadoBatch, self).__init__()
 
         if scriptpath:
             _, lExt = splitext(scriptpath)

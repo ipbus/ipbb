@@ -72,7 +72,7 @@ if [ "${PYTHON_MAJOR}" != "2" ]; then
 fi
 
 # Check if conda is installed
-if ! [ -x "$(command -v conda)" ]; then
+if [ -z "$(command -v conda)" ]; then
   echo -e "${COL_RED}conda is not installed. Please install miniconda and source ${BASH_SOURCE} again.${COL_NULL}" >&2
   return 1
 fi
@@ -103,12 +103,12 @@ if [ ! -d "${IPBB_VENV}" ] ; then
   # virtualenv ${IPBB_VENV} --system-site-packages
   echo "conda create -y -p ${IPBB_VENV}"
   conda create -y -p ${IPBB_VENV}
-  source ${IPBB_VENV}/bin/activate ${IPBB_VENV}
+  source activate ${IPBB_VENV}
 
   echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"
 
   # upgrade pip to the latest greatest version
-  pip install -q --upgrade pip
+  pip install -q --upgrade pip setuptools
 
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
@@ -127,7 +127,7 @@ fi
 
 if [ -z ${CONDA_PREFIX+X} ] ; then
   echo -e "${COL_GREEN}Activating ipbb environment${COL_NULL}"
-  source ${IPBB_VENV}/bin/activate ${IPBB_VENV}
+  source activate ${IPBB_VENV}
 
   # Consistency check
   if [[ ! ${IPBB_VENV} -ef ${CONDA_PREFIX} ]]; then
@@ -150,4 +150,6 @@ eval "$(_IPBB_COMPLETE=source ipbb)"
 eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"
 
 echo -e "${COL_GREEN}ipbb environment successfully loaded${COL_NULL}"
+
+alias deactivate='source deactivate'
 

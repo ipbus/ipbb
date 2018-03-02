@@ -25,7 +25,7 @@ from ..depparser.IPCoresSimMaker import IPCoresSimMaker
 from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
 
 # 
-from ..tools.xilinx import VivadoOpen
+from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 from ..tools.mentor import ModelSimBatch, ModelSimBatch, autodetect
 
 
@@ -60,8 +60,10 @@ def sim(ctx, proj):
 @click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory', show_default=True)
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
+@click.option('-f', '--force-simlib-compilation', 'aForceCompileSimLib', is_flag=True, help="Force simlib compilation/check.")
+
 @click.pass_obj
-def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
+def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
     '''
     Generate the vivado libraries and cores required to simulate the current design.
 
@@ -124,10 +126,10 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
             echo('- ' + style(lIPCore, fg='blue'))
     # -------------------------------------------------------------------------
 
-    lCompileSimlib = not exists(lSimlibPath)
+    lCompileSimlib = not exists(lSimlibPath) or aForceCompileSimLib
 
     if not lCompileSimlib:
-        echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lCompileSimlib))
+        echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lSimlibPath))
 
     # For questa and modelsim the simulator name is the variant name in lowercase
     lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lCompileSimlib, lSimVariant, lSimulator, kIPExportDir)
@@ -213,7 +215,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
             ))
 
     if not exists( lCoreSimDir ):
-        raise clickClickException("Simlib directory not found")
+        raise click.ClickException("Simlib directory not found")
 
     lSimLibs = next(os.walk(lCoreSimDir))[1]
     echo ('Detected simulation libraries: '+ style(', '.join(lSimLibs), fg='blue'))

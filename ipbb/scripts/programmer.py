@@ -4,6 +4,7 @@ from __future__ import print_function
 # Modules
 import click
 import click_didyoumean
+import traceback
 
 from click import echo, secho, style
 from ..tools.common import which

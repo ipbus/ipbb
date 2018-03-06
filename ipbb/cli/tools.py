@@ -53,3 +53,14 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     ), fg='red')
     confirm("Do you want to continue anyway?", abort=True)
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def echoVivadoConsoleError( aExc ):
+    echo(
+        style("Vivado error/critical warnings detected\n", fg='red')+
+        style("\n".join(lExc.errors), fg='red') + '\n' +
+        style("\n".join(lExc.criticalWarns), fg='yello') 
+    )
+
+# ------------------------------------------------------------------------------

@@ -59,49 +59,49 @@ class VivadoNotFoundError(Exception):
 
 
 # -------------------------------------------------------------------------
-class OldVivadoBatch(object):
-    """docstring for OldVivadoBatch"""
+# class OldVivadoBatch(object):
+#     """docstring for OldVivadoBatch"""
 
-    _reInfo = re.compile('^INFO:')
-    _reWarn = re.compile('^WARNING:')
-    _reError = re.compile('^ERROR:')
+#     _reInfo = re.compile('^INFO:')
+#     _reWarn = re.compile('^WARNING:')
+#     _reError = re.compile('^ERROR:')
 
-    def __init__(self, script):
-        super(OldVivadoBatch, self).__init__()
+#     def __init__(self, script):
+#         super(OldVivadoBatch, self).__init__()
 
-        lBasename, lExt = os.path.splitext(script)
+#         lBasename, lExt = os.path.splitext(script)
 
-        if lExt != '.tcl':
-            raise RuntimeError('Bugger off!!!')
+#         if lExt != '.tcl':
+#             raise RuntimeError('Bugger off!!!')
 
-        self._script = script
+#         self._script = script
 
-        # Define custom log file
-        self._log = 'vivado_{0}.log'.format(lBasename)
+#         # Define custom log file
+#         self._log = 'vivado_{0}.log'.format(lBasename)
 
-        # Guard against missing vivado executable
-        if not which('vivado'):
-            raise VivadoNotFoundError(
-                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?')
+#         # Guard against missing vivado executable
+#         if not which('vivado'):
+#             raise VivadoNotFoundError(
+#                 '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?')
 
-        cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(
-            self._script, self._log)
-        process = subprocess.Popen(cmd.split())
+#         cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(
+#             self._script, self._log)
+#         process = subprocess.Popen(cmd.split())
 
-        process.wait()
+#         process.wait()
 
-        self.errors = []
-        self.info = []
-        self.warnings = []
+#         self.errors = []
+#         self.info = []
+#         self.warnings = []
 
-        with open(self._log) as lLog:
-            for i, l in enumerate(lLog):
-                if self._reError.match(l):
-                    self.errors.append((i, l))
-                elif self._reWarn.match(l):
-                    self.warnings.append((i, l))
-                elif self._reInfo.match(l):
-                    self.info.append((i, l))
+#         with open(self._log) as lLog:
+#             for i, l in enumerate(lLog):
+#                 if self._reError.match(l):
+#                     self.errors.append((i, l))
+#                 elif self._reWarn.match(l):
+#                     self.warnings.append((i, l))
+#                 elif self._reInfo.match(l):
+#                     self.info.append((i, l))
 # -------------------------------------------------------------------------
 
 
@@ -189,20 +189,26 @@ class VivadoConsoleError(Exception):
     """Exception raised for errors in the input.
 
     Attributes:
-        message -- explanation of the error
-        command -- input command in which the error occurred
+        errors (list): Error messages
+        command (list): input command in which the error occurred
     """
 
-    def __init__(self, errors, command):
+    def __init__(self, command, errors, criticalWarns=None):
 
         self.errors = errors
+        self.criticalWarns = criticalWarns
         self.command = command
+
+    def __str__(self):
+        return self.__class__.__name__+'(\'{}\', errors: {}, critical warnings {})'.format(self.command, len(self.errors), len(self.criticalWarns))
 # -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
 class VivadoConsole(object):
-    """docstring for Vivado"""
+    """Class to interface to Vivado TCL console
+
+    """
 
     __reCharBackspace = re.compile(".\b")
     __reError = re.compile('^ERROR:')
@@ -221,13 +227,23 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None):
+    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=True):
+        """
+        Args:
+            sessionid (str):
+            echo (bool):
+            echoprefix (str):
+            executable (str):
+            prompt (str):
+            stopOnCWarnings (str):
+        """
         super(VivadoConsole, self).__init__()
 
         # Set up logger first
         self._log = logging.getLogger('Vivado')
         self._log.debug('Starting Vivado')
 
+        self._stopOnCWarnings = stopOnCWarnings
         # define what executable to run
         self._executable=executable
         if not which(self._executable):
@@ -406,8 +422,8 @@ class VivadoConsole(object):
         # for lWarning in lCriticalWarnings:
             # secho(lWarning, fg='yellow')                
         
-        if lErrors:
-            raise VivadoConsoleError(lErrors, aCmd)
+        if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
+            raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
             
         return list(lBuffer)
     # --------------------------------------------------------------

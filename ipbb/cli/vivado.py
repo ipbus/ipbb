@@ -14,7 +14,7 @@ from click import echo, secho, style, confirm
 from texttable import Texttable
 
 from ..tools.common import which, SmartOpen
-from .tools import DirSentry, ensureNoMissingFiles
+from .tools import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError
@@ -111,9 +111,7 @@ def makeproject(env, aReverse, aToScript, aToStdout):
                 lDepFileParser.maps
             )
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red'
-              )
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
         secho("Error caught while generating Vivado TCL commands:\n" +
@@ -153,8 +151,7 @@ def synth(env, jobs):
                 'wait_on_run synth_1',
             ])
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 
 
@@ -191,8 +188,7 @@ def impl(env, jobs):
                 'wait_on_run impl_1',
             ])
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 
     secho("\n{}: Implementation completed successfully.\n".format(env.currentproj.name), fg='green')
@@ -243,8 +239,7 @@ def orderconstr(env, order):
 
 # 'reorder_files -fileset constrs_1 -before [get_files {0}] [get_files {1}]'.format(,to)
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 
     secho("\n{}: Constraint order set to.\n".format(env.currentproj.name), fg='green')
@@ -281,8 +276,7 @@ def usage(env):
             lTarget(lOpenCmds)
             # lTarget(lImplCmds)
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 # ------------------------------------------------------------------------------
 
@@ -320,8 +314,7 @@ def bitfile(env):
             lTarget(lOpenCmds)
             lTarget(lBitFileCmds)
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 
     secho("\n{}: Bitfile successfully written.\n".format(env.currentproj.name), fg='green')
@@ -367,8 +360,7 @@ def status(env):
                 lInfos[lRun] = dict(zip(lProps, lValues))
 
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 
     echo()
@@ -413,8 +405,7 @@ def reset(env):
             lTarget(lOpenCmds)
             lTarget(lResetCmds)
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
     
     secho("\n{}: synth_1 and impl_1 successfully reset.\n".format(env.currentproj.name), fg='green')
@@ -488,7 +479,6 @@ def package(ctx):
     echo()
 
     secho("Collecting addresstable", fg='blue')
-    # for addrtab in lDepFileParser.commands['addrtab']:
     for addrtab in env.depParser.commands['addrtab']:
         sh.cp('-av', addrtab.FilePath, join(lSrcPath, 'addrtab'), _out=sys.stdout)
     echo()
@@ -539,7 +529,6 @@ def archive(ctx):
             lTarget(lOpenCmds)
             lTarget(lArchiveCmds)
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red')
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
 # ------------------------------------------------------------------------------

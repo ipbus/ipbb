@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `--filter` option to `ipbb dep report`
 - `--jobs` option to `ipbb vivado` `synth` and `impl` commands.
 - Vivado variant autodetection to `ipb-prog vivado`.
--`srcs run` command, to simplify running commands in the source area.
+- `srcs run` command, to simplify running commands in the source area.
+- `VivadoConsole` can quite on Vivado's CRITICAL WARNINGS
 
 ## [0.2.9] - 2018-01-08
 ### Changed

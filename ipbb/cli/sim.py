@@ -17,7 +17,7 @@ from os.path import join, splitext, split, exists, splitext, basename, dirname, 
 from click import echo, secho, style
 
 # Tools imports
-from .tools import DirSentry, ensureNoMissingFiles
+from .tools import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
@@ -152,7 +152,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
                 else None
             )
         ) as lVivadoConsole:
-
+        
             lVivadoVersion = lVivadoConsole('version -short')[0]
             lIPCoreSimMaker.write(
                 lVivadoConsole,
@@ -163,9 +163,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
                 lDepFileParser.maps
             )
     except VivadoConsoleError as lExc:
-        secho("Vivado errors detected\n" +
-              "\n".join(lExc.errors), fg='red'
-              )
+        echoVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
         secho("Error caught while generating Vivado TCL commands:\n" +

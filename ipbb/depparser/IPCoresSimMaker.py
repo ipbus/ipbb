@@ -62,8 +62,7 @@ set_property "target_language" "VHDL" $obj
                 write(
                     'config_compile_simlib -cfgopt {' + self.simulator + '.vhdl.unisim: -nodebug}')
         if self.compileSimlibs:
-            write('compile_simlib -simulator ' + self.simulator + ' -directory $xlib_path')
-
+            write('compile_simlib -simulator ' + self.simulator + ' -directory $xlib_path -verbose')
         write(
             'set_property compxlib.{}_compiled_library_dir $xlib_path [current_project]'.format(self.simulator)
             )

@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import os
 
-from click import secho, confirm, get_current_context
+from click import echo, secho, style, confirm, get_current_context
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -59,8 +59,8 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 def echoVivadoConsoleError( aExc ):
     echo(
         style("Vivado error/critical warnings detected\n", fg='red')+
-        style("\n".join(lExc.errors), fg='red') + '\n' +
-        style("\n".join(lExc.criticalWarns), fg='yello') 
+        style("\n".join(aExc.errors), fg='red') + '\n' +
+        style("\n".join(aExc.criticalWarns), fg='yellow') 
     )
 
 # ------------------------------------------------------------------------------

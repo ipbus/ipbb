@@ -12,7 +12,7 @@ import tempfile
 import sys
 import re
 
-from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
+from os.path import join, split, exists, basename, abspath, splitext, relpath
 from ..tools.common import which, SmartOpen
 from .tools import DirSentry
 from click import echo, secho, style, confirm
@@ -98,7 +98,7 @@ def report(env, filters):
             # print(lCmd)
             # lCmdTable.add_row([str(lCmd)])
             lRow = [
-                relpath(lCmd.FilePath, env.work.path),
+                relpath(lCmd.FilePath, env.srcdir),
                 ','.join(lCmd.flags()),
                 lCmd.Package,
                 lCmd.Component,
@@ -167,10 +167,10 @@ def report(env, filters):
                 for pathexp in sorted(lPathExps):
 
                     lFNFTable.add_row([
-                        relpath(pathexp, env.work.path),
+                        relpath(pathexp, env.srcdir),
                         pkg,
                         cmp,
-                        '\n'.join([relpath(src, env.work.path) for src in lPathExps[pathexp]]),
+                        '\n'.join([relpath(src, env.srcdir) for src in lPathExps[pathexp]]),
                         ])
         echo(lPrepend.sub('\g<1>  ',lFNFTable.draw()))
 # ------------------------------------------------------------------------------

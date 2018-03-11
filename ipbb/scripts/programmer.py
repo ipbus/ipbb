@@ -125,8 +125,10 @@ def program(deviceid, bitfile, v):
             device, ', '.join(hw_devs)))
 
     if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format( bitfile, lTarget), fg='yellow')):
+        echo("Programming {}".format(lTarget))
         v.programDevice(device, bitfile)
-        echo("{} successfully programmed on {}".format(bitfile, lTarget))
+        echo("Done.")
+        secho("{} successfully programmed on {}".format(bitfile, lTarget), fg='green')
     else:
         secho('Programming aborted.', fg='yellow')
     v.closeHwTarget(lTarget)

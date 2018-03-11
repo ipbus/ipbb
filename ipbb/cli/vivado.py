@@ -71,7 +71,7 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
-@click.option('-r', '--reverse', 'aReverse', is_flag=True)
+@click.option('-r/-n', '--reverse/--natural', 'aReverse', default=True)
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
@@ -178,7 +178,7 @@ def impl(env, jobs):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
+        with VivadoOpen(lSessionId, stopOnCWarnings=True) as lTarget:
 
             # Open the project
             lTarget('open_project {}'.format(lVivProjPath))
@@ -380,7 +380,7 @@ def status(env):
 @vivado.command('reset', short_help="Reset synthesis and implementation runs.")
 @click.pass_obj
 def reset(env):
-    '''Reset   runs'''
+    '''Reset synth and impl runs'''
 
     lSessionId = 'reset'
 
@@ -416,8 +416,11 @@ def reset(env):
 # ------------------------------------------------------------------------------
 @vivado.command('package', short_help="Package the firmware image and metadata into a standalone archive")
 @click.pass_context
-def package(ctx):
-    '''Package bitfile with address table and file list'''
+@click.option('--tag', '-t', 'aTag', default=None, help="Optional tag to add to the archive name.")
+def package(ctx, aTag):
+    '''Package bitfile with address table and file list
+
+    '''
 
     env = ctx.obj
 
@@ -427,7 +430,7 @@ def package(ctx):
 
     if not exists(lTopProjPath):
         secho('Vivado project does not exist. Creating the project...', fg='yellow')
-        ctx.invoke(project)
+        ctx.invoke(makeproject)
 
 
     lBitPath = join(lTopProjPath, 'top.runs', 'impl_1', 'top.bit')
@@ -487,10 +490,20 @@ def package(ctx):
     # -------------------------------------------------------------------------
     # Tar everything up
     secho("Generating tarball", fg='blue')
-    lTgzBaseName = '{name}_{host}_{time}'.format(
-        name=env.currentproj.config['name'],
-        host=socket.gethostname().replace('.', '_'),
-        time=time.strftime('%y%m%d_%H%M')
+    # lTgzBaseName = '{name}_{host}_{time}'.format(
+    #     name=env.currentproj.config['name'],
+    #     host=socket.gethostname().replace('.', '_'),
+    #     time=time.strftime('%y%m%d_%H%M')
+    # )
+    # Build the tarball basename with the format
+    # <projname>_(<tag>_)<host>_<date>
+    lTgzBaseName = '_'.join(
+        [env.currentproj.config['name']] +
+        ([aTag] if aTag is not None else []) +
+        [
+            socket.gethostname().replace('.', '_'),
+            time.strftime('%y%m%d_%H%M')
+        ]
     )
     lTgzPath = join(lPkgPath, lTgzBaseName + '.tgz')
 

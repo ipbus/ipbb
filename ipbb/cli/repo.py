@@ -306,7 +306,10 @@ def run(env, pkg, cmd, args):
         wd = env.srcdir
 
     lCmd = sh.Command(cmd)
-    lCmd(*args, _cwd=wd, _out=sys.stdout, _err=sys.stderr)
+    try:
+        lCmd(*args, _cwd=wd, _out=sys.stdout, _err=sys.stderr)
+    except sh.ErrorReturnCode as lExc:
+        raise click.ClickException("Command '{}' failed with error code {}".format(lExc.full_cmd, lExc.exit_code))
 
 
 # ------------------------------------------------------------------------------

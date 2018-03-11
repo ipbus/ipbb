@@ -11,6 +11,7 @@ import sys
 import traceback
 
 from texttable import Texttable
+from click import echo, style, secho
 
 # ------------------------------------------------------------------------------
 # Add -h as default help option
@@ -48,7 +49,6 @@ def cli(ctx):
 def info(env, verbose):
     '''Print a brief report about the current working area'''
 
-    from click import echo, style, secho
 
     if not env.work.path:
         secho  ( 'ERROR: No ipbb work area detected', fg='red' )

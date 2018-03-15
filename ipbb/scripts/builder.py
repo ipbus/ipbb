@@ -13,6 +13,9 @@ import traceback
 from texttable import Texttable
 from click import echo, style, secho
 
+from ..cli import Environment
+from .._version import __version__
+
 # ------------------------------------------------------------------------------
 # Add -h as default help option
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -31,14 +34,16 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 )
 @click.pass_context
 def cli(ctx):
-
-    from ..cli import Environment
     # Manually add the Environment to the top-level context.
     ctx.obj = Environment()
 
-    # Print warning message if in command-line mode (no arguments) and we are not in an ipbb area.
-    # if not ctx.protected_args and not ctx.invoked_subcommand:
-        # print (ctx.obj)
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+@cli.command()
+def version():
+    echo('ipbb - {}'.format(__version__))
+    raise SystemExit(0)
 # ------------------------------------------------------------------------------
 
 

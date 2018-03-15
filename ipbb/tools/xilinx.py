@@ -346,10 +346,12 @@ class VivadoConsole(object):
             # ----------------------------------------------------------
             # Break if prompt
             if lIndex == 1:
+                if not lBuffer:
+                    lBuffer.append(None)
                 break
             elif lIndex == 2:
                 lTimeoutCounts += 1
-                print ("<Time elapsed: {0}s>".format(
+                print ("<Time elapsed since last command: {0}s>".format(
                     lTimeoutCounts * self._process.timeout))
             # ----------------------------------------------------------
 

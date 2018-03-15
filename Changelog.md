@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+[Unreleased]
+### Changed
+
+### Added
+- OOC run monitoring in `vivado synth`
+
 [0.3.0] - 2018-03-11
 ### Changed
 - `ipcores` and `project` `sim` commands updated to Vivado 2017.4

@@ -148,8 +148,34 @@ def synth(env, jobs):
             lTarget([
                 'reset_run synth_1',
                 'launch_runs synth_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
-                'wait_on_run synth_1',
             ])
+
+
+            while (True):
+                lSynthesisRuns = lTarget('get_runs -filter {IS_SYNTHESIS}')[0].split()
+                lRunInfos = {}
+
+                lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
+                
+                for lRun in lSynthesisRuns:
+                    lValues = lTarget([ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ])
+                    lRunInfos[lRun] = dict(zip(lProps, lValues))
+
+                lSummary = Texttable(max_width=0)
+                lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+                lSummary.add_row(['Run']+lProps)
+                for lRun in sorted(lRunInfos):
+                    lInfo = lRunInfos[lRun]
+                    lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])
+                secho('\n'+lSummary.draw(), fg='cyan')
+
+                if lRunInfos['synth_1']['PROGRESS'] == '100%':
+                    break
+
+                lTarget([
+                        'wait_on_run synth_1 -timeout 1',
+                    ])
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -341,15 +367,17 @@ def status(env):
     ]
 
     lInfos = {}
-    lProps = ['Status', 'Progress']
+    lProps = ['STATUS', 'PROGRESS', 'IS_IMPLEMENTATION', 'IS_SYNTHESIS', 'STATS.ELAPSED']
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
+        with VivadoOpen(lSessionId, echo=False) as lTarget:
+            echo('Opening project')
             lTarget(lOpenCmds)
             
             lIPs = lTarget('get_ips')[0].split()
 
+            echo('Retrieving run information')
             # Gather data about existing runs
             lRuns = lTarget('get_runs')[0].split()
             for lRun in sorted(lRuns):
@@ -364,7 +392,8 @@ def status(env):
         raise click.Abort()
 
     echo()
-    lSummary = Texttable()
+    lSummary = Texttable(max_width=0)
+    lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.add_row(['Run']+lProps)
     for lRun in sorted(lInfos):
         lInfo = lInfos[lRun]

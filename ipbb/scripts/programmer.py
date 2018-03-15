@@ -7,7 +7,11 @@ import click_didyoumean
 import traceback
 
 from click import echo, secho, style
+from ..cli.tools import echoVivadoConsoleError
 from ..tools.common import which
+from ..tools.xilinx import VivadoConsole, VivadoConsoleError
+from .._version import __version__
+
 
 # ------------------------------------------------------------------------------
 # Add -h as default help option
@@ -37,35 +41,49 @@ def cli():
     pass
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+@cli.command()
+def version():
+    echo('ipb-prog - {}'.format(__version__))
+    raise SystemExit(0)
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 @cli.group()
 @click.pass_context
 def vivado(ctx):
     pass
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @vivado.command('list', short_help="Vivado programmer interface.")
-@click.option('-v/-q', default=False)
-def list(v):
+@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI")
+@click.option('-v/-q', 'aVerbosity',default=False)
+def list(aHwServerURI, aVerbosity):
     lVivado = autodetectVivadoVariant()
     # Build vivado interface
     echo('Starting '+lVivado+'...')
-    from ..tools import xilinx
-    v = xilinx.VivadoConsole(executable=lVivado, echo=v)
-    echo('... done')
+    try:
+        v = VivadoConsole(executable=lVivado, echo=aVerbosity)
+        echo('... done')
 
-    echo("Looking for targets")
-    v.openHw()
-    v.connect()
-    hw_targets = v.getHwTargets()
+        echo("Looking for targets")
+        v.openHw()
+        v.connect(aHwServerURI)
+        hw_targets = v.getHwTargets()
 
-    for target in hw_targets:
-        echo("- target "+style(target, fg='blue'))
+        for target in hw_targets:
+            echo("- target "+style(target, fg='blue'))
 
-        v.openHwTarget(target)
-        hw_devices = v.getHwDevices()
-        for device in hw_devices:
-            echo("  + "+style(device, fg='green'))
-        v.closeHwTarget(target)
+            v.openHwTarget(target)
+            hw_devices = v.getHwDevices()
+            for device in hw_devices:
+                echo("  + "+style(device, fg='green'))
+            v.closeHwTarget(target)
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
 
 # ------------------------------------------------------------------------------   
 
@@ -83,56 +101,60 @@ def _validateDevice(ctx, param, value):
 @vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
-@click.option('-v/-q', default=False)
-def program(deviceid, bitfile, v):
+@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI")
+@click.option('-v/-q', 'aVerbosity', default=False)
+def program(deviceid, bitfile, aHwServerURI, aVerbosity):
 
     target, device = deviceid
     # Build vivado interface
     
     lVivado = autodetectVivadoVariant()
     echo('Starting '+lVivado+'...')
-    from ..tools import xilinx
-    v = xilinx.VivadoConsole(executable=lVivado, echo=v)
-    echo('... done')
-    v.openHw()
-    v.connect()
-    hw_targets = v.getHwTargets()
+    try:
+        v = VivadoConsole(executable=lVivado, echo=aVerbosity, stopOnCWarnings=False)
+        echo('... done')
+        v.openHw()
+        v.connect(aHwServerURI)
+        hw_targets = v.getHwTargets()
 
-    echo('Found targets: ' + style('{}'.format(', '.join(hw_targets)), fg='blue'))
+        echo('Found targets: ' + style('{}'.format(', '.join(hw_targets)), fg='blue'))
 
-    lMatchingTargets = [t for t in hw_targets if target in t]
-    if len(lMatchingTargets) == 0:
-        raise RuntimeError('Target %s not found. Targets available %s: ' % (
-            target, ', '.join(hw_targets)))
+        lMatchingTargets = [t for t in hw_targets if target in t]
+        if len(lMatchingTargets) == 0:
+            raise RuntimeError('Target %s not found. Targets available %s: ' % (
+                target, ', '.join(hw_targets)))
 
-    if len(lMatchingTargets) > 1:
-        raise RuntimeError(
-            'Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (
-                target, ', '.join(hw_targets)
+        if len(lMatchingTargets) > 1:
+            raise RuntimeError(
+                'Multiple targets matching %s found. Prease refine your selection. Targets available %s: ' % (
+                    target, ', '.join(hw_targets)
+                )
             )
-        )
 
-    lTarget = lMatchingTargets[0]
+        lTarget = lMatchingTargets[0]
 
-    echo('Selected target: '+style('{}'.format(lMatchingTargets[0]), fg='blue')) 
-    v.openHwTarget(lTarget)
+        echo('Selected target: '+style('{}'.format(lMatchingTargets[0]), fg='blue')) 
+        v.openHwTarget(lTarget)
 
-    hw_devs = v.getHwDevices()
-    echo('Found devices: '+style('{}'.format(', '.join(hw_devs)), fg='blue'))
+        hw_devs = v.getHwDevices()
+        echo('Found devices: '+style('{}'.format(', '.join(hw_devs)), fg='blue'))
 
-    if device not in hw_devs:
-        raise RuntimeError('Device %s not found. Devices available %s: ' % (
-            device, ', '.join(hw_devs)))
+        if device not in hw_devs:
+            raise RuntimeError('Device %s not found. Devices available %s: ' % (
+                device, ', '.join(hw_devs)))
 
-    if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format( bitfile, lTarget), fg='yellow')):
-        echo("Programming {}".format(lTarget))
-        v.programDevice(device, bitfile)
-        echo("Done.")
-        secho("{} successfully programmed on {}".format(bitfile, lTarget), fg='green')
-    else:
-        secho('Programming aborted.', fg='yellow')
-    v.closeHwTarget(lTarget)
+        if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format( bitfile, lTarget), fg='yellow')):
+            echo("Programming {}".format(lTarget))
+            v.programDevice(device, bitfile)
+            echo("Done.")
+            secho("{} successfully programmed on {}".format(bitfile, lTarget), fg='green')
+        else:
+            secho('Programming aborted.', fg='yellow')
+        v.closeHwTarget(lTarget)
 
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
 
 def main():
     '''Discovers the env at startup'''

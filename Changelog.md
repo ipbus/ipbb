@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [Unreleased]
 ### Changed
+- Improved `srcs status` summary for git tags.
 
 ### Added
 - OOC run monitoring in `vivado synth`

@@ -12,7 +12,12 @@ from ..tools.common import which
 from ..tools.xilinx import VivadoConsole, VivadoConsoleError
 from .._version import __version__
 
-
+class ProgEnvironment(object):
+    """docstring for ProgEnvironment"""
+    def __init__(self):
+        super(ProgEnvironment, self).__init__()
+        self.arg = arg
+        
 # ------------------------------------------------------------------------------
 # Add -h as default help option
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -37,8 +42,9 @@ def autodetectVivadoVariant():
     cls=click_didyoumean.DYMGroup,
     context_settings=CONTEXT_SETTINGS,
 )
+@click.pass_context
 def cli():
-    pass
+    ctx.obj = ProgrammerEnvironment()
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -52,8 +58,9 @@ def version():
 # ------------------------------------------------------------------------------
 @cli.group()
 @click.pass_context
-def vivado(ctx):
-    pass
+@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI")
+def vivado(ctx, aHwServerURI):
+    ctx.obj.options['vivado.hw_server'] = aHwServerURI
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------

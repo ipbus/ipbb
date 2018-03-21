@@ -394,7 +394,7 @@ def status(env):
     echo()
     lSummary = Texttable(max_width=0)
     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lSummary.add_row(['Run']+lProps)
+    lSummary.header(['Run']+lProps)
     for lRun in sorted(lInfos):
         lInfo = lInfos[lRun]
         lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])

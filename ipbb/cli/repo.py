@@ -333,7 +333,7 @@ def status(env):
     for lSrc in lSrcs:
         lSrcDir = join(env.srcdir, lSrc)
 
-        lKind, lBranch = "unknown", None
+        lKind, lHEADId = "unknown", None
 
         # Check if a git repository
         if exists(join( lSrcDir, '.git')):
@@ -344,25 +344,37 @@ def status(env):
                     sh.git('rev-parse','--git-dir')
                 except sh.ErrorReturnCode_128:
                     lKind += ' (broken)'
-                    lBranch = '(unknown)'             
+                    lHEADId = '(unknown)'             
 
 
                 if lKind == 'git':
                     try:
-                        # lBranch = sh.git('symbolic-ref','--short', 'HEAD').strip()
                         lBranch = '/'.join(sh.git('symbolic-ref', 'HEAD').split('/')[2:]).strip()
                     except sh.ErrorReturnCode_128:
-                        lBranch = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
+                        lBranch = None
+                            
+                    try: 
+                        lTag = sh.git('describe', '--tags', '--exact-match', 'HEAD').strip()
+                    except sh.ErrorReturnCode_128:
+                        lTag = None
+
+                    if lTag is not None:
+                        lHEADId = lTag
+                    elif lBranch is not None:
+                        lHEADId = lBranch
+                    else:
+                        lHEADId = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
+                    print("'"+str(lHEADId)+"'")
 
                     try:
                         sh.git('diff', '--no-ext-diff', '--quiet').strip()
                     except sh.ErrorReturnCode_1:
-                        lBranch += '*'
+                        lHEADId += '*'
 
                     try:
                         sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
                     except sh.ErrorReturnCode_1:
-                        lBranch += '+'
+                        lHEADId += '+'
         elif exists(join( lSrcDir, '.svn')):
             with DirSentry(lSrcDir) as _:
                 lKind = 'svn'
@@ -371,13 +383,13 @@ def status(env):
 
                 lSVNInfo = { lEntry[0]:lEntry[1].strip() for lEntry in ( lLine.split(':',1) for lLine in lSVNInfoRaw.split('\n') if lLine )}
 
-                lBranch = lSVNInfo['URL'].replace( lSVNInfo['Repository Root']+'/', '' )
+                lHEADId = lSVNInfo['URL'].replace( lSVNInfo['Repository Root']+'/', '' )
 
                 lSVNStatus = sh.svn('status','-q')
                 if len(lSVNStatus):
-                    lBranch += '*'
+                    lHEADId += '*'
 
-        lSrcTable.add_row([lSrc, lKind, lBranch])
+        lSrcTable.add_row([lSrc, lKind, lHEADId])
     echo  ( lSrcTable.draw() )
 # ------------------------------------------------------------------------------
 

@@ -35,8 +35,8 @@ def ensureVivado(env):
 
 # ------------------------------------------------------------------------------
 @click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)
-@click.pass_context
 @click.option('-p', '--proj', default=None)
+@click.pass_context
 def vivado(ctx, proj):
     '''Vivado command group'''
 

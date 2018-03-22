@@ -57,17 +57,20 @@ def version():
 
 # ------------------------------------------------------------------------------
 @cli.group()
-@click.pass_context
-@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI")
-def vivado(ctx, aHwServerURI):
-    ctx.obj.options['vivado.hw_server'] = aHwServerURI
+@click.pass_obj
+@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI <host>:<port>")
+def vivado(obj, aHwServerURI):
+    obj.options['vivado.hw_server'] = aHwServerURI
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @vivado.command('list', short_help="Vivado programmer interface.")
-@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI")
+@click.pass_obj
 @click.option('-v/-q', 'aVerbosity',default=False)
-def list(aHwServerURI, aVerbosity):
+def list(obj, aVerbosity):
+
+    lHwServerURI = obj.options['vivado.hw_server']
+
     lVivado = autodetectVivadoVariant()
     # Build vivado interface
     echo('Starting '+lVivado+'...')
@@ -77,7 +80,7 @@ def list(aHwServerURI, aVerbosity):
 
         echo("Looking for targets")
         v.openHw()
-        v.connect(aHwServerURI)
+        v.connect(lHwServerURI)
         hw_targets = v.getHwTargets()
 
         for target in hw_targets:
@@ -108,20 +111,22 @@ def _validateDevice(ctx, param, value):
 @vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
-@click.option('--hwsrv-uri', 'aHwServerURI',default=None, help="Hardware server URI")
 @click.option('-v/-q', 'aVerbosity', default=False)
-def program(deviceid, bitfile, aHwServerURI, aVerbosity):
+@click.pass_obj
+def program(obl, deviceid, bitfile, aVerbosity):
 
     target, device = deviceid
-    # Build vivado interface
+
+    lHwServerURI = obj.options['vivado.hw_server']
     
+    # Build vivado interface
     lVivado = autodetectVivadoVariant()
     echo('Starting '+lVivado+'...')
     try:
         v = VivadoConsole(executable=lVivado, echo=aVerbosity, stopOnCWarnings=False)
         echo('... done')
         v.openHw()
-        v.connect(aHwServerURI)
+        v.connect(lHwServerURI)
         hw_targets = v.getHwTargets()
 
         echo('Found targets: ' + style('{}'.format(', '.join(hw_targets)), fg='blue'))

@@ -4,14 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-[Unreleased]
+##[Unreleased]
 ### Changed
 - Improved `srcs status` summary for git tags.
 
 ### Added
 - OOC run monitoring in `vivado synth`
+- `ipb-prog vivado` hardware URI option for remote hardware servers.
 
-[0.3.0] - 2018-03-11
+## [0.3.0] - 2018-03-11
 ### Changed
 - `ipcores` and `project` `sim` commands updated to Vivado 2017.4
 - Simplified `ipbb vivado project`: IP syntesis runs are not launched automatically anymore.

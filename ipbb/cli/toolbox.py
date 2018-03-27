@@ -6,20 +6,10 @@ from os.path import basename, relpath
 import re
 from texttable import Texttable
 
+from .utils import validateComponent
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepFileParser import DepFileParser
 
-
-
-# ------------------------------------------------------------------------------
-def _validateComponent(ctx, param, value):
-    lSeparators = value.count(':')
-    # Validate the format
-    if lSeparators != 1:
-        raise click.BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
-
-    return tuple(value.split(':'))
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @click.group('toolbox', short_help="Miscelaneous useful commands.")
@@ -36,7 +26,7 @@ def toolbox(env):
 
 @toolbox.command('check-dep', short_help="Performs basic checks on dependency files")
 @click.option('-v', '--verbose', count=True)
-@click.argument('component', callback=_validateComponent)
+@click.argument('component', callback=validateComponent)
 @click.argument('depfile', required=False, default=None)
 @click.option('-t', '--toolset', required=True, type=click.Choice(['vivado','sim']))
 @click.pass_obj

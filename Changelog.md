@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - OOC run monitoring in `vivado synth`
 - `ipb-prog vivado` hardware URI option for remote hardware servers.
+- New `toolbox` command group.
+- `toolbox check-dep` command to validate single `dep` files.
 
 ## [0.3.0] - 2018-03-11
 ### Changed

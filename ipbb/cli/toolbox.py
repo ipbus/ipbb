@@ -34,13 +34,13 @@ def toolbox(env):
 # ------------------------------------------------------------------------------
 
 
-@toolbox.command('check-dep-files', short_help="Performs basic checks on dependency files")
+@toolbox.command('check-dep', short_help="Performs basic checks on dependency files")
 @click.option('-v', '--verbose', count=True)
 @click.argument('component', callback=_validateComponent)
 @click.argument('depfile', required=False, default=None)
 @click.option('-t', '--toolset', required=True, type=click.Choice(['vivado','sim']))
 @click.pass_obj
-def check_dep_files(env, verbose, component, depfile, toolset):
+def check_depfile(env, verbose, component, depfile, toolset):
     '''Perform basic checks on dependency files'''
 
     lPackage, lComponent = component

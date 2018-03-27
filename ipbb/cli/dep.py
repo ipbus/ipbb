@@ -14,7 +14,7 @@ import re
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath
 from ..tools.common import which, SmartOpen
-from .tools import DirSentry
+from .utils import DirSentry
 from click import echo, secho, style, confirm
 from texttable import Texttable
 

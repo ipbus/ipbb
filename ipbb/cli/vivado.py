@@ -14,7 +14,7 @@ from click import echo, secho, style, confirm
 from texttable import Texttable
 
 from ..tools.common import which, SmartOpen
-from .tools import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
+from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError

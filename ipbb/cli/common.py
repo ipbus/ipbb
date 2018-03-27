@@ -9,7 +9,7 @@ import sys
 from click import echo, secho, style, confirm, get_current_context
 from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from . import kProjAreaCfgFile
-from .tools import DirSentry
+from .utils import DirSentry
 from ..tools.common import which
 
 # ------------------------------------------------------------------------------

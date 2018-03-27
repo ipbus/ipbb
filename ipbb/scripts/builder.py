@@ -150,6 +150,8 @@ def main():
     from ..cli import dep
     cli.add_command(dep.dep)
 
+    from ..cli import toolbox
+    cli.add_command(toolbox.toolbox)
 
     from ..cli import common
 
@@ -167,7 +169,7 @@ def main():
 
     from ..cli import debug
     cli.add_command(debug.debug)
-    
+
     try:
         cli()
     except Exception as e:

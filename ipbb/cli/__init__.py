@@ -3,7 +3,7 @@ from __future__ import print_function
 # Import click for ansi colors
 import click
 
-from .tools import findFileInParents
+from .utils import findFileInParents
 from os import walk
 from os.path import join, split, exists, splitext, basename
 from ..depparser.Pathmaker import Pathmaker

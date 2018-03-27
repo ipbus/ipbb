@@ -12,7 +12,7 @@ from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from . import kSourceDir, kProjDir, kWorkAreaCfgFile
-from .tools import DirSentry, findFileInParents
+from .utils import DirSentry, findFileInParents
 from urlparse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable

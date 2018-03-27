@@ -64,3 +64,14 @@ def echoVivadoConsoleError( aExc ):
     )
 
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def validateComponent(ctx, param, value):
+    lSeparators = value.count(':')
+    # Validate the format
+    if lSeparators != 1:
+        raise click.BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
+
+    return tuple(value.split(':'))
+# ------------------------------------------------------------------------------

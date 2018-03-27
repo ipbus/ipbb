@@ -17,7 +17,7 @@ from os.path import join, splitext, split, exists, splitext, basename, dirname, 
 from click import echo, secho, style
 
 # Tools imports
-from .tools import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
+from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports

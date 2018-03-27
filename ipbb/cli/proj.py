@@ -10,21 +10,10 @@ import json
 # Elements
 from ..tools.common import SmartOpen
 from . import kProjAreaCfgFile, kProjDir
-from .tools import DirSentry
+from .utils import DirSentry, validateComponent
 
 from os.path import join, split, exists, splitext, relpath
 from click import echo, style, secho
-
-
-# ------------------------------------------------------------------------------
-# def _getprojects(env):
-
-#     if not exists(env.projdir):
-#         raise click.ClickException("Directory '%s' does not exist." % env.projdir )
-
-#     '''Returns the list of existing projects'''
-#     return [ lProj for lProj in next(os.walk(env.projdir))[1] if exists( join( env.projdir, lProj, kProjAreaCfgFile ) ) ]
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -36,22 +25,11 @@ def proj():
 
 
 # ------------------------------------------------------------------------------
-def _validateComponent(ctx, param, value):
-    lSeparators = value.count(':')
-    # Validate the format
-    if lSeparators != 1:
-        raise click.BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
-
-    return tuple(value.split(':'))
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 # TODO: move the list of supported products somewhere else
 @proj.command('create', short_help="Create a new project area.")
 @click.argument('kind', type=click.Choice(['vivado', 'sim']))
 @click.argument('projname')
-@click.argument('component', callback=_validateComponent)
+@click.argument('component', callback=validateComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 @click.pass_obj
 def create( env, kind, projname, component, topdep ):

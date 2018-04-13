@@ -33,17 +33,11 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
     context_settings=CONTEXT_SETTINGS,
 )
 @click.pass_context
+@click.version_option()
 def cli(ctx):
     # Manually add the Environment to the top-level context.
     ctx.obj = Environment()
 
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-@cli.command()
-def version():
-    echo('ipbb - {}'.format(__version__))
-    raise SystemExit(0)
 # ------------------------------------------------------------------------------
 
 

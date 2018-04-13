@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import os
 
-from click import echo, secho, style, confirm, get_current_context
+from click import echo, secho, style, confirm, get_current_context, BadParameter
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -71,7 +71,7 @@ def validateComponent(ctx, param, value):
     lSeparators = value.count(':')
     # Validate the format
     if lSeparators != 1:
-        raise click.BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
+        raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
 
     return tuple(value.split(':'))
 # ------------------------------------------------------------------------------

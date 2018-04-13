@@ -16,7 +16,7 @@ class ProgEnvironment(object):
     """docstring for ProgEnvironment"""
     def __init__(self):
         super(ProgEnvironment, self).__init__()
-        self.arg = arg
+        self.options = {}
         
 # ------------------------------------------------------------------------------
 # Add -h as default help option
@@ -43,15 +43,9 @@ def autodetectVivadoVariant():
     context_settings=CONTEXT_SETTINGS,
 )
 @click.pass_context
-def cli():
+@click.version_option()
+def cli(ctx):
     ctx.obj = ProgrammerEnvironment()
-# ------------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-@cli.command()
-def version():
-    echo('ipb-prog - {}'.format(__version__))
-    raise SystemExit(0)
 # ------------------------------------------------------------------------------
 
 

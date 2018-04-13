@@ -61,9 +61,9 @@ def create( env, kind, projname, component, topdep ):
     if not exists(lTopDepPath):
         import glob
         lTopDepDir = lPathmaker.getPath( lTopPackage, lTopComponent, 'include' )
-        lTopDepCandidates = [ "'{}'".format(relpath(p, lTopDepDir)) for p in glob.glob ( join( lTopDepDir,'*top*.dep' ) ) ]
+        lTopDepCandidates = [ "'{}'".format(relpath(p, lTopDepDir)) for p in glob.glob ( join( lTopDepDir,'*.dep' ) ) ]
         secho('Top-level dep file {} not found'.format(lTopDepPath), fg='red')
-        echo( 'Suggestions (*top*.dep):' )
+        echo( 'Suggestions (*.dep):' )
         for lC in lTopDepCandidates:
             echo ( ' - ' + lC )
 

@@ -46,10 +46,17 @@ def addrtab(env, aDest):
         pass
 
     import sh
+
+    if not env.depParser.commands["addrtab"]:
+        secho("\nWARNING no address table files defined in {}.\n".format(env.currentproj.name), fg='yellow')
+        return
+
     for addrtab in env.depParser.commands["addrtab"]:
         print(sh.cp('-av', addrtab.FilePath,
                     join(aDest, basename(addrtab.FilePath))
                     ))
+    secho("\n{}: Address table files collected in '{}'.\n".format(env.currentproj.name, aDest), fg='green')
+
 # ------------------------------------------------------------------------------
 
 
@@ -131,7 +138,7 @@ def gendecoders(ctx):
         # ------------------------------------------------------------------------------
         # If no difference between old and newly generated decoders, quit here.
         if not lUpdatedDecoders:
-            print ('All ipbus decoders are up-to-date')
+            secho("\n{}: All ipbus decoders are up-to-date.\n".format(env.currentproj.name), fg='green')
             return
         # ------------------------------------------------------------------------------
 
@@ -143,4 +150,7 @@ def gendecoders(ctx):
         confirm('Do you want to continue?', abort=True)
         for lDecoder, lTarget in lUpdatedDecoders:
             print (sh.cp('-av', lDecoder, lTarget))
+
+        secho("\n{}: {} decoders updated.\n".format(env.currentproj.name, len(lUpdatedDecoders)), fg='green')
+
 # ------------------------------------------------------------------------------

@@ -7,7 +7,7 @@ import click_didyoumean
 import traceback
 
 from click import echo, secho, style
-from ..cli.tools import echoVivadoConsoleError
+from ..cli.utils import echoVivadoConsoleError
 from ..tools.common import which
 from ..tools.xilinx import VivadoConsole, VivadoConsoleError
 from .._version import __version__

@@ -45,7 +45,7 @@ def autodetectVivadoVariant():
 @click.pass_context
 @click.version_option()
 def cli(ctx):
-    ctx.obj = ProgrammerEnvironment()
+    ctx.obj = ProgEnvironment()
 # ------------------------------------------------------------------------------
 
 

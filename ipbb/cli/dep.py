@@ -44,7 +44,7 @@ def dep(ctx, proj):
 # ------------------------------------------------------------------------------
 @dep.command()
 @click.pass_obj
-@click.option('-f', '--filter', 'filters', multiple=True)
+@click.option('-f', '--filter', 'filters', help='Select dep entries with regexes.', multiple=True)
 def report(env, filters):
     '''Summarise the dependency tree of the current project'''
 
@@ -52,6 +52,7 @@ def report(env, filters):
     
     lFilterFormat = re.compile('([^=]*)=(.*)')
     lFilterFormatErrors = []
+    lFieldNotFound = []
     lFilters = []
 
     # print ( filters )
@@ -60,7 +61,13 @@ def report(env, filters):
         m = lFilterFormat.match(f)
         if not m:
             lFilterFormatErrors.append(f)
+            continue
         # print (m.group(1))
+
+        if m.group(1) not in lCmdHeaders:
+            lFieldNotFound.append(m.group(1))
+            continue
+
 
         try:
             i = lCmdHeaders.index(m.group(1))
@@ -71,6 +78,10 @@ def report(env, filters):
 
     if lFilterFormatErrors:
         raise click.ClickException("Filter syntax errors: "+' '.join(['\''+e+'\'' for e in lFilterFormatErrors]))
+
+    if lFieldNotFound:
+        raise click.ClickException("Filter syntax errors: fields not found {}. Expected one of {}".format(', '.join("'"+s+"'" for s in lFieldNotFound), ', '.join(("'"+s+"'" for s in lCmdHeaders))))
+
     # return
     lParser = env.depParser
 

@@ -84,14 +84,15 @@ set_property "target_language" "VHDL" $obj
                 #         'generate_target simulation [get_files {0}]'.format(lBasename)
                 #         )
 
-        lIPs, lIPFiles = zip(*lXCIs)
-        write('upgrade_ip [get_ips {0}]'.format(' '.join(lIPs)))
+        if lXCIs:
+            lIPs, lIPFiles = zip(*lXCIs)
+            write('upgrade_ip [get_ips {0}]'.format(' '.join(lIPs)))
 
-        for lFile in lIPFiles:
-            write('generate_target simulation [get_files {0}]'.format(lFile))
+            for lFile in lIPFiles:
+                write('generate_target simulation [get_files {0}]'.format(lFile))
 
 
-        write('set_property top top [get_filesets sim_1]')
-        write('export_simulation -force -simulator {} -directory {} -lib_map_path $xlib_path'.format(self.simulator, self.exportdir))
+            write('set_property top top [get_filesets sim_1]')
+            write('export_simulation -force -simulator {} -directory {} -lib_map_path $xlib_path'.format(self.simulator, self.exportdir))
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

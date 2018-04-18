@@ -109,6 +109,11 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
 
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
+    lCompileSimlib = not exists(lSimlibPath) or aForceCompileSimLib
+
+    if not lCompileSimlib:
+        echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lSimlibPath))
+
     # -------------------------------------------------------------------------
     # Extract the list of cores
     lIPCores = [ 
@@ -119,17 +124,13 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
 
     if not lIPCores:
         secho ("WARNING: No ipcore files detected in this project", fg='yellow')
-        return
+        if not aForceCompileSimLib:
+            return
     else:
         echo ('List of ipcores in project')
         for lIPCore in lIPCores:
             echo('- ' + style(lIPCore, fg='blue'))
     # -------------------------------------------------------------------------
-
-    lCompileSimlib = not exists(lSimlibPath) or aForceCompileSimLib
-
-    if not lCompileSimlib:
-        echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lSimlibPath))
 
     # For questa and modelsim the simulator name is the variant name in lowercase
     lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lCompileSimlib, lSimVariant, lSimulator, kIPExportDir)

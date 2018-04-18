@@ -11,10 +11,9 @@ class IPCoresSimMaker(object):
 
     _compiler='vcom'
 
-    def __init__(self, aSimlibPath, aCompileSimLibs, aTargetSimulator, aSimulator, aExportDir):
+    def __init__(self, aSimlibPath, aTargetSimulator, aSimulator, aExportDir):
         # self.pathmaker = aPathmaker
         self.simlibPath = aSimlibPath
-        self.compileSimlibs = aCompileSimLibs
         self.targetSimulator = aTargetSimulator
         self.simulator = aSimulator
         self.exportdir = aExportDir

@@ -22,6 +22,7 @@ from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
 from ..depparser.IPCoresSimMaker import IPCoresSimMaker
+from ..depparser.SimlibMaker import SimlibMaker
 from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
 
 # 
@@ -57,7 +58,7 @@ def sim(ctx, proj):
 
 # ------------------------------------------------------------------------------
 @sim.command('ipcores', short_help="Generate vivado sim cores for the current design.")
-@click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory', show_default=True)
+@click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory. The default value is overridden by IPBB_SIMLIB_BASE environment variable when defined', show_default=True)
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.option('-f', '--force-simlib-compilation', 'aForceCompileSimLib', is_flag=True, help="Force simlib compilation/check.")
@@ -95,25 +96,60 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
             'ModelSim is not available. Have you sourced the environment script?')
     # -------------------------------------------------------------------------
 
+    lDryRun = aToScript or aToStdout
+
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant = autodetect()
-    
+
     # For questa and modelsim the simulator name is the variant name in lowercase
     lSimulator = lSimVariant.lower()
     echo(style(lSimVariant, fg='blue')+" detected")
 
     lDepFileParser = env.depParser
 
+    # Guess the current vivado version from environment
+    lVivadoVersion = basename(os.environ['XILINX_VIVADO'])
+    secho('Using Vivado version: '+lVivadoVersion, fg='green')
+
+    # -------------------------------------------------------------------------
     # Store the target path in the env, for it to be retrieved by Vivado
     # i.e. .xilinx_sim_libs/2017.4
-    lSimlibPath = expandvars(join(aXilSimLibsPath, basename(os.environ['XILINX_VIVADO'])))
+    lSimlibPath = expandvars(join(aXilSimLibsPath, lVivadoVersion))
 
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
     lCompileSimlib = not exists(lSimlibPath) or aForceCompileSimLib
 
-    if not lCompileSimlib:
+    if lCompileSimlib:
+        lSimlibMaker = SimlibMaker(lSimulator, lSimlibPath)
+        try:
+            with (
+                # Pipe commands to Vivado console
+                VivadoOpen('simlib') if not lDryRun 
+                else SmartOpen(
+                    # Dump to script
+                    aToScript if not aToStdout 
+                    # Dump to terminal
+                    else None
+                )
+            ) as lVivadoConsole:
+
+                lSimlibMaker.write(
+                    lVivadoConsole
+                )        
+
+        except VivadoConsoleError as lExc:
+            echoVivadoConsoleError(lExc)
+            raise click.Abort()
+        except RuntimeError as lExc:
+            secho("Error caught while generating Vivado TCL commands:\n" +
+                  "\n".join(lExc), fg='red'
+                  )
+            raise click.Abort()
+    else:
         echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lSimlibPath))
+
+    # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
     # Extract the list of cores
@@ -136,13 +172,8 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
     # For questa and modelsim the simulator name is the variant name in lowercase
     lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lCompileSimlib, lSimVariant, lSimulator, kIPExportDir)
 
-
-    lDryRun = aToScript or aToStdout
     secho("Generating ipcore simulation code", fg='blue')
 
-
-    # 
-    lVivadoVersion = None
     try:
         with (
             # Pipe commands to Vivado console
@@ -155,7 +186,6 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
             )
         ) as lVivadoConsole:
         
-            lVivadoVersion = lVivadoConsole('version -short')[0]
             lIPCoreSimMaker.write(
                 lVivadoConsole,
                 lDepFileParser.vars,
@@ -173,7 +203,6 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
               )
         raise click.Abort()
 
-    secho('Used Vivado version: '+lVivadoVersion, fg='green')
 
     # Copy the generated modelsim ini file locally, with a new name
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), join(os.getcwd(), lIpCoresModelsimIni))

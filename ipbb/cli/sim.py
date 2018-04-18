@@ -97,6 +97,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout, aForceCompileSimLib):
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant = autodetect()
+    
     # For questa and modelsim the simulator name is the variant name in lowercase
     lSimulator = lSimVariant.lower()
     echo(style(lSimVariant, fg='blue')+" detected")

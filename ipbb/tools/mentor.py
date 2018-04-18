@@ -45,7 +45,7 @@ def autodetect( executable = _vcom ):
     if 'modelsim' in lVersion.lower():
         return 'ModelSim'
     elif 'questa' in lVersion.lower():
-        return 'QuestaSim'
+        return 'Questa'
     else:
         raise RuntimeError("Failed to detect ModelSim/QuestaSim variant")
 # --------------------------------------------------------------

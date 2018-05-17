@@ -9,7 +9,7 @@ import traceback
 from click import echo, secho, style
 from ..cli.utils import echoVivadoConsoleError
 from ..tools.common import which
-from ..tools.xilinx import VivadoConsole, VivadoConsoleError
+from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
 from .._version import __version__
 
 class ProgEnvironment(object):
@@ -66,28 +66,38 @@ def list(obj, aVerbosity):
     lHwServerURI = obj.options['vivado.hw_server']
 
     lVivado = autodetectVivadoVariant()
+
+    if not lVivado:
+        raise click.ClickException(
+            "Vivado not found. Please source the Vivado environment before continuing.")
+
     # Build vivado interface
     echo('Starting '+lVivado+'...')
     try:
-        v = VivadoConsole(executable=lVivado, echo=aVerbosity)
+        v = VivadoHWServer(executable=lVivado, echo=aVerbosity)
         echo('... done')
 
         echo("Looking for targets")
         v.openHw()
         v.connect(lHwServerURI)
         hw_targets = v.getHwTargets()
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
 
-        for target in hw_targets:
-            echo("- target "+style(target, fg='blue'))
+    for target in hw_targets:
+        echo("- target "+style(target, fg='blue'))
 
+        try:
             v.openHwTarget(target)
             hw_devices = v.getHwDevices()
             for device in hw_devices:
                 echo("  + "+style(device, fg='green'))
             v.closeHwTarget(target)
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
+        except VivadoConsoleError as lExc:
+            echoVivadoConsoleError(lExc)
+            raise click.Abort()
+
 
 # ------------------------------------------------------------------------------   
 
@@ -107,7 +117,7 @@ def _validateDevice(ctx, param, value):
 @click.argument('bitfile', type=click.Path(exists=True))
 @click.option('-v/-q', 'aVerbosity', default=False)
 @click.pass_obj
-def program(obl, deviceid, bitfile, aVerbosity):
+def program(obj, deviceid, bitfile, aVerbosity):
 
     target, device = deviceid
 
@@ -117,7 +127,7 @@ def program(obl, deviceid, bitfile, aVerbosity):
     lVivado = autodetectVivadoVariant()
     echo('Starting '+lVivado+'...')
     try:
-        v = VivadoConsole(executable=lVivado, echo=aVerbosity, stopOnCWarnings=False)
+        v = VivadoHWServer(executable=lVivado, echo=aVerbosity, stopOnCWarnings=False)
         echo('... done')
         v.openHw()
         v.connect(lHwServerURI)

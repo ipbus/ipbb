@@ -57,6 +57,15 @@ def create( env, kind, projname, component, topdep ):
     from ..depparser.Pathmaker import Pathmaker
     lPathmaker = Pathmaker(env.srcdir, 0)
     lTopPackage, lTopComponent = component
+
+    if lTopPackage not in env.sources:
+        secho('Top-level package {} not found'.format(lTopPackage), fg='red')
+        echo( 'Available packages:' )
+        for lPkg in env.sources:
+            echo ( ' - ' + lPkg )
+
+        raise click.ClickException('Top-level package %s not found' % lTopPackage)
+
     lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
     if not exists(lTopDepPath):
         import glob

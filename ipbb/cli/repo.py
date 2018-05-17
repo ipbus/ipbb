@@ -305,7 +305,13 @@ def run(env, pkg, cmd, args):
     else:
         wd = env.srcdir
 
-    lCmd = sh.Command(cmd)
+    try:
+        lCmd = sh.Command(cmd)
+    except sh.CommandNotFound as lExc:
+        secho("ERROR: Command '{}' not found in path".format(cmd), fg='red')
+        raise click.ClickException("Command aborted")
+
+
     try:
         lCmd(*args, _cwd=wd, _out=sys.stdout, _err=sys.stderr)
     except sh.ErrorReturnCode as lExc:
@@ -364,7 +370,6 @@ def status(env):
                         lHEADId = lBranch
                     else:
                         lHEADId = sh.git('rev-parse', '--short', 'HEAD').strip()+'...'
-                    print("'"+str(lHEADId)+"'")
 
                     try:
                         sh.git('diff', '--no-ext-diff', '--quiet').strip()

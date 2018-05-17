@@ -29,7 +29,7 @@ def ensureVivado(env):
     if not which('vivado'):
         # if 'XILINX_VIVADO' not in os.environ:
         raise click.ClickException(
-            "Vivado is not available. Have you sourced the environment script?")
+            "Vivado not found. Please source the Vivado environment before continuing.")
 # ------------------------------------------------------------------------------
 
 
@@ -125,6 +125,7 @@ def makeproject(env, aReverse, aToScript, aToStdout):
 # ------------------------------------------------------------------------------
 @vivado.command('synth', short_help='Run the synthesis step on the current project.')
 @click.option('-j', '--jobs', type=int, default=None)
+# @click.option('-e', '--email', default=None)
 @click.pass_obj
 def synth(env, jobs):
     '''Run synthesis'''
@@ -138,6 +139,14 @@ def synth(env, jobs):
 
     ensureVivado(env)
 
+    args = []
+
+    if jobs is not None:
+        args +=  ['-jobs {}'.format(jobs)]
+
+    # if email is not None:
+        # args +=  ['-email_to {} -email_all'.format(email)]
+
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
         with VivadoOpen(lSessionId) as lTarget:
@@ -147,7 +156,7 @@ def synth(env, jobs):
 
             lTarget([
                 'reset_run synth_1',
-                'launch_runs synth_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
+                ' '.join(['launch_runs synth_1']+args),
             ])
 
 

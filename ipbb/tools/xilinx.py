@@ -17,6 +17,7 @@ import tempfile
 # Elements
 from os.path import join, split, exists, splitext, basename
 from .common import which, OutputFormatter
+from click import style
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -183,6 +184,50 @@ class VivadoBatch(object):
     #--------------------------------------------
 # -------------------------------------------------------------------------
 
+from click.termui import _ansi_colors as kANSIColors
+from click.termui import _ansi_reset_all as kANSIColorResetAll
+
+
+for c in kANSIColors:
+    vars()['kANSIColor{}'.format(c.capitalize())] = '\033[{}m'.format(kANSIColors.index(c)+30)
+
+
+class VivadoOutputFormatter(OutputFormatter):
+    """docstring for VivadoOutputFormatter"""
+    def __init__(self, prefix=None, quiet=False):
+        super(VivadoOutputFormatter, self).__init__(prefix, quiet)
+
+        self.pendingchars = ''
+
+
+
+    def write(self, message):
+        if self.quiet:
+            return
+
+        # put any pending character first
+        msg = self.pendingchars+message
+
+        lines = msg.splitlines()
+
+        if not message.endswith('\n'):
+            self.pendingchars = lines[-1]
+            del lines[-1]
+        else:
+            self.pendingchars = ''
+
+        # print(lines)
+        # print(self.prefix)
+
+        for l in lines:
+            if l.startswith('INFO:'):
+                l = kANSIColorBlue+l+kANSIColorResetAll
+            elif l.startswith('WARNING:'):
+                l = kANSIColorYellow+l+kANSIColorResetAll
+            elif l.startswith('CRITICAL WARNING:') or l.startswith('ERROR:'):
+                l = kANSIColorRed+l+kANSIColorResetAll
+            self._write((self.prefix if self.prefix else '')+l+'\n')
+
 
 # -------------------------------------------------------------------------
 class VivadoConsoleError(Exception):
@@ -257,7 +302,7 @@ class VivadoConsole(object):
             self._prompt = prompt
 
         # Set up the output formatter
-        self._out = OutputFormatter(
+        self._out = VivadoOutputFormatter(
             echoprefix if ( echoprefix or (sessionid is None) ) 
                 else (sessionid + ' | '),
             quiet = (not echo)

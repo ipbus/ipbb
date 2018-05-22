@@ -14,7 +14,7 @@ def debug(ctx):
 
 
 # ------------------------------------------------------------------------------
-@debug.command()
+@debug.command('dump')
 @click.pass_context
 def dump(ctx):
 
@@ -29,7 +29,7 @@ def dump(ctx):
 
 
 # ------------------------------------------------------------------------------
-@debug.command()
+@debug.command('ipy')
 @click.pass_context
 def ipy(ctx):
     '''Opens IPython to inspect the parser'''
@@ -38,3 +38,23 @@ def ipy(ctx):
     import IPython
     IPython.embed()
 # ------------------------------------------------------------------------------
+
+@debug.command('test-vivado-formatter')
+@click.pass_context
+def test_formatter(ctx):
+
+    from ..tools.xilinx import VivadoOutputFormatter
+
+    out = VivadoOutputFormatter('test | ')
+
+    out.write('Plain\n')
+    out.write('Start')
+    out.write('End\n')
+
+    out.write('Start')
+    out.write('middle')
+    out.write('End\n')
+    out.write('INFO: this is an info message \n')
+    out.write('WARNING: this is a warning message \n')
+    out.write('CRITICAL WARNING: this is a critical warning message \n')
+    out.write('ERROR: this is an error message \n')

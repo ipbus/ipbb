@@ -123,6 +123,39 @@ def makeproject(env, aReverse, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
+@vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
+@click.pass_obj
+def chk_syntax(env):
+    
+    lSessionId = 'chk-syn'
+
+    # Check
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+
+    ensureVivado(env)
+
+    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+    try:
+        with VivadoOpen(lSessionId) as lTarget:
+
+            # Open the project
+            lTarget('open_project {}'.format(lVivProjPath))
+
+            lTarget([
+                'check_syntax',
+            ])
+
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
+
+
+    secho("\n{}: Synthax check completed.\n".format(env.currentproj.name), fg='green')   
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 @vivado.command('synth', short_help='Run the synthesis step on the current project.')
 @click.option('-j', '--jobs', type=int, default=None)
 # @click.option('-e', '--email', default=None)

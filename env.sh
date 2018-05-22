@@ -6,7 +6,6 @@ COL_RED="\e[31m"
 COL_GREEN="\e[32m"
 COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
-
 COL_NULL="\e[0m"
 
 

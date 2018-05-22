@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ##[Unreleased]
 ### Changed
 - Improved `srcs status` summary for git tags.
+- Modelsim workflow re-worked. Xilinx simlib generation moved to a dedicated command `gen-simlib`.
 
 ### Added
 - OOC run monitoring in `vivado synth`
 - `ipb-prog vivado` hardware URI option for remote hardware servers.
 - New `toolbox` command group.
 - `toolbox check-dep` command to validate single `dep` files.
+- `vivado check-syntax` command to check vhdl syntax before synthesis.
+- Colorised Vivado messages.
 
 ## [0.3.0] - 2018-03-11
 ### Changed

@@ -44,12 +44,11 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     if not aDepFileParser.missing:
         return
 
-    lRootName = get_current_context().find_root().info_name
     secho("ERROR: Project '{}' contains missing dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
         aCurrentProj,
         len(aDepFileParser.missing),
         ("" if len(aDepFileParser.missing) == 1 else "s"),
-        lRootName,
+        getClickRootName(),
     ), fg='red')
     confirm("Do you want to continue anyway?", abort=True)
 # ------------------------------------------------------------------------------
@@ -74,4 +73,10 @@ def validateComponent(ctx, param, value):
         raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
 
     return tuple(value.split(':'))
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def getClickRootName():
+    return get_current_context().find_root().info_name
 # ------------------------------------------------------------------------------

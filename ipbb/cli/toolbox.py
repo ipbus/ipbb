@@ -2,7 +2,7 @@
 import click
 
 from click import echo, style, secho
-from os.path import basename, relpath
+from os.path import basename, relpath, exists
 import re
 from texttable import Texttable
 
@@ -38,8 +38,12 @@ def check_depfile(env, verbose, component, depfile, toolset):
         depfile = basename(lComponent) + ".dep"
 
     lPathMaker = Pathmaker(env.srcdir, env._verbosity)
-    lParser = DepFileParser(toolset, lPathMaker)
-    lParser.parse(lPackage, lComponent, depfile)
+
+    try:
+        lParser = DepFileParser(toolset, lPathMaker)
+        lParser.parse(lPackage, lComponent, depfile)
+    except OSError as lExc:
+        raise click.ClickException("Failed to parse dep file - '{}'".format(lExc))
 
     echo ()
 

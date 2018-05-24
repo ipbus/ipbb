@@ -369,7 +369,7 @@ class DepFileParser(object):
         if not exists(lDepFilePath):
             self.missing.append(
                 (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
-            raise IOError("File "+lDepFilePath+" does not exist")
+            raise OSError("File "+lDepFilePath+" does not exist")
 
         with open(lDepFilePath) as lDepFile:
             for lLineNum, lLine in enumerate(lDepFile):

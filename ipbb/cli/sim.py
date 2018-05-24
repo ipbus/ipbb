@@ -14,10 +14,10 @@ import getpass
 
 # Elements
 from os.path import join, splitext, split, exists, splitext, basename, dirname, abspath, expandvars
-from click import echo, secho, style
+from click import echo, secho, style, confirm
 
 # Tools imports
-from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
+from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError, getClickRootName
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
@@ -199,8 +199,8 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
     if not exists(lSimlibPath):
-        secho("Warning: Simulation Xilinx libraries not found. Likely this is a problem.\nPlease execute {} sim simlibs to generate them.".format(env.currentproj.name), fg='yellow')
-
+        secho("Warning: Simulation Xilinx libraries not found. Likely this is a problem.\nPlease execute {} sim simlibs to generate them.".format(getClickRootName()), fg='yellow')
+        confirm("Do you want to continue anyway?", abort=True)
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------

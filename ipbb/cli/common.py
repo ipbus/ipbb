@@ -6,7 +6,7 @@ import click
 import sh
 import sys
 
-from click import echo, secho, style, confirm, get_current_context
+from click import echo, secho, style, confirm
 from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from . import kProjAreaCfgFile
 from .utils import DirSentry

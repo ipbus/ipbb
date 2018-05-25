@@ -51,7 +51,7 @@ def vivado(ctx, proj):
         return
     else:
         if env.currentproj.name is None:
-            raise click.ClickException('Project area not defined. Move into a project area and try again')
+            raise click.ClickException('Project area not defined. Move to a project area and try again')
 # ------------------------------------------------------------------------------
 
 

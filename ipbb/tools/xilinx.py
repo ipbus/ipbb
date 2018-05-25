@@ -58,54 +58,6 @@ class VivadoNotFoundError(Exception):
         super(VivadoNotFoundError, self).__init__(message)
 # ------------------------------------------------
 
-
-# -------------------------------------------------------------------------
-# class OldVivadoBatch(object):
-#     """docstring for OldVivadoBatch"""
-
-#     _reInfo = re.compile('^INFO:')
-#     _reWarn = re.compile('^WARNING:')
-#     _reError = re.compile('^ERROR:')
-
-#     def __init__(self, script):
-#         super(OldVivadoBatch, self).__init__()
-
-#         lBasename, lExt = os.path.splitext(script)
-
-#         if lExt != '.tcl':
-#             raise RuntimeError('Bugger off!!!')
-
-#         self._script = script
-
-#         # Define custom log file
-#         self._log = 'vivado_{0}.log'.format(lBasename)
-
-#         # Guard against missing vivado executable
-#         if not which('vivado'):
-#             raise VivadoNotFoundError(
-#                 '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?')
-
-#         cmd = 'vivado -mode batch -source {0} -log {1} -nojournal'.format(
-#             self._script, self._log)
-#         process = subprocess.Popen(cmd.split())
-
-#         process.wait()
-
-#         self.errors = []
-#         self.info = []
-#         self.warnings = []
-
-#         with open(self._log) as lLog:
-#             for i, l in enumerate(lLog):
-#                 if self._reError.match(l):
-#                     self.errors.append((i, l))
-#                 elif self._reWarn.match(l):
-#                     self.warnings.append((i, l))
-#                 elif self._reInfo.match(l):
-#                     self.info.append((i, l))
-# -------------------------------------------------------------------------
-
-
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoBatch(object):
     """docstring for VivadoBatch"""
@@ -186,13 +138,16 @@ class VivadoBatch(object):
 
 
 # -------------------------------------------------------------------------
+kANSIColorResetAll = '\x1b[0m'
+
+# import color definition from click
 from click.termui import _ansi_colors as kANSIColors
-from click.termui import _ansi_reset_all as kANSIColorResetAll
-
-
 for c in kANSIColors:
-    vars()['kANSIColor{}'.format(c.capitalize())] = '\033[{}m'.format(kANSIColors.index(c)+30)
+    vars()['kANSIColor{}'.format(c.capitalize())] = '\x1b[38;5;{}m'.format(kANSIColors.index(c))
 
+# Add orange for Critical Warnings, to avoid mixing them up with errros or standard warnings
+
+kANSIColorOrange = '\x1b[38;5;{}m'.format(215)
 
 class VivadoOutputFormatter(OutputFormatter):
     """docstring for VivadoOutputFormatter"""
@@ -221,14 +176,21 @@ class VivadoOutputFormatter(OutputFormatter):
         # print(self.prefix)
 
         for l in lines:
+            lColor = None
             if l.startswith('INFO:'):
-                l = kANSIColorBlue+l+kANSIColorResetAll
+                lColor = kANSIColorBlue
             elif l.startswith('WARNING:'):
-                l = kANSIColorYellow+l+kANSIColorResetAll
-            elif l.startswith('CRITICAL WARNING:') or l.startswith('ERROR:'):
-                l = kANSIColorRed+l+kANSIColorResetAll
+                lColor = kANSIColorYellow
+            elif l.startswith('CRITICAL WARNING:'):
+                lColor = kANSIColorOrange
+            elif l.startswith('ERROR:'):
+                lColor = kANSIColorRed
             elif self.quiet:
                 continue
+
+            if lColor is not None:
+                l = lColor+l+kANSIColorResetAll
+
             self._write((self.prefix if self.prefix else '')+l+'\n')
 # -------------------------------------------------------------------------
 

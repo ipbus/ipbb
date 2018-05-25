@@ -103,9 +103,9 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
                 # Dump to terminal
                 else None
             )
-        ) as lTarget:
+        ) as lConsole:
             lVivadoMaker.write(
-                lTarget,
+                lConsole,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,
@@ -131,6 +131,10 @@ def checksyntax(env):
     
     lSessionId = 'chk-syn'
 
+    lStopOn = [
+        'HDL 9-806', # Syntax errors
+    ]
+
     # Check
     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
@@ -140,21 +144,23 @@ def checksyntax(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
+        with VivadoOpen(lSessionId) as lConsole:
 
             # Open the project
-            lTarget('open_project {}'.format(lVivProjPath))
+            lConsole('open_project {}'.format(lVivProjPath))
 
-            lTarget([
-                'check_syntax',
-            ])
+            # Change message severity to ERROR for the isses we're interested in
+            lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
+
+            # Execute the syntax check
+            lConsole('check_syntax')
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
 
 
-    secho("\n{}: Synthax check completed.\n".format(env.currentproj.name), fg='green')   
+    secho("\n{}: Synthax check completed successfully.\n".format(env.currentproj.name), fg='green')   
 # ------------------------------------------------------------------------------
 
 # -------------------------------------
@@ -308,17 +314,17 @@ def orderconstr(env, order):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
+        with VivadoOpen(lSessionId) as lConsole:
             # Open vivado project
-            lTarget('open_project {}'.format(lVivProjPath))
-            # lConstraints = lTarget('get_files -of_objects [get_filesets constrs_1]')[0].split()
+            lConsole('open_project {}'.format(lVivProjPath))
+            # lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
             # print()
             # print('\n'.join( ' * {}'.format(c) for c in lConstraints ))
 
             lCmds = [lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i+1]) for i in xrange(len(lConstrOrder)-1)]
-            lTarget(lCmds)
+            lConsole(lCmds)
 
-            lConstraints = lTarget('get_files -of_objects [get_filesets constrs_1]')[0].split()
+            lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
 
         echo('\nNew constraint order:')
         echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstraints ))
@@ -432,20 +438,20 @@ def status(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId, echo=False) as lTarget:
+        with VivadoOpen(lSessionId, echo=False) as lConsole:
             echo('Opening project')
-            lTarget(lOpenCmds)
+            lConsole(lOpenCmds)
             
-            lIPs = lTarget('get_ips')[0].split()
+            lIPs = lConsole('get_ips')[0].split()
 
             echo('Retrieving run information')
             # Gather data about existing runs
-            lRuns = lTarget('get_runs')[0].split()
+            lRuns = lConsole('get_runs')[0].split()
             for lRun in sorted(lRuns):
                 secho(lRun, fg='blue')
 
                 lCmds = [ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ]
-                lValues = lTarget(lCmds)
+                lValues = lConsole(lCmds)
                 lInfos[lRun] = dict(zip(lProps, lValues))
 
     except VivadoConsoleError as lExc:
@@ -622,9 +628,9 @@ def archive(ctx):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
-            lTarget(lOpenCmds)
-            lTarget(lArchiveCmds)
+        with VivadoOpen(lSessionId) as lConsole:
+            lConsole(lOpenCmds)
+            lConsole(lArchiveCmds)
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()

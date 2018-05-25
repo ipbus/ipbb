@@ -82,12 +82,10 @@ class VivadoProjectMaker(object):
             lName, lExt = os.path.splitext(lBasename)
             lTargetFile = os.path.join('$outputDir/top.srcs/sources_1/ip', lName, lBasename)
 
-            cmds = []
+            # local list of commands
             lCommands = []
 
             if lExt == '.xci':
-                # write('import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
-                cmds.append('import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
 
                 c = 'import_files -norecurse -fileset sources_1 $files'
                 f = src.FilePath
@@ -98,31 +96,20 @@ class VivadoProjectMaker(object):
                 lXciTargetFiles.append(lTargetFile)
             else:
                 if src.Include:
-                    # cmd = 'add_files -norecurse -fileset {1} {0}'.format(src.FilePath, self.filesets[lExt])
-                    cmds.append('add_files -norecurse -fileset {1} {0}'.format(src.FilePath, self.filesets[lExt]))
 
                     c = 'add_files -norecurse -fileset {0} $files'.format(self.filesets[lExt])
                     f = src.FilePath
                     lCommands += [(c, f)]
 
                     if src.Vhdl2008:
-                        # cmd += '\nset_property FILE_TYPE {{VHDL 2008}} [get_files {0}]'.format(src.FilePath)
-                        cmds.append('set_property FILE_TYPE {{VHDL 2008}} [get_files {0}]'.format(src.FilePath))
                         c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
                         f = src.FilePath
                         lCommands += [(c, f)]
                     if lExt == '.tcl':
-                        # write('set_property USED_IN implementation [' + cmd + ']')
-                        cmds.append('set_property USED_IN implementation [get_files {0}]'.format(src.FilePath))
                         c = 'set_property USED_IN implementation [get_files {$files}]'
                         f = src.FilePath
                         lCommands += [(c, f)]
-                    # else:
-                        # write(cmd)
                 if src.Lib:
-                    # write('set_property library {1} [ get_files [ {0} ] ]'.format(
-                    #     src.FilePath, src.Lib))
-                    cmds.append('set_property library {1} [ get_files [ {0} ] ]'.format(src.FilePath, src.Lib))
                     c = 'set_property library {0} [ get_files [ {{$files}} ] ]'.format(src.Lib)
                     f = src.FilePath
                     lCommands += [(c, f)]

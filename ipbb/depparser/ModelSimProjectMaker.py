@@ -14,7 +14,6 @@ class ModelSimProjectMaker(object):
     def __init__(self, aReverse = False, aTurbo=True):
         self.reverse = aReverse
         self.turbo = aTurbo
-
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -47,7 +46,8 @@ class ModelSimProjectMaker(object):
 
         lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
 
-        lCommandGroups = {}
+
+        lSrcCommandGroups = []
         # ----------------------------------------------------------
         for src in lSrcs:
 
@@ -114,16 +114,21 @@ class ModelSimProjectMaker(object):
                 # ----------------------------------------------------------
 
             if self.turbo:
-            # In turbo mode group compilation commands together
-                lCommandGroups.setdefault(cmd, []).append(file)
+                # In turbo mode group compilation commands together
+                if not lSrcCommandGroups or lSrcCommandGroups[-1]['cmd'] != cmd:
+                    lSrcCommandGroups.append( {'cmd': cmd, 'files': [file]} )
+                else:
+                    lSrcCommandGroups[-1]['files'].append(file)
+
             else:
-                # execute them immediately when torbo is disabled instead
+                # execute them immediately when turbo is disabled instead
                 write('{0} {1}'.format(cmd, file))
             # ----------------------------------------------------------
 
         if self.turbo:
-            for cmd, files in lCommandGroups.iteritems():
-                write('{0} {1}'.format(cmd, ' '.join(files)))
+            # for cmd, files in lSrcCommandGroups.iteritems():
+            for item in lSrcCommandGroups:
+                write('{0} {1}'.format(item['cmd'], ' '.join(item['files'])))
 # --------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

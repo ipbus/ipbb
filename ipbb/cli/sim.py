@@ -80,14 +80,14 @@ def sim(ctx, proj):
 
 
 # ------------------------------------------------------------------------------
-@sim.command('gen-simlib', short_help="Compile xilinx simulation libraries")
+@sim.command('setup-simlib', short_help="Compile xilinx simulation libraries")
 @click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory. The default value is overridden by IPBB_SIMLIB_BASE environment variable when defined', show_default=True)
 @click.option('-f', '--force', 'aForce', is_flag=True, help="Force simlib compilation/check.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
-def gen_simlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
-    lSessionId = 'gen-simlib'
+def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
+    lSessionId = 'setup-simlib'
 
     # -------------------------------------------------------------------------
     if not which('vivado'):
@@ -122,35 +122,35 @@ def gen_simlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
 
     if not lCompileSimlib:
         echo("Xilinx simulation library exist at {}. Compilation will be skipped.".format(lSimlibPath))
-        return
+    else:
+        echo("Xilinx simulation library will be generated at {}".format(style(lSimlibPath, fg='blue')))
 
-    echo("Xilinx simulation library will be generated at {}".format(style(lSimlibPath, fg='blue')))
+        lSimlibMaker = SimlibMaker(lSimulator, lSimlibPath)
+        try:
+            with (
+                # Pipe commands to Vivado console
+                VivadoOpen(lSessionId) if not lDryRun 
+                else SmartOpen(
+                    # Dump to script
+                    aToScript if not aToStdout 
+                    # Dump to terminal
+                    else None
+                )
+            ) as lVivadoConsole:
 
-    lSimlibMaker = SimlibMaker(lSimulator, lSimlibPath)
-    try:
-        with (
-            # Pipe commands to Vivado console
-            VivadoOpen(lSessionId) if not lDryRun 
-            else SmartOpen(
-                # Dump to script
-                aToScript if not aToStdout 
-                # Dump to terminal
-                else None
-            )
-        ) as lVivadoConsole:
+                lSimlibMaker.write(
+                    lVivadoConsole
+                )        
 
-            lSimlibMaker.write(
-                lVivadoConsole
-            )        
-
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
-    except RuntimeError as lExc:
-        secho("Error caught while generating Vivado TCL commands:\n" +
-              "\n".join(lExc), fg='red'
-              )
-        raise click.Abort()
+        except VivadoConsoleError as lExc:
+            echoVivadoConsoleError(lExc)
+            raise click.Abort()
+        except RuntimeError as lExc:
+            secho("Error caught while generating Vivado TCL commands:\n" +
+                  "\n".join(lExc), fg='red'
+                  )
+            raise click.Abort()
+    shutil.copy(join(lSimlibPath, 'modelsim.ini'), '.')
 
 # ------------------------------------------------------------------------------
 
@@ -254,10 +254,9 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
               )
         raise click.Abort()
 
-
     # Copy the generated modelsim ini file locally, with a new name
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), join(os.getcwd(), lIpCoresModelsimIni))
-    secho("Imported modelsim.ini from {} copied to {}".format(lSimlibPath, lIpCoresModelsimIni), fg='blue')
+    secho("Imported modelsim.ini from {} to {}".format(lSimlibPath, lIpCoresModelsimIni), fg='blue')
 
     # Prepare the area where to compile the simulation
     lIPSimDir = join(kIPExportDir,lSimulator)

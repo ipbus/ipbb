@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ##[Unreleased]
 ### Changed
 - Improved `srcs status` summary for git tags.
-- Modelsim workflow re-worked. Xilinx simlib generation moved to a dedicated command `gen-simlib`.
+- Modelsim workflow updated. Xilinx simlib generation moved to a dedicated command `setup-simlib`.
 
 ### Added
 - OOC run monitoring in `vivado synth`

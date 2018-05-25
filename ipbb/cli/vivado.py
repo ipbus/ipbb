@@ -7,6 +7,7 @@ import os
 import ipbb
 import sys
 import sh
+import time
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
@@ -17,7 +18,7 @@ from ..tools.common import which, SmartOpen
 from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
-from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
 
 
 # ------------------------------------------------------------------------------
@@ -72,10 +73,11 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
 @click.option('-r/-n', '--reverse/--natural', 'aReverse', default=True)
+@click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle sim script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def makeproject(env, aReverse, aToScript, aToStdout):
+def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
     lSessionId = 'make-project'
@@ -88,7 +90,7 @@ def makeproject(env, aReverse, aToScript, aToStdout):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lVivadoMaker = VivadoProjectMaker(aReverse)
+    lVivadoMaker = VivadoProjectMaker(aReverse, aOptimise)
 
     lDryRun = aToScript or aToStdout
 
@@ -125,7 +127,7 @@ def makeproject(env, aReverse, aToScript, aToStdout):
 # ------------------------------------------------------------------------------
 @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
 @click.pass_obj
-def chk_syntax(env):
+def checksyntax(env):
     
     lSessionId = 'chk-syn'
 
@@ -155,7 +157,20 @@ def chk_syntax(env):
     secho("\n{}: Synthax check completed.\n".format(env.currentproj.name), fg='green')   
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+# -------------------------------------
+def getSynthRunProps(aConsole):
+    with VivadoSnoozer(lConsole):
+        lSynthesisRuns = lConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
+        lRunProps = {}
+
+        lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
+        
+        for lRun in lSynthesisRuns:
+            lValues = lConsole([ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ])
+            lRunProps[lRun] = dict(zip(lProps, lValues))
+    return lRunProps
+# -------------------------------------
+
 @vivado.command('synth', short_help='Run the synthesis step on the current project.')
 @click.option('-j', '--jobs', type=int, default=None)
 # @click.option('-e', '--email', default=None)
@@ -180,43 +195,48 @@ def synth(env, jobs):
     # if email is not None:
         # args +=  ['-email_to {} -email_all'.format(email)]
 
+
+
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
+        with VivadoOpen(lSessionId) as lConsole:
 
             # Open the project
-            lTarget('open_project {}'.format(lVivProjPath))
+            lConsole('open_project {}'.format(lVivProjPath))
 
-            lTarget([
+
+            lRunProps = getSynthRunProps(lConsole)
+            lIPRunsToReset  = [ k for k,v in lRunProps.iteritems() if (not k.startswith('synth') and v['STATUS'].startswith('Running'))]
+
+            for run in lIPRunsToReset:
+                secho('IP run {} found in running state. Resetting.'.format(run), fg='yellow')
+                lConsole('reset_run {}'.format(run))
+
+            lConsole([
                 'reset_run synth_1',
                 ' '.join(['launch_runs synth_1']+args),
             ])
 
-
             while (True):
-                lSynthesisRuns = lTarget('get_runs -filter {IS_SYNTHESIS}')[0].split()
-                lRunInfos = {}
 
-                lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
-                
-                for lRun in lSynthesisRuns:
-                    lValues = lTarget([ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ])
-                    lRunInfos[lRun] = dict(zip(lProps, lValues))
+                lRunProps = getSynthRunProps(lConsole)
+                lProps = lRunProps.itervalues().next().keys()
 
                 lSummary = Texttable(max_width=0)
                 lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
                 lSummary.add_row(['Run']+lProps)
-                for lRun in sorted(lRunInfos):
-                    lInfo = lRunInfos[lRun]
+                for lRun in sorted(lRunProps):
+                    lInfo = lRunProps[lRun]
                     lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])
                 secho('\n'+lSummary.draw(), fg='cyan')
 
-                if lRunInfos['synth_1']['PROGRESS'] == '100%':
+                if lRunProps['synth_1']['PROGRESS'] == '100%':
                     break
 
-                lTarget([
+                lConsole([
                         'wait_on_run synth_1 -timeout 1',
                     ])
+
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -246,11 +266,11 @@ def impl(env, jobs):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId, stopOnCWarnings=True) as lTarget:
+        with VivadoOpen(lSessionId, stopOnCWarnings=True) as lConsole:
 
             # Open the project
-            lTarget('open_project {}'.format(lVivProjPath))
-            lTarget([
+            lConsole('open_project {}'.format(lVivProjPath))
+            lConsole([
                 'reset_run impl_1',
                 'launch_runs impl_1' + (' -jobs {}'.format(jobs) if jobs is not None else ''),
                 'wait_on_run impl_1',
@@ -264,12 +284,11 @@ def impl(env, jobs):
 
 
 # ------------------------------------------------------------------------------
-@vivado.command('order-constr', short_help='Reorder with which constraints are processed')
+@vivado.command('order-constr', short_help='Change the order with which constraints are processed')
 @click.option('-i/-r', '--initial/--reverse', 'order', default=True, help='Reset or invert the order of evaluation of constraint files.')
 @click.pass_obj
 def orderconstr(env, order):
     '''Reorder constraint set'''
-
 
     lSessionId = 'order-constr'
     # Check
@@ -315,9 +334,9 @@ def orderconstr(env, order):
 
 
 # ------------------------------------------------------------------------------
-@click.command('usage', short_help='Print usage report for the top project.')
+@click.command('resource-usage', short_help='Print usage report for the top project.')
 @click.pass_obj
-def usage(env):
+def resourceusage(env):
 
     lSessionId = 'usage'
 
@@ -340,9 +359,9 @@ def usage(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
-            lTarget(lOpenCmds)
-            # lTarget(lImplCmds)
+        with VivadoOpen(lSessionId) as lConsole:
+            lConsole(lOpenCmds)
+            # lConsole(lImplCmds)
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -378,9 +397,9 @@ def bitfile(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
-            lTarget(lOpenCmds)
-            lTarget(lBitFileCmds)
+        with VivadoOpen(lSessionId) as lConsole:
+            lConsole(lOpenCmds)
+            lConsole(lBitFileCmds)
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -472,9 +491,9 @@ def reset(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lTarget:
-            lTarget(lOpenCmds)
-            lTarget(lResetCmds)
+        with VivadoOpen(lSessionId) as lConsole:
+            lConsole(lOpenCmds)
+            lConsole(lResetCmds)
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -561,13 +580,7 @@ def package(ctx, aTag):
     # -------------------------------------------------------------------------
     # Tar everything up
     secho("Generating tarball", fg='blue')
-    # lTgzBaseName = '{name}_{host}_{time}'.format(
-    #     name=env.currentproj.config['name'],
-    #     host=socket.gethostname().replace('.', '_'),
-    #     time=time.strftime('%y%m%d_%H%M')
-    # )
-    # Build the tarball basename with the format
-    # <projname>_(<tag>_)<host>_<date>
+
     lTgzBaseName = '_'.join(
         [env.currentproj.config['name']] +
         ([aTag] if aTag is not None else []) +

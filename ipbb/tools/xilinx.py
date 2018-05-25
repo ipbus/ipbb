@@ -184,6 +184,8 @@ class VivadoBatch(object):
     #--------------------------------------------
 # -------------------------------------------------------------------------
 
+
+# -------------------------------------------------------------------------
 from click.termui import _ansi_colors as kANSIColors
 from click.termui import _ansi_reset_all as kANSIColorResetAll
 
@@ -202,8 +204,7 @@ class VivadoOutputFormatter(OutputFormatter):
 
 
     def write(self, message):
-        if self.quiet:
-            return
+
 
         # put any pending character first
         msg = self.pendingchars+message
@@ -226,7 +227,10 @@ class VivadoOutputFormatter(OutputFormatter):
                 l = kANSIColorYellow+l+kANSIColorResetAll
             elif l.startswith('CRITICAL WARNING:') or l.startswith('ERROR:'):
                 l = kANSIColorRed+l+kANSIColorResetAll
+            elif self.quiet:
+                continue
             self._write((self.prefix if self.prefix else '')+l+'\n')
+# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -269,6 +273,16 @@ class VivadoConsole(object):
         lInstances = set(cls.__instances)
         for lInstance in lInstances:
             lInstance.quit()
+    # --------------------------------------------------------------
+
+    # --------------------------------------------------------------
+    @property
+    def quiet(self):
+        return self._out.quiet
+    
+    @quiet.setter
+    def quiet(self, value):
+        self._out.quiet = value
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -340,7 +354,6 @@ class VivadoConsole(object):
 
     # --------------------------------------------------------------
     def __send(self, aText):
-
         self._process.sendline(aText)
         # --------------------------------------------------------------
         # Hard check: First line of output must match the injected command
@@ -555,7 +568,17 @@ class VivadoHWServer(VivadoConsole):
 
 # -------------------------------------------------------------------------
 class VivadoOpen(object):
-    """docstring for VivadoOpen"""
+    """VivadoConsole wrapper for with statements"""
+
+    # --------------------------------------------------------------
+    @property
+    def quiet(self):
+        return self._console.quiet
+    
+    @quiet.setter
+    def quiet(self, value):
+        self._console.quiet = value
+    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __init__(self, *args, **kwargs):
@@ -589,8 +612,32 @@ class VivadoOpen(object):
             return self._console.execute(aCmd, aMaxLen)
         elif isinstance(aCmd, list):
             return self._console.executeMany(aCmd, aMaxLen)
+        else:
+            raise TypeError('Unsupported command type '+type(aCmd).__name__)
     # --------------------------------------------------------------
 # -------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------
+class VivadoSnoozer(object):
+    """Snoozes notifications from Vivado """
+    # --------------------------------------------------------------
+    def __init__(self, aConsole):
+        super(VivadoSnoozer, self).__init__()
+        self._console = aConsole
+        self._quiet = None
+    # --------------------------------------------------------------
+
+    # --------------------------------------------------------------
+    def __enter__(self):
+        self._quiet = self._console.quiet
+        self._console.quiet = True
+    # --------------------------------------------------------------
+    
+    # --------------------------------------------------------------
+    def __exit__(self, type, value, traceback):
+        self._console.quiet = self._quiet
+    # --------------------------------------------------------------
 
 # -------------------------------------------------------------------------
 

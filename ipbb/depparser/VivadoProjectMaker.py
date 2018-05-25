@@ -1,6 +1,9 @@
 from __future__ import print_function
 import time
 import os
+import collections
+
+from string import Template as tmpl
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -19,16 +22,17 @@ class VivadoProjectMaker(object):
         '.v': 'sources_1',
         '.xci': 'sources_1',
         '.ngc': 'sources_1',
-        '.ucf': 'ise_1',
-        '.xco': 'ise_1',
         '.edn': 'sources_1',
         '.edf': 'sources_1'
+        # Legacy ISE files
+        # '.ucf': 'ise_1',
+        # '.xco': 'ise_1',
     }
 
     # --------------------------------------------------------------
-    def __init__(self, aReverse = False):
+    def __init__(self, aReverse = False, aTurbo=True):
         self.reverse = aReverse
-
+        self.turbo = aTurbo
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -60,8 +64,6 @@ class VivadoProjectMaker(object):
             'if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
         write(
             'if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
-        write(
-            'if {[string equal [get_filesets -quiet ise_1] ""]} {create_fileset -srcset ise_1}')
 
         for setup in aCommandList['setup']:
             write('source {0}'.format(setup.FilePath))
@@ -71,37 +73,73 @@ class VivadoProjectMaker(object):
 
         lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
 
+        # Grouping commands here, where the order matters only for constraint files
+        lSrcCommandGroups = collections.OrderedDict()
+
         for src in lSrcs:
+            # Extract path tokens
             lPath, lBasename = os.path.split(src.FilePath)
             lName, lExt = os.path.splitext(lBasename)
-            lTargetFile = os.path.join(
-                '$outputDir/top.srcs/sources_1/ip', lName, lBasename)
+            lTargetFile = os.path.join('$outputDir/top.srcs/sources_1/ip', lName, lBasename)
+
+            cmds = []
+            lCommands = []
 
             if lExt == '.xci':
-                write(
-                    'import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
+                # write('import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
+                cmds.append('import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
+
+                c = 'import_files -norecurse -fileset sources_1 $files'
+                f = src.FilePath
+
+                lCommands += [(c, f)]
+
                 lXciBasenames.append(lName)
                 lXciTargetFiles.append(lTargetFile)
             else:
                 if src.Include:
-                    cmd = 'add_files -norecurse -fileset {1} {0}'.format(
-                        src.FilePath, self.filesets[lExt])
+                    # cmd = 'add_files -norecurse -fileset {1} {0}'.format(src.FilePath, self.filesets[lExt])
+                    cmds.append('add_files -norecurse -fileset {1} {0}'.format(src.FilePath, self.filesets[lExt]))
+
+                    c = 'add_files -norecurse -fileset {0} $files'.format(self.filesets[lExt])
+                    f = src.FilePath
+                    lCommands += [(c, f)]
+
                     if src.Vhdl2008:
-                        cmd += '\nset_property FILE_TYPE {{VHDL 2008}} [get_files {0}]'.format(
-                            src.FilePath)
+                        # cmd += '\nset_property FILE_TYPE {{VHDL 2008}} [get_files {0}]'.format(src.FilePath)
+                        cmds.append('set_property FILE_TYPE {{VHDL 2008}} [get_files {0}]'.format(src.FilePath))
+                        c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
+                        f = src.FilePath
+                        lCommands += [(c, f)]
                     if lExt == '.tcl':
-                        write(
-                            'set_property USED_IN implementation [' + cmd + ']')
-                    else:
-                        write(cmd)
+                        # write('set_property USED_IN implementation [' + cmd + ']')
+                        cmds.append('set_property USED_IN implementation [get_files {0}]'.format(src.FilePath))
+                        c = 'set_property USED_IN implementation [get_files {$files}]'
+                        f = src.FilePath
+                        lCommands += [(c, f)]
+                    # else:
+                        # write(cmd)
                 if src.Lib:
-                    write('set_property library {1} [ get_files [ {0} ] ]'.format(
-                        src.FilePath, src.Lib))
+                    # write('set_property library {1} [ get_files [ {0} ] ]'.format(
+                    #     src.FilePath, src.Lib))
+                    cmds.append('set_property library {1} [ get_files [ {0} ] ]'.format(src.FilePath, src.Lib))
+                    c = 'set_property library {0} [ get_files [ {{$files}} ] ]'.format(src.Lib)
+                    f = src.FilePath
+                    lCommands += [(c, f)]
+
+            for c,f in lCommands:
+                if self.turbo:
+                    lSrcCommandGroups.setdefault(c, []).append(f)
+                else:
+                    write(tmpl(c).substitute(files=f).encode('ascii'))
+
+        if self.turbo:
+            for c,f in lSrcCommandGroups.iteritems():
+                write(tmpl(c).substitute(files=' '.join(f)).encode('ascii'))
 
         write('set_property top top [current_fileset]')
 
-        write(
-            'set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
+        write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
 
         for i in lXciBasenames:
             write('upgrade_ip [get_ips {0}]'.format(i))

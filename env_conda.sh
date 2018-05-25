@@ -95,7 +95,7 @@ fi
 
 if [ ! -d "${IPBB_VENV}" ] ; then
 
-  echo -e "${COL_YELLOW}Virtualenv ${IPBB_VENV} doen not exist.${COL_NULL}"
+  echo -e "${COL_YELLOW}Virtualenv ${IPBB_VENV} does not exist.${COL_NULL}"
   echo -e "${COL_GREEN}Setting up a new virtual python environment in ${IPBB_VENV}${COL_NULL}"
 
   IPBB_PIP_INSTALLOPT="-U -I -q"

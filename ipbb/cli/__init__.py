@@ -118,7 +118,7 @@ class Environment(object):
                     self.currentproj.config['topCmp'],
                     self.currentproj.config['topDep']
                 )
-            except IOError as e:
+            except OSError as e:
                 pass
 
         return self._depParser

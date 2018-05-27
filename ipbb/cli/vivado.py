@@ -165,14 +165,14 @@ def checksyntax(env):
 
 # -------------------------------------
 def getSynthRunProps(aConsole):
-    with VivadoSnoozer(lConsole):
-        lSynthesisRuns = lConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
+    with VivadoSnoozer(aConsole):
+        lSynthesisRuns = aConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
         lRunProps = {}
 
         lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
         
         for lRun in lSynthesisRuns:
-            lValues = lConsole([ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ])
+            lValues = aConsole([ 'get_property {0} [get_runs {1}]'.format(lProp, lRun) for lProp in lProps ])
             lRunProps[lRun] = dict(zip(lProps, lValues))
     return lRunProps
 # -------------------------------------

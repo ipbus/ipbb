@@ -36,12 +36,15 @@ def ensureVivado(env):
 
 # ------------------------------------------------------------------------------
 @click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)
-@click.option('-p', '--proj', default=None)
+@click.option('-p', '--proj', default=None, help="Selected project, if not current")
+@click.option('-q', '--quiet', is_flag=True, default=False, help="Suppress most of Vivado messages")
 @click.pass_context
-def vivado(ctx, proj):
+def vivado(ctx, proj, quiet):
     '''Vivado command group'''
 
     env = ctx.obj
+
+    env.vivadoEcho = not quiet
 
     # lProj = proj if proj is not None else env.currentproj.name
     if proj is not None:
@@ -96,7 +99,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
     try:
         with (
-            VivadoOpen(lSessionId) if not lDryRun 
+            VivadoOpen(lSessionId, echo=env.vivadoEcho) if not lDryRun 
             else SmartOpen(
                 # Dump to script
                 aToScript if not aToStdout 
@@ -144,7 +147,7 @@ def checksyntax(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
             # Open the project
             lConsole('open_project {}'.format(lVivProjPath))
@@ -165,6 +168,11 @@ def checksyntax(env):
 
 # -------------------------------------
 def getSynthRunProps(aConsole):
+    '''Retrieve the status of synthesis runs
+    
+    Helper function
+    '''
+
     with VivadoSnoozer(aConsole):
         lSynthesisRuns = aConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
         lRunProps = {}
@@ -201,11 +209,9 @@ def synth(env, jobs):
     # if email is not None:
         # args +=  ['-email_to {} -email_all'.format(email)]
 
-
-
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
             # Open the project
             lConsole('open_project {}'.format(lVivProjPath))
@@ -275,7 +281,7 @@ def impl(env, jobs):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId, stopOnCWarnings=True) as lConsole:
+        with VivadoOpen(lSessionId, , echo=env.vivadoEcho, stopOnCWarnings=True) as lConsole:
 
             # Change message severity to ERROR for the isses we're interested in
             lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
@@ -320,7 +326,7 @@ def orderconstr(env, order):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             # Open vivado project
             lConsole('open_project {}'.format(lVivProjPath))
             # lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
@@ -371,7 +377,7 @@ def resourceusage(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             lConsole(lOpenCmds)
             # lConsole(lImplCmds)
     except VivadoConsoleError as lExc:
@@ -409,7 +415,7 @@ def bitfile(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             lConsole(lOpenCmds)
             lConsole(lBitFileCmds)
     except VivadoConsoleError as lExc:
@@ -444,7 +450,7 @@ def status(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId, echo=False) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             echo('Opening project')
             lConsole(lOpenCmds)
             
@@ -503,7 +509,7 @@ def reset(env):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             lConsole(lOpenCmds)
             lConsole(lResetCmds)
     except VivadoConsoleError as lExc:
@@ -634,7 +640,7 @@ def archive(ctx):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             lConsole(lOpenCmds)
             lConsole(lArchiveCmds)
     except VivadoConsoleError as lExc:

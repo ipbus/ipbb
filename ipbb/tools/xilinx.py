@@ -251,8 +251,8 @@ class VivadoConsole(object):
     def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
         """
         Args:
-            sessionid (str):
-            echo (bool):
+            sessionid (str): Name of the Vivado session
+            echo (bool): 
             echoprefix (str):
             executable (str):
             prompt (str):

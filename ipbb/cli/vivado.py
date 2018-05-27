@@ -281,7 +281,7 @@ def impl(env, jobs):
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId, , echo=env.vivadoEcho, stopOnCWarnings=True) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho, stopOnCWarnings=True) as lConsole:
 
             # Change message severity to ERROR for the isses we're interested in
             lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])

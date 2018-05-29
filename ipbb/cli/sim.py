@@ -452,11 +452,18 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     # Create a wrapper to force default bindings at load time
     print ('Writing modelsim wrapper \'./vsim\'')
     with SmartOpen('vsim') as lVsimSh:
-        lVsimSh('#!/bin/sh')
-        lVsimSh('export MTI_VCO_MODE=64')
-        lVsimSh('vsim "$@"')
-        # lVsimSh('vsim {libs} "$@"'.format(
-        #     libs=' '.join('-L ' + l for l in lSimLibs)))
+        # lVsimSh('#!/bin/sh')
+        # lVsimSh('export MTI_VCO_MODE=64')
+        # lVsimSh('vsim "$@"')
+        lVsimSh('''#!/bin/sh
+
+if [ ! -f modelsim.ini ]; then
+    echo "WARNING: modelsim.ini not found. Vivado simulation libraries won't be loaded."
+fi
+
+export MTI_VCO_MODE=64
+vsim "$@
+    ''')
 
     # Make it executable
     os.chmod('vsim', 0755)

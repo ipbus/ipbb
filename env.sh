@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#
-
 COL_RED="\e[31m"
 COL_GREEN="\e[32m"
 COL_YELLOW="\e[33m"

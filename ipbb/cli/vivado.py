@@ -136,6 +136,7 @@ def checksyntax(env):
 
     lStopOn = [
         'HDL 9-806', # Syntax errors
+        'HDL 9-69',  # Type not declared
     ]
 
     # Check

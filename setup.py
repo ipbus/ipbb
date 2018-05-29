@@ -12,7 +12,8 @@ setup(
         'Click-didyoumean',
         'TextTable',
         'Sh',
-        'Pexpect'
+        'Pexpect',
+        'PsUtil'
     ],
     entry_points='''
         [console_scripts]

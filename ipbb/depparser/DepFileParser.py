@@ -144,8 +144,7 @@ class DepFileParser(object):
         self.pathMaker = aPathmaker
 
         self.vars = {}
-        self.commands = {'setup': [], 'src': [],
-                            'addrtab': [], 'cgpfile': []}
+        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'cgpfile': []}
         self.libs = list()
         self.maps = list()
         self.components = OrderedDict()

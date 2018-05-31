@@ -36,14 +36,20 @@ class IPCoresSimMaker(object):
         write('set outputDir {0}'.format(lWorkingDir))
         write('file mkdir $outputDir')
 
-        write('create_project top $outputDir -force'.format(**aScriptVariables))
+        # write('create_project top $outputDir -force'.format(**aScriptVariables))
+
+        write(
+            'create_project top $outputDir -part {device_name}{device_package}{device_speed} -force'.format(
+                **aScriptVariables
+            )
+        )
 
         write('''
-set obj [get_projects top]
-set_property "default_lib" "xil_defaultlib" $obj
-set_property "simulator_language" "Mixed" $obj
-set_property "source_mgmt_mode" "DisplayOnly" $obj
-set_property "target_language" "VHDL" $obj
+set proj_top [get_projects top]
+set_property "default_lib" "xil_defaultlib" $proj_top
+set_property "simulator_language" "Mixed" $proj_top
+set_property "source_mgmt_mode" "DisplayOnly" $proj_top
+set_property "target_language" "Mixed" $proj_top
 ''')
 
         write('set_property target_simulator ' +

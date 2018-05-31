@@ -462,7 +462,7 @@ if [ ! -f modelsim.ini ]; then
 fi
 
 export MTI_VCO_MODE=64
-vsim "$@
+vsim "$@"
     ''')
 
     # Make it executable
@@ -514,4 +514,27 @@ sudo chmod a+rw /dev/net/tun
         sh.ifconfig(dev, 'up', ip, _out=sys.stdout)
         sh.chmod('a+rw', '/dev/net/tun', _out=sys.stdout)
 
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+@sim.command('mifs')
+@click.pass_obj
+def mifs(env):
+
+    lDepFileParser = env.depParser
+
+    # print (env.depParser.commands)
+
+    lPaths = []
+    for c in env.depParser.commands['src']:
+        if splitext(c.FilePath)[1] != '.mif':
+            continue
+        lPaths.append(c.FilePath)
+
+    if not lPaths:
+        return
+
+    sh.mkdir('-p', 'mif')
+    for p in lPaths:
+        sh.cp(p, 'mif/')
 # ------------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import os.path
 import atexit
 import sh
 import tempfile
+import psutil
 
 # Elements
 from os.path import join, split, exists, splitext, basename
@@ -265,6 +266,13 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
+    @property
+    def processinfo(self):
+        return self._processinfo
+    
+    # --------------------------------------------------------------
+
+    # --------------------------------------------------------------
     def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
         """
         Args:
@@ -315,6 +323,7 @@ class VivadoConsole(object):
         self.__expectPrompt()
         self._log.debug('Vivado up and running')
 
+        self._processinfo = psutil.Process(self._process.pid)
         # Method mapping
         self.isAlive = self._process.isalive
         # Add self to the list of instances

@@ -44,32 +44,26 @@ class IPCoresSimMaker(object):
             )
         )
 
+        write('set_property ip_repo_paths {{{}}} [current_project]'.format(
+            ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
+            )
+        )
+
         write('''
 set proj_top [get_projects top]
 set_property "default_lib" "xil_defaultlib" $proj_top
 set_property "simulator_language" "Mixed" $proj_top
 set_property "source_mgmt_mode" "DisplayOnly" $proj_top
-set_property "target_language" "Mixed" $proj_top
+set_property "target_language" "VHDL" $proj_top
 ''')
 
-        write('set_property target_simulator ' +
-              self.targetSimulator + ' [current_project]')
+        write('set_property target_simulator ' + self.targetSimulator + ' [current_project]')
 
-        # write('file mkdir $xlib_path')
-        # lUnisim_nodebug = aScriptVariables.get('unisim_nodebug')
-        # if lUnisim_nodebug == '1':  # If the encrypted library uses unisim
-        #     # Yeah... Incorrectly documented by Vivado They change the variable
-        #     # name used for questa on this option only.
-        #     if self.simulator == 'questa':
-        #         write(
-        #             'config_compile_simlib -cfgopt {questasim.vhdl.unisim: -nodebug}')
-        #     else:
-        #         write(
-        #             'config_compile_simlib -cfgopt {' + self.simulator + '.vhdl.unisim: -nodebug}')
-        # if self.compileSimlibs:
-        #     write('compile_simlib -simulator ' + self.simulator + ' -directory $xlib_path -verbose')
         write(
-            'set_property compxlib.{}_compiled_library_dir {} [current_project]'.format(self.simulator, self.simlibPath)
+            'set_property compxlib.{}_compiled_library_dir {} [current_project]'.format(
+                self.simulator, 
+                self.simlibPath
+                )
             )
 
         write()

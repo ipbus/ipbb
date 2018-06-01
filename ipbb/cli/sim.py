@@ -462,6 +462,7 @@ if [ ! -f modelsim.ini ]; then
 fi
 
 export MTI_VCO_MODE=64
+export MODELSIM_DATAPATH="mif/"
 vsim "$@"
     ''')
 

@@ -1,9 +1,12 @@
 #!/bin/bash
 
+#
+
 COL_RED="\e[31m"
 COL_GREEN="\e[32m"
 COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
+
 COL_NULL="\e[0m"
 
 
@@ -68,13 +71,13 @@ if [ "${PYTHON_MAJOR}" != "2" ]; then
   return 1
 fi
 
-# Check if virtualenv is installed
-if ! [ -x "$(command -v virtualenv)" ]; then
-  echo -e "${COL_RED}virtualenv is not installed. Please install virtualenv and source ${BASH_SOURCE} again.${COL_NULL}" >&2
+# Check if conda is installed
+if [ -z "$(command -v conda)" ]; then
+  echo -e "${COL_RED}conda is not installed. Please install miniconda and source ${BASH_SOURCE} again.${COL_NULL}" >&2
   return 1
 fi
 
-# Check if virtualenv is installed
+# Check if pip is installed
 if ! [ -x "$(command -v pip)" ]; then
   echo -e "${COL_RED}pip is not installed. Please install pip and source ${BASH_SOURCE} again.${COL_NULL}" >&2
   return 1
@@ -97,13 +100,15 @@ if [ ! -d "${IPBB_VENV}" ] ; then
 
   IPBB_PIP_INSTALLOPT="-U -I -q"
 
-  virtualenv ${IPBB_VENV} --system-site-packages
-  source ${IPBB_VENV}/bin/activate
+  # virtualenv ${IPBB_VENV} --system-site-packages
+  echo "conda create -y -p ${IPBB_VENV}"
+  conda create -y -p ${IPBB_VENV}
+  source activate ${IPBB_VENV}
 
   echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"
 
   # upgrade pip to the latest greatest version
-  pip install -q --upgrade pip
+  pip install -q --upgrade pip setuptools
 
 
   if [ "${PYTHON_VERSION}" == "2.7" ] ; then
@@ -117,24 +122,25 @@ if [ ! -d "${IPBB_VENV}" ] ; then
   pip install -q --editable ${IPBB_ROOT}
 
   echo -e "${COL_GREEN}Setup completed${COL_NULL}"
-  deactivate
+  source deactivate
 fi
 
-if [ -z ${VIRTUAL_ENV+X} ] ; then
+if [ -z ${CONDA_PREFIX+X} ] ; then
   echo -e "${COL_GREEN}Activating ipbb environment${COL_NULL}"
-  source ${IPBB_VENV}/bin/activate
+  source activate ${IPBB_VENV}
 
   # Consistency check
-  if [[ ! ${IPBB_VENV} -ef ${VIRTUAL_ENV} ]]; then
-    deactivate
+  if [[ ! ${IPBB_VENV} -ef ${CONDA_PREFIX} ]]; then
+    echo ${IPBB_VENV} -ef ${CONDA_PREFIX}
     echo -e "${COL_RED}ERROR: ipbb environment loading failed. Was ipbb directory moved?${COL_NULL}"
     echo -e "${COL_RED}       Delete ${IPBB_VENV} and source env.sh again.${COL_NULL}"
     return
   fi
 fi
 
-# add test/bin to PATH
-pathadd PATH ${IPBB_ROOT}/test/scripts
+# add bin and test/bin to PATH
+pathadd PATH ${IPBB_ROOT}/bin
+pathadd PATH ${IPBB_ROOT}/test/bin
 
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"
@@ -144,4 +150,6 @@ eval "$(_IPBB_COMPLETE=source ipbb)"
 eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"
 
 echo -e "${COL_GREEN}ipbb environment successfully loaded${COL_NULL}"
+
+alias deactivate='source deactivate'
 

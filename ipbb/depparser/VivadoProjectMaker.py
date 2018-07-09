@@ -158,7 +158,7 @@ class VivadoProjectMaker(object):
         write('set_property top top [current_fileset]')
 
         write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
-        
+
         for i in lXciBasenames:
             write('upgrade_ip [get_ips {0}]'.format(i))
         for i in lXciTargetFiles:

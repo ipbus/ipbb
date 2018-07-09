@@ -2,6 +2,8 @@ from __future__ import print_function
 import time
 import os
 import collections
+import glob
+import subprocess
 
 from string import Template as tmpl
 
@@ -24,7 +26,8 @@ class VivadoProjectMaker(object):
         '.xci': 'sources_1',
         '.ngc': 'sources_1',
         '.edn': 'sources_1',
-        '.edf': 'sources_1'
+        '.edf': 'sources_1',
+        '.bd': 'sources_1'
         # Legacy ISE files
         # '.ucf': 'ise_1',
         # '.xco': 'ise_1',
@@ -57,6 +60,16 @@ class VivadoProjectMaker(object):
 
         write(
             'create_project top $outputDir -part {device_name}{device_package}{device_speed} -force'.format(
+                **aScriptVariables
+            )
+        )
+
+        # for block designs of development boards
+        if 'board_part' not in aScriptVariables:
+            pass
+        else:
+            write(
+            'set_property BOARD_PART {board_part} [current_project]'.format(
                 **aScriptVariables
             )
         )
@@ -95,6 +108,23 @@ class VivadoProjectMaker(object):
 
                 lXciBasenames.append(lName)
                 lXciTargetFiles.append(lTargetFile)
+
+            # Support block designs
+            elif lExt == '.bd': # import pdb; pdb.set_trace()
+                
+                fl=glob.glob(lPath+'/*') # delete build artefacts to include recursive submodules
+                fl.remove(lPath+'/'+lBasename) # do not delete the design
+                if os.path.exists(lPath+'/hdl'): # do not delete hdl file if it exists
+                    fl.remove(lPath+'/hdl')
+                for file in fl:
+                    subprocess.Popen(['rm', '-rf', file])
+
+                # hard write to add, open, and close board design
+                write(str('add_files -fileset sources_1 {'+lPath+'/'+lBasename+'}'))
+                write(str('open_bd_design {'+lPath+'/'+lBasename+'}')) # open design to add all submodules
+                write('close_bd_design [current_bd_design]')
+                write(str('generate_target all [get_files '+lPath+'/'+lBasename+']')) # get all submodules
+
             else:
                 if src.Include:
 
@@ -128,7 +158,7 @@ class VivadoProjectMaker(object):
         write('set_property top top [current_fileset]')
 
         write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
-
+        
         for i in lXciBasenames:
             write('upgrade_ip [get_ips {0}]'.format(i))
         for i in lXciTargetFiles:

@@ -72,15 +72,19 @@ def git(env, repo, branch, dest):
     # Maybe not necessary
 
     lUrl = urlparse(repo)
-    # Strip '.git' at the end
-    lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
+    # Strip '.git' at the end if it exists, this supports git in a folder
+    if 'git' in lUrl.path:
+        lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
+    else:
+        lRepoName = lUrl.path if dest is None else dest
+
     lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
-    # Check for #glein: #    import pdb; pdb.set_trace()
-#    if exists(lRepoLocalPath):
-#        raise click.ClickException(
-#            'Repository already exists \'%s\'' % lRepoLocalPath
-#            )
+    # Check for
+    if exists(lRepoLocalPath):
+        raise click.ClickException(
+            'Repository already exists \'%s\'' % lRepoLocalPath
+            )
 
     if branch is not None:
         lLsRemote = sh.git('ls-remote', '-h','-t', repo, branch)

@@ -76,11 +76,11 @@ def git(env, repo, branch, dest):
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
     lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
-    # Check for 
-    if exists(lRepoLocalPath):
-        raise click.ClickException(
-            'Repository already exists \'%s\'' % lRepoLocalPath
-            )
+    # Check for #    import pdb; pdb.set_trace()
+#    if exists(lRepoLocalPath):
+#        raise click.ClickException(
+#            'Repository already exists \'%s\'' % lRepoLocalPath
+#            )
 
     if branch is not None:
         lLsRemote = sh.git('ls-remote', '-h','-t', repo, branch)

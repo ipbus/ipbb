@@ -20,6 +20,7 @@ class VivadoProjectMaker(object):
         '.mif': 'sources_1',
         '.vhd': 'sources_1',
         '.v': 'sources_1',
+        '.sv': 'sources_1',
         '.xci': 'sources_1',
         '.ngc': 'sources_1',
         '.edn': 'sources_1',

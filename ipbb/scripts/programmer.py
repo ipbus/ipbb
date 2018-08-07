@@ -93,14 +93,18 @@ def list(obj, aVerbosity):
 
         try:
             v.openHwTarget(target)
-            hw_devices = v.getHwDevices()
-            for device in hw_devices:
-                echo("  + "+style(device, fg='green'))
-            v.closeHwTarget(target)
         except VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)
-            raise click.Abort()
+            # raise click.Abort()
+            v.closeHwTarget(target)
+            continue
 
+
+        hw_devices = v.getHwDevices()
+        for device in hw_devices:
+            echo("  + "+style(device, fg='green'))
+    
+        v.closeHwTarget(target)
 
 # ------------------------------------------------------------------------------   
 

@@ -80,7 +80,19 @@ if ! [ -x "$(command -v pip)" ]; then
   return 1
 fi
 
-SH_SOURCE=${BASH_SOURCE}
+# SH_SOURCE=${BASH_SOURCE}
+
+if [ -n "$ZSH_VERSION" ]; then
+   # assume Zsh
+   SH_SOURCE=${(%):-%x}
+elif [ -n "$BASH_VERSION" ]; then
+   # assume Bash
+   SH_SOURCE=${BASH_SOURCE}
+else
+   # asume something else
+   echo "Error: only bash and zsh supported"
+fi
+
 IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 IPBB_VENV=${IPBB_ROOT}/external/ipbb
 

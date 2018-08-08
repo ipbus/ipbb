@@ -199,7 +199,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
     if not exists(lSimlibPath):
-        secho("Warning: Simulation Xilinx libraries not found. Likely this is a problem.\nPlease execute {} sim simlibs to generate them.".format(getClickRootName()), fg='yellow')
+        secho("Warning: Simulation Xilinx libraries not found. Likely this is a problem.\nPlease execute {} sim setup-simlibs to generate them.".format(getClickRootName()), fg='yellow')
         confirm("Do you want to continue anyway?", abort=True)
     # -------------------------------------------------------------------------
 
@@ -462,6 +462,7 @@ if [ ! -f modelsim.ini ]; then
 fi
 
 export MTI_VCO_MODE=64
+export MODELSIM_DATAPATH="mif/"
 vsim "$@"
     ''')
 

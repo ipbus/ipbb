@@ -38,7 +38,6 @@ class VivadoProjectMaker(object):
 
     # --------------------------------------------------------------
     def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aMaps):
-
         if 'device_name' not in aScriptVariables:
             raise RuntimeError("Variable 'device_name' not defined in dep files.")
 
@@ -61,10 +60,14 @@ class VivadoProjectMaker(object):
             )
         )
 
-        write(
-            'if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
-        write(
-            'if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
+        # Add ip repositories to the project variable
+        write('set_property ip_repo_paths {{{}}} [current_project]'.format(
+            ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
+            )
+        )
+
+        write('if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
+        write('if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
 
         for setup in aCommandList['setup']:
             write('source {0}'.format(setup.FilePath))

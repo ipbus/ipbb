@@ -74,20 +74,6 @@ def gendecoders(ctx):
         # Gather address tables
         ctx.invoke(addrtab, aDest=lDecodersDir)
 
-    # ------------------------------------------------------------------------------
-    # TODO: Clean me up
-    lGenScript = 'gen_ipbus_addr_decode'
-    if not which(lGenScript):
-        os.environ['PATH'] = '/opt/cactus/bin/uhal/tools:' + os.environ['PATH']
-        if not which(lGenScript):
-            raise click.ClickException(
-                "'{0}' script not found.".format(lGenScript))
-
-    if '/opt/cactus/lib' not in os.environ['LD_LIBRARY_PATH'].split(':'):
-        os.environ['LD_LIBRARY_PATH'] = '/opt/cactus/lib:' + \
-            os.environ['LD_LIBRARY_PATH']
-
-
     lGenScript = 'gen_ipbus_addr_decode'
     lGenToolPath = '/opt/cactus/bin/uhal/tools'
     lGenToolLibPath = '/opt/cactus/lib'
@@ -97,14 +83,19 @@ def gendecoders(ctx):
         lPaths = os.environ['PATH'].split() if os.environ['PATH'] else []
         if lGenToolPath not in lPaths:
             lPaths[0:0] = [lGenToolPath]
+            os.environ['PATH'] = ':'.join(lPaths)
 
-        lLibPaths = os.environ['LD_LIBRARY_PATH'].split() if os.environ['LD_LIBRARY_PATH'] else []
-        if lGenToolLibPath not in lLibPaths:
-            lLibPaths[0:0] = [lGenToolLibPath]
 
         if not which(lGenScript):
             raise click.ClickException(
                 "'{0}' script not found.".format(lGenScript))
+
+    lLibPaths = os.environ['LD_LIBRARY_PATH'].split() if os.environ['LD_LIBRARY_PATH'] else []
+    if lGenToolLibPath not in lLibPaths:
+        lLibPaths[0:0] = [lGenToolLibPath]
+        os.environ['LD_LIBRARY_PATH'] = ':'.join(lLibPaths)
+
+    secho("Using "+which(lGenScript), fg='green')
 
     # ------------------------------------------------------------------------------
 

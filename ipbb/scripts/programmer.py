@@ -5,7 +5,10 @@ from __future__ import print_function
 import click
 import click_didyoumean
 import traceback
+import tempfile
+import tarfile
 
+from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from click import echo, secho, style
 from ..cli.utils import echoVivadoConsoleError
 from ..tools.common import which
@@ -90,14 +93,18 @@ def list(obj, aVerbosity):
 
         try:
             v.openHwTarget(target)
-            hw_devices = v.getHwDevices()
-            for device in hw_devices:
-                echo("  + "+style(device, fg='green'))
-            v.closeHwTarget(target)
         except VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)
-            raise click.Abort()
+            # raise click.Abort()
+            v.closeHwTarget(target)
+            continue
 
+
+        hw_devices = v.getHwDevices()
+        for device in hw_devices:
+            echo("  + "+style(device, fg='green'))
+    
+        v.closeHwTarget(target)
 
 # ------------------------------------------------------------------------------   
 
@@ -120,6 +127,21 @@ def _validateDevice(ctx, param, value):
 def program(obj, deviceid, bitfile, aVerbosity):
 
     target, device = deviceid
+
+    bitbase, bitext = splitext(bitfile)
+    if bitext == '.tgz':
+        with tarfile.open(bitfile) as lTF:
+            lTopFiles = [ m.name for m in lTF.getmembers() if m.name.endswith('top.bit')]
+            if len(lTopFiles) < 0:
+                raise RuntimeError('No top.bit images found in {}'.format(bitfile))
+            elif len(lTopFiles) > 1:
+                raise RuntimeError('Multiple top.bit images found in {}'.format(bitfile))
+
+            lTmpDir = tempfile.mkdtemp()
+
+            lTF.extract(lTopFiles[0], lTmpDir)
+        secho('Extracting top.bit from {} to {}'.format(bitfile, lTmpDir), fg='green')
+        bitfile = join(lTmpDir, lTopFiles[0])
 
     lHwServerURI = obj.options['vivado.hw_server']
     

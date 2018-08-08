@@ -36,27 +36,6 @@ function pathadd() {
 }
 #------------------------------------------------------------------------------
 
-
-# for Zsh
-#
-# typeset -U path
-# path+=(~/foo)
-#
-# To add it to the front
-# path=(~/foo "$path[@]")
-
-# TODO: Cleanup
-# if [ -n "$ZSH_VERSION" ]; then
-#    # assume Zsh
-#    SH_SOURCE=${(%):-%N} # Alternative? ${(%):-%x}
-# elif [ -n "$BASH_VERSION" ]; then
-#    # assume Bash
-#    SH_SOURCE=${BASH_SOURCE}
-# else
-#    # asume something else
-#    echo "Error: only bash and zsh supported"
-# fi
-
 #------------------------------------------------------------------------------
 PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
 PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')
@@ -80,7 +59,19 @@ if ! [ -x "$(command -v pip)" ]; then
   return 1
 fi
 
-SH_SOURCE=${BASH_SOURCE}
+# SH_SOURCE=${BASH_SOURCE}
+
+if [ -n "$ZSH_VERSION" ]; then
+   # assume Zsh
+   SH_SOURCE=${(%):-%x}
+elif [ -n "$BASH_VERSION" ]; then
+   # assume Bash
+   SH_SOURCE=${BASH_SOURCE}
+else
+   # asume something else
+   echo "Error: only bash and zsh supported"
+fi
+
 IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 IPBB_VENV=${IPBB_ROOT}/external/ipbb
 
@@ -114,7 +105,7 @@ if [ ! -d "${IPBB_VENV}" ] ; then
 
   echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 
-  pip install -q --editable ${IPBB_ROOT}
+  pip install -q --no-cache-dir --editable ${IPBB_ROOT}
 
   echo -e "${COL_GREEN}Setup completed${COL_NULL}"
   deactivate
@@ -135,6 +126,7 @@ fi
 
 # add test/bin to PATH
 pathadd PATH ${IPBB_ROOT}/test/scripts
+pathadd PATH ${IPBB_ROOT}/tools/bin
 
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}"

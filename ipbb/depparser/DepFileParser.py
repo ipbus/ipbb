@@ -144,7 +144,7 @@ class DepFileParser(object):
         self.pathMaker = aPathmaker
 
         self.vars = {}
-        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'cgpfile': []}
+        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': []}
         self.libs = list()
         self.maps = list()
         self.components = OrderedDict()
@@ -204,7 +204,10 @@ class DepFileParser(object):
         subp.add_argument("--cd")
         subp.add_argument("-t", "--toplevel", action="store_true")
         subp.add_argument("file", nargs="*")
-
+        subp = parser_add.add_parser("iprepo")
+        subp.add_argument("-c", "--component", **lCompArgOpts)
+        subp.add_argument("--cd")
+        subp.add_argument("file", nargs="*")
         # map parser method to self
         self.parseLine = parser.parse_args
         # --------------------------------------------------------------

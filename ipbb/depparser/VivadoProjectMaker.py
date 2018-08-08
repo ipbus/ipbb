@@ -60,6 +60,11 @@ class VivadoProjectMaker(object):
             )
         )
 
+        if 'board_part' in aScriptVariables:
+            write('set_property -name "board_part" -value "{board_part}" -objects [current_project]'.format(**aScriptVariables))
+        if 'dsa_board_id' in aScriptVariables:
+            write('set_property -name "dsa.board_id" -value "{dsa_board_id}" -objects [current_project]'.format(**aScriptVariables))
+
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
             ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))

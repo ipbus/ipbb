@@ -36,27 +36,6 @@ function pathadd() {
 }
 #------------------------------------------------------------------------------
 
-
-# for Zsh
-#
-# typeset -U path
-# path+=(~/foo)
-#
-# To add it to the front
-# path=(~/foo "$path[@]")
-
-# TODO: Cleanup
-# if [ -n "$ZSH_VERSION" ]; then
-#    # assume Zsh
-#    SH_SOURCE=${(%):-%N} # Alternative? ${(%):-%x}
-# elif [ -n "$BASH_VERSION" ]; then
-#    # assume Bash
-#    SH_SOURCE=${BASH_SOURCE}
-# else
-#    # asume something else
-#    echo "Error: only bash and zsh supported"
-# fi
-
 #------------------------------------------------------------------------------
 PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
 PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')

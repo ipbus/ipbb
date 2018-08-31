@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+# [0.3.4] - 2018-8-31
+### Changed
+- `ipb-prog` `vivado program` now capable of extrating bitfiles from tarballs. No need to unpack the tarball anymore.
+
 # [0.3.3] - 2018-8-8
 ### Changed
 - Updated `gen_ipus_addr_decode` to the latest version.

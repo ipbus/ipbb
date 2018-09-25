@@ -263,6 +263,18 @@ def synth(env, jobs):
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
+def getIPCoresCompiled(aConsole, proj):
+	lVivProjPath = proj.path
+	print(lVivProjPath)
+	lIPCoresPath = join(lVivProjPath, 'top', 'top.srcs', 'sources_1', 'ip')
+	for folder in next(os.walk(lIPCoresPath))[1]:
+		if not os.path.isdir(join(lIPCoresPath, folder, 'sim')):
+			secho("Simulation directory does not exist for %s. Compiling the ip-core."%(folder), fg='yellow')
+			aConsole('generate_target all [get_files %s/top/top.srcs/sources_1/ip/%s/%s.xci]' % (lVivProjPath, folder, folder))
+			aConsole('export_ip_user_files -of_objects [get_files %s/top/top.srcs/sources_1/ip/%s/%s.xci] -no_script -sync -force -quiet' % (lVivProjPath,folder,folder))
+			aConsole('export_simulation -of_objects [get_files %s/top/top.srcs/sources_1/ip/%s/%s.xci] -directory %s/top/top.ip_user_files/sim_scripts -ip_user_files_dir %s/top/top.ip_user_files -ipstatic_source_dir %s/top/top.ip_user_files/ipstatic -lib_map_path [list {modelsim=%s/top/top.cache/compile_simlib/modelsim} {questa=%s/top/top.cache/compile_simlib/questa} {ies=%s/top/top.cache/compile_simlib/ies} {xcelium=%s/top/top.cache/compile_simlib/xcelium} {vcs=%s/top/top.cache/compile_simlib/vcs} {riviera=%s/top/top.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet' %(lVivProjPath, folder, folder, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath))
+
+# ------------------------------------------------------------------------------
 @vivado.command('sim', short_help='Run the simulation step on the specified dependency.')
 @click.option('-rf', '--run-for', metavar='<time> <unit>',type=(int, str), default=(0,'us'), help = "Specify the duration of the simulation of <time> <unit> in addition to the default 1 us.")
 @click.option('-g', '--GUI-mode', is_flag=True, help = "Show simulation in Vivado interface.")
@@ -280,7 +292,7 @@ def sim(env, run_for, gui_mode):
 
 	ensureVivado(env)
 
-    #find the test bench name
+	#find the test bench name
 	proj_file = open(lVivProjPath, 'r')
 	proj_file_text = proj_file.read()
 	tb_file = re.search('tb_.+\.',proj_file_text).group(0)
@@ -295,6 +307,9 @@ def sim(env, run_for, gui_mode):
 			lConsole('set_property source_mgmt_mode All [current_project]')
 			lConsole('update_compile_order -fileset sources_1') #update compile order
 			
+			getIPCoresCompiled(lConsole, env.currentproj)
+			
+            #commented for testing
 			lConsole(["launch_simulation"]) #run the simulation in Vivado for 1000ns
 			if run_for[0] != 0:
 				lConsole('run {}{}'.format(run_for[0],run_for[1])) #extend simulation for time specified

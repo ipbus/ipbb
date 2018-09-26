@@ -142,8 +142,8 @@ kANSIColorResetAll = '\x1b[0m'
 
 # import color definition from click
 from click.termui import _ansi_colors as kANSIColors
-for c in kANSIColors:
-    vars()['kANSIColor{}'.format(c.capitalize())] = '\x1b[38;5;{}m'.format(kANSIColors.index(c))
+for n,c in kANSIColors.iteritems():
+    vars()['kANSIColor{}'.format(n.capitalize())] = '\x1b[38;5;{}m'.format(c)
 
 # Add orange for Critical Warnings, to avoid mixing them up with errros or standard warnings
 

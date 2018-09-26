@@ -123,8 +123,13 @@ class nodetree(object):
             s = s + prefix + i.name + " " + hex(i.ref.getAddress()) + " " + hex(i.width) + " " + str(i.flag) + "\n"
             if i.desc: s = s + self.dump(i, prefix + "  ")
         return s
-    
+
     def assign_width(self, n):
+        errors = []
+        self._assign_width(n, errors)
+        return len(errors) == 0
+
+    def _assign_width(self, n, errors_detected):
         n.sort()
         if n.ref is not None:
             addr = n.ref.getAddress()
@@ -142,12 +147,14 @@ class nodetree(object):
                 saddr = i.ref.getAddress()
                 if saddr < max_addr:
                     log.error("Overlap between nodes detected: " + i.name + " " + hex(saddr) + " "+ hex(max_addr))
-                max_addr = saddr + pow(2, self.assign_width(i))
-                if max_addr > top_addr: top_addr = max_addr
+                    errors_detected.append(i.name)
+                max_addr = saddr + pow(2, self._assign_width(i, errors_detected))
+                if max_addr > top_addr:
+                    top_addr = max_addr
             n.width = int(math.ceil(math.log(top_addr - addr,2)))
-        # if addr % pow(2, n.width) != 0:
         if addr % pow(2, n.width) != 0:
-            log.error("Non-aligned base address detected: '%s', addr: %s, width: %s", n.name, hex(addr), n.width)
+            log.error("Node '" + n.name + "' at " + hex(addr) + ": Width, " + hex(n.width) + ", produces address mask " + hex(pow(2,n.width)) + " that is not aligned with node's base address")
+            errors_detected.append(n.name)
         return n.width
 
     def get_nodes(self, n):
@@ -161,6 +168,9 @@ class nodetree(object):
 
 #===========================================================================================
 
+EXIT_CODE_INCORRECT_ARGUMENTS = 1
+EXIT_CODE_ARG_PARSING_ERROR   = 2
+EXIT_CODE_NODE_ADDRESS_ERRORS = 3
 
 def main():    
 
@@ -172,16 +182,16 @@ def main():
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(logging.WARNING)
-    uhal.setLogLevelTo(uhal.LogLevel.ERROR)
+    uhal.setLogLevelTo(uhal.LogLevel.WARNING)
 
     # options for verbosity level and VHDL template
     nflag = False
-    template_fn = "/opt/cactus/etc/uhal/tools/ipbus_addr_decode.vhd"
+    template_fn = os.path.join(os.environ['IPBB_ROOT'], "tools/etc/ipbus_addr_decode.vhd")
     try:
         opts, args = getopt.getopt(sys.argv[1:], "vdnht:", ["verbose","debug","dry-run","help","template="])
     except getopt.GetoptError, err:
         log.critical(__doc__)
-        sys.exit(2)
+        sys.exit(EXIT_CODE_ARG_PARSING_ERROR)
     for o, a in opts:
         if o in ("-v", "--verbose"):
             log.setLevel(logging.INFO)
@@ -200,7 +210,7 @@ def main():
     # make sure that exactly one argument was given, later assumed to be the xml file name
     if len(args) != 1:
         log.critical("Incorrect usage - invalid number of arguments! Make sure that options come before argument.\n" + __doc__)
-        sys.exit(1)
+        sys.exit(EXIT_CODE_INCORRECT_ARGUMENTS)
 
     try:
         device = uhal.getDevice("dummy","ipbusudp-1.3://localhost:12345","file://" + args[0])
@@ -213,7 +223,11 @@ def main():
         f = d.getFirmwareInfo()
         p = "type" in f and f["type"] == "endpoint"
         t.add(node(i,d,p))
-    t.assign_width(t.root)
+    node_address_errors_detected = False
+    if not t.assign_width(t.root):
+        log.error("Node errors detected (e.g. non-aligned addresses, or address overlaps); exiting early before writing output")
+        sys.exit(EXIT_CODE_NODE_ADDRESS_ERRORS)
+
     uhal_slaves = t.get_nodes(t.root)
     moduleName = os.path.splitext(os.path.basename(args[0]))[0]
         
@@ -226,9 +240,8 @@ def main():
         addr_bits = BitArray(addr)
         mask_bits = BitArray(2**width - 1)
         log.info("uHAL slave %s,%s,0b%s,0b%s" % (n,id,addr_bits, mask_bits))
-        # print "uHAL slave %s,%s,0b%s,0b%s" % (n,id,addr_bits, mask_bits)
         if (addr_bits & mask_bits).uint() != 0:
-            log.error("ERROR: Non-aligned address 0b%s (0x%x) with respect to address bit mask 0b%s" % (str(addr_bits), addr, str(mask_bits)))
+            log.error("ERROR: Non Aligned address 0b%s with respect to address bit mask 0b%s" % (str(addr_bits),str(mask_bits)))
     
         or_prod = or_prod | (addr_bits & ~mask_bits)
         and_prod = and_prod & (addr_bits | mask_bits)
@@ -243,7 +256,7 @@ def main():
 
     if not nflag:
 
-        # generate vhdl snipped with symbolic constants
+        # generate vhdl snippet with symbolic constants
         snippet1 = "-- START automatically  generated VHDL the %s \n" % time.asctime()
         slaveIds={}
         maxN=0
@@ -275,12 +288,16 @@ def main():
             
             snippet2 += "      sel := ipbus_sel_t(to_unsigned(" + slaveIds[n] + ", IPBUS_SEL_WIDTH)); -- " + str(id) + " / base " + addr_bits.hex() + " / mask " + mask.hex() + "\n"
         snippet2 += "-- END automatically generated VHDL\n"
-    
+
+        # calculate required selector bit width
+        ipbus_sel_width = int(math.floor(math.log(maxN+1,2))+1)
+
         # print vhdl code
         vhdlfilename = "ipbus_decode_"+moduleName+".vhd"
         vhdlfile=open(vhdlfilename,"w")
         vhdlfile.write(open(template_fn).read().replace("-- INSERT_SYMBOLIC_CONSTANTS_HERE",snippet1)\
                        .replace("-- INSERT_SELECTION_HERE",snippet2)\
+                       .replace("INSERT_SEL_WIDTH_HERE","%s"%ipbus_sel_width)\
                        .replace("PACKAGENAME",moduleName))
         vhdlfile.close()
         print "VHDL decode file saved: ", vhdlfilename

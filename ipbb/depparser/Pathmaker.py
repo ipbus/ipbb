@@ -6,10 +6,19 @@ import os
 
 class Pathmaker(object):
 
-    fpaths = {"src": "firmware/hdl", "include": "firmware/cfg",
-              "addrtab": "addr_table", "setup": "firmware/cfg"}
-    fexts = {"src": "vhd", "include": "dep",
-             "addrtab": "xml"}  # , "setup": "tcl"}
+    fpaths = {
+        "src": "firmware/hdl",
+        "include": "firmware/cfg",
+        "addrtab": "addr_table",
+        "setup": "firmware/cfg",
+        "iprepo": "firmware/cgn",
+    }
+    fexts = {
+        "src": "vhd",
+        "include": "dep",
+        "addrtab": "xml"
+        # , "setup": "tcl"}
+        } 
 
     # --------------------------------------------------------------
     def __init__(self, rootdir, verbosity):

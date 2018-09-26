@@ -99,7 +99,7 @@ def info(env, verbose):
     echo  ( )
 
     secho ( "Dependecy tree elements", fg='blue')
-    lCommandKinds = ['setup', 'src', 'addrtab', 'cgpfile']
+    lCommandKinds = ['setup', 'src', 'addrtab', 'iprepo']
     lDepTable = Texttable()
     lDepTable.set_cols_align(['c'] * 4)
     lDepTable.add_row(lCommandKinds)

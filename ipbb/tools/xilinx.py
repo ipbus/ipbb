@@ -18,6 +18,7 @@ import tempfile
 from os.path import join, split, exists, splitext, basename
 from .common import which, OutputFormatter
 from click import style
+from .termui import *
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -140,14 +141,17 @@ class VivadoBatch(object):
 # -------------------------------------------------------------------------
 kANSIColorResetAll = '\x1b[0m'
 
+
 # import color definition from click
-from click.termui import _ansi_colors as kANSIColors
-for n,c in kANSIColors.iteritems():
-    vars()['kANSIColor{}'.format(n.capitalize())] = '\x1b[38;5;{}m'.format(c)
 
-# Add orange for Critical Warnings, to avoid mixing them up with errros or standard warnings
+# from click.termui import _ansi_colors as kANSIColors
+# for n,c in kANSIColors.iteritems():
+#     print(n,c)
+#     vars()['kANSIColor{}'.format(n.capitalize())] = '\x1b[38;5;{}m'.format(c)
 
-kANSIColorOrange = '\x1b[38;5;{}m'.format(215)
+# # Add orange for Critical Warnings, to avoid mixing them up with errros or standard warnings
+
+# kANSIColorOrange = '\x1b[38;5;{}m'.format(215)
 
 class VivadoOutputFormatter(OutputFormatter):
     """docstring for VivadoOutputFormatter"""
@@ -178,18 +182,18 @@ class VivadoOutputFormatter(OutputFormatter):
         for l in lines:
             lColor = None
             if l.startswith('INFO:'):
-                lColor = kANSIColorBlue
+                lColor = kBlue
             elif l.startswith('WARNING:'):
-                lColor = kANSIColorYellow
+                lColor = kYellow
             elif l.startswith('CRITICAL WARNING:'):
-                lColor = kANSIColorOrange
+                lColor = kOrange
             elif l.startswith('ERROR:'):
-                lColor = kANSIColorRed
+                lColor = kRed
             elif self.quiet:
                 continue
 
             if lColor is not None:
-                l = lColor+l+kANSIColorResetAll
+                l = lColor+l+kReset
 
             self._write((self.prefix if self.prefix else '')+l+'\n')
 # -------------------------------------------------------------------------

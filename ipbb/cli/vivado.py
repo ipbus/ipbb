@@ -612,7 +612,7 @@ def package(ctx, aTag):
 
     # Zip everything
     sh.tar('cvfz', abspath(lTgzPath), '-C', lPkgPath,
-           '--transform', 's/^src/' + lTgzBaseName + '/', 'src', _out=sys.stdout
+           '--transform', 's|^src|' + lTgzBaseName + '|', 'src', _out=sys.stdout
            )
     echo()
 

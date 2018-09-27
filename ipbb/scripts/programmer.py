@@ -5,7 +5,10 @@ from __future__ import print_function
 import click
 import click_didyoumean
 import traceback
+import tempfile
+import tarfile
 
+from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from click import echo, secho, style
 from ..cli.utils import echoVivadoConsoleError
 from ..tools.common import which
@@ -66,7 +69,6 @@ def list(obj, aVerbosity):
     lHwServerURI = obj.options['vivado.hw_server']
 
     lVivado = autodetectVivadoVariant()
-
     if not lVivado:
         raise click.ClickException(
             "Vivado not found. Please source the Vivado environment before continuing.")
@@ -90,14 +92,18 @@ def list(obj, aVerbosity):
 
         try:
             v.openHwTarget(target)
-            hw_devices = v.getHwDevices()
-            for device in hw_devices:
-                echo("  + "+style(device, fg='green'))
-            v.closeHwTarget(target)
         except VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)
-            raise click.Abort()
+            # raise click.Abort()
+            v.closeHwTarget(target)
+            continue
 
+
+        hw_devices = v.getHwDevices()
+        for device in hw_devices:
+            echo("  + "+style(device, fg='green'))
+    
+        v.closeHwTarget(target)
 
 # ------------------------------------------------------------------------------   
 
@@ -105,9 +111,12 @@ def list(obj, aVerbosity):
 def _validateDevice(ctx, param, value):
     lSeparators = value.count(':')
     # Validate the format
-    if lSeparators != 1:
+    if lSeparators == 0:
+        return (value, None)
+    elif lSeparators == 1:
+        return tuple(value.split(':'))
+    else:
         raise click.BadParameter('Malformed device name : %s. Expected <target>:<device>' % value)
-    return tuple(value.split(':'))
 # ------------------------------------------------------------------------------
 
 
@@ -121,11 +130,30 @@ def program(obj, deviceid, bitfile, aVerbosity):
 
     target, device = deviceid
 
+    bitbase, bitext = splitext(bitfile)
+    if bitext == '.tgz':
+        with tarfile.open(bitfile) as lTF:
+            lTopFiles = [ m.name for m in lTF.getmembers() if m.name.endswith('top.bit')]
+            if len(lTopFiles) < 0:
+                raise RuntimeError('No top.bit images found in {}'.format(bitfile))
+            elif len(lTopFiles) > 1:
+                raise RuntimeError('Multiple top.bit images found in {}'.format(bitfile))
+
+            lTmpDir = tempfile.mkdtemp()
+
+            lTF.extract(lTopFiles[0], lTmpDir)
+        secho('Extracting top.bit from {} to {}'.format(bitfile, lTmpDir), fg='green')
+        bitfile = join(lTmpDir, lTopFiles[0])
+
     lHwServerURI = obj.options['vivado.hw_server']
     
     # Build vivado interface
     lVivado = autodetectVivadoVariant()
-    echo('Starting '+lVivado+'...')
+    if not lVivado:
+        raise click.ClickException(
+            "Vivado not found. Please source the Vivado environment before continuing.")
+
+    echo('Starting {}...'.format(lVivado))
     try:
         v = VivadoHWServer(executable=lVivado, echo=aVerbosity, stopOnCWarnings=False)
         echo('... done')
@@ -152,14 +180,21 @@ def program(obj, deviceid, bitfile, aVerbosity):
         echo('Selected target: '+style('{}'.format(lMatchingTargets[0]), fg='blue')) 
         v.openHwTarget(lTarget)
 
-        hw_devs = v.getHwDevices()
-        echo('Found devices: '+style('{}'.format(', '.join(hw_devs)), fg='blue'))
+        lHWDevices = v.getHwDevices()
+        echo('Found devices: '+style('{}'.format(', '.join(lHWDevices)), fg='blue'))
 
-        if device not in hw_devs:
+        if device is None:
+            if len(lHWDevices) == 1:
+                device = lHWDevices[0]
+            else:
+                raise RuntimeError(
+                    'Device not specified while multiple devices are available at the current target {}: {} '.format(lTarget, ', '.join(lHWDevices))
+                    )
+        elif device not in lHWDevices:
             raise RuntimeError('Device %s not found. Devices available %s: ' % (
-                device, ', '.join(hw_devs)))
+                device, ', '.join(lHWDevices)))
 
-        if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format( bitfile, lTarget), fg='yellow')):
+        if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format(bitfile, lTarget), fg='yellow')):
             echo("Programming {}".format(lTarget))
             v.programDevice(device, bitfile)
             echo("Done.")

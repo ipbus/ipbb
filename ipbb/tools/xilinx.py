@@ -164,7 +164,6 @@ class VivadoOutputFormatter(OutputFormatter):
 
     def write(self, message):
 
-
         # put any pending character first
         msg = self.pendingchars+message
 

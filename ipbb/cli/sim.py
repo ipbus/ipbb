@@ -4,20 +4,22 @@ from __future__ import print_function
 # Modules
 import click
 import os
-import ipbb
 import subprocess
 import sys
 import sh
 import shutil
 import tempfile
 import getpass
+import collections
+
+import ipbb
 
 # Elements
 from os.path import join, splitext, split, exists, splitext, basename, dirname, abspath, expandvars
 from click import echo, secho, style, confirm
 
 # Tools imports
-from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError, getClickRootName
+from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError, getClickRootName, validateIpAddress, validateMacAddress
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
@@ -387,8 +389,8 @@ def fli(env, dev, ipbuspkg):
 @click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle sim script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
-@click.option('--ip', 'aIp', default=None, help='sim ip address')
-@click.option('--mac', 'aMac', default=None, help='sim mac address')
+@click.option('--ip', 'aIp', callback=validateIpAddress, default=None, help='sim ip address')
+@click.option('--mac', 'aMac', callback=validateMacAddress, default=None, help='sim mac address')
 @click.pass_obj
 def makeproject(env, aReverse, aOptimise, aToScript, aToStdout, aIp, aMac):
     """
@@ -454,9 +456,12 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout, aIp, aMac):
     # Create a wrapper to force default bindings at load time
     print ('Writing modelsim wrapper \'./vsim\'')
 
-    lVsimArgs = {'IP_ADDR': aIp, 'MAC_ADDR': aMac}
+    lVsimArgs = collections.OrderedDict([
+        ('MAC_ADDR', aMac),
+        ('IP_ADDR', aIp),
+        ])
 
-    lVsimExtraArgs = ' '.join([ '-g{}=\'{}\''.format(k,v) for k,v in lVsimArgs.iteritems() if v is not None])
+    lVsimExtraArgs = ' '.join([ '-G{}=\'{}\''.format(k,v) for k,v in lVsimArgs.iteritems() if v is not None])
     lVsimBody = '''#!/bin/sh
 
 if [ ! -f modelsim.ini ]; then

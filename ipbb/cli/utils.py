@@ -2,6 +2,9 @@ from __future__ import print_function
 # ------------------------------------------------------------------------------
 
 import os
+import ipaddress
+import sys
+import re
 
 from click import echo, secho, style, confirm, get_current_context, BadParameter
 
@@ -73,6 +76,38 @@ def validateComponent(ctx, param, value):
         raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
 
     return tuple(value.split(':'))
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def validateIpAddress(ctx, param, value):
+    if value is None:
+        return
+
+    try:
+        lIp = ipaddress.ip_address(value)
+    except ValueError as e:
+        raise BadParameter, BadParameter(str(e)),  sys.exc_info()[2]
+
+    # import ipdb
+    # ipdb.set_trace()
+    lHexIp = ''.join([ '%02x' % ord(c) for c in lIp.packed])
+
+    return 'X"{}"'.format(lHexIp)
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def validateMacAddress(ctx, param, value):
+    if value is None:
+        return
+
+    m = re.match('([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})', value)
+    if m is None:
+        raise BadParameter('Malformed mac address : %s' % value)
+
+    lHexMac = ''.join([ '%02x' % int(c,16) for c in value.split(':')])
+    return 'X"{}"'.format(lHexMac)
 # ------------------------------------------------------------------------------
 
 

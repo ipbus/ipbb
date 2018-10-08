@@ -1,9 +1,11 @@
 
 import click
 
+import re
+import ipaddress
+
 from click import echo, style, secho
 from os.path import basename, relpath, exists
-import re
 from texttable import Texttable
 
 from .utils import validateComponent
@@ -24,6 +26,7 @@ def toolbox(env):
 # ------------------------------------------------------------------------------
 
 
+# ------------------------------------------------------------------------------
 @toolbox.command('check-dep', short_help="Performs basic checks on dependency files")
 @click.option('-v', '--verbose', count=True)
 @click.argument('component', callback=validateComponent)
@@ -145,5 +148,6 @@ def check_depfile(env, verbose, component, depfile, toolset):
         raise click.ClickException("Cannot find 1 or more files referenced by depfile {}".format(lPathMaker.getPath(lPackage, lComponent, 'include', depfile)))
     elif not verbose:
         echo ("No errors found in depfile {}".format(lPathMaker.getPath(lPackage, lComponent, 'include', depfile)))
+# ------------------------------------------------------------------------------
 
 

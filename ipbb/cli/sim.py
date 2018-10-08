@@ -389,11 +389,12 @@ def fli(env, dev, ipbuspkg):
 @click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle sim script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
-@click.option('--ip', 'aIp', callback=validateIpAddress, default=None, help='sim ip address')
-@click.option('--mac', 'aMac', callback=validateMacAddress, default=None, help='sim mac address')
+@click.option('--ip', 'aIp', callback=validateIpAddress, default=None, help='Sim ip address. Format: XX.XX.XX.XX')
+@click.option('--mac', 'aMac', callback=validateMacAddress, default=None, help='Sim mac address. Format: MM:MM:MM:SS:SS:SS')
 @click.pass_obj
 def makeproject(env, aReverse, aOptimise, aToScript, aToStdout, aIp, aMac):
     """
+    Creates the modelsim project
     """
 
     lSessionId = 'project'

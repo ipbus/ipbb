@@ -9,6 +9,7 @@ import sys
 import sh
 import time
 import re
+import hashlib
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
@@ -278,12 +279,11 @@ def getIPCoresCompiled(aConsole, proj):
 @vivado.command('sim', short_help='Run the simulation step on the specified dependency.')
 @click.option('-rf', '--run-for', metavar='<time> <unit>',type=(int, str), default=(0,'us'), help = "Specify the duration of the simulation of <time> <unit> in addition to the default 1 us.")
 @click.option('-g', '--GUI-mode', is_flag=True, help = "Show simulation in Vivado interface.")
+@click.option('-c', '--iocheck', is_flag=True, help = "Compare simulation output text to the golden output in golden_hash.txt")
 @click.pass_obj
-def sim(env, run_for, gui_mode):
+def sim(env, run_for, gui_mode, iocheck):
 
 	lSessionId = 'sim'
-
-	#print("I got {}, and {}.".format(run_for,gui_mode))
 
 	# Check
 	lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
@@ -300,7 +300,7 @@ def sim(env, run_for, gui_mode):
 	proj_file.close()
 
 	from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-	try:
+	try: #prepare and run simulation
 		with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 			lConsole('open_project {}'.format(lVivProjPath)) #open the project in Vivado
 			lConsole('set_property top {} [get_filesets sim_1]'.format(tb_file)) #set the top file
@@ -318,6 +318,27 @@ def sim(env, run_for, gui_mode):
 	except VivadoConsoleError as lExc:
 		echoVivadoConsoleError(lExc)
 		raise click.Abort()
+
+	if iocheck: #perform check on the textio output and golden output
+		md5 = hashlib.md5()
+		with open("../../src/fpga/framework/hdl/tb/vcu118/golden_hash.txt", 'r') as g:
+			f = open("../../src/fpga/framework/hdl/tb/vcu118/output_text.txt", 'r')
+			md5.update(f.read()) #feed file to md5sum
+			hash_key = md5.hexdigest()
+			for line in g.readlines():
+				if line[0] != '#': #ignore comments in golden_hash.txt
+					vals = line.split(',')
+					if vals[1] == hash_key: #catch matching hash
+						hash_key = True
+						print("Output matched golden output!")
+						break
+
+			if hash_key != True:
+				raise click.ClickException(click.style("Simulation output does not match any golden output.",fg='red'))
+
+		# except Exception as error:
+		# 	print("Error: golden_hash.txt not found")
+		# 	raise click.Abort()
 
 	secho("\n{}: Simulation completed successfully.\n".format(env.currentproj.name), fg='green')
 

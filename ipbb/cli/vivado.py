@@ -295,8 +295,12 @@ def sim(env, run_for, gui_mode, iocheck):
 	#find the test bench name
 	proj_file = open(lVivProjPath, 'r')
 	proj_file_text = proj_file.read()
-	tb_file = re.search('tb_.+\.',proj_file_text).group(0)
-	tb_file = tb_file[0:len(tb_file) - 1]
+	tb_path = re.search('[^/]+/tb_.+\.',proj_file_text).group(0)
+
+	tb_path = tb_path[0:len(tb_path) - 1].split('/')
+	board = tb_path[0]
+	tb_file = tb_path[1]
+
 	proj_file.close()
 
 	from ..tools.xilinx import VivadoOpen, VivadoConsoleError
@@ -321,20 +325,21 @@ def sim(env, run_for, gui_mode, iocheck):
 
 	if iocheck: #perform check on the textio output and golden output
 		md5 = hashlib.md5()
-		with open("../../src/fpga/framework/hdl/tb/vcu118/golden_hash.txt", 'r') as g:
-			f = open("../../src/fpga/framework/hdl/tb/vcu118/output_text.txt", 'r')
+		with open("../../src/fpga/framework/hdl/tb/{}/golden_hash.txt".format(board), 'r') as g:
+			f = open("../../src/fpga/framework/hdl/tb/{}/output_text.txt".format(board), 'r')
 			md5.update(f.read()) #feed file to md5sum
 			hash_key = md5.hexdigest()
+			hash_key_check = False
 			for line in g.readlines():
 				if line[0] != '#': #ignore comments in golden_hash.txt
 					vals = line.split(',')
 					if vals[1] == hash_key: #catch matching hash
-						hash_key = True
-						print("Output matched golden output!")
+						hash_key_check = True
+						print("Output matched golden output! Calculated hash is: {}".format(hash_key))
 						break
 
-			if hash_key != True:
-				raise click.ClickException(click.style("Simulation output does not match any golden output.",fg='red'))
+			if hash_key_check != True:
+				raise click.ClickException(click.style("Simulation output does not match any golden output. Calculated hash is: {}".format(hash_key),fg='red'))
 
 		# except Exception as error:
 		# 	print("Error: golden_hash.txt not found")

@@ -14,7 +14,7 @@ import re
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath
 from ..tools.common import which, SmartOpen
-from .utils import DirSentry
+from .utils import DirSentry, printDictTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
 
@@ -84,13 +84,9 @@ def report(env, filters):
 
     # return
     lParser = env.depParser
-
-    # lTitle = Texttable(max_width=0)
-    # lTitle.header(['Commands'])
-    # lTitle.set_chars(['-', '|', '+', '-'])
-    # lTitle.set_deco(Texttable.BORDER)
-    # secho(lTitle.draw(), fg='blue')
-
+    secho('* Variables', fg='blue')
+    printDictTable(lParser.vars, aHeader=False)
+    
     echo()
     secho('* Parsed commands', fg='blue')
 

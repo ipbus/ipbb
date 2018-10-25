@@ -13,7 +13,8 @@ setup(
         'TextTable',
         'Sh',
         'Pexpect',
-        'PsUtil'
+        'PsUtil',
+        'IPython'
     ],
     entry_points='''
         [console_scripts]

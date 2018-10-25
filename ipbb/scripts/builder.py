@@ -9,6 +9,7 @@ import click_didyoumean
 import ipbb
 import sys
 import traceback
+import StringIO
 
 from texttable import Texttable
 from click import echo, style, secho
@@ -172,17 +173,24 @@ def main():
     try:
         cli()
     except Exception as e:
-        hline = '-'*80
-        click.echo()
-        click.secho(hline, fg='red')
-        click.secho("FATAL ERROR: Caught '"+type(e).__name__+"' exception:", fg='red')
-        click.secho(e.message, fg='red')
-        click.secho(hline, fg='red')
-        import StringIO
-        lTrace = StringIO.StringIO()
-        traceback.print_exc(file=lTrace)
-        print (lTrace.getvalue())
-        # Do something with lTrace
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        lFirstFrame = traceback.extract_tb(exc_tb)[-1]
+
+        secho("ERROR ('{}' exception): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(exc_type.__name__, e, lFirstFrame[0], lFirstFrame[1], lFirstFrame[2], lFirstFrame[3] ),fg='red')
+        
+        "File \"{}\", line {}, in {}"
+        # secho("{}".format(),fg='red')
+        # print(lFirstFrame)
+        # ipdb.set_trace()
+        # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        # 'Error: exception of type {} throw'
+        # print(e, exc_type.__name__, fname, exc_tb.tb_lineno)
+        lExc = StringIO.StringIO()
+        traceback.print_exc(file=lExc)
+        print ("Exception in user code:")
+        print ('-'*60)
+        secho(lExc.getvalue(), fg='red')
+        print ('-'*60)
         raise SystemExit(-1)
 # ------------------------------------------------------------------------------
 

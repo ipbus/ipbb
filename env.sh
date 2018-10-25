@@ -96,13 +96,6 @@ if [ ! -d "${IPBB_VENV}" ] ; then
   # upgrade pip to the latest greatest version
   pip install -q --upgrade pip
 
-
-  if [ "${PYTHON_VERSION}" == "2.7" ] ; then
-    pip install ${IPBB_PIP_INSTALLOPT} ipython
-  elif [ "${PYTHON_VERSION}" == "2.6" ] ; then
-    pip install ${IPBB_PIP_INSTALLOPT} ipython==1.2.1
-  fi
-
   echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 
   pip install ${IPBB_PIP_INSTALLOPT} --no-cache-dir --editable ${IPBB_ROOT}

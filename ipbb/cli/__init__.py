@@ -3,15 +3,17 @@ from __future__ import print_function
 # Import click for ansi colors
 import click
 
-from .utils import findFileInParents
+import utils
+
 from os import walk
 from os.path import join, split, exists, splitext, basename
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepFileParser import DepFileParser
 
 # Constants
-kWorkAreaCfgFile = '.ipbbwork'
-kProjAreaCfgFile = '.ipbbproj'
+kWorkAreaFile = '.ipbbwork'
+kProjAreaFile = '.ipbbproj'
+kProjUserFile = '.ipbbuser'
 kSourceDir = 'src'
 kProjDir = 'proj'
 
@@ -27,8 +29,6 @@ class Environment(object):
     """docstring for Environment"""
 
     _verbosity = 0
-
-
 
     # ----------------------------------------------------------------------------
     def __init__(self):
@@ -52,9 +52,7 @@ class Environment(object):
         self.currentproj.path = None
         self.currentproj.file = None
         self.currentproj.config = None
-        # self.projectPath = None
-        # self.projectFile = None
-        # self.projectConfig = None
+        self.currentproj.config = None
 
         self.pathMaker = None
     # ------------------------------------------------------------------------------
@@ -64,28 +62,45 @@ class Environment(object):
 
         self._clear()
 
-        lWorkAreaPath = findFileInParents(kWorkAreaCfgFile)
+        # -----------------------------
+        lWorkAreaFilePath = utils.findFileInParents(kWorkAreaFile)
 
         # Stop here is no signature is found
-        if not lWorkAreaPath:
+        if not lWorkAreaFilePath:
             return
 
-        self.work.path, self.work.cfgFile = split(lWorkAreaPath)
+        self.work.path, self.work.cfgFile = split(lWorkAreaFilePath)
         self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
+        # -----------------------------
 
-        lProjectPath = findFileInParents(kProjAreaCfgFile)
+
+        # -----------------------------
+        lProjAreaFilePath = utils.findFileInParents(kProjAreaFile)
 
         # Stop here if no project file is found
-        if not lProjectPath:
+        if not lProjAreaFilePath:
             return
 
-        self.currentproj.path, self.currentproj.file = split(lProjectPath)
+        self.currentproj.path, self.currentproj.file = split(lProjAreaFilePath)
         self.currentproj.name = basename(self.currentproj.path)
 
         # Import project settings
         import json
-        with open(lProjectPath, 'r') as lProjectFile:
+        with open(lProjAreaFilePath, 'r') as lProjectFile:
             self.currentproj.config = json.load(lProjectFile)
+        # -----------------------------
+
+
+        # -----------------------------
+        lProjUserFilePath = utils.findFileInParents(kProjUserFile)
+        
+        # Stop here if no conf file is found
+        if not lProjUserFilePath:
+            return
+
+        with open(lProjUserFilePath, 'r') as lProjUserFilePath:
+            self.currentproj.user = json.load(lProjUserFilePath)
+        # -----------------------------
 
     # ----------------------------------------------------------------------------
 
@@ -94,7 +109,8 @@ class Environment(object):
         return self.__repr__() + '''({{
     working area path: {work.path}
     project area: {currentproj.name}
-    configuration: {currentproj.config}
+    project configuration: {currentproj.config}
+    user settings: {currentproj.user}
     pathMaker: {pathMaker}
     parser: {_depParser}
     }})'''.format(**(self.__dict__))

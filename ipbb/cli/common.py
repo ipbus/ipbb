@@ -8,7 +8,7 @@ import sys
 
 from click import echo, secho, style, confirm
 from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
-from . import kProjAreaCfgFile
+from . import kProjAreaFile, kProjUserFile
 from .utils import DirSentry
 from ..tools.common import which
 
@@ -18,7 +18,10 @@ from ..tools.common import which
 def cleanup(env):
 
     _, lSubdirs, lFiles =  next(os.walk(env.currentproj.path))
-    lFiles.remove( kProjAreaCfgFile )
+    for f in [kProjAreaFile, kProjUserFile]:
+        if f not in lFiles: continue
+
+        lFiles.remove( f )
 
 
     if not click.confirm(style("All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format( env.currentproj.path ), fg='yellow')):
@@ -30,6 +33,16 @@ def cleanup(env):
     
     if lFiles:
         sh.rm('-v', *lFiles, _out=sys.stdout)
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+@click.command('user-config', short_help="Manage project-wise user settings.")
+@click.option('-l', '--list', 'aList', is_flag=true)
+@click.pass_obj
+def user_config(env, list):
+    pass
+
 # ------------------------------------------------------------------------------
 
 

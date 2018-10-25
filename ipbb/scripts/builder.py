@@ -87,9 +87,8 @@ def info(env, verbose):
     lProjTable = Texttable()
     lProjTable.set_deco(Texttable.VLINES | Texttable.BORDER)
 
-    secho ( "Project '%s'" % env.currentproj.config['name'], fg='blue')
+    secho ( "Project '%s'" % env.currentproj.name, fg='blue')
     lProjTable.add_rows([
-        # ["name", env.currentproj.config['name']],
         ["toolset", env.currentproj.config['toolset']],
         ["top package", env.currentproj.config['topPkg']],
         ["top component", env.currentproj.config['topCmp']],
@@ -159,12 +158,14 @@ def main():
     vivado.vivado.add_command(common.cleanup)
     vivado.vivado.add_command(common.addrtab)
     vivado.vivado.add_command(common.gendecoders)
+    vivado.vivado.add_command(common.user_config)
     cli.add_command(vivado.vivado)
 
     from ..cli import sim
     sim.sim.add_command(common.cleanup)
     sim.sim.add_command(common.addrtab)
     sim.sim.add_command(common.gendecoders)
+    sim.sim.add_command(common.user_config)
     cli.add_command(sim.sim)
 
     from ..cli import debug

@@ -9,7 +9,7 @@ import sys
 from click import echo, secho, style, confirm
 from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
 from . import kProjAreaFile, kProjUserFile
-from .utils import DirSentry
+from .utils import DirSentry, formatDictTable
 from ..tools.common import which
 
 # ------------------------------------------------------------------------------
@@ -38,10 +38,26 @@ def cleanup(env):
 
 # ------------------------------------------------------------------------------
 @click.command('user-config', short_help="Manage project-wise user settings.")
-@click.option('-l', '--list', 'aList', is_flag=true)
+@click.option('-l', '--list', 'aList', is_flag=True)
+@click.option('--add', 'aAdd', nargs=2, help='Add a new variable: name value')
+@click.option('--unset', 'aUnset', nargs=1, help='Remove a variable: name')
 @click.pass_obj
-def user_config(env, list):
-    pass
+def user_config(env, aList, aAdd, aUnset):
+    
+    echo("User settings")
+
+    if aAdd:
+        lKey, lValue = aAdd
+        env.currentproj.usersettings[lKey] = lValue
+        env.currentproj.saveUserSettings()
+
+    if aUnset:
+        del env.currentproj.usersettings[aUnset]
+        env.currentproj.saveUserSettings()
+
+    if env.currentproj.usersettings:
+        echo  ( formatDictTable(env.currentproj.usersettings) )
+
 
 # ------------------------------------------------------------------------------
 

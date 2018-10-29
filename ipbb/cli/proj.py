@@ -9,7 +9,7 @@ import json
 
 # Elements
 from ..tools.common import SmartOpen
-from . import kProjAreaCfgFile, kProjDir
+from . import kProjAreaFile, kProjDir, ProjectInfo
 from .utils import DirSentry, validateComponent
 
 from os.path import join, split, exists, splitext, relpath
@@ -82,15 +82,16 @@ def create( env, kind, projname, component, topdep ):
     # Build source code directory
     os.makedirs(lProjAreaPath)
 
-    lCfg = {
+    pi = ProjectInfo()
+    pi.path = lProjAreaPath
+    pi.settings = {
         'toolset': kind,
         'topPkg': lTopPackage,
         'topCmp': lTopComponent,
         'topDep': topdep,
         'name': projname
     }
-    with open( join(lProjAreaPath, kProjAreaCfgFile), 'w' ) as lProjFile:
-        json.dump(lCfg, lProjFile, indent=2)
+    pi.saveSettings()
 
     secho('{} project area \'{}\' created'.format( kind.capitalize(), projname), fg='green')
 # ------------------------------------------------------------------------------

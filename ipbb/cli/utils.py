@@ -29,17 +29,28 @@ class DirSentry:
 
 
 # ------------------------------------------------------------------------------
-def findFileInParents(aAreaFileName):
-    lPath = os.getcwd()
+def findFileDirInParents(aFileName, aDirPath = os.getcwd()):
 
-    while lPath is not '/':
-        lBuildFile = os.path.join(lPath, aAreaFileName)
+    lDirPath = aDirPath
+    while lDirPath is not '/':
+        lBuildFile = os.path.join(lDirPath, aFileName)
         if os.path.exists(lBuildFile):
-            return lBuildFile
-        lPath, _ = os.path.split(lPath)
+            return lDirPath
+        lDirPath, _ = os.path.split(lDirPath)
 
     return None
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def findFileInParents(aFileName, aDirPath = os.getcwd()):
+
+    lDirPath = findFileDirInParents(aFileName, aDirPath)
+
+    return join(lDirPath, aFileName) if lDirPath is not None else None
+# ------------------------------------------------------------------------------
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -81,7 +92,7 @@ def validateComponent(ctx, param, value):
 
 
 # ------------------------------------------------------------------------------
-def validateIpAddress(ctx, param, value):
+def validateIpAddress(value):
     if value is None:
         return
 
@@ -99,7 +110,7 @@ def validateIpAddress(ctx, param, value):
 
 
 # ------------------------------------------------------------------------------
-def validateMacAddress(ctx, param, value):
+def validateMacAddress(value):
     if value is None:
         return
 

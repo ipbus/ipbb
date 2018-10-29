@@ -14,7 +14,7 @@ import StringIO
 from texttable import Texttable
 from click import echo, style, secho
 
-from ..cli import Environment
+from ..cli import Environment, utils
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 )
 @click.pass_context
 @click.version_option()
-def cli(ctx):
+def climain(ctx):
     # Manually add the Environment to the top-level context.
     ctx.obj = Environment()
 
@@ -43,7 +43,7 @@ def cli(ctx):
 
 
 # ------------------------------------------------------------------------------
-@cli.command()
+@climain.command()
 @click.option('-v', '--verbose', count=True, help="Verbosity")
 @click.pass_obj
 def info(env, verbose):
@@ -67,6 +67,7 @@ def info(env, verbose):
         echo  ( )
         secho ( "Firmware packages", fg='blue' )
         lSrcTable = Texttable()
+        lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         for lSrc in env.sources:
             lSrcTable.add_row([lSrc])
         echo  ( lSrcTable.draw() )
@@ -74,6 +75,7 @@ def info(env, verbose):
         echo  ( )
         secho ( "Projects", fg='blue' )
         lProjTable = Texttable()
+        lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         for lProj in env.projects:
             lProjTable.add_row([lProj])
         echo  ( lProjTable.draw() )
@@ -81,20 +83,32 @@ def info(env, verbose):
 
     echo  ( )
 
-    if env.currentproj.config is None:
+    if not env.currentproj.settings:
         return
 
-    lProjTable = Texttable()
-    lProjTable.set_deco(Texttable.VLINES | Texttable.BORDER)
+    # lProjSettingsTable = Texttable()
+    # lProjSettingsTable.set_deco(Texttable.VLINES | Texttable.BORDER)
 
     secho ( "Project '%s'" % env.currentproj.name, fg='blue')
-    lProjTable.add_rows([
-        ["toolset", env.currentproj.config['toolset']],
-        ["top package", env.currentproj.config['topPkg']],
-        ["top component", env.currentproj.config['topCmp']],
-        ["top dep file", env.currentproj.config['topDep']],
-    ], header=False)
-    echo  ( lProjTable.draw() )
+    # lProjSettingsTable.add_rows([
+    #     ["toolset", env.currentproj.settings['toolset']],
+    #     ["top package", env.currentproj.settings['topPkg']],
+    #     ["top component", env.currentproj.settings['topCmp']],
+    #     ["top dep file", env.currentproj.settings['topDep']],
+    # ], header=False)
+    # echo  ( lProjSettingsTable.draw() )
+
+
+    echo  ( utils.formatDictTable(env.currentproj.settings, aHeader=False) )
+
+    echo  ( )
+
+
+    if not env.currentproj.usersettings:
+        return
+
+    secho ( "User settings", fg='blue')
+    echo  ( utils.formatDictTable(env.currentproj.usersettings, aHeader=False) )
 
     echo  ( )
 
@@ -138,19 +152,19 @@ def main():
 
     # Add custom cli to shell
     from ..cli import repo
-    cli.add_command(repo.init)
-    # cli.add_command(repo.cd)
-    cli.add_command(repo.add)
-    cli.add_command(repo.srcs)
+    climain.add_command(repo.init)
+    # climain.add_command(repo.cd)
+    climain.add_command(repo.add)
+    climain.add_command(repo.srcs)
 
     from ..cli import proj
-    cli.add_command(proj.proj)
+    climain.add_command(proj.proj)
 
     from ..cli import dep
-    cli.add_command(dep.dep)
+    climain.add_command(dep.dep)
 
     from ..cli import toolbox
-    cli.add_command(toolbox.toolbox)
+    climain.add_command(toolbox.toolbox)
 
     from ..cli import common
 
@@ -159,20 +173,20 @@ def main():
     vivado.vivado.add_command(common.addrtab)
     vivado.vivado.add_command(common.gendecoders)
     vivado.vivado.add_command(common.user_config)
-    cli.add_command(vivado.vivado)
+    climain.add_command(vivado.vivado)
 
     from ..cli import sim
     sim.sim.add_command(common.cleanup)
     sim.sim.add_command(common.addrtab)
     sim.sim.add_command(common.gendecoders)
     sim.sim.add_command(common.user_config)
-    cli.add_command(sim.sim)
+    climain.add_command(sim.sim)
 
     from ..cli import debug
-    cli.add_command(debug.debug)
+    climain.add_command(debug.debug)
 
     try:
-        cli()
+        climain()
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         lFirstFrame = traceback.extract_tb(exc_tb)[-1]

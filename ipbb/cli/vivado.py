@@ -23,9 +23,9 @@ from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
 
 # ------------------------------------------------------------------------------
 def ensureVivado(env):
-    if env.currentproj.config['toolset'] != 'vivado':
+    if env.currentproj.settings['toolset'] != 'vivado':
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivado', found '%s'" % env.currentproj.config['toolset'])
+            "Work area toolset mismatch. Expected 'vivado', found '%s'" % env.currentproj.settings['toolset'])
 
     if not which('vivado'):
         # if 'XILINX_VIVADO' not in os.environ:
@@ -571,7 +571,7 @@ def package(ctx, aTag):
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    lSummary = dict(env.currentproj.config)
+    lSummary = dict(env.currentproj.settings)
     lSummary.update({
         'time': socket.gethostname().replace('.', '_'),
         'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
@@ -601,7 +601,7 @@ def package(ctx, aTag):
     secho("Generating tarball", fg='blue')
 
     lTgzBaseName = '_'.join(
-        [env.currentproj.config['name']] +
+        [env.currentproj.settings['name']] +
         ([aTag] if aTag is not None else []) +
         [
             socket.gethostname().replace('.', '_'),
@@ -636,7 +636,7 @@ def archive(ctx):
         'open_project %s' % join(env.currentproj.path, 'top', 'top'),
     ]
     lArchiveCmds = [
-        'archive_project %s -force' % join(env.currentproj.path, '{}.xpr.zip'.format(env.currentproj.config['name'])),
+        'archive_project %s -force' % join(env.currentproj.path, '{}.xpr.zip'.format(env.currentproj.settings['name'])),
     ]
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError

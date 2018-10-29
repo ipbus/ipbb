@@ -2,11 +2,11 @@ from __future__ import print_function
 
 # Import click for ansi colors
 import click
-
+import json
 import utils
 
 from os import walk
-from os.path import join, split, exists, splitext, basename
+from os.path import join, split, exists, splitext, basename, dirname
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepFileParser import DepFileParser
 
@@ -21,8 +21,106 @@ kProjDir = 'proj'
 
 # ------------------------------------------------------------------------------
 class FolderInfo(object):
+    '''Utility class, attributes holder'''
     pass
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+class ProjectInfo(FolderInfo):
+    '''
+    Helper class to contain project information and configuration parameters
+    Provides methods to load/save configuration fragments to file.
+    '''
+
+    # ------------------------------------------------------------------------------
+    def __init__(self, aPath=None):
+        self.name = None
+        self.path = None
+        self.settings = {}
+        self.usersettings = {}
+
+        if aPath is None:
+            return
+
+        self.load(aPath)
+    # ------------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    @property
+    def filepath(self):
+        if self.path is None:
+            return ""
+        return join(self.path, kProjAreaFile)
+    # ------------------------------------------------------------------------------
+
+    
+    # ------------------------------------------------------------------------------
+    @property
+    def userfilepath(self):
+        if self.path is None:
+            return ""        
+        return join(self.path, kProjUserFile)
+    # ------------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    def load(self, aPath):
+        self.path = aPath
+
+        if not exists(self.filepath):
+            raise RuntimeError("Missing project area definition at {}".format(self.filepath))
+
+        self.name = basename(self.path)
+        self.loadSettings()
+        self.loadUserSettings()
+    # ------------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    def loadSettings(self):
+        # lProjAreaFilePath = join(self.path, kProjAreaFile)
+        if not exists(self.filepath):
+            return
+
+        # self.path, self.file = split(lProjAreaFilePath)
+        self.name = basename(self.path)
+
+        # Import project settings
+        with open(self.filepath, 'r') as f:
+            self.settings = json.load(f)
+    # ------------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    def loadUserSettings(self):
+        if not exists(self.userfilepath):
+            return
+
+        with open(self.userfilepath, 'r') as f:
+            self.usersettings = json.load(f)
+    # ------------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    def saveSettings(self, jsonindent=2):
+        if not self.settings:
+            return
+        with open(self.filepath, 'w') as f:
+            json.dump(self.settings, f, indent=jsonindent)
+    # ------------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    def saveUserSettings(self, jsonindent=2):
+        if not self.usersettings:
+            return
+        with open(self.userfilepath, 'w') as f:
+            json.dump(self.usersettings, f, indent=jsonindent)
+    # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------------
 class Environment(object):
@@ -47,12 +145,7 @@ class Environment(object):
         self.work.path = None
         self.work.cfgFile = None
 
-        self.currentproj = FolderInfo()
-        self.currentproj.name = None
-        self.currentproj.path = None
-        self.currentproj.file = None
-        self.currentproj.config = None
-        self.currentproj.config = None
+        self.currentproj = ProjectInfo()
 
         self.pathMaker = None
     # ------------------------------------------------------------------------------
@@ -63,44 +156,23 @@ class Environment(object):
         self._clear()
 
         # -----------------------------
-        lWorkAreaFilePath = utils.findFileInParents(kWorkAreaFile)
+        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile)
 
         # Stop here is no signature is found
-        if not lWorkAreaFilePath:
+        if not lWorkAreaPath:
             return
 
-        self.work.path, self.work.cfgFile = split(lWorkAreaFilePath)
+        self.work.path, self.work.cfgFile = lWorkAreaPath, kWorkAreaFile
         self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
         # -----------------------------
 
 
         # -----------------------------
-        lProjAreaFilePath = utils.findFileInParents(kProjAreaFile)
-
-        # Stop here if no project file is found
-        if not lProjAreaFilePath:
+        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile)
+        if not lProjAreaPath:
             return
 
-        self.currentproj.path, self.currentproj.file = split(lProjAreaFilePath)
-        self.currentproj.name = basename(self.currentproj.path)
-
-        # Import project settings
-        import json
-        with open(lProjAreaFilePath, 'r') as lProjectFile:
-            self.currentproj.config = json.load(lProjectFile)
-        # -----------------------------
-
-
-        # -----------------------------
-        lProjUserFilePath = utils.findFileInParents(kProjUserFile)
-        
-        # Stop here if no conf file is found
-        if not lProjUserFilePath:
-            return
-
-        with open(lProjUserFilePath, 'r') as lProjUserFilePath:
-            self.currentproj.user = json.load(lProjUserFilePath)
-        # -----------------------------
+        self.currentproj.load(lProjAreaPath)
 
     # ----------------------------------------------------------------------------
 
@@ -109,8 +181,8 @@ class Environment(object):
         return self.__repr__() + '''({{
     working area path: {work.path}
     project area: {currentproj.name}
-    project configuration: {currentproj.config}
-    user settings: {currentproj.user}
+    project configuration: {currentproj.settings}
+    user settings: {currentproj.usersettings}
     pathMaker: {pathMaker}
     parser: {_depParser}
     }})'''.format(**(self.__dict__))
@@ -123,16 +195,16 @@ class Environment(object):
         if self._depParser is None:
 
             self._depParser = DepFileParser(
-                self.currentproj.config['toolset'],
+                self.currentproj.settings['toolset'],
                 self.pathMaker,
                 aVerbosity=self._verbosity
             )
 
             try:
                 self._depParser.parse(
-                    self.currentproj.config['topPkg'],
-                    self.currentproj.config['topCmp'],
-                    self.currentproj.config['topDep']
+                    self.currentproj.settings['topPkg'],
+                    self.currentproj.settings['topCmp'],
+                    self.currentproj.settings['topDep']
                 )
             except OSError as e:
                 pass
@@ -163,7 +235,7 @@ class Environment(object):
     def projects(self):
         return [
             lProj for lProj in next(walk(self.projdir))[1]
-            if exists(join(self.projdir, lProj, kProjAreaCfgFile))
+            if exists(join(self.projdir, lProj, kProjAreaFile))
         ]
     # -----------------------------------------------------------------------------
 

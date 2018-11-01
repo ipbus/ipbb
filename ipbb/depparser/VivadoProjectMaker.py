@@ -27,7 +27,8 @@ class VivadoProjectMaker(object):
         '.ngc': 'sources_1',
         '.edn': 'sources_1',
         '.edf': 'sources_1',
-        '.bd': 'sources_1'
+        '.bd': 'sources_1',
+        '.dat': 'sources_1'
         # Legacy ISE files
         # '.ucf': 'ise_1',
         # '.xco': 'ise_1',

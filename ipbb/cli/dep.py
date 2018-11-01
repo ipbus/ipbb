@@ -114,20 +114,22 @@ def report(env, filters):
 
             ]
 
-            if lFilters and not all([ rxp.match(lRow[i]) for i,rxp in lFilters ]):
+            if lFilters and not all([ rxp.match(lRow[i]) for i, rxp in lFilters ]):
                 continue
-                
-            lCmdTable.add_row(lRow)           
 
-        echo(lPrepend.sub('\g<1>  ',lCmdTable.draw()))
+            lCmdTable.add_row(lRow)
+
+        echo(lPrepend.sub('\g<1>  ', lCmdTable.draw()))
         echo()
+
+    secho('Resolved packages & components', fg='blue')
 
     string = ''
 
-    string += '+----------------------------------+\n'
-    string += '|  Resolved packages & components  |\n'
-    string += '+----------------------------------+\n'
-    string += 'packages: ' + str(list(lParser.components.iterkeys())) + '\n'
+    # string += '+----------------------------------+\n'
+    # string += '|  Resolved packages & components  |\n'
+    # string += '+----------------------------------+\n'
+    string += 'packages: ' + ' '.join(list(lParser.components.iterkeys())) + '\n'
     string += 'components:\n'
     for pkg in sorted(lParser.components):
         string += '+ %s (%d)\n' % (pkg, len(lParser.components[pkg]))
@@ -135,19 +137,15 @@ def report(env, filters):
             string += '  > ' + str(cmp) + '\n'
 
     if lParser.missing:
-        string += '\n'
-        string += '+----------------------------------------+\n'
-        string += '|  Missing packages, components & files  |\n'
-        string += '+----------------------------------------+\n'
 
         if lParser.missingPackages:
-            string += 'packages: ' + \
-                str(list(lParser.missingPackages)) + '\n'
+            secho ('Missing packages:', fg='red')
+            echo  (' '.join(list(lParser.missingPackages)))
 
         # ------
         lCNF = lParser.missingComponents
         if lCNF:
-            string += 'components: \n'
+            secho ('Missing components:', fg='red')
 
             for pkg in sorted(lCNF):
                 string += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
@@ -158,13 +156,13 @@ def report(env, filters):
 
         # ------
     echo(string)
-        
+
     lFNF = lParser.missingFiles
 
     if lFNF:
 
         lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(['path expression','package','component','included by'])
+        lFNFTable.header(['path expression', 'package', 'component', 'included by'])
         lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
 
         for pkg in sorted(lFNF):
@@ -178,8 +176,8 @@ def report(env, filters):
                         pkg,
                         cmp,
                         '\n'.join([relpath(src, env.srcdir) for src in lPathExps[pathexp]]),
-                        ])
-        echo(lPrepend.sub('\g<1>  ',lFNFTable.draw()))
+                    ])
+        echo(lPrepend.sub('\g<1>  ', lFNFTable.draw()))
 # ------------------------------------------------------------------------------
 
 
@@ -202,12 +200,12 @@ def ls(env, group, output):
             lWriter(addrtab.FilePath)
 # ------------------------------------------------------------------------------
 
+
 # ------------------------------------------------------------------------------
 @dep.command('components')
 @click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.pass_obj
 def components(env, output):
-
 
     with SmartOpen(output) as lWriter:
         for lPkt, lCmps in env.depParser.components.iteritems():

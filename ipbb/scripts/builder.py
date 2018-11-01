@@ -104,13 +104,11 @@ def info(env, verbose):
     echo  ( )
 
 
-    if not env.currentproj.usersettings:
-        return
+    if env.currentproj.usersettings:
+        secho ( "User settings", fg='blue')
+        echo  ( utils.formatDictTable(env.currentproj.usersettings, aHeader=False) )
 
-    secho ( "User settings", fg='blue')
-    echo  ( utils.formatDictTable(env.currentproj.usersettings, aHeader=False) )
-
-    echo  ( )
+        echo  ( )
 
     secho ( "Dependecy tree elements", fg='blue')
     lCommandKinds = ['setup', 'src', 'addrtab', 'iprepo']

@@ -306,7 +306,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     import ConfigParser
 
     lIniParser = ConfigParser.RawConfigParser()
-    lIniParser.read('modelsim.ipcores.ini')
+    lIniParser.read(lIpCoresModelsimIni)
     for lSimLib in lSimLibs:
         echo (' - ' + lSimLib)
         lIniParser.set('Library', lSimLib, join(lCoreSimDir, lSimLib))

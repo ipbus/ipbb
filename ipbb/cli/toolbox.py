@@ -77,19 +77,17 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 lRow = [
                     relpath(lCmd.FilePath, env.srcdir),
                     ','.join(lCmd.flags()),
-                    #lCmd.Package,
-                    #lCmd.Component,
                     lCmd.Map,
                     lCmd.Lib,
 
                 ]
 
-                if lFilters and not all([ rxp.match(lRow[i]) for i,rxp in lFilters ]):
+                if lFilters and not all([ rxp.match(lRow[i]) for i, rxp in lFilters ]):
                     continue
-                    
-                lCmdTable.add_row(lRow)           
 
-            echo(lPrepend.sub('\g<1>    ',lCmdTable.draw()))
+                lCmdTable.add_row(lRow)
+
+            echo(lPrepend.sub('\g<1>    ', lCmdTable.draw()))
             echo()
 
         secho('Resolved packages & components', fg='blue')
@@ -101,11 +99,9 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 string += '    > ' + str(cmp) + '\n'
         echo(string)
 
-
     if lParser.missingPackages:
         secho ('Missing packages:', fg='red')
         echo(str(list(lParser.missingPackages)))
-
 
     lCNF = lParser.missingComponents
     if lCNF:
@@ -119,13 +115,12 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 string += '  > ' + str(cmp) + '\n'
         echo(string)
 
-        
     lFNF = lParser.missingFiles
     if lFNF:
         secho ('Missing files:', fg='red')
 
         lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(['path','included by']) # ['path expression','package','component','included by'])
+        lFNFTable.header(['path','included by'])  # ['path expression','package','component','included by'])
         lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
 
         for pkg in sorted(lFNF):
@@ -136,18 +131,13 @@ def check_depfile(env, verbose, component, depfile, toolset):
 
                     lFNFTable.add_row([
                         relpath(pathexp, env.srcdir),
-                        #pkg,
-                        #cmp,
                         '\n'.join([relpath(src, env.srcdir) for src in lPathExps[pathexp]]),
-                        ])
-        echo(lPrepend.sub('\g<1>  ',lFNFTable.draw()))
+                    ])
+        echo(lPrepend.sub('\g<1>  ', lFNFTable.draw()))
         echo()
-
 
     if lParser.missingPackages or lParser.missingComponents or lParser.missingFiles:
         raise click.ClickException("Cannot find 1 or more files referenced by depfile {}".format(lPathMaker.getPath(lPackage, lComponent, 'include', depfile)))
     elif not verbose:
         echo ("No errors found in depfile {}".format(lPathMaker.getPath(lPackage, lComponent, 'include', depfile)))
 # ------------------------------------------------------------------------------
-
-

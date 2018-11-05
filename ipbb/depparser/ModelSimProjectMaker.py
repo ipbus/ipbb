@@ -37,7 +37,7 @@ class ModelSimProjectMaker(object):
 
         write('vlib work')
 
-        for lib in aLibs:
+        for lib in set(aLibs):
             write('vlib {0}'.format(lib))
 
         for ma in aMaps:
@@ -92,7 +92,7 @@ class ModelSimProjectMaker(object):
                 # ----------------------------------------------------------
 
                 # ----------------------------------------------------------
-                if splitext(file)[1] == '.vhd':
+                if splitext(file)[1] in ['.vhd', '.vhdl']:
                     if src.Vhdl2008:
                         cmd = 'vcom -2008'
                     else:

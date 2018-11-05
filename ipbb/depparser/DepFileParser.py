@@ -554,11 +554,11 @@ class DepFileParser(object):
                             # --------------------------------------------------------------
 
                             self.commands[lParsedLine.cmd].append(Command(
-                                lFilePath, lPackage, lComponent, lMap, lInclude, lInclude, lTopLevel, lVhdl2008
+                                lFilePath, lPackage, lComponent, lLib, lMap, lInclude, lTopLevel, lVhdl2008
                             ))
 
                             self._includes.commands.append(Command(
-                                lFilePath, lPackage, lComponent, lMap, lInclude, lInclude, lTopLevel, lVhdl2008
+                                lFilePath, lPackage, lComponent, lLib, lMap, lInclude, lTopLevel, lVhdl2008
                             ))
 
                             self._revDepMap.setdefault(lFilePath, []).append(lDepFilePath)

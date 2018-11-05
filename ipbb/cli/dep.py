@@ -49,14 +49,14 @@ def report(env, filters):
     '''Summarise the dependency tree of the current project'''
 
     lCmdHeaders = ['path', 'flags', 'package', 'component', 'map', 'lib']
-    
+
     lFilterFormat = re.compile('([^=]*)=(.*)')
     lFilterFormatErrors = []
     lFieldNotFound = []
     lFilters = []
 
     # print ( filters )
-    
+
     for f in filters:
         m = lFilterFormat.match(f)
         if not m:

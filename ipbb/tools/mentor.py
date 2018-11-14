@@ -12,6 +12,7 @@ import os
 import atexit
 import sh
 import tempfile
+import re
 
 # Elements
 from os.path import join, split, exists, splitext, basename
@@ -26,64 +27,67 @@ from click import echo, secho, style
 _vsim = 'vsim'
 _vcom = 'vcom'
 
-
-# --------------------------------------------------------------
-def autodetect( executable = _vcom ):
-    if not which(executable):
-        raise ModelNotSimFoundError(
-            "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % executable)
-
-    # lVsim = subprocess.Popen([executable, '-version'],
-    #                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # lOut, lErr = lVsim.communicate()
-
-    # if lVsim.returncode != 0:
-    #     raise RuntimeError("Failed to execute %s" % executable)
-
-    lVersion = sh.vsim('-version')
-
-    if 'modelsim' in lVersion.lower():
-        return 'ModelSim'
-    elif 'questa' in lVersion.lower():
-        return 'Questa'
-    else:
-        raise RuntimeError("Failed to detect ModelSim/QuestaSim variant")
-# --------------------------------------------------------------
-
-
 # ------------------------------------------------
-class ModelNotSimFoundError(Exception):
+class ModelSimNotFoundError(Exception):
 
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
-        super(ModelNotSimFoundError, self).__init__(message)
+        super(ModelSimNotFoundError, self).__init__(message)
 # ------------------------------------------------
 
 
+# --------------------------------------------------------------
+def autodetect( executable = _vcom ):
+
+    """
+    QuestaSim-64 vcom 10.6c_3 Compiler 2017.12 Dec 21 2017
+
+    Model Technology ModelSim SE-64 vcom 10.6c Compiler 2017.07 Jul 25 2017
+    """
+
+    lVerExpr = r'(QuestaSim|ModelSim).+vcom\s(\d+\.\d+[\w]).*\sCompiler'
+    lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
+
+    if not which(executable):
+        raise ModelSimNotFoundError(
+            "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % executable)
+
+    lExe = sh.Command(executable)
+    lVerStr = lExe('-version')
+
+    m = lVerRe.search(str(lVerStr))
+
+    if m is None:
+        raise ModelSimNotFoundError("Failed to detect ModelSim/QuestaSim variant")
+
+    return m.groups()
+# --------------------------------------------------------------
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class OldModelSimBatch(object):
-    """docstring for VivadoBatch"""
+# class OldModelSimBatch(object):
+#     """docstring for VivadoBatch"""
 
-    def __init__(self, script):
-        super(OldModelSimBatch, self).__init__()
+#     def __init__(self, script):
+#         super(OldModelSimBatch, self).__init__()
 
-        lBasename, lExt = splitext(script)
-        if lExt != '.tcl':
-            raise ValueError('Bugger off!!!')
+#         lBasename, lExt = splitext(script)
+#         if lExt != '.tcl':
+#             raise ValueError('Bugger off!!!')
 
-        if not exists(script):
-            raise ValueError("Script not found: '%s'" % script)
+#         if not exists(script):
+#             raise ValueError("Script not found: '%s'" % script)
 
-        # Guard against missing vivado executable
-        if not which('vsim'):
-            raise ModelNotSimFoundError(
-                "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
+#         # Guard against missing vivado executable
+#         if not which('vsim'):
+#             raise ModelSimNotFoundError(
+#                 "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
 
-        self._script = script
+#         self._script = script
         
 
-        vsim = sh.Command(_vsim)
-        vsim('-c', '-do', script, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
+#         vsim = sh.Command(_vsim)
+#         vsim('-c', '-do', script, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -136,7 +140,7 @@ class ModelSimBatch(object):
 
         # Guard against missing vivado executable
         if not which('vsim'):
-            raise ModelNotSimFoundError(
+            raise ModelSimNotFoundError(
                 "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
 
         vsim = sh.Command(_vsim)

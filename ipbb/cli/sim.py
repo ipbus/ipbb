@@ -13,6 +13,8 @@ import getpass
 import collections
 
 import ipbb
+import ipbb.tools.xilinx as xilinx
+import ipbb.tools.mentor as mentor
 
 # Elements
 from os.path import join, splitext, split, exists, splitext, basename, dirname, abspath, expandvars
@@ -27,20 +29,8 @@ from ..depparser.IPCoresSimMaker import IPCoresSimMaker
 from ..depparser.SimlibMaker import SimlibMaker
 from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
 
-# 
-from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-from ..tools.mentor import ModelSimBatch, ModelSimBatch, autodetect
-
 
 kIPExportDir = 'ipcores_sim'
-
-# ------------------------------------------------
-class ModelsimNotFoundError(Exception):
-
-    def __init__(self, message):
-        # Call the base class constructor with the parameters it needs
-        super(ModelsimNotFoundError, self).__init__(message)
-# ------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -50,19 +40,37 @@ def ensureModelsim(env):
         raise click.ClickException(
             "Work area toolset mismatch. Expected 'sim', found '%s'" % env.currentproj.config['toolset'])
 
-    # -------------------------------------------------------------------------
-    if not which('vsim'):
-        raise click.ClickException(
-            'Failed to detect Modelsim/Questa simulation environment. Is the environment setup correctly?')
+    try:
+        env.siminfo = mentor.autodetect()
+    except mentor.ModelSimNotFoundError as lExc:
+        raise click.ClickException, click.ClickException(lExc.message), sys.exc_info()[2]
+
+    try:
+        env.vivadoinfo = xilinx.autodetect()
+    except xilinx.VivadoNotFoundError as lExc:
+        env.vivadoinfo = None
 # ------------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
+def simlibPath(env, aBasePath):
+    lSimVariant, lSimVersion = env.siminfo
+    lVivadoVariant, lVivadoVersion = env.vivadoinfo
+
+    return expandvars(
+        join(
+            aBasePath, lVivadoVersion, '{}_{}'.format(lSimVariant.lower(), lSimVersion)
+        )
+    )
+
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @click.group('sim', short_help="Set up simulation projects.", chain=True)
 @click.pass_context
 @click.option('-p', '--proj', metavar='<name>', default=None, help='Switch to <name> before running subcommands.')
 def sim(ctx, proj):
-    '''Simulation commands'''
+    '''Simulation commands group'''
 
     env = ctx.obj
 
@@ -93,30 +101,31 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
 
     # -------------------------------------------------------------------------
     if not which('vivado'):
-        # if 'XILINX_VIVADO' not in os.environ:
         raise click.ClickException(
             'Vivado is not available. Have you sourced the environment script?')
     # -------------------------------------------------------------------------
 
     lDryRun = aToScript or aToStdout
 
+
     # Use compiler executable to detect Modelsim's flavour
-    lSimVariant = autodetect()
+    lSimVariant, lSimVersion = env.siminfo
 
     # For questa and modelsim the simulator name is the variant name in lowercase
     lSimulator = lSimVariant.lower()
     echo(style(lSimVariant, fg='blue')+" detected")
 
-    lDepFileParser = env.depParser
-
     # Guess the current vivado version from environment
-    lVivadoVersion = basename(os.environ['XILINX_VIVADO'])
+    if env.vivadoinfo is None:
+        raise click.ClickException("Missing Vivado environment. Please source the veivado environment and try again")
+
+    lVivadoVariant, lVivadoVersion = env.vivadoinfo
     secho('Using Vivado version: '+lVivadoVersion, fg='green')
 
     # -------------------------------------------------------------------------
     # Store the target path in the env, for it to be retrieved by Vivado
-    # i.e. .xilinx_sim_libs/2017.4
-    lSimlibPath = expandvars(join(aXilSimLibsPath, lVivadoVersion))
+    # i.e. .xilinx_sim_libs/2017.4/modelsim_106.c
+    lSimlibPath = simlibPath(env, aXilSimLibsPath)
 
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
@@ -131,10 +140,10 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
         try:
             with (
                 # Pipe commands to Vivado console
-                VivadoOpen(lSessionId) if not lDryRun 
+                xilinx.VivadoOpen(lSessionId) if not lDryRun
                 else SmartOpen(
                     # Dump to script
-                    aToScript if not aToStdout 
+                    aToScript if not aToStdout
                     # Dump to terminal
                     else None
                 )
@@ -142,9 +151,9 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
 
                 lSimlibMaker.write(
                     lVivadoConsole
-                )        
+                )
 
-        except VivadoConsoleError as lExc:
+        except xilinx.VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)
             raise click.Abort()
         except RuntimeError as lExc:
@@ -171,32 +180,26 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     lSessionId = 'ipcores'
     lIpCoresModelsimIni = 'modelsim.ipcores.ini'
 
-    # -------------------------------------------------------------------------
-    if not which('vivado'):
-        # if 'XILINX_VIVADO' not in os.environ:
-        raise click.ClickException(
-            'Vivado is not available. Have you sourced the environment script?')
-    # -------------------------------------------------------------------------
-
     lDryRun = aToScript or aToStdout
 
     # Use compiler executable to detect Modelsim's flavour
-    lSimVariant = autodetect()
+    lSimVariant, lSimVersion = env.siminfo
 
     # For questa and modelsim the simulator name is the variant name in lowercase
     lSimulator = lSimVariant.lower()
     echo(style(lSimVariant, fg='blue')+" detected")
 
-    lDepFileParser = env.depParser
-
     # Guess the current vivado version from environment
-    lVivadoVersion = basename(os.environ['XILINX_VIVADO'])
+    if env.vivadoinfo is None:
+        raise click.ClickException("Missing Vivado environment. Please source the veivado environment and try again")
+
+    lVivadoVariant, lVivadoVersion = env.vivadoinfo
     secho('Using Vivado version: '+lVivadoVersion, fg='green')
 
     # -------------------------------------------------------------------------
     # Store the target path in the env, for it to be retrieved by Vivado
-    # i.e. .xilinx_sim_libs/2017.4
-    lSimlibPath = expandvars(join(aXilSimLibsPath, lVivadoVersion))
+    # i.e. .xilinx_sim_libs/2017.4/modelsim_106.c
+    lSimlibPath = simlibPath(env, aXilSimLibsPath)
 
     echo ("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
 
@@ -205,13 +208,15 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
         confirm("Do you want to continue anyway?", abort=True)
     # -------------------------------------------------------------------------
 
+    lDepFileParser = env.depParser
+
     # -------------------------------------------------------------------------
     # Extract the list of cores
-    lIPCores = [ 
-                split(name)[1] for name, ext in 
-                ( splitext(src.FilePath) for src in lDepFileParser.commands["src"] )
-                    if ext in [".xci", ".edn"]
-                ]
+    lIPCores = [
+        split(name)[1] for name, ext in
+        ( splitext(src.FilePath) for src in lDepFileParser.commands["src"] )
+        if ext in [".xci", ".edn"]
+    ]
 
     if not lIPCores:
         secho ("WARNING: No ipcore files detected in this project", fg='yellow')
@@ -230,7 +235,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     try:
         with (
             # Pipe commands to Vivado console
-            VivadoOpen(lSessionId) if not lDryRun 
+            xilinx.VivadoOpen(lSessionId) if not lDryRun
             else SmartOpen(
                 # Dump to script
                 aToScript if not aToStdout 
@@ -238,7 +243,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
                 else None
             )
         ) as lVivadoConsole:
-        
+
             lIPCoreSimMaker.write(
                 lVivadoConsole,
                 lDepFileParser.vars,
@@ -247,7 +252,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
                 lDepFileParser.libs,
                 lDepFileParser.maps
             )
-    except VivadoConsoleError as lExc:
+    except xilinx.VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
@@ -267,39 +272,38 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # and copy the simlibrary config file into it
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), lIPSimDir)
 
-    # Compile 
-    secho("Compiling ipcore simulation", fg='blue')
+    # Compile
+    secho("Compiling ipcores simulation", fg='blue')
 
-    with ModelSimBatch(echo=aToStdout, dryrun=lDryRun, cwd=lIPSimDir) as lSim:
+    with mentor.ModelSimBatch(echo=aToStdout, dryrun=lDryRun, cwd=lIPSimDir) as lSim:
         lSim('do compile.do')
-    
 
     # ----------------------------------------------------------
     # Collect the list of libraries generated by ipcores to add them to
     # modelsim.ini
     lVivadoYear = [int(v) for v in lVivadoVersion.split('.')]
-    
+
     if lVivadoYear[0] >= 2017:
         # Vivado 2017 requires an additional folder on the simulation path
         lCoreSimDir = abspath(join(
-                kIPExportDir, 
-                lSimulator,
-                '{0}_lib'.format(lSimulator),
-                'msim'
-            ))
+            kIPExportDir,
+            lSimulator,
+            '{0}_lib'.format(lSimulator),
+            'msim'
+        ))
     else:
         # Vivado 2016<
         lCoreSimDir = abspath(join(
-                kIPExportDir, 
-                lSimulator,
-                'msim'
-            ))
+            kIPExportDir,
+            lSimulator,
+            'msim'
+        ))
 
     if not exists( lCoreSimDir ):
         raise click.ClickException("Simlib directory not found")
 
     lSimLibs = next(os.walk(lCoreSimDir))[1]
-    echo ('Detected simulation libraries: '+ style(', '.join(lSimLibs), fg='blue'))
+    echo ('Detected simulation libraries: ' + style(', '.join(lSimLibs), fg='blue'))
 
     # add newly generated libraries to modelsim.ini
     echo ('Adding generated simulation libraries to modelsim.ini')
@@ -417,7 +421,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout, aIp, aMac):
     # -------------------------------------------------------------------------
 
     # Use compiler executable to detect Modelsim's flavour
-    lSimulator = autodetect().lower()
+    # lSimulator = mentor.autodetect().lower()
 
     lDepFileParser = env.depParser
 
@@ -432,7 +436,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout, aIp, aMac):
         sh.rm('-rf', 'work')
 
     try:
-        with ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
+        with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
                 lDepFileParser.vars,

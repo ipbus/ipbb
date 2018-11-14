@@ -59,6 +59,35 @@ class VivadoNotFoundError(Exception):
         super(VivadoNotFoundError, self).__init__(message)
 # ------------------------------------------------
 
+
+# ------------------------------------------------
+def autodetect(executable='vivado'):
+    """
+Vivado v2017.4 (64-bit)
+SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
+IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
+Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
+    """
+
+    lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
+
+    lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
+
+    if not which(executable):
+        raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
+
+    lExe = sh.Command(executable)
+    lVerStr = lExe('-version')
+
+    m = lVerRe.search(str(lVerStr))
+
+    if m is None:
+        raise VivadoNotFoundError("Failed to detect Vivado variant")
+
+    return m.groups()
+# ------------------------------------------------
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoBatch(object):
     """docstring for VivadoBatch"""
@@ -67,7 +96,7 @@ class VivadoBatch(object):
     _reCritWarn = re.compile('^CRITICAL WARNING:')
     _reError = re.compile('^ERROR:')
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
         super(VivadoBatch, self).__init__()
 
@@ -81,33 +110,33 @@ class VivadoBatch(object):
         self.terminal = sys.stdout if echo else None
         self.cwd = cwd
         self.dryrun = dryrun
-    #--------------------------------------------
+    # --------------------------------------------
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __enter__(self):
         self.script = (
-            open(self.scriptpath, 'w') if self.scriptpath 
-                else tempfile.NamedTemporaryFile(suffix='.do')
-            )
+            open(self.scriptpath, 'w') if self.scriptpath
+            else tempfile.NamedTemporaryFile(suffix='.do')
+        )
         return self
-    #--------------------------------------------
+    # --------------------------------------------
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __exit__(self, type, value, traceback):
             if not self.dryrun:
                 self._run()
             self.script.close()
-    #--------------------------------------------
+    # --------------------------------------------
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __call__(self, *strings):
         for f in [self.script, self.terminal]:
             if not f: continue
             f.write(' '.join(strings)+'\n')
             f.flush()
-    #--------------------------------------------
+    # --------------------------------------------
 
-    #--------------------------------------------
+    # --------------------------------------------
     def _run(self):
 
         # Define custom log file
@@ -119,7 +148,7 @@ class VivadoBatch(object):
         if not which('vivado'):
             raise VivadoNotFoundError(
                 '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?'
-                )
+            )
 
         sh.vivado('-mode','batch', '-source', self.script.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
         self.errors = []
@@ -134,25 +163,11 @@ class VivadoBatch(object):
                     self.warnings.append((i, l))
                 elif self._reInfo.match(l):
                     self.info.append((i, l))
-    #--------------------------------------------
+    # --------------------------------------------
 # -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
-kANSIColorResetAll = '\x1b[0m'
-
-
-# import color definition from click
-
-# from click.termui import _ansi_colors as kANSIColors
-# for n,c in kANSIColors.iteritems():
-#     print(n,c)
-#     vars()['kANSIColor{}'.format(n.capitalize())] = '\x1b[38;5;{}m'.format(c)
-
-# # Add orange for Critical Warnings, to avoid mixing them up with errros or standard warnings
-
-# kANSIColorOrange = '\x1b[38;5;{}m'.format(215)
-
 class VivadoOutputFormatter(OutputFormatter):
     """docstring for VivadoOutputFormatter"""
     def __init__(self, prefix=None, quiet=False):
@@ -161,11 +176,10 @@ class VivadoOutputFormatter(OutputFormatter):
         self.pendingchars = ''
 
 
-
     def write(self, message):
 
         # put any pending character first
-        msg = self.pendingchars+message
+        msg = self.pendingchars + message
 
         lines = msg.splitlines()
 
@@ -244,7 +258,7 @@ class VivadoConsole(object):
     @property
     def quiet(self):
         return self._out.quiet
-    
+
     @quiet.setter
     def quiet(self, value):
         self._out.quiet = value
@@ -255,7 +269,7 @@ class VivadoConsole(object):
         """
         Args:
             sessionid (str): Name of the Vivado session
-            echo (bool): 
+            echo (bool):
             echoprefix (str):
             executable (str):
             prompt (str):
@@ -269,9 +283,9 @@ class VivadoConsole(object):
 
         self._stopOnCWarnings = stopOnCWarnings
         # define what executable to run
-        self._executable=executable
+        self._executable = executable
         if not which(self._executable):
-            raise VivadoNotFoundError(self._executable+" not found in PATH. Have you sourced Vivado\'s setup script?")
+            raise VivadoNotFoundError(self._executable + " not found in PATH. Have you sourced Vivado\'s setup script?")
 
         # Define the prompt to use
         if prompt is None:
@@ -282,17 +296,17 @@ class VivadoConsole(object):
 
         # Set up the output formatter
         self._out = VivadoOutputFormatter(
-            echoprefix if ( echoprefix or (sessionid is None) ) 
+            echoprefix if ( echoprefix or (sessionid is None) )
                 else (sessionid + ' | '),
             quiet = (not echo)
         )
-        
-        self._out.write('\n'+'-'*40+'\n')
+
+        self._out.write('\n' + '-' * 40+'\n')
         self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
-            echo = echo,
-            logfile = self._out
+            echo=echo,
+            logfile=self._out
         )
 
         self._process.delaybeforesend = 0.00  # 1

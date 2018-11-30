@@ -13,7 +13,7 @@ import tempfile
 import sys
 import re
 
-from os.path import join, split, exists, basename, abspath, splitext, relpath
+from os.path import join, split, exists, basename, abspath, splitext, relpath, isfile, isdir
 from ..tools.common import which, SmartOpen
 from .utils import DirSentry, printDictTable
 from click import echo, secho, style, confirm
@@ -63,7 +63,6 @@ def report(env, filters):
         if not m:
             lFilterFormatErrors.append(f)
             continue
-        # print (m.group(1))
 
         if m.group(1) not in lCmdHeaders:
             lFieldNotFound.append(m.group(1))
@@ -247,7 +246,7 @@ def set_env(**environ):
 
 # ------------------------------------------------------------------------------
 # ----------------------------
-def hashAndUpdate(aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
+def hashAndUpdate0g(aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
 
     # New instance of the selected algorithm
     lHash = aAlgo()
@@ -260,6 +259,30 @@ def hashAndUpdate(aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashl
             # Also update other hashes
             for lUpHash in aUpdateHashes:
                 lUpHash.update(lChunk)
+
+    return lHash
+# ----------------------------
+
+
+# ----------------------------
+def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
+
+    # New instance of the selected algorithm
+    lHash = aAlgo()
+
+    if isfile(aPath):
+        # Loop ovet the file content
+        with open(aPath, "rb") as f:
+            for lChunk in iter(lambda: f.read(aChunkSize), b''):
+                lHash.update(lChunk)
+
+                # Also update other hashes
+                for lUpHash in aUpdateHashes:
+                    lUpHash.update(lChunk)
+    elif isdir(aPath):
+        for root, dirs, files in os.walk(aPath):
+            for f in files:
+                hashAndUpdate(f, aChunkSize, aUpdateHashes=aUpdateHashes, aAlgo=aAlgo)
 
     return lHash
 # ----------------------------

@@ -250,7 +250,6 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
                 lDepFileParser.components,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
-                lDepFileParser.maps
             )
     except xilinx.VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -452,7 +451,6 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
                 lDepFileParser.components,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
-                lDepFileParser.maps
             )
     except sh.ErrorReturnCode as e:
         secho('ERROR: Sim exit code: {}.\nCommand:\n\n   {}\n'.format(e.exit_code,e.full_cmd), fg='red')

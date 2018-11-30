@@ -113,7 +113,6 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
                 lDepFileParser.components,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
-                lDepFileParser.maps
             )
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)

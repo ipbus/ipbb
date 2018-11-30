@@ -136,6 +136,7 @@ class DepFileParser(object):
         # Member variables
         self._toolset = aToolSet
         self._depth = 0
+        self._libMappingStack = list()
         self._includes = None
         self._verbosity = aVerbosity
         self._revDepMap = {}
@@ -181,6 +182,7 @@ class DepFileParser(object):
 
         # Include sub-parser
         subp = parser_add.add_parser('include')
+        subp.add_argument("-m", "--map")
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('--cd')
         subp.add_argument('file', nargs='*')
@@ -408,7 +410,7 @@ class DepFileParser(object):
                     else:
                         try:
                             exec(lLine[1:], None, self.vars)
-                        except:
+                        except Exception:
                             raise SystemExit(
                                 "Parsing directive failed in {0} , line '{1}'".format(aDepFileName, lLine))
                     continue
@@ -429,7 +431,7 @@ class DepFileParser(object):
                     try:
                         lExprValue = eval(
                             lLine[lTokens[0] + 1: lTokens[1]], None, self.vars)
-                    except:
+                    except Exception:
                         raise SystemExit(
                             "Parsing directive failed in {0} , line '{1}'".format(aDepFileName, lLine))
 
@@ -510,9 +512,15 @@ class DepFileParser(object):
                 # --------------------------------------------------------------
                 # If an include command, parse the specified dep files
                 if lParsedLine.cmd == "include":
+                    if lParsedLine.map:
+                        self._libMappingStack.append(lParsedLine.map)
+
                     for lFileList in lFileLists:
                         for lFile, lFilePath in lFileList:
                             self.parse(lPackage, lComponent, lFile)
+
+                    if lParsedLine.map:
+                        self._libMappingStack.pop()
 
                 else:
                     # --------------------------------------------------------------
@@ -536,11 +544,16 @@ class DepFileParser(object):
                     # --------------------------------------------------------------
                     # Set the target library, whether specified explicitly or
                     # not
-                    if ('lib' in lParsedLine) and (lParsedLine.lib):
-                        lLib = lParsedLine.lib
-                        self.libs.append(lLib)
-                    else:
-                        lLib = None
+                    lLib = None
+                    if lParsedLine.cmd == 'src':
+                        if lParsedLine.lib:
+                            lLib = lParsedLine.lib
+                        elif self._libMappingStack:
+                            lLib = self._libMappingStack[-1]
+
+                        # if ('lib' in lParsedLine) and (lParsedLine.lib):
+                            # lLib = lParsedLine.lib
+                            # self.libs.append(lLib)
                     # --------------------------------------------------------------
 
                     # --------------------------------------------------------------

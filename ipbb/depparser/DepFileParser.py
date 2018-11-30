@@ -13,21 +13,19 @@ class Command(object):
     Attributes:
         FilePath  (str): absolute, normalised path to the command target.
         Package   (str): package the target belongs to.
-        Component (str): component withon 'Package' the target belongs to 
+        Component (str): component withon 'Package' the target belongs to
         Lib       (str): library the file will be added to
-        Map       (str): ?
         Include   (bool): flag, used to include/exclude target from projects
         TopLevel  (bool): flag, identifies address table as top-level (address tables only)
         Vhdl2008  (bool): flags toggles the vhdl 2008 syntax for .vhd files (vhd targets only)
 
     """
     # --------------------------------------------------------------
-    def __init__(self, aFilePath, aPackage, aComponent, aLib, aMap, aInclude, aTopLevel, aVhdl2008):
+    def __init__(self, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008):
         self.FilePath = aFilePath
         self.Package = aPackage
         self.Component = aComponent
         self.Lib = aLib
-        self.Map = aMap
         self.Include = aInclude
         self.TopLevel = aTopLevel
         self.Vhdl2008 = aVhdl2008
@@ -54,7 +52,7 @@ class Command(object):
         if self.Vhdl2008:
             lFlags.append('vhdl2008')
         return lFlags
-        
+
     __repr__ = __str__
 
     def __eq__(self, other):
@@ -78,6 +76,7 @@ class DepFile(object):
         pathmaker = Pathmaker.Pathmaker('', 1)
         return '{}:{} - {}'.format(self.pkg, pathmaker.getPath('', self.cmp, 'include', self.dep), len(self.commands))
 
+
 class MissingFile(object):
     """docstring for MissingFile"""
     def __init__(self, aPackage, aComponent, aPathExpr):
@@ -85,6 +84,7 @@ class MissingFile(object):
         self.pkg = aPackage
         self.cmp = aComponent
         self.xpr = aPathExpr
+
 
 class MultiCommandExpr(object):
     pass
@@ -146,7 +146,6 @@ class DepFileParser(object):
         self.vars = {}
         self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': []}
         self.libs = list()
-        self.maps = list()
         self.components = OrderedDict()
 
         self.missing = list()
@@ -192,7 +191,6 @@ class DepFileParser(object):
         subp = parser_add.add_parser("src")
         subp.add_argument("-c", "--component", **lCompArgOpts)
         subp.add_argument("-l", "--lib")
-        subp.add_argument("-m", "--map")
         # subp.add_argument("-g", "--generated" , action = "store_true") #
         # TODO: Check if still used in Vivado
         subp.add_argument("-n", "--noinclude", action="store_true")
@@ -544,21 +542,12 @@ class DepFileParser(object):
                                       lParsedLine.cmd, lFile, lFilePath)
                             # --------------------------------------------------------------
 
-                            # --------------------------------------------------------------
-                            # Map to any generated libraries
-                            if ('map' in lParsedLine) and (lParsedLine.map):
-                                lMap = lParsedLine.map
-                                self.maps.append((lMap, lFilePath))
-                            else:
-                                lMap = None
-                            # --------------------------------------------------------------
-
                             self.commands[lParsedLine.cmd].append(Command(
-                                lFilePath, lPackage, lComponent, lLib, lMap, lInclude, lTopLevel, lVhdl2008
+                                lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008
                             ))
 
                             self._includes.commands.append(Command(
-                                lFilePath, lPackage, lComponent, lLib, lMap, lInclude, lTopLevel, lVhdl2008
+                                lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008
                             ))
 
                             self._revDepMap.setdefault(lFilePath, []).append(lDepFilePath)

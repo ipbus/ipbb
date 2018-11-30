@@ -397,11 +397,11 @@ def fli(env, dev, ipbuspkg):
 def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
-    
+
     \b
     1. Compiles the source code into the 'work' library,
     2. Generates a 'vsim' wrapper that sets the simulation environment before invoking vsim.
-    
+
     NOTE: The ip/mac address of ipbus desings implementing a fli and exposing the ip/mac addresses via  top level generics can be set by defining the following user settings:
 
     \b
@@ -440,7 +440,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     lSimProjMaker = ModelSimProjectMaker(aReverse, aOptimise)
 
     lDryRun = aToStdout or aToScript
-    
+
     if not lDryRun:
         sh.rm('-rf', 'work')
 
@@ -463,7 +463,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         traceback.print_exc(file=lBuf)
         secho(lBuf.getvalue(), fg='red')
         raise click.ClickException("Compilation failed")
-    
+
     if lDryRun:
         return
     # ----------------------------------------------------------
@@ -473,9 +473,9 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     lVsimArgs = collections.OrderedDict([
         ('MAC_ADDR', validateMacAddress(env.currentproj.usersettings.get('ipbus.fli.mac_address', None))),
         ('IP_ADDR', validateIpAddress(env.currentproj.usersettings.get('ipbus.fli.ip_address', None))),
-        ])
+    ])
 
-    lVsimExtraArgs = ' '.join([ '-G{}=\'{}\''.format(k,v) for k,v in lVsimArgs.iteritems() if v is not None])
+    lVsimExtraArgs = ' '.join([ '-G{}=\'{}\''.format(k, v) for k, v in lVsimArgs.iteritems() if v is not None])
     lVsimBody = '''#!/bin/sh
 
 if [ ! -f modelsim.ini ]; then
@@ -487,7 +487,7 @@ export MODELSIM_DATAPATH="mif/"
 vsim {} "$@"
     '''.format(
         lVsimExtraArgs
-        )
+    )
     with SmartOpen('vsim') as lVsimSh:
         lVsimSh(lVsimBody)
 
@@ -506,6 +506,7 @@ def sim_get_command_aliases(self, ctx, cmd_name):
         return rv
     if cmd_name == 'project':
         return click.Group.get_command(self, ctx, 'make-project')
+
 
 import types
 sim.get_command = types.MethodType(sim_get_command_aliases, sim)

@@ -18,7 +18,7 @@ class Pathmaker(object):
         "include": "dep",
         "addrtab": "xml"
         # , "setup": "tcl"}
-        } 
+    }
 
     # --------------------------------------------------------------
     def __init__(self, rootdir, verbosity):

@@ -37,7 +37,7 @@ class VivadoProjectMaker(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aMaps):
+    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
         if 'device_name' not in aScriptVariables:
             raise RuntimeError("Variable 'device_name' not defined in dep files.")
 

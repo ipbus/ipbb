@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 # ------------------------------------------------------------------------------
 
@@ -48,7 +49,7 @@ def dep(ctx, proj):
 def report(env, filters):
     '''Summarise the dependency tree of the current project'''
 
-    lCmdHeaders = ['path', 'flags', 'package', 'component', 'map', 'lib']
+    lCmdHeaders = ['path', 'flags', 'package', 'component', 'lib']
 
     lFilterFormat = re.compile('([^=]*)=(.*)')
     lFilterFormatErrors = []
@@ -68,7 +69,6 @@ def report(env, filters):
             lFieldNotFound.append(m.group(1))
             continue
 
-
         try:
             i = lCmdHeaders.index(m.group(1))
             r = re.compile(m.group(2))
@@ -77,16 +77,16 @@ def report(env, filters):
             lFilterFormatErrors.append(f)
 
     if lFilterFormatErrors:
-        raise click.ClickException("Filter syntax errors: "+' '.join(['\''+e+'\'' for e in lFilterFormatErrors]))
+        raise click.ClickException("Filter syntax errors: " + ' '.join(['\'' + e + '\'' for e in lFilterFormatErrors]))
 
     if lFieldNotFound:
-        raise click.ClickException("Filter syntax errors: fields not found {}. Expected one of {}".format(', '.join("'"+s+"'" for s in lFieldNotFound), ', '.join(("'"+s+"'" for s in lCmdHeaders))))
+        raise click.ClickException("Filter syntax errors: fields not found {}. Expected one of {}".format(', '.join("'" + s + "'" for s in lFieldNotFound), ', '.join(("'" + s + "'" for s in lCmdHeaders))))
 
     # return
     lParser = env.depParser
     secho('* Variables', fg='blue')
     printDictTable(lParser.vars, aHeader=False)
-    
+
     echo()
     secho('* Parsed commands', fg='blue')
 
@@ -109,7 +109,7 @@ def report(env, filters):
                 ','.join(lCmd.flags()),
                 lCmd.Package,
                 lCmd.Component,
-                lCmd.Map,
+                # lCmd.Map,
                 lCmd.Lib,
 
             ]
@@ -119,23 +119,24 @@ def report(env, filters):
 
             lCmdTable.add_row(lRow)
 
-        echo(lPrepend.sub('\g<1>  ', lCmdTable.draw()))
+        echo(lPrepend.sub(r'\g<1>  ', lCmdTable.draw()))
         echo()
 
     secho('Resolved packages & components', fg='blue')
 
-    string = ''
+    lString = ''
 
-    # string += '+----------------------------------+\n'
-    # string += '|  Resolved packages & components  |\n'
-    # string += '+----------------------------------+\n'
-    string += 'packages: ' + ' '.join(list(lParser.components.iterkeys())) + '\n'
-    string += 'components:\n'
+    # lString += '+----------------------------------+\n'
+    # lString += '|  Resolved packages & components  |\n'
+    # lString += '+----------------------------------+\n'
+    lString += 'packages: ' + ' '.join(list(lParser.components.iterkeys())) + '\n'
+    lString += 'components:\n'
     for pkg in sorted(lParser.components):
-        string += '+ %s (%d)\n' % (pkg, len(lParser.components[pkg]))
-        for cmp in sorted(lParser.components[pkg]):
-            string += '  > ' + str(cmp) + '\n'
-
+        lString += u'* %s (%d)\n' % (pkg, len(lParser.components[pkg]))
+        lSortCmp = sorted(lParser.components[pkg])
+        for cmp in lSortCmp[:-1]:
+            lString += u'  ├── ' + str(cmp) + '\n'
+        lString += u'  └── ' + str(lSortCmp[-1]) + '\n'
     if lParser.missing:
 
         if lParser.missingPackages:
@@ -148,14 +149,16 @@ def report(env, filters):
             secho ('Missing components:', fg='red')
 
             for pkg in sorted(lCNF):
-                string += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
+                lString += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
+                lSortCNF = sorted(lCNF[pkg])
+                for cmp in lSortCNF[:-1]:
+                    lString += u'  ├──' + str(cmp) + '\n'
+                lString += u'  └──' + str(lSortCNF[-1]) + '\n'
 
-                for cmp in sorted(lCNF[pkg]):
-                    string += '  > ' + str(cmp) + '\n'
         # ------
 
         # ------
-    echo(string)
+    echo(lString)
 
     lFNF = lParser.missingFiles
 
@@ -177,7 +180,7 @@ def report(env, filters):
                         cmp,
                         '\n'.join([relpath(src, env.srcdir) for src in lPathExps[pathexp]]),
                     ])
-        echo(lPrepend.sub('\g<1>  ', lFNFTable.draw()))
+        echo(lPrepend.sub(r'\g<1>  ', lFNFTable.draw()))
 # ------------------------------------------------------------------------------
 
 

@@ -18,8 +18,7 @@ class IPCoresSimMaker(object):
         self.simulator = aSimulator
         self.exportdir = aExportDir
 
-
-    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aMaps):
+    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         write = aTarget
 
@@ -46,7 +45,7 @@ class IPCoresSimMaker(object):
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
             ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
-            )
+        )
         )
 
         write('''
@@ -61,10 +60,10 @@ set_property "target_language" "VHDL" $proj_top
 
         write(
             'set_property compxlib.{}_compiled_library_dir {} [current_project]'.format(
-                self.simulator, 
+                self.simulator,
                 self.simlibPath
-                )
             )
+        )
 
         write()
         lXCIs = []
@@ -89,7 +88,6 @@ set_property "target_language" "VHDL" $proj_top
 
             for lFile in lIPFiles:
                 write('generate_target simulation [get_files {0}]'.format(lFile))
-
 
             write('set_property top top [get_filesets sim_1]')
             write('export_simulation -force -simulator {} -directory {} -lib_map_path {}'.format(self.simulator, self.exportdir, self.simlibPath))

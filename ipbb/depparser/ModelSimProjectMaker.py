@@ -17,7 +17,7 @@ class ModelSimProjectMaker(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aMaps):
+    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         # ----------------------------------------------------------
         # FIXME: Tempourary assignments
@@ -40,12 +40,7 @@ class ModelSimProjectMaker(object):
         for lib in set(aLibs):
             write('vlib {0}'.format(lib))
 
-        for ma in aMaps:
-            write('vmap {0} {1}'.format(ma[0], ma[1]))
-            write('vcom -work {0} -refresh -force_refresh'.format(ma[0]))
-
         lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
-
 
         lSrcCommandGroups = []
         # ----------------------------------------------------------

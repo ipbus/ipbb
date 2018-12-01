@@ -247,6 +247,7 @@ class VivadoConsole(object):
         'vivado': 'Vivado%[ \t]',
         'vivado_lab': 'vivado_lab%[ \t]'
     }
+
     # --------------------------------------------------------------
     @classmethod
     def killAllInstances(cls):
@@ -269,7 +270,7 @@ class VivadoConsole(object):
     @property
     def processinfo(self):
         return self._processinfo
-    
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -409,7 +410,7 @@ class VivadoConsole(object):
 
             if self.__reCriticalWarning.match(self._process.before):
                 lCriticalWarnings.append(self._process.before)
-                
+
         # --------------------------------------------------------------
 
         return lBuffer, lErrors, lCriticalWarnings
@@ -431,11 +432,11 @@ class VivadoConsole(object):
         self._log.debug('Shutting Vivado down')
         try:
             self.execute('quit')
-        except pexpect.ExceptionPexpect as e:
+        except pexpect.ExceptionPexpect:
             pass
 
-        # Write one last newline 
-        self._out.write('-'*40+'\n')
+        # Write one last newline
+        self._out.write('-' * 40 + '\n')
         # Just in case
         self._process.terminate(True)
 
@@ -469,10 +470,10 @@ class VivadoConsole(object):
         # Print critical warnings if any
         # for lWarning in lCriticalWarnings:
             # secho(lWarning, fg='yellow')                
-        
+
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
             raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
-            
+
         return list(lBuffer)
     # --------------------------------------------------------------
 
@@ -498,7 +499,6 @@ class VivadoHWServer(VivadoConsole):
         super(VivadoHWServer, self).__init__(*args, **kwargs)
     # --------------------------------------------------------------
 
-
     # --------------------------------------------------------------
     def openHw(self):
         return self.execute('open_hw')
@@ -508,7 +508,7 @@ class VivadoHWServer(VivadoConsole):
     def connect(self, uri=None):
         lCmd = ['connect_hw_server']
         if uri is not None:
-            lCmd += ['-url '+uri]
+            lCmd += ['-url ' + uri]
         return self.execute(' '.join(lCmd))
     # --------------------------------------------------------------
 
@@ -527,7 +527,7 @@ class VivadoHWServer(VivadoConsole):
         lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
         return self.execute(lCmd)
     # --------------------------------------------------------------
-    
+
     # --------------------------------------------------------------
     def getHwDevices(self):
         return self.execute('get_hw_devices')[0].split()
@@ -562,7 +562,7 @@ class VivadoOpen(object):
     @property
     def quiet(self):
         return self._console.quiet
-    
+
     @quiet.setter
     def quiet(self, value):
         self._console.quiet = value
@@ -580,7 +580,7 @@ class VivadoOpen(object):
         self._console = VivadoConsole(*self._args, **self._kwargs)
         return self
     # --------------------------------------------------------------
-    
+
     # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
         self._console.quit()
@@ -601,7 +601,7 @@ class VivadoOpen(object):
         elif isinstance(aCmd, list):
             return self._console.executeMany(aCmd, aMaxLen)
         else:
-            raise TypeError('Unsupported command type '+type(aCmd).__name__)
+            raise TypeError('Unsupported command type ' + type(aCmd).__name__)
     # --------------------------------------------------------------
 # -------------------------------------------------------------------------
 
@@ -621,7 +621,7 @@ class VivadoSnoozer(object):
         self._quiet = self._console.quiet
         self._console.quiet = True
     # --------------------------------------------------------------
-    
+
     # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
         self._console.quiet = self._quiet

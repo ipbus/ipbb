@@ -297,11 +297,11 @@ class VivadoConsole(object):
         # Set up the output formatter
         self._out = VivadoOutputFormatter(
             echoprefix if ( echoprefix or (sessionid is None) )
-                else (sessionid + ' | '),
-            quiet = (not echo)
+            else (sessionid + ' | '),
+            quiet=(not echo)
         )
 
-        self._out.write('\n' + '-' * 40+'\n')
+        self._out.write('\n' + '-' * 40 + '\n')
         self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),

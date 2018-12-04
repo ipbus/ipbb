@@ -51,7 +51,6 @@ class ModelSimProjectMaker(object):
 
                 lPath, lBasename = split(src.FilePath)
                 lName, lExt = splitext(lBasename)
-                lMap = src.Map
 
                 # ----------------------------------------------------------
                 if lExt == '.xco':
@@ -94,9 +93,6 @@ class ModelSimProjectMaker(object):
                         cmd = 'vcom'
                 elif splitext(file)[1] == '.v':
                     cmd = 'vlog'
-
-                elif lMap is not None:
-                    continue
 
                 else:
                     print('# IGNORING unknown source file type in Modelsim build: {0}'.format(

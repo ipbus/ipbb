@@ -9,10 +9,9 @@ import shutil
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class IPCoresSimMaker(object):
 
-    _compiler='vcom'
+    _compiler = 'vcom'
 
     def __init__(self, aSimlibPath, aTargetSimulator, aSimulator, aExportDir):
-        # self.pathmaker = aPathmaker
         self.simlibPath = aSimlibPath
         self.targetSimulator = aTargetSimulator
         self.simulator = aSimulator
@@ -26,8 +25,6 @@ class IPCoresSimMaker(object):
         write(time.strftime('# %c'))
         write()
 
-        # Hack alert : Alessandro
-        # write('set xlib_path {0}'.format(self.simlibPath))
 
         lWorkingDir = os.path.abspath(os.path.join(os.getcwd(), 'top'))
 

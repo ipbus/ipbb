@@ -9,8 +9,14 @@ import re
 from click import echo, secho, style, confirm, get_current_context, BadParameter
 from texttable import Texttable
 
+
 # ------------------------------------------------------------------------------
 class DirSentry:
+    """Helper class implementing the guard pattern for temporary directory switches.
+    
+    Attributes:
+        dir (string): Destination directory
+    """
     def __init__(self, aDir):
         self.dir = aDir
 
@@ -19,7 +25,6 @@ class DirSentry:
             raise RuntimeError('Directory ' + self.dir + ' does not exist')
 
         self._lOldDir = os.path.realpath(os.getcwd())
-        # print self._lOldDir
         os.chdir(self.dir)
         return self
 
@@ -29,7 +34,7 @@ class DirSentry:
 
 
 # ------------------------------------------------------------------------------
-def findFileDirInParents(aFileName, aDirPath = os.getcwd()):
+def findFileDirInParents(aFileName, aDirPath=os.getcwd()):
 
     lDirPath = aDirPath
     while lDirPath is not '/':
@@ -43,14 +48,12 @@ def findFileDirInParents(aFileName, aDirPath = os.getcwd()):
 
 
 # ------------------------------------------------------------------------------
-def findFileInParents(aFileName, aDirPath = os.getcwd()):
+def findFileInParents(aFileName, aDirPath=os.getcwd()):
 
     lDirPath = findFileDirInParents(aFileName, aDirPath)
 
     return join(lDirPath, aFileName) if lDirPath is not None else None
 # ------------------------------------------------------------------------------
-
-
 
 
 # ------------------------------------------------------------------------------
@@ -72,9 +75,9 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 # ------------------------------------------------------------------------------
 def echoVivadoConsoleError( aExc ):
     echo(
-        style("Vivado error/critical warnings detected\n", fg='red')+
+        style("Vivado error/critical warnings detected\n", fg='red') +
         style("\n".join(aExc.errors), fg='red') + '\n' +
-        style("\n".join(aExc.criticalWarns), fg='yellow') 
+        style("\n".join(aExc.criticalWarns), fg='yellow')
     )
 
 # ------------------------------------------------------------------------------
@@ -101,8 +104,6 @@ def validateIpAddress(value):
     except ValueError as e:
         raise BadParameter, BadParameter(str(e)),  sys.exc_info()[2]
 
-    # import ipdb
-    # ipdb.set_trace()
     lHexIp = ''.join([ '%02x' % ord(c) for c in lIp.packed])
 
     return 'X"{}"'.format(lHexIp)
@@ -111,14 +112,15 @@ def validateIpAddress(value):
 
 # ------------------------------------------------------------------------------
 def validateMacAddress(value):
+
     if value is None:
         return
 
-    m = re.match('([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})', value)
+    m = re.match(r'([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})', value)
     if m is None:
         raise BadParameter('Malformed mac address : %s' % value)
 
-    lHexMac = ''.join([ '%02x' % int(c,16) for c in value.split(':')])
+    lHexMac = ''.join([ '%02x' % int(c, 16) for c in value.split(':')])
     return 'X"{}"'.format(lHexMac)
 # ------------------------------------------------------------------------------
 
@@ -140,7 +142,7 @@ def formatRegTable(aRegs, aHeader=True, aSort=True):
     lRegs = sorted(aRegs) if aSort else aRegs
     for k in lRegs:
         lRegTable.add_row( [str(k), hex(aRegs[k])] )
-        
+
     return lRegTable.draw()
 # ------------------------------------------------------------------------------
 
@@ -162,7 +164,7 @@ def formatDictTable(aDict, aHeader=True, aSort=True, aFmtr=str):
     for k in (sorted(aDict) if aSort else aDict):
         v = aDict[k]
         lDictTable.add_row( [str(k), aFmtr(v) if aFmtr else v])
-        
+
     return lDictTable.draw()
 # ------------------------------------------------------------------------------
 

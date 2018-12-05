@@ -91,11 +91,13 @@ Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoBatch(object):
-    """docstring for VivadoBatch"""
-    _reInfo = re.compile('^INFO:')
-    _reWarn = re.compile('^WARNING:')
-    _reCritWarn = re.compile('^CRITICAL WARNING:')
-    _reError = re.compile('^ERROR:')
+    """
+    Wrapper class to run Vivado jobs in batch mode
+    """
+    _reInfo = re.compile(r'^INFO:')
+    _reWarn = re.compile(r'^WARNING:')
+    _reCritWarn = re.compile(r'^CRITICAL WARNING:')
+    _reError = re.compile(r'^ERROR:')
 
     # --------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
@@ -141,7 +143,7 @@ class VivadoBatch(object):
     def _run(self):
 
         # Define custom log file
-        lRoot,_ = splitext(basename(self.script.name))
+        lRoot, _ = splitext(basename(self.script.name))
         lLog = 'vivado_{0}.log'.format(lRoot)
         lJou = 'vivado_{0}.jou'.format(lRoot)
 
@@ -151,7 +153,7 @@ class VivadoBatch(object):
                 '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?'
             )
 
-        sh.vivado('-mode','batch', '-source', self.script.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
+        sh.vivado('-mode', 'batch', '-source', self.script.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
         self.errors = []
         self.info = []
         self.warnings = []
@@ -170,15 +172,22 @@ class VivadoBatch(object):
 
 # -------------------------------------------------------------------------
 class VivadoOutputFormatter(OutputFormatter):
-    """docstring for VivadoOutputFormatter"""
+    """Formatter for Vivado command line output
+
+    Arguments:
+        prefix (string): String to prepend to each line of output
+    """
     def __init__(self, prefix=None, quiet=False):
         super(VivadoOutputFormatter, self).__init__(prefix, quiet)
 
         self.pendingchars = ''
 
-
     def write(self, message):
-
+        """Writes formatted message
+        
+        Args:
+            message (string): Message to format
+        """
         # put any pending character first
         msg = self.pendingchars + message
 
@@ -190,36 +199,34 @@ class VivadoOutputFormatter(OutputFormatter):
         else:
             self.pendingchars = ''
 
-        # print(lines)
-        # print(self.prefix)
-
-        for l in lines:
+        for lLine in lines:
             lColor = None
-            if l.startswith('INFO:'):
+            if lLine.startswith('INFO:'):
                 lColor = kBlue
-            elif l.startswith('WARNING:'):
+            elif lLine.startswith('WARNING:'):
                 lColor = kYellow
-            elif l.startswith('CRITICAL WARNING:'):
+            elif lLine.startswith('CRITICAL WARNING:'):
                 lColor = kOrange
-            elif l.startswith('ERROR:'):
+            elif lLine.startswith('ERROR:'):
                 lColor = kRed
             elif self.quiet:
                 continue
 
             if lColor is not None:
-                l = lColor+l+kReset
+                lLine = lColor + lLine + kReset
 
-            self._write((self.prefix if self.prefix else '')+l+'\n')
+            self._write((self.prefix if self.prefix else '') + lLine + '\n')
 # -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
 class VivadoConsoleError(Exception):
     """Exception raised for errors in the input.
-
+    
     Attributes:
-        errors (list): Error messages
         command (list): input command in which the error occurred
+        errors (list): Error messages
+        criticalWarns (list): Critical warning messages
     """
 
     def __init__(self, command, errors, criticalWarns=None):
@@ -236,12 +243,15 @@ class VivadoConsoleError(Exception):
 # -------------------------------------------------------------------------
 class VivadoConsole(object):
     """Class to interface to Vivado TCL console
-
+    
+    Attributes:
+        isAlive (bool): Status of the vivado process
+    
     """
 
-    __reCharBackspace = re.compile(".\b")
-    __reError = re.compile('^ERROR:')
-    __reCriticalWarning = re.compile('^CRITICAL WARNING:')
+    __reCharBackspace = re.compile(r'.\b')
+    __reError = re.compile(r'^ERROR:')
+    __reCriticalWarning = re.compile(r'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
         'vivado': 'Vivado%[ \t]',
@@ -469,7 +479,7 @@ class VivadoConsole(object):
 
         # Print critical warnings if any
         # for lWarning in lCriticalWarnings:
-            # secho(lWarning, fg='yellow')                
+            # secho(lWarning, fg='yellow')
 
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
             raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)

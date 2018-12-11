@@ -10,7 +10,7 @@ import json
 # Elements
 from ..tools.common import SmartOpen
 from . import kProjAreaFile, kProjDir, ProjectInfo
-from .utils import DirSentry, validateComponent
+from .utils import DirSentry, raiseError, validateComponent
 
 from os.path import join, split, exists, splitext, relpath
 from click import echo, style, secho
@@ -44,13 +44,14 @@ def create( env, kind, projname, component, topdep ):
     # ------------------------------------------------------------------------------
     # Must be in a build area
     if env.work.path is None:
-        raise click.ClickException('Build area root directory not found')
+        raiseError("Build area root directory not found")
+        # raise click.ClickException('Build area root directory not found')
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
     lProjAreaPath = join( env.work.path, kProjDir, projname )
     if exists(lProjAreaPath):
-        raise click.ClickException('Directory %s already exists' % lProjAreaPath)
+        raiseError("Directory {} already exists".format(lProjAreaPath))
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
@@ -64,7 +65,8 @@ def create( env, kind, projname, component, topdep ):
         for lPkg in env.sources:
             echo ( ' - ' + lPkg )
 
-        raise click.ClickException('Top-level package %s not found' % lTopPackage)
+        raiseError("Top-level package {} not found".format(lTopPackage))
+        # raise click.ClickException('Top-level package %s not found' % lTopPackage)
 
     lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
     if not exists(lTopDepPath):
@@ -76,7 +78,8 @@ def create( env, kind, projname, component, topdep ):
         for lC in lTopDepCandidates:
             echo ( ' - ' + lC )
 
-        raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
+        raiseError("Top-level dependency file {} not found".format(lTopDepPath))
+        # raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
     # ------------------------------------------------------------------------------
 
     # Build source code directory

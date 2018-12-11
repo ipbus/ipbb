@@ -6,7 +6,7 @@ import ipaddress
 import sys
 import re
 
-from click import echo, secho, style, confirm, get_current_context, BadParameter
+from click import echo, secho, style, confirm, get_current_context, ClickException, BadParameter
 from texttable import Texttable
 
 
@@ -34,8 +34,24 @@ class DirSentry:
 
 
 # ------------------------------------------------------------------------------
-def findFileDirInParents(aFileName, aDirPath=os.getcwd()):
+def raiseError(aMessage):
+    secho("\nERROR: " + aMessage + "\n", fg='red')
+    raise ClickException("Command aborted.")
 
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def findFileDirInParents(aFileName, aDirPath=os.getcwd()):
+    """Find, in the current directory tree, the folder in which a given file is located.
+    
+    Args:
+        aFileName (str): Name of the file to search
+        aDirPath (str, optional): Search path
+    
+    Returns:
+        TYPE: Description
+    """
     lDirPath = aDirPath
     while lDirPath is not '/':
         lBuildFile = os.path.join(lDirPath, aFileName)

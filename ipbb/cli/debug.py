@@ -4,6 +4,7 @@ import os
 
 # Elements
 from click import echo, style, secho
+from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
 
 # ------------------------------------------------------------------------------
 @click.group()
@@ -39,9 +40,11 @@ def ipy(ctx):
     IPython.embed()
 # ------------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
 @debug.command('test-vivado-formatter')
 @click.pass_context
-def test_formatter(ctx):
+def test_vivado_formatter(ctx):
 
     from ..tools.xilinx import VivadoOutputFormatter
 
@@ -58,3 +61,12 @@ def test_formatter(ctx):
     out.write('WARNING: this is a warning message \n')
     out.write('CRITICAL WARNING: this is a critical warning message \n')
     out.write('ERROR: this is an error message \n')
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+@debug.command('test-vivado-console')
+@click.pass_context
+def test_vivado_console(ctx):
+    with VivadoOpen('debug') as lConsole:
+        lConsole('puts Hello Xilinx World')

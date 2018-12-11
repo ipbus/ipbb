@@ -236,7 +236,7 @@ class VivadoConsoleError(Exception):
         self.command = command
 
     def __str__(self):
-        return self.__class__.__name__+'(\'{}\', errors: {}, critical warnings {})'.format(self.command, len(self.errors), len(self.criticalWarns))
+        return self.__class__.__name__ + '(\'{}\', errors: {}, critical warnings {})'.format(self.command, len(self.errors), len(self.criticalWarns))
 # -------------------------------------------------------------------------
 
 
@@ -249,13 +249,13 @@ class VivadoConsole(object):
     
     """
 
-    __reCharBackspace = re.compile(r'.\b')
+    __reCharBackspace = re.compile(r'.\x08')
     __reError = re.compile(r'^ERROR:')
     __reCriticalWarning = re.compile(r'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado': 'Vivado%[ \t]',
-        'vivado_lab': 'vivado_lab%[ \t]'
+        'vivado': r'Vivado%\s',
+        'vivado_lab': r'vivado_lab%\s'
     }
 
     # --------------------------------------------------------------
@@ -356,15 +356,16 @@ class VivadoConsole(object):
         self._process.sendline(aText)
         # --------------------------------------------------------------
         # Hard check: First line of output must match the injected command
-        lIndex = self._process.expect(['\r\n'])
+        lIndex = self._process.expect([r'\r\n'])
 
         lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
         lCmdSent = aText.split('\n')[0]
         if lCmdRcvd != lCmdSent:
             # --------------------------------------------------------------
             print ('-' * 20)
+            print ('Echo character-by-character diff')
             # Find where the 2 strings don't match
-            print (' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
+            print ('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
             for i in xrange(min(len(lCmdRcvd), len(lCmdSent))):
                 r = lCmdRcvd[i]
                 s = lCmdSent[i]
@@ -386,7 +387,7 @@ class VivadoConsole(object):
     def __expectPrompt(self, aMaxLen=100):
         # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
         lCpl = self._process.compile_pattern_list(
-            ['\r\n', self._prompt, pexpect.TIMEOUT]
+            [r'\r\n', self._prompt, pexpect.TIMEOUT]
         )
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)

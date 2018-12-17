@@ -65,33 +65,6 @@ def autodetect( executable = _vcom ):
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# class OldModelSimBatch(object):
-#     """docstring for VivadoBatch"""
-
-#     def __init__(self, script):
-#         super(OldModelSimBatch, self).__init__()
-
-#         lBasename, lExt = splitext(script)
-#         if lExt != '.tcl':
-#             raise ValueError('Bugger off!!!')
-
-#         if not exists(script):
-#             raise ValueError("Script not found: '%s'" % script)
-
-#         # Guard against missing vivado executable
-#         if not which('vsim'):
-#             raise ModelSimNotFoundError(
-#                 "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
-
-#         self._script = script
-        
-
-#         vsim = sh.Command(_vsim)
-#         vsim('-c', '-do', script, '-do', 'quit', _out=sys.stdout, _err=sys.stderr)
-
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimBatch(object):
     """docstring for VivadoBatch"""
 
@@ -156,6 +129,53 @@ class ModelSimBatch(object):
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+# -------------------------------------------------------------------------
+class ModelSimOutputFormatter(OutputFormatter):
+    """Formatter for Vivado command line output
+
+    Arguments:
+        prefix (string): String to prepend to each line of output
+    """
+    def __init__(self, prefix=None, quiet=False):
+        super(ModelSimOutputFormatter, self).__init__(prefix, quiet)
+
+        self.pendingchars = ''
+
+    def write(self, message):
+        """Writes formatted message
+        
+        Args:
+            message (string): Message to format
+        """
+        # put any pending character first
+        msg = self.pendingchars + message
+
+        lines = msg.splitlines()
+
+        if not message.endswith('\n'):
+            self.pendingchars = lines[-1]
+            del lines[-1]
+        else:
+            self.pendingchars = ''
+
+        for lLine in lines:
+            lColor = None
+            if lLine.startswith('** Note:'):
+                lColor = kBlue
+            elif lLine.startswith('** Warning:'):
+                lColor = kYellow
+            elif lLine.startswith('** Error:'):
+                lColor = kRed
+            elif self.quiet:
+                continue
+
+            if lColor is not None:
+                lLine = lColor + lLine + kReset
+
+            self._write((self.prefix if self.prefix else '') + lLine + '\n')
+# -------------------------------------------------------------------------
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class ModelSimConsoleError(Exception):
     """Exception raised for errors in the input.
@@ -176,12 +196,12 @@ class ModelSimConsoleError(Exception):
 class ModelSimConsole(object):
     """docstring for ModelSimConsole"""
 
-    __reCharBackspace = re.compile(".\b")
-    __reError = re.compile('^# \*\* Error')
+    __reCharBackspace = re.compile(r'.\x08')
+    __reError = re.compile(r'^# \*\* Error')
     __instances = set()
     __promptMap = {
-        'ModelSim': 'ModelSim> \rModelSim> ',
-        'QuestaSim': 'QuestaSim> \rQuestaSim> '
+        'ModelSim': r'ModelSim> \rModelSim> ',
+        'QuestaSim': r'QuestaSim> \rQuestaSim> '
     }
     __cmdPromptMaxLen = 500
 
@@ -221,9 +241,9 @@ class ModelSimConsole(object):
 
         # Set up the output formatter
         self._out = OutputFormatter(
-            echoprefix if ( echoprefix or (sessionid is None) ) 
-                else (sessionid + ' | '),
-            quiet = (not echo)
+            echoprefix if ( echoprefix or (sessionid is None) )
+            else (sessionid + ' | '),
+            quiet=(not echo)
         )
 
         self._process = pexpect.spawn(
@@ -231,9 +251,9 @@ class ModelSimConsole(object):
                 self._executable,
                 'transcript' + ('_' + sessionid) if sessionid else ''
             ),
-            env = lEnv,
-            echo = echo,
-            logfile = self._out
+            env=lEnv,
+            echo=echo,
+            logfile=self._out
         )
 
         self._process.delaybeforesend = 0.00  # 1

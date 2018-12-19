@@ -184,17 +184,21 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
+    lSimulator = lSimVariant.lower()
+
+    if lSimulator in ['questasim']:
+        lSimulator = 'questa'
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lSimulator = lSimVariant.lower()
-    echo(style(lSimVariant, fg='blue')+" detected")
+    echo(style(lSimVariant, fg='blue') + " detected")
+    secho('Using simulator: {} {}'.format(lSimVariant, lSimVersion), fg='green')
 
     # Guess the current vivado version from environment
     if env.vivadoinfo is None:
         raise click.ClickException("Missing Vivado environment. Please source the veivado environment and try again")
 
     lVivadoVariant, lVivadoVersion = env.vivadoinfo
-    secho('Using Vivado version: '+lVivadoVersion, fg='green')
+    secho('Using Vivado version: ' + lVivadoVersion, fg='green')
 
     # -------------------------------------------------------------------------
     # Store the target path in the env, for it to be retrieved by Vivado
@@ -228,7 +232,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # -------------------------------------------------------------------------
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lSimVariant, lSimulator, kIPExportDir)
+    lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lSimulator, kIPExportDir)
 
     secho("Generating ipcore simulation code", fg='blue')
 

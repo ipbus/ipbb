@@ -12,7 +12,6 @@ import os
 import atexit
 import sh
 import tempfile
-import re
 
 # Elements
 from os.path import join, split, exists, splitext, basename
@@ -27,6 +26,7 @@ from click import echo, secho, style
 _vsim = 'vsim'
 _vcom = 'vcom'
 
+
 # ------------------------------------------------
 class ModelSimNotFoundError(Exception):
 
@@ -37,7 +37,7 @@ class ModelSimNotFoundError(Exception):
 
 
 # --------------------------------------------------------------
-def autodetect( executable = _vcom ):
+def autodetect( executable=_vcom ):
 
     """
     QuestaSim-64 vcom 10.6c_3 Compiler 2017.12 Dec 21 2017

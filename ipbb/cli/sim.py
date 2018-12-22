@@ -75,16 +75,15 @@ def sim(ctx, proj):
     env = ctx.obj
 
     if proj is not None:
-
         # Change directory before executing subcommand
         from .proj import cd
         ctx.invoke(cd, projname=proj)
-        return
     else:
         if env.currentproj.name is None:
             raise click.ClickException('Project area not defined. Move into a project area and try again.')
 
     ensureModelsim(env)
+
     # -------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 

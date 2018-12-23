@@ -5,7 +5,7 @@ import click
 import json
 import utils
 
-from os import walk
+from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepFileParser import DepFileParser
@@ -156,7 +156,7 @@ class Environment(object):
         self._clear()
 
         # -----------------------------
-        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile)
+        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile, getcwd())
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
@@ -168,7 +168,7 @@ class Environment(object):
 
 
         # -----------------------------
-        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile)
+        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile, getcwd())
         if not lProjAreaPath:
             return
 

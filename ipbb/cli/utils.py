@@ -42,7 +42,7 @@ def raiseError(aMessage):
 
 
 # ------------------------------------------------------------------------------
-def findFileDirInParents(aFileName, aDirPath=os.getcwd()):
+def findFileDirInParents(aFileName, aDirPath):
     """Find, in the current directory tree, the folder in which a given file is located.
     
     Args:

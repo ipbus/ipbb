@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
+import pprint
 import yaml
 from collections import OrderedDict
 
+
+yaml_example="""
+
+"""
 
 d = {
     'ipbus-firmware': {
@@ -28,10 +33,13 @@ e = [
         ('repo', 'https://github.com/ipbus/ipbus-firmware.git'),
         ('branch', 'None'),
         ('dest', 'None'),
-        ]
-    
+    ]
 ]
 
-print e
+
+x = d
+
+pprint.pprint(x)
 with open('required_packages.yml', 'w') as yaml_file:
-    yaml.dump(e, yaml_file, default_flow_style=False)
+    yaml.dump(d, yaml_file, default_flow_style=False)
+print '\n'

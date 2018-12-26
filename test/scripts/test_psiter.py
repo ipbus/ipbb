@@ -6,12 +6,12 @@ import time
 import collections
 import itertools
 
-from ipbb.tools.common import ProcessTree, ProcessIter, ProcessNode, ProcessAnalyzer
+from ipbb.tools.pstree import ProcessTree, ProcessIter, ProcessNode, ProcessAnalyzer
 
-print sys.argv
 
 if len(sys.argv) != 2:
     print 'Error'
+    print sys.argv
     raise SystemExit(-1)
 pid = int(sys.argv[1])
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     for i in tree:
         print 'Process', i
 
-    pa = ProcessAnalyzer(p)
+    pa = ProcessTreeAnalyzer(p)
     for n, v in pa.snapshot(0.1):
         print n, v
 # -----------------------------------------------------------------------------

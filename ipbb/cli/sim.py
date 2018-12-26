@@ -36,6 +36,7 @@ kIPExportDir = 'ipcores_sim'
 # ------------------------------------------------------------------------------
 def ensureModelsim(env):
     '''Utility function ensuring that the simulation environment is correctly setup'''
+
     if env.currentproj.settings['toolset'] != 'sim':
         raise click.ClickException(
             "Work area toolset mismatch. Expected 'sim', found '%s'" % env.currentproj.settings['toolset'])
@@ -64,6 +65,7 @@ def simlibPath(env, aBasePath):
     )
 
 # ------------------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------------
 @click.group('sim', short_help="Set up simulation projects.", chain=True)

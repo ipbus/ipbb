@@ -135,8 +135,9 @@ class VivadoBatch(object):
     # --------------------------------------------
     def __call__(self, *strings):
         for f in [self.script, self.terminal]:
-            if not f: continue
-            f.write(' '.join(strings)+'\n')
+            if not f:
+                continue
+            f.write(' '.join(strings) + '\n')
             f.flush()
     # --------------------------------------------
 

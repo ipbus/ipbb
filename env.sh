@@ -87,14 +87,15 @@ if [ ! -d "${IPBB_VENV}" ] ; then
   echo -e "${COL_GREEN}Setting up a new virtual python environment in ${IPBB_VENV}${COL_NULL}"
 
   IPBB_PIP_INSTALLOPT="-U -I -q"
+  IPBB_PIP_INSTALLOPT="-U -I"
 
-  virtualenv ${IPBB_VENV} --system-site-packages
+  virtualenv ${IPBB_VENV} --no-site-packages
   source ${IPBB_VENV}/bin/activate
 
   echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"
 
   # upgrade pip to the latest greatest version
-  pip install -q --upgrade "pip<19"
+  pip install ${IPBB_PIP_INSTALLOPT} "pip<19" setuptools
 
   echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 
@@ -117,12 +118,12 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
   fi
 fi
 
-# add test/bin to PATH
-pathadd PATH ${IPBB_ROOT}/test/scripts
+# add tests/bin to PATH
+pathadd PATH ${IPBB_ROOT}/tests/scripts
 pathadd PATH ${IPBB_ROOT}/tools/bin
 
 # Temporary
-pathadd PYTHONPATH "${IPBB_ROOT}"
+pathadd PYTHONPATH "${IPBB_ROOT}/src"
 
 # Obscure click vodoo to enable bash autocompletion
 eval "$(_IPBB_COMPLETE=source ipbb)"

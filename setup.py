@@ -1,11 +1,15 @@
 from setuptools import setup, find_packages
 
-exec(open('ipbb/_version.py').read())
+exec(open('src/ipbb/_version.py').read())
 
 setup(
     name='ipbb',
     version=__version__,
+    author='Alessandro Thea',
+    author_email='alessandro.thea@stfc.ac.uk',
+    url='https://github.com/ipbus/ipbb',
     packages=find_packages('src'),
+    package_dir={'': 'src'},
     include_package_data=True,
     install_requires=[
         'Click',
@@ -14,7 +18,8 @@ setup(
         'Sh',
         'Pexpect',
         'PsUtil',
-        'IPython'
+        'IPython',
+        'PyTest',
     ],
     entry_points='''
         [console_scripts]

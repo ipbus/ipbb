@@ -5,7 +5,7 @@ exec(open('ipbb/_version.py').read())
 setup(
     name='ipbb',
     version=__version__,
-    packages=find_packages(),
+    packages=find_packages('src'),
     include_package_data=True,
     install_requires=[
         'Click',

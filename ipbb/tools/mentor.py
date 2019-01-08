@@ -45,7 +45,7 @@ def autodetect( executable=_vcom ):
     Model Technology ModelSim SE-64 vcom 10.6c Compiler 2017.07 Jul 25 2017
     """
 
-    lVerExpr = r'(QuestaSim|ModelSim).+vcom\s(\d+\.\d+[\w]).*\sCompiler'
+    lVerExpr = r'(QuestaSim|ModelSim).+vcom\s(\d+\.\d+[\w]*).*\sCompiler'
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
 
     if not which(executable):

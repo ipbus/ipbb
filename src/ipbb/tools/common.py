@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 # -------------------------------------------------------------------------
 
 import os
@@ -6,7 +7,6 @@ import sys
 import pexpect
 import subprocess
 import time
-
 
 
 # ------------------------------------------------------------------------------
@@ -20,7 +20,6 @@ class SmartOpen(object):
             self.target = sys.stdout
         else:
             self.target = aTarget
-    # -------------------------------------------
 
     # -------------------------------------------
     @property
@@ -29,27 +28,23 @@ class SmartOpen(object):
             return self.target.name
         else:
             return None
-    # -------------------------------------------
 
     # -------------------------------------------
     def __enter__(self):
         return self
-    # -------------------------------------------
 
     # -------------------------------------------
     def __exit__(self, type, value, traceback):
         if self.target is not sys.stdout:
             self.target.close()
-    # -------------------------------------------
 
     # -------------------------------------------
     def __call__(self, *strings):
         self.target.write(' '.join(strings))
         self.target.write("\n")
         self.target.flush()
-    # -------------------------------------------
 
-# ------------------------------------------------------------------------------
+    # -------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -95,8 +90,14 @@ class OutputFormatter(object):
         # update pending status
         self.pending = message.endswith('\n')
 
-        # furthemore, postfix the prefix to the newlines in message, execpt for the last one if pending is pn        
-        msg += message.replace('\n', '\n' + self.prefix, message.count('\n') - self.pending) if self.prefix else message
+        # furthemore, postfix the prefix to the newlines in message, execpt for the last one if pending is pn
+        msg += (
+            message.replace(
+                '\n', '\n' + self.prefix, message.count('\n') - self.pending
+            )
+            if self.prefix
+            else message
+        )
 
         self._write(msg)
 
@@ -107,31 +108,29 @@ class OutputFormatter(object):
         if self.quiet:
             return
         self._flush()
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 # Helper function equivalent to which in posix systems
 def which(aExecutable):
     '''Searches for exectable il $PATH'''
-    lSearchPaths = os.environ["PATH"].split(os.pathsep) if aExecutable[0] != os.sep else [os.path.dirname(aExecutable)]
+    lSearchPaths = (
+        os.environ["PATH"].split(os.pathsep)
+        if aExecutable[0] != os.sep
+        else [os.path.dirname(aExecutable)]
+    )
     for lPath in lSearchPaths:
         if not os.access(os.path.join(lPath, aExecutable), os.X_OK):
             continue
         return os.path.normpath(os.path.join(lPath, aExecutable))
     return None
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 def mkdir(path, mode=0777):
     try:
-        os.makedirs(path,mode)
+        os.makedirs(path, mode)
     except OSError:
         if os.path.exists(path) and os.path.isdir(path):
             pass
         return
-# ------------------------------------------------------------------------------
-
-
-

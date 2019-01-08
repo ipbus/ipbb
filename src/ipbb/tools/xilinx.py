@@ -114,7 +114,6 @@ class VivadoBatch(object):
         self.terminal = sys.stdout if echo else None
         self.cwd = cwd
         self.dryrun = dryrun
-    # --------------------------------------------
 
     # --------------------------------------------
     def __enter__(self):
@@ -123,14 +122,12 @@ class VivadoBatch(object):
             else tempfile.NamedTemporaryFile(suffix='.do')
         )
         return self
-    # --------------------------------------------
 
     # --------------------------------------------
     def __exit__(self, type, value, traceback):
             if not self.dryrun:
                 self._run()
             self.script.close()
-    # --------------------------------------------
 
     # --------------------------------------------
     def __call__(self, *strings):
@@ -139,7 +136,6 @@ class VivadoBatch(object):
                 continue
             f.write(' '.join(strings) + '\n')
             f.flush()
-    # --------------------------------------------
 
     # --------------------------------------------
     def _run(self):

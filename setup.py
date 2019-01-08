@@ -18,7 +18,9 @@ setup(
         'Sh',
         'Pexpect',
         'PsUtil',
+        'ipaddress',
         'IPython',
+        'IPdb',
         'PyTest',
     ],
     entry_points='''

@@ -124,9 +124,10 @@ def _validateDevice(ctx, param, value):
 @vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
-@click.option('-v/-q', 'aVerbosity', default=False)
+@click.option('-p', '--probe', type=click.File(), default=None, help="Probe file")
+@click.option('-v/-q', 'aVerbosity', default=False, help="Turns verbosity on/off. Default is -q (quiet).")
 @click.pass_obj
-def program(obj, deviceid, bitfile, aVerbosity):
+def program(obj, deviceid, bitfile, probe, aVerbosity):
 
     target, device = deviceid
 
@@ -196,7 +197,7 @@ def program(obj, deviceid, bitfile, aVerbosity):
 
         if click.confirm(style("Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format(bitfile, lTarget), fg='yellow')):
             echo("Programming {}".format(lTarget))
-            v.programDevice(device, bitfile)
+            v.programDevice(device, bitfile, probe.name if probe else None)
             echo("Done.")
             secho("{} successfully programmed on {}".format(bitfile, lTarget), fg='green')
         else:

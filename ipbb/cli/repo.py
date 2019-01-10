@@ -72,11 +72,15 @@ def git(env, repo, branch, dest):
     # Maybe not necessary
 
     lUrl = urlparse(repo)
-    # Strip '.git' at the end
-    lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
+    # Strip '.git' at the end if it exists, this supports git in a folder
+    if 'git' in lUrl.path:
+        lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
+    else:
+        lRepoName = lUrl.path if dest is None else dest
+
     lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
-    # Check for 
+    # Check for
     if exists(lRepoLocalPath):
         raise click.ClickException(
             'Repository already exists \'%s\'' % lRepoLocalPath
@@ -122,7 +126,7 @@ def git(env, repo, branch, dest):
     if dest is not None:
         lArgs += [dest]
 
-    sh.git(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
+    sh.git(*lArgs)#glein: , _out=sys.stdout, _cwd=env.srcdir)
 
     if branch is not None:
 

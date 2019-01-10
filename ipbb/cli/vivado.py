@@ -8,6 +8,8 @@ import ipbb
 import sys
 import sh
 import time
+import re
+import hashlib
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
@@ -20,6 +22,8 @@ from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
 
+# Debugging and testing
+#import pdb; pdb.set_trace()
 
 # ------------------------------------------------------------------------------
 def ensureVivado(env):
@@ -258,6 +262,91 @@ def synth(env, jobs):
     secho("\n{}: Synthesis completed successfully.\n".format(env.currentproj.name), fg='green')
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+def getIPCoresCompiled(aConsole, proj):
+	lVivProjPath = proj.path
+	print(lVivProjPath)
+	lIPCoresPath = join(lVivProjPath, 'top', 'top.srcs', 'sources_1', 'ip')
+	for folder in next(os.walk(lIPCoresPath))[1]:
+		if not os.path.isdir(join(lIPCoresPath, folder, 'sim')):
+			secho("Simulation directory does not exist for %s. Compiling the ip-core."%(folder), fg='yellow')
+			aConsole('generate_target all [get_files %s/top/top.srcs/sources_1/ip/%s/%s.xci]' % (lVivProjPath, folder, folder))
+			aConsole('export_ip_user_files -of_objects [get_files %s/top/top.srcs/sources_1/ip/%s/%s.xci] -no_script -sync -force -quiet' % (lVivProjPath,folder,folder))
+			aConsole('export_simulation -of_objects [get_files %s/top/top.srcs/sources_1/ip/%s/%s.xci] -directory %s/top/top.ip_user_files/sim_scripts -ip_user_files_dir %s/top/top.ip_user_files -ipstatic_source_dir %s/top/top.ip_user_files/ipstatic -lib_map_path [list {modelsim=%s/top/top.cache/compile_simlib/modelsim} {questa=%s/top/top.cache/compile_simlib/questa} {ies=%s/top/top.cache/compile_simlib/ies} {xcelium=%s/top/top.cache/compile_simlib/xcelium} {vcs=%s/top/top.cache/compile_simlib/vcs} {riviera=%s/top/top.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet' %(lVivProjPath, folder, folder, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath, lVivProjPath))
+
+# ------------------------------------------------------------------------------
+@vivado.command('sim', short_help='Run the simulation step on the specified dependency.')
+@click.option('-rf', '--run-for', metavar='<time> <unit>',type=(int, str), default=(0,'us'), help = "Specify the duration of the simulation of <time> <unit> in addition to the default 1 us.")
+@click.option('-g', '--GUI-mode', is_flag=True, help = "Show simulation in Vivado interface.")
+@click.option('-c', '--iocheck', is_flag=True, help = "Compare simulation output text to the golden output in golden_hash.txt")
+@click.pass_obj
+def sim(env, run_for, gui_mode, iocheck):
+
+	lSessionId = 'sim'
+
+	# Check
+	lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+	if not exists(lVivProjPath):
+		raise click.ClickException("Vivado project %s does not exist" % lVivProjPath, fg='red')
+
+	ensureVivado(env)
+
+	#find the test bench name
+	proj_file = open(lVivProjPath, 'r')
+	proj_file_text = proj_file.read()
+	tb_path = re.search('[^/]+/tb_.+\.',proj_file_text).group(0)
+
+	tb_path = tb_path[0:len(tb_path) - 1].split('/')
+	board = tb_path[0]
+	tb_file = tb_path[1]
+
+	proj_file.close()
+
+	from ..tools.xilinx import VivadoOpen, VivadoConsoleError
+	try: #prepare and run simulation
+		with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
+			lConsole('open_project {}'.format(lVivProjPath)) #open the project in Vivado
+			lConsole('set_property top {} [get_filesets sim_1]'.format(tb_file)) #set the top file
+			lConsole('set_property source_mgmt_mode All [current_project]')
+			lConsole('update_compile_order -fileset sources_1') #update compile order
+			
+			getIPCoresCompiled(lConsole, env.currentproj)
+			
+            #commented for testing
+			lConsole(["launch_simulation"]) #run the simulation in Vivado for 1000ns
+			if run_for[0] != 0:
+				lConsole('run {}{}'.format(run_for[0],run_for[1])) #extend simulation for time specified
+			lConsole("start_gui" if gui_mode else "") #start GUI when specified
+
+	except VivadoConsoleError as lExc:
+		echoVivadoConsoleError(lExc)
+		raise click.Abort()
+
+	if iocheck: #perform check on the textio output and golden output
+		md5 = hashlib.md5()
+		with open("../../src/fpga/framework/hdl/tb/{}/golden_hash.txt".format(board), 'r') as g:
+			f = open("../../src/fpga/framework/hdl/tb/{}/output_text.txt".format(board), 'r')
+			md5.update(f.read()) #feed file to md5sum
+			hash_key = md5.hexdigest()
+			hash_key_check = False
+			for line in g.readlines():
+				if line[0] != '#': #ignore comments in golden_hash.txt
+					vals = line.split(',')
+					if vals[1] == hash_key: #catch matching hash
+						hash_key_check = True
+						print("Output matched golden output! Calculated hash is: {}".format(hash_key))
+						break
+
+			if hash_key_check != True:
+				raise click.ClickException(click.style("Simulation output does not match any golden output. Calculated hash is: {}".format(hash_key),fg='red'))
+
+		# except Exception as error:
+		# 	print("Error: golden_hash.txt not found")
+		# 	raise click.Abort()
+
+	secho("\n{}: Simulation completed successfully.\n".format(env.currentproj.name), fg='green')
+
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')

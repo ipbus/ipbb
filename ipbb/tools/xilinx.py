@@ -20,6 +20,7 @@ from os.path import join, split, exists, splitext, basename
 from .common import which, OutputFormatter
 from click import style
 from .termui import *
+from collections import Iterable
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -339,17 +340,14 @@ class VivadoConsole(object):
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __del__(self):
         self.quit()
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
         return self.execute(aCmd, aMaxLen)
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __send(self, aText):
@@ -380,8 +378,6 @@ class VivadoConsole(object):
             # --------------------------------------------------------------
             raise RuntimeError(
                 "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent, lCmdRcvd))
-        # --------------------------------------------------------------
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __expectPrompt(self, aMaxLen=100):
@@ -425,7 +421,6 @@ class VivadoConsole(object):
         # --------------------------------------------------------------
 
         return lBuffer, lErrors, lCriticalWarnings
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def quit(self):
@@ -453,19 +448,16 @@ class VivadoConsole(object):
 
         # Remove self from the list of instances
         self.__instances.remove(self)
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     @property
     def echoprefix(self):
         return self._out.prefix
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     @echoprefix.setter
     def echoprefix(self, prefix):
         self._out.prefix = prefix
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
@@ -478,15 +470,10 @@ class VivadoConsole(object):
         self.__send(aCmd)
         lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
 
-        # Print critical warnings if any
-        # for lWarning in lCriticalWarnings:
-            # secho(lWarning, fg='yellow')
-
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
             raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
 
         return list(lBuffer)
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def executeMany(self, aCmds, aMaxLen=1):
@@ -497,23 +484,34 @@ class VivadoConsole(object):
         for lCmd in aCmds:
             lOutput.extend(self.execute(lCmd, aMaxLen))
         return lOutput
+
     # --------------------------------------------------------------
-# -------------------------------------------------------------------------
+    def changeMsgSeverity(self, aIds, aSeverity):
+        """Change the severity of a single/multiple messages
+        
+        Args:
+            aIds (str or list): List of message ids to update
+            aSeverity (str): Target severity
+        """
+        lIds = aIds if isinstance(aIds, Iterable) else [aIds]
+        self.executeMany(['set_msg_config -id "{}" -new_severity "{}"'.format(i, aSeverity) for i in lIds])
 
 
 # -------------------------------------------------------------------------
 class VivadoHWServer(VivadoConsole):
-    """docstring for VivadoHWServer"""
 
+    """Vivado Harware server object
+
+    Exposes a standard interface for programming devices.
+    """
+    
     # --------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(VivadoHWServer, self).__init__(*args, **kwargs)
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def openHw(self):
         return self.execute('open_hw')
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def connect(self, uri=None):
@@ -521,28 +519,23 @@ class VivadoHWServer(VivadoConsole):
         if uri is not None:
             lCmd += ['-url ' + uri]
         return self.execute(' '.join(lCmd))
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def getHwTargets(self):
         return self.execute('get_hw_targets')[0].split()
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def openHwTarget(self, target):
         return self.execute('open_hw_target {{{0}}}'.format(target))
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def closeHwTarget(self, target=None):
         lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
         return self.execute(lCmd)
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def getHwDevices(self):
         return self.execute('get_hw_devices')[0].split()
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def programDevice(self, device, bitfile):
@@ -561,8 +554,6 @@ class VivadoHWServer(VivadoConsole):
             'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath)
         )
         self.execute('program_hw_devices [current_hw_device]')
-    # --------------------------------------------------------------
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -574,28 +565,30 @@ class VivadoOpen(object):
     def quiet(self):
         return self._console.quiet
 
+    # --------------------------------------------------------------
     @quiet.setter
     def quiet(self, value):
         self._console.quiet = value
+
     # --------------------------------------------------------------
+    @property
+    def console(self):
+        return self._console
 
     # --------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(VivadoOpen, self).__init__()
         self._args = args
         self._kwargs = kwargs
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __enter__(self):
         self._console = VivadoConsole(*self._args, **self._kwargs)
         return self
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
         self._console.quit()
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __call__(self, aCmd=None, aMaxLen=1):
@@ -613,8 +606,6 @@ class VivadoOpen(object):
             return self._console.executeMany(aCmd, aMaxLen)
         else:
             raise TypeError('Unsupported command type ' + type(aCmd).__name__)
-    # --------------------------------------------------------------
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------

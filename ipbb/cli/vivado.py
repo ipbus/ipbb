@@ -130,11 +130,11 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
 @click.pass_obj
 def checksyntax(env):
-    
+
     lSessionId = 'chk-syn'
 
     lStopOn = [
-        'HDL 9-806', # Syntax errors
+        'HDL 9-806',  # Syntax errors
         'HDL 9-69',  # Type not declared
     ]
 
@@ -153,7 +153,8 @@ def checksyntax(env):
             lConsole('open_project {}'.format(lVivProjPath))
 
             # Change message severity to ERROR for the isses we're interested in
-            lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
+            # lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
+            lConsole.console.changeMsgSeverity( lStopOn, 'ERROR' )
 
             # Execute the syntax check
             lConsole('check_syntax')
@@ -162,9 +163,8 @@ def checksyntax(env):
         echoVivadoConsoleError(lExc)
         raise click.Abort()
 
+    secho("\n{}: Synthax check completed successfully.\n".format(env.currentproj.name), fg='green')
 
-    secho("\n{}: Synthax check completed successfully.\n".format(env.currentproj.name), fg='green')   
-# ------------------------------------------------------------------------------
 
 # -------------------------------------
 def getSynthRunProps(aConsole):
@@ -216,9 +216,8 @@ def synth(env, jobs):
             # Open the project
             lConsole('open_project {}'.format(lVivProjPath))
 
-
             lRunProps = getSynthRunProps(lConsole)
-            lIPRunsToReset  = [ k for k,v in lRunProps.iteritems() if (not k.startswith('synth') and v['STATUS'].startswith('Running'))]
+            lIPRunsToReset = [ k for k, v in lRunProps.iteritems() if (not k.startswith('synth') and v['STATUS'].startswith('Running'))]
 
             for run in lIPRunsToReset:
                 secho('IP run {} found in running state. Resetting.'.format(run), fg='yellow')
@@ -226,7 +225,7 @@ def synth(env, jobs):
 
             lConsole([
                 'reset_run synth_1',
-                ' '.join(['launch_runs synth_1']+args),
+                ' '.join(['launch_runs synth_1'] + args),
             ])
 
             while (True):
@@ -236,11 +235,11 @@ def synth(env, jobs):
 
                 lSummary = Texttable(max_width=0)
                 lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-                lSummary.add_row(['Run']+lProps)
+                lSummary.add_row(['Run'] + lProps)
                 for lRun in sorted(lRunProps):
                     lInfo = lRunProps[lRun]
-                    lSummary.add_row([lRun]+[ lInfo[lProp] for lProp in lProps ])
-                secho('\n'+lSummary.draw(), fg='cyan')
+                    lSummary.add_row([lRun] + [ lInfo[lProp] for lProp in lProps ])
+                secho('\n' + lSummary.draw(), fg='cyan')
 
                 if lRunProps['synth_1']['PROGRESS'] == '100%':
                     break
@@ -249,11 +248,9 @@ def synth(env, jobs):
                         'wait_on_run synth_1 -timeout 1',
                     ])
 
-
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
-
 
     secho("\n{}: Synthesis completed successfully.\n".format(env.currentproj.name), fg='green')
 # ------------------------------------------------------------------------------
@@ -264,7 +261,7 @@ def synth(env, jobs):
 @click.option('-j', '--jobs', type=int, default=None)
 @click.pass_obj
 def impl(env, jobs):
-    '''Launch implementation run'''
+    '''Launch an implementation run'''
 
     lSessionId = 'impl'
 
@@ -275,16 +272,17 @@ def impl(env, jobs):
 
     ensureVivado(env)
 
+    # List of vivado message that are expected to result into an error.
     lStopOn = [
-        'Timing 38-282', # Force error when timing is not met
+        'Timing 38-282',  # Force error when timing is not met
     ]
 
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho, stopOnCWarnings=True) as lConsole:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
             # Change message severity to ERROR for the isses we're interested in
-            lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
+            lConsole.console.changeMsgSeverity(lStopOn, "ERROR")
 
             # Open the project
             lConsole('open_project {}'.format(lVivProjPath))
@@ -316,7 +314,6 @@ def orderconstr(env, order):
 
     ensureVivado(env)
 
-
     lDepFileParser = env.depParser
     lConstrSrc = [src.FilePath for src in lDepFileParser.commands['src'] if splitext(src.FilePath)[1] in ['.tcl', '.xdc']]
     lCmdTemplate = 'reorder_files -fileset constrs_1 -after [get_files {0}] [get_files {1}]'
@@ -333,7 +330,7 @@ def orderconstr(env, order):
             # print()
             # print('\n'.join( ' * {}'.format(c) for c in lConstraints ))
 
-            lCmds = [lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i+1]) for i in xrange(len(lConstrOrder)-1)]
+            lCmds = [lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i + 1]) for i in xrange(len(lConstrOrder)-1)]
             lConsole(lCmds)
 
             lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
@@ -374,7 +371,6 @@ def resourceusage(env):
         'open_run impl_1',
     ]
 
-
     from ..tools.xilinx import VivadoOpen, VivadoConsoleError
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -383,7 +379,7 @@ def resourceusage(env):
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
-# ------------------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------------
 @vivado.command('bitfile', short_help="Generate a bitfile.")
@@ -453,7 +449,7 @@ def status(env):
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             echo('Opening project')
             lConsole(lOpenCmds)
-            
+
             lIPs = lConsole('get_ips')[0].split()
 
             echo('Retrieving run information')

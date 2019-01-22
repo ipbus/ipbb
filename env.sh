@@ -34,7 +34,7 @@ function pathadd() {
     eval "${PATH_NAME}=${PATH_VAL}"
   fi
 }
-#------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')

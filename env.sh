@@ -94,7 +94,7 @@ if [ ! -d "${IPBB_VENV}" ] ; then
   echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"
 
   # upgrade pip to the latest greatest version
-  pip install -q --upgrade pip
+  pip install -q --upgrade "pip<19"
 
   echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 

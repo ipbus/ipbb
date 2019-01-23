@@ -182,7 +182,7 @@ def main():
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(logging.WARNING)
-    uhal.setLogLevelTo(uhal.LogLevel.WARNING)
+    uhal.setLogLevelTo(uhal.LogLevel.ERROR)
 
     # options for verbosity level and VHDL template
     nflag = False

@@ -162,6 +162,7 @@ def report(env, filters):
     lFNF = lParser.missingFiles
 
     if lFNF:
+        secho ('Missing files:', fg='red')
 
         lFNFTable = Texttable(max_width=0)
         lFNFTable.header(['path expression', 'package', 'component', 'included by'])

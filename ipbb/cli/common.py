@@ -204,7 +204,7 @@ def gendecoders(ctx):
             print(sh.cp('-av', lDecoder, lTarget))
 
         secho(
-            "\n{}: {} decoders updated.\n".format(
+            "\n\n{}: {} decoders updated.\n".format(
                 env.currentproj.name, len(lUpdatedDecoders)
             ),
             fg='green',

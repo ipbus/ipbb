@@ -160,7 +160,9 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
                   "\n".join(lExc), fg='red'
                   )
             raise click.Abort()
+
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), '.')
+    echo("\nmodelsim.ini imported from {}".format(lSimlibPath))
 
 # ------------------------------------------------------------------------------
 

@@ -22,6 +22,7 @@ setup(
         'IPython',
         'IPdb',
         'PyTest',
+        'PyYAML',
     ],
     entry_points='''
         [console_scripts]

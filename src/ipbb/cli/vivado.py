@@ -557,7 +557,6 @@ def package(ctx, aTag):
     # -------------------------------------------------------------------------
     # Generate a json signature file
     import socket
-    import time
     secho("Generating summary files", fg='blue')
 
     # -------------------------------------------------------------------------
@@ -574,8 +573,8 @@ def package(ctx, aTag):
     })
 
     with open(join(lSrcPath, 'summary.txt'), 'w') as lSummaryFile:
-        import json
-        json.dump(lSummary, lSummaryFile, indent=2)
+        import yaml
+        yaml.safe_dump(lSummary, lSummaryFile, indent=2, default_flow_style=False)
     echo()
     # -------------------------------------------------------------------------
 

@@ -5,7 +5,6 @@ import click
 import os
 import ipbb
 import subprocess
-import json
 
 # Elements
 from ..tools.common import SmartOpen

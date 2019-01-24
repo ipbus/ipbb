@@ -2,7 +2,7 @@ from __future__ import print_function
 
 # Import click for ansi colors
 import click
-import json
+import yaml
 import utils
 
 from os import walk, getcwd
@@ -18,11 +18,13 @@ kSourceDir = 'src'
 kProjDir = 'proj'
 
 
-
 # ------------------------------------------------------------------------------
 class FolderInfo(object):
     '''Utility class, attributes holder'''
+
     pass
+
+
 # ------------------------------------------------------------------------------
 
 
@@ -44,8 +46,6 @@ class ProjectInfo(FolderInfo):
             return
 
         self.load(aPath)
-    # ------------------------------------------------------------------------------
-
 
     # ------------------------------------------------------------------------------
     @property
@@ -53,30 +53,26 @@ class ProjectInfo(FolderInfo):
         if self.path is None:
             return ""
         return join(self.path, kProjAreaFile)
-    # ------------------------------------------------------------------------------
 
-    
     # ------------------------------------------------------------------------------
     @property
     def userfilepath(self):
         if self.path is None:
-            return ""        
+            return ""
         return join(self.path, kProjUserFile)
-    # ------------------------------------------------------------------------------
-
 
     # ------------------------------------------------------------------------------
     def load(self, aPath):
         self.path = aPath
 
         if not exists(self.filepath):
-            raise RuntimeError("Missing project area definition at {}".format(self.filepath))
+            raise RuntimeError(
+                "Missing project area definition at {}".format(self.filepath)
+            )
 
         self.name = basename(self.path)
         self.loadSettings()
         self.loadUserSettings()
-    # ------------------------------------------------------------------------------
-
 
     # ------------------------------------------------------------------------------
     def loadSettings(self):
@@ -89,9 +85,7 @@ class ProjectInfo(FolderInfo):
 
         # Import project settings
         with open(self.filepath, 'r') as f:
-            self.settings = json.load(f)
-    # ------------------------------------------------------------------------------
-
+            self.settings = yaml.load(f)
 
     # ------------------------------------------------------------------------------
     def loadUserSettings(self):
@@ -99,26 +93,23 @@ class ProjectInfo(FolderInfo):
             return
 
         with open(self.userfilepath, 'r') as f:
-            self.usersettings = json.load(f)
-    # ------------------------------------------------------------------------------
-
+            self.usersettings = yaml.load(f)
 
     # ------------------------------------------------------------------------------
     def saveSettings(self, jsonindent=2):
         if not self.settings:
             return
         with open(self.filepath, 'w') as f:
-            json.dump(self.settings, f, indent=jsonindent)
-    # ------------------------------------------------------------------------------
-
+            yaml.safe_dump(self.settings, f, indent=jsonindent, default_flow_style=False)
 
     # ------------------------------------------------------------------------------
     def saveUserSettings(self, jsonindent=2):
         if not self.usersettings:
             return
         with open(self.userfilepath, 'w') as f:
-            json.dump(self.usersettings, f, indent=jsonindent)
-    # ------------------------------------------------------------------------------
+            yaml.safe_dump(self.usersettings, f, indent=jsonindent, default_flow_style=False)
+
+
 # ------------------------------------------------------------------------------
 
 
@@ -133,7 +124,6 @@ class Environment(object):
         super(Environment, self).__init__()
 
         self._autodetect()
-    # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
     def _clear(self):
@@ -148,7 +138,6 @@ class Environment(object):
         self.currentproj = ProjectInfo()
 
         self.pathMaker = None
-    # ------------------------------------------------------------------------------
 
     # ----------------------------------------------------------------------------
     def _autodetect(self):
@@ -166,7 +155,6 @@ class Environment(object):
         self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
         # -----------------------------
 
-
         # -----------------------------
         lProjAreaPath = utils.findFileDirInParents(kProjAreaFile, getcwd())
         if not lProjAreaPath:
@@ -174,20 +162,21 @@ class Environment(object):
 
         self.currentproj.load(lProjAreaPath)
 
-    # ----------------------------------------------------------------------------
-
     # -----------------------------------------------------------------------------
     def __str__(self):
-        return self.__repr__() + '''({{
+        return (
+            self.__repr__()
+            + '''({{
     working area path: {work.path}
     project area: {currentproj.name}
     project configuration: {currentproj.settings}
     user settings: {currentproj.usersettings}
     pathMaker: {pathMaker}
     parser: {_depParser}
-    }})'''.format(**(self.__dict__))
-    # -----------------------------------------------------------------------------
-
+    }})'''.format(
+                **(self.__dict__)
+            )
+        )
 
     # -----------------------------------------------------------------------------
     @property
@@ -197,47 +186,45 @@ class Environment(object):
             self._depParser = DepFileParser(
                 self.currentproj.settings['toolset'],
                 self.pathMaker,
-                aVerbosity=self._verbosity
+                aVerbosity=self._verbosity,
             )
 
             try:
                 self._depParser.parse(
                     self.currentproj.settings['topPkg'],
                     self.currentproj.settings['topCmp'],
-                    self.currentproj.settings['topDep']
+                    self.currentproj.settings['topDep'],
                 )
             except OSError as e:
                 pass
 
         return self._depParser
-    # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     @property
     def srcdir(self):
         return join(self.work.path, kSourceDir) if self.work.path is not None else None
-    # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     @property
     def projdir(self):
         return join(self.work.path, kProjDir) if self.work.path is not None else None
-    # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     @property
     def sources(self):
         return next(walk(self.srcdir))[1]
-    # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     @property
     def projects(self):
         return [
-            lProj for lProj in next(walk(self.projdir))[1]
+            lProj
+            for lProj in next(walk(self.projdir))[1]
             if exists(join(self.projdir, lProj, kProjAreaFile))
         ]
+
     # -----------------------------------------------------------------------------
 
-# -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------

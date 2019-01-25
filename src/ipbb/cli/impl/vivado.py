@@ -123,8 +123,6 @@ def checksyntax(env):
 
     ensureVivado(env)
 
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
@@ -192,8 +190,6 @@ def synth(env, jobs):
 
     # if email is not None:
     # args +=  ['-email_to {} -email_all'.format(email)]
-
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -266,8 +262,6 @@ def impl(env, jobs):
     # List of vivado message that are expected to result into an error.
     lStopOn = ['Timing 38-282']  # Force error when timing is not met
 
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
@@ -324,8 +318,6 @@ def orderconstr(env, order):
     lConstrOrder = lConstrSrc if order else [f for f in reversed(lConstrSrc)]
     # echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstrOrder ))
 
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             # Open vivado project
@@ -376,8 +368,6 @@ def resourceusage(env):
 
     lOpenCmds = ['open_project %s' % lVivProjPath, 'open_run impl_1']
 
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             lConsole(lOpenCmds)
@@ -407,8 +397,6 @@ def bitfile(env):
     lOpenCmds = ['open_project %s' % lVivProjPath]
 
     lBitFileCmds = ['launch_runs impl_1 -to_step write_bitstream', 'wait_on_run impl_1']
-
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -448,8 +436,6 @@ def status(env):
         'IS_SYNTHESIS',
         'STATS.ELAPSED',
     ]
-
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -503,8 +489,6 @@ def reset(env):
     lOpenCmds = ['open_project %s' % join(env.currentproj.path, 'top', 'top')]
 
     lResetCmds = ['reset_run synth_1', 'reset_run impl_1']
-
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -644,8 +628,6 @@ def archive(ctx):
             env.currentproj.path, '{}.xpr.zip'.format(env.currentproj.settings['name'])
         )
     ]
-
-    from ..tools.xilinx import VivadoOpen, VivadoConsoleError
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:

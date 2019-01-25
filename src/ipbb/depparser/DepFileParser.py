@@ -15,9 +15,9 @@ class Command(object):
         Package   (str): package the target belongs to.
         Component (str): component withon 'Package' the target belongs to
         Lib       (str): library the file will be added to
-        Include   (bool): flag, used to include/exclude target from projects
-        TopLevel  (bool): flag, identifies address table as top-level (address tables only)
-        Vhdl2008  (bool): flags toggles the vhdl 2008 syntax for .vhd files (vhd targets only)
+        Include   (bool): src-only flag, used to include/exclude target from projects
+        TopLevel  (bool): addrtab-only flag, identifies address table as top-level
+        Vhdl2008  (bool): src-only flags, toggles the vhdl 2008 syntax for .vhd files
 
     """
     # --------------------------------------------------------------
@@ -144,7 +144,7 @@ class DepFileParser(object):
         self.pathMaker = aPathmaker
 
         self.vars = {}
-        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': []}
+        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': [], 'finalise': []}
         self.libs = list()
         self.components = OrderedDict()
 
@@ -179,15 +179,26 @@ class DepFileParser(object):
         # Set up the parser
         parser = DepLineParser(usage=argparse.SUPPRESS)
         parser_add = parser.add_subparsers(dest="cmd")
+
+        # Include sub-parser
         subp = parser_add.add_parser("include")
         subp.add_argument("-c", "--component", **lCompArgOpts)
         subp.add_argument("--cd")
         subp.add_argument("file", nargs="*")
+
+        # Setup sub-parser
         subp = parser_add.add_parser("setup")
         subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("-z", "--coregen", action="store_true")
         subp.add_argument("--cd")
         subp.add_argument("file", nargs="*")
+
+        # Finalise sub-parser
+        subp = parser_add.add_parser("finalise")
+        subp.add_argument("-c", "--component", **lCompArgOpts)
+        subp.add_argument("--cd")
+        subp.add_argument("file", nargs="*")
+
+        # Source sub-parser
         subp = parser_add.add_parser("src")
         subp.add_argument("-c", "--component", **lCompArgOpts)
         subp.add_argument("-l", "--lib")
@@ -197,11 +208,15 @@ class DepFileParser(object):
         subp.add_argument("--cd")
         subp.add_argument("file", nargs="+")
         subp.add_argument("--vhdl2008", action="store_true")
+
+        # Address table sub-parser
         subp = parser_add.add_parser("addrtab")
         subp.add_argument("-c", "--component", **lCompArgOpts)
         subp.add_argument("--cd")
         subp.add_argument("-t", "--toplevel", action="store_true")
         subp.add_argument("file", nargs="*")
+
+        # Ip repository sub-parser
         subp = parser_add.add_parser("iprepo")
         subp.add_argument("-c", "--component", **lCompArgOpts)
         subp.add_argument("--cd")
@@ -350,7 +365,7 @@ class DepFileParser(object):
         Parses a dependency file from package aPackage/aComponent
         '''
         # --------------------------------------------------------------
-        # We have gone one layer further down the rabbit hole        
+        # We have gone one layer further down the rabbit hole
         lParentInclude = self._includes if self._depth != 0 else None
 
         self._includes = DepFile(aPackage, aComponent, aDepFileName)
@@ -364,7 +379,6 @@ class DepFileParser(object):
         lDepFilePath = self.pathMaker.getPath(
             aPackage, aComponent, 'include', aDepFileName)
         # --------------------------------------------------------------
-
 
         if not exists(lDepFilePath):
             self.missing.append(
@@ -504,15 +518,18 @@ class DepFileParser(object):
                     # --------------------------------------------------------------
                     # Set some processing flags, whether specified explicitly
                     # or not
-                    if 'noinclude' in lParsedLine:
-                        lInclude = not lParsedLine.noinclude
-                    else:
-                        lInclude = True
+                    # if 'noinclude' in lParsedLine:
+                    #     lInclude = not lParsedLine.noinclude
+                    # else:
+                    #     lInclude = True
 
-                    if 'toplevel' in lParsedLine:
-                        lTopLevel = lParsedLine.toplevel
-                    else:
-                        lTopLevel = False
+                    # if 'toplevel' in lParsedLine:
+                    #     lTopLevel = lParsedLine.toplevel
+                    # else:
+                    #     lTopLevel = False
+
+                    lInclude = ('noinclude' in lParsedLine and not lParsedLine.noinclude)
+                    lTopLevel = ('toplevel' in lParsedLine and lParsedLine.toplevel)
                     # --------------------------------------------------------------
 
                     # --------------------------------------------------------------

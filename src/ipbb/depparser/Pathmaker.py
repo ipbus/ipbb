@@ -11,6 +11,7 @@ class Pathmaker(object):
         "include": "firmware/cfg",
         "addrtab": "addr_table",
         "setup": "firmware/cfg",
+        "finalise": "firmware/cfg",
         "iprepo": "firmware/cgn",
     }
     fexts = {

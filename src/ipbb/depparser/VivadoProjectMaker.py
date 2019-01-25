@@ -136,6 +136,10 @@ class VivadoProjectMaker(object):
             write('upgrade_ip [get_ips {0}]'.format(i))
         for i in lXciTargetFiles:
             write('create_ip_run [get_files {0}]'.format(i))
+
+        for finalise in aCommandList['finalise']:
+            write('source {0}'.format(finalise.FilePath))
+
         write('close_project')
     # --------------------------------------------------------------
 

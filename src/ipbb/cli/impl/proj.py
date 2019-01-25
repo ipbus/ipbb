@@ -10,6 +10,7 @@ import subprocess
 from ...tools.common import SmartOpen
 from .. import kProjAreaFile, kProjDir, ProjectInfo
 from ..utils import DirSentry, raiseError, validateComponent
+from ...depparser.Pathmaker import Pathmaker
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
@@ -40,7 +41,6 @@ def create(env, kind, projname, component, topdep):
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
-    from ..depparser.Pathmaker import Pathmaker
 
     lPathmaker = Pathmaker(env.srcdir, 0)
     lTopPackage, lTopComponent = component

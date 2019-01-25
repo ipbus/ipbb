@@ -10,11 +10,15 @@ import sys
 import sh
 import time
 import types
+import socket
+import yaml
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 from texttable import Texttable
+
+from .dep import hash
 
 from ...tools.common import which, SmartOpen
 from ..utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
@@ -542,12 +546,10 @@ def package(ctx, aTag):
 
     # -------------------------------------------------------------------------
     # Generate a json signature file
-    import socket
 
     secho("Generating summary files", fg='blue')
 
     # -------------------------------------------------------------------------
-    from .dep import hash
 
     lHash = ctx.invoke(hash, output=join(lSrcPath, 'hashes.txt'), verbose=True)
     # -------------------------------------------------------------------------
@@ -563,8 +565,6 @@ def package(ctx, aTag):
     )
 
     with open(join(lSrcPath, 'summary.txt'), 'w') as lSummaryFile:
-        import yaml
-
         yaml.safe_dump(lSummary, lSummaryFile, indent=2, default_flow_style=False)
     echo()
     # -------------------------------------------------------------------------

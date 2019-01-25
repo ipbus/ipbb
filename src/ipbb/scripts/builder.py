@@ -165,9 +165,9 @@ def main():
 
     climain.add_command(dep.dep)
 
-    # from ..cli import toolbox
+    from ..cli import toolbox
 
-    # climain.add_command(toolbox.toolbox)
+    climain.add_command(toolbox.toolbox)
 
     from ..cli import common
 
@@ -179,13 +179,13 @@ def main():
     vivado.vivado.add_command(common.user_config)
     climain.add_command(vivado.vivado)
 
-    # from ..cli import sim
+    from ..cli import sim
 
-    # sim.sim.add_command(common.cleanup)
-    # sim.sim.add_command(common.addrtab)
-    # sim.sim.add_command(common.gendecoders)
-    # sim.sim.add_command(common.user_config)
-    # climain.add_command(sim.sim)
+    sim.sim.add_command(common.cleanup)
+    sim.sim.add_command(common.addrtab)
+    sim.sim.add_command(common.gendecoders)
+    sim.sim.add_command(common.user_config)
+    climain.add_command(sim.sim)
 
     from ..cli import debug
 

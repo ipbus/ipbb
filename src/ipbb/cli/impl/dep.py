@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -13,7 +14,17 @@ import tempfile
 import sys
 import re
 
-from os.path import join, split, exists, basename, abspath, splitext, relpath, isfile, isdir
+from os.path import (
+    join,
+    split,
+    exists,
+    basename,
+    abspath,
+    splitext,
+    relpath,
+    isfile,
+    isdir,
+)
 from ...tools.common import which, SmartOpen
 from ..utils import DirSentry, printDictTable
 from click import echo, secho, style, confirm
@@ -30,11 +41,15 @@ def dep(ctx, proj):
     if lProj is not None:
         # Change directory before executing subcommand
         from ..proj import cd
+
         ctx.invoke(cd, projname=lProj)
         return
     else:
         if env.currentproj.name is None:
-            raise click.ClickException('Project area not defined. Move into a project area and try again')
+            raise click.ClickException(
+                'Project area not defined. Move into a project area and try again'
+            )
+
 
 # ------------------------------------------------------------------------------
 
@@ -65,15 +80,23 @@ def report(env, filters):
         try:
             i = lCmdHeaders.index(m.group(1))
             r = re.compile(m.group(2))
-            lFilters.append( (i, r) )
+            lFilters.append((i, r))
         except RuntimeError as e:
             lFilterFormatErrors.append(f)
 
     if lFilterFormatErrors:
-        raise click.ClickException("Filter syntax errors: " + ' '.join(['\'' + e + '\'' for e in lFilterFormatErrors]))
+        raise click.ClickException(
+            "Filter syntax errors: "
+            + ' '.join(['\'' + e + '\'' for e in lFilterFormatErrors])
+        )
 
     if lFieldNotFound:
-        raise click.ClickException("Filter syntax errors: fields not found {}. Expected one of {}".format(', '.join("'" + s + "'" for s in lFieldNotFound), ', '.join(("'" + s + "'" for s in lCmdHeaders))))
+        raise click.ClickException(
+            "Filter syntax errors: fields not found {}. Expected one of {}".format(
+                ', '.join("'" + s + "'" for s in lFieldNotFound),
+                ', '.join(("'" + s + "'" for s in lCmdHeaders)),
+            )
+        )
 
     # return
     lParser = env.depParser
@@ -85,7 +108,7 @@ def report(env, filters):
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
-        echo( '  + {0} ({1})' .format(k, len(lParser.commands[k])) )
+        echo('  + {0} ({1})'.format(k, len(lParser.commands[k])))
         if not lParser.commands[k]:
             echo()
             continue
@@ -104,10 +127,9 @@ def report(env, filters):
                 lCmd.Component,
                 # lCmd.Map,
                 lCmd.Lib,
-
             ]
 
-            if lFilters and not all([ rxp.match(lRow[i]) for i, rxp in lFilters ]):
+            if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
                 continue
 
             lCmdTable.add_row(lRow)
@@ -133,13 +155,13 @@ def report(env, filters):
     if lParser.missing:
 
         if lParser.missingPackages:
-            secho ('Missing packages:', fg='red')
-            echo  (' '.join(list(lParser.missingPackages)))
+            secho('Missing packages:', fg='red')
+            echo(' '.join(list(lParser.missingPackages)))
 
         # ------
         lCNF = lParser.missingComponents
         if lCNF:
-            secho ('Missing components:', fg='red')
+            secho('Missing components:', fg='red')
 
             for pkg in sorted(lCNF):
                 lString += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
@@ -156,7 +178,7 @@ def report(env, filters):
     lFNF = lParser.missingFiles
 
     if lFNF:
-        secho ('Missing files:', fg='red')
+        secho('Missing files:', fg='red')
 
         lFNFTable = Texttable(max_width=0)
         lFNFTable.header(['path expression', 'package', 'component', 'included by'])
@@ -168,12 +190,16 @@ def report(env, filters):
                 lPathExps = lCmps[cmp]
                 for pathexp in sorted(lPathExps):
 
-                    lFNFTable.add_row([
-                        relpath(pathexp, env.srcdir),
-                        pkg,
-                        cmp,
-                        '\n'.join([relpath(src, env.srcdir) for src in lPathExps[pathexp]]),
-                    ])
+                    lFNFTable.add_row(
+                        [
+                            relpath(pathexp, env.srcdir),
+                            pkg,
+                            cmp,
+                            '\n'.join(
+                                [relpath(src, env.srcdir) for src in lPathExps[pathexp]]
+                            ),
+                        ]
+                    )
         echo(lPrepend.sub(r'\g<1>  ', lFNFTable.draw()))
 
 
@@ -201,10 +227,13 @@ def components(env, output):
             for lCmp in lCmps:
                 lWriter(lCmp)
             lWriter()
+
+
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
+
 
 @contextlib.contextmanager
 def set_env(**environ):
@@ -232,7 +261,9 @@ def set_env(**environ):
 
 # ------------------------------------------------------------------------------
 # ----------------------------
-def hashAndUpdate0g(aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
+def hashAndUpdate0g(
+    aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1
+):
 
     # New instance of the selected algorithm
     lHash = aAlgo()
@@ -247,6 +278,8 @@ def hashAndUpdate0g(aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=has
                 lUpHash.update(lChunk)
 
     return lHash
+
+
 # ----------------------------
 
 
@@ -271,6 +304,8 @@ def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.s
                 hashAndUpdate(f, aChunkSize, aUpdateHashes=aUpdateHashes, aAlgo=aAlgo)
 
     return lHash
+
+
 # ----------------------------
 
 
@@ -282,15 +317,14 @@ def hash(env, output, verbose):
 
     # Ensure that the selecte algorithm exists
     if lAlgo is None:
-        raise AttributeError(
-            'Hashing algorithm {0} is not available'.format(lAlgoName)
-        )
+        raise AttributeError('Hashing algorithm {0} is not available'.format(lAlgoName))
 
     with SmartOpen(output) as lWriter:
 
         if verbose:
             lTitle = "{0} hashes for project '{1}'".format(
-                lAlgoName, env.currentproj.name)
+                lAlgoName, env.currentproj.name
+            )
             lWriter("# " + '=' * len(lTitle))
             lWriter("# " + lTitle)
             lWriter("# " + "=" * len(lTitle))
@@ -306,8 +340,7 @@ def hash(env, output, verbose):
                 lWriter("#" + "-" * 79)
             for lCmd in lCmds:
                 lCmdHash = hashAndUpdate(
-                    lCmd.FilePath, aUpdateHashes=[
-                        lProjHash, lGrpHash], aAlgo=lAlgo
+                    lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
                 ).hexdigest()
                 if verbose:
                     lWriter(lCmdHash, lCmd.FilePath)
@@ -338,6 +371,7 @@ def hash(env, output, verbose):
 
 # ------------------------------------------------------------------------------
 def archive(ctx):
-    print ('archive')
+    print('archive')
+
 
 # ------------------------------------------------------------------------------

@@ -3,7 +3,12 @@ import os
 
 # Elements
 from click import echo, style, secho
-from ...tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer, VivadoOutputFormatter
+from ...tools.xilinx import (
+    VivadoOpen,
+    VivadoConsoleError,
+    VivadoSnoozer,
+    VivadoOutputFormatter,
+)
 
 
 # ------------------------------------------------------------------------------

@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+
 # Modules
 import click
 

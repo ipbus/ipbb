@@ -131,7 +131,12 @@ def gendecoders(ctx):
             echo("Processing " + style(basename(lAddr.FilePath), fg='blue'))
             # Interested in top-level address tables only
             if not lAddr.TopLevel:
-                secho("{} is not a top-level address table. Decoder will not be generated.".format(lAddr.FilePath), fg='cyan')
+                secho(
+                    "{} is not a top-level address table. Decoder will not be generated.".format(
+                        lAddr.FilePath
+                    ),
+                    fg='cyan',
+                )
                 continue
 
             # Generate a new decoder file

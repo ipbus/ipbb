@@ -150,34 +150,34 @@ def main():
         )
 
     # Add custom cli to shell
-    # from ..cli import repo
+    from ..cli import repo
 
-    # climain.add_command(repo.init)
-    # # climain.add_command(repo.cd)
-    # climain.add_command(repo.add)
-    # climain.add_command(repo.srcs)
+    climain.add_command(repo.init)
+    # climain.add_command(repo.cd)
+    climain.add_command(repo.add)
+    climain.add_command(repo.srcs)
 
-    # from ..cli import proj
+    from ..cli import proj
 
-    # climain.add_command(proj.proj)
+    climain.add_command(proj.proj)
 
-    # from ..cli import dep
+    from ..cli import dep
 
-    # climain.add_command(dep.dep)
+    climain.add_command(dep.dep)
 
     # from ..cli import toolbox
 
     # climain.add_command(toolbox.toolbox)
 
-    # from ..cli import common
+    from ..cli import common
 
-    # from ..cli import vivado
+    from ..cli import vivado
 
-    # vivado.vivado.add_command(common.cleanup)
-    # vivado.vivado.add_command(common.addrtab)
-    # vivado.vivado.add_command(common.gendecoders)
-    # vivado.vivado.add_command(common.user_config)
-    # climain.add_command(vivado.vivado)
+    vivado.vivado.add_command(common.cleanup)
+    vivado.vivado.add_command(common.addrtab)
+    vivado.vivado.add_command(common.gendecoders)
+    vivado.vivado.add_command(common.user_config)
+    climain.add_command(vivado.vivado)
 
     # from ..cli import sim
 

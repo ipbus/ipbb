@@ -11,7 +11,7 @@ from ..tools.common import SmartOpen
 from . import kProjAreaFile, kProjDir, ProjectInfo
 from .utils import DirSentry, raiseError, validateComponent
 
-from os.path import join, split, exists, splitext, relpath
+from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
 
 
@@ -66,6 +66,17 @@ def create( env, kind, projname, component, topdep ):
 
         raiseError("Top-level package {} not found".format(lTopPackage))
         # raise click.ClickException('Top-level package %s not found' % lTopPackage)
+
+    if not exists(lPathmaker.getPath(lTopPackage, lTopComponent)):
+        lTopPkgPath = lPathmaker.getPath(lTopPackage)
+        secho('Top-level component {}:{} not found'.format(lTopPackage, lTopComponent), fg='red')
+        echo('Available components')
+        # When in Py3 https://docs.python.org/3/library/os.html#os.scandir
+        for d in [join(lTopPkgPath, s) for s in os.listdir(lTopPkgPath) if isdir(join(lTopPkgPath, s))]:
+            echo ( ' - ' + d)
+
+        raiseError("Top-level component {}:{} not found".format(lTopPackage, lTopComponent))
+
 
     lTopDepPath = lPathmaker.getPath( lTopPackage, lTopComponent, 'include', topdep )
     if not exists(lTopDepPath):

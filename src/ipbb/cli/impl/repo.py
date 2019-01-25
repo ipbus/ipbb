@@ -11,8 +11,8 @@ import sys
 from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
-from . import kSourceDir, kProjDir, kWorkAreaFile
-from .utils import DirSentry, findFileInParents
+from .. import kSourceDir, kProjDir, kWorkAreaFile
+from ..utils import DirSentry, findFileInParents
 from urlparse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable

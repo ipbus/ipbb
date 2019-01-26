@@ -29,7 +29,7 @@ def sim(ctx, proj):
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
 def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
-    from impl.setupsimlib import setupsimlib
+    from impl.sim import setupsimlib
     setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce)
 
 
@@ -44,7 +44,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     Generate the vivado libraries and cores required to simulate the current design.
 
     '''
-    from impl.ipcores import ipcores
+    from impl.sim import ipcores
     ipcores(env, aXilSimLibsPath, aToScript, aToStdout)
 
 
@@ -57,7 +57,7 @@ def fli(env, dev, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
-    from impl.fli import fli
+    from impl.sim import fli
     fli(env, dev, ipbuspkg)
 
 
@@ -83,7 +83,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     - 'ipbus.fli.ip_address': mapped to IP_ADDR top-level generic
 
     """
-    from impl.makeproject import makeprojectw
+    from impl.sim import makeproject
     makeproject(env, aReverse, aOptimise, aToScript, aToStdout)
 
 
@@ -111,7 +111,7 @@ sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 def virtualtap(env, dev, ip):
     """VirtualTap
     """
-    from impl.virtualtap import virtualtap
+    from impl.sim import virtualtap
     virtualtap(env, dev, ip)
 
 
@@ -121,5 +121,5 @@ def virtualtap(env, dev, ip):
 def mifs(env):
     """Import MIF files from project
     """
-    from impl.mifs import mifs
+    from impl.sim import mifs
     mifs(env)

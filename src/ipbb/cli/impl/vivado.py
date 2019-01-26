@@ -551,7 +551,7 @@ def package(ctx, aTag):
 
     # -------------------------------------------------------------------------
 
-    lHash = ctx.invoke(hash, output=join(lSrcPath, 'hashes.txt'), verbose=True)
+    lHash = hash(env, output=join(lSrcPath, 'hashes.txt'), verbose=True)
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------

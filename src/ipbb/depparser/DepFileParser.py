@@ -17,11 +17,12 @@ class Command(object):
         Lib       (str): library the file will be added to
         Include   (bool): src-only flag, used to include/exclude target from projects
         TopLevel  (bool): addrtab-only flag, identifies address table as top-level
-        Vhdl2008  (bool): src-only flags, toggles the vhdl 2008 syntax for .vhd files
+        Vhdl2008  (bool): src-only flag, toggles the vhdl 2008 syntax for .vhd files
+        Finalise  (bool): setup-only flag, identifies setup scripts to be executed at the end
 
     """
     # --------------------------------------------------------------
-    def __init__(self, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008):
+    def __init__(self, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008, aFinalise):
         self.FilePath = aFilePath
         self.Package = aPackage
         self.Component = aComponent
@@ -29,16 +30,19 @@ class Command(object):
         self.Include = aInclude
         self.TopLevel = aTopLevel
         self.Vhdl2008 = aVhdl2008
+        self.Finalise = aFinalise
 
     def __str__(self):
 
-        lFlags = []
-        if not self.Include:
-            lFlags.append('noinclude')
-        if self.TopLevel:
-            lFlags.append('top')
-        if self.Vhdl2008:
-            lFlags.append('vhdl2008')
+        lFlags = self.flags()
+        # if not self.Include:
+        #     lFlags.append('noinclude')
+        # if self.TopLevel:
+        #     lFlags.append('top')
+        # if self.Vhdl2008:
+        #     lFlags.append('vhdl2008')
+        # if self.Finalise:
+        #     lFlags.append('finalise')
         return '{ \'%s\', flags: %s, component: \'%s:%s\' }' % (
             self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
         )
@@ -51,6 +55,8 @@ class Command(object):
             lFlags.append('top')
         if self.Vhdl2008:
             lFlags.append('vhdl2008')
+        if self.Finalise:
+            lFlags.append('finalise')
         return lFlags
 
     __repr__ = __str__
@@ -144,7 +150,7 @@ class DepFileParser(object):
         self.pathMaker = aPathmaker
 
         self.vars = {}
-        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': [], 'finalise': []}
+        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': []}  # , 'finalise': []}
         self.libs = list()
         self.components = OrderedDict()
 
@@ -178,49 +184,50 @@ class DepFileParser(object):
         # --------------------------------------------------------------
         # Set up the parser
         parser = DepLineParser(usage=argparse.SUPPRESS)
-        parser_add = parser.add_subparsers(dest="cmd")
+        parser_add = parser.add_subparsers(dest='cmd')
 
         # Include sub-parser
-        subp = parser_add.add_parser("include")
-        subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("--cd")
-        subp.add_argument("file", nargs="*")
+        subp = parser_add.add_parser('include')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('--cd')
+        subp.add_argument('file', nargs='*')
 
         # Setup sub-parser
-        subp = parser_add.add_parser("setup")
-        subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("--cd")
-        subp.add_argument("file", nargs="*")
+        subp = parser_add.add_parser('setup')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('--cd')
+        subp.add_argument('file', nargs='*')
+        subp.add_argument('-f', '--finalise', action='store_true')
 
         # Finalise sub-parser
-        subp = parser_add.add_parser("finalise")
-        subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("--cd")
-        subp.add_argument("file", nargs="*")
+        # subp = parser_add.add_parser('finalise')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('--cd')
+        # subp.add_argument('file', nargs='*')
 
         # Source sub-parser
-        subp = parser_add.add_parser("src")
-        subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("-l", "--lib")
-        # subp.add_argument("-g", "--generated" , action = "store_true") #
+        subp = parser_add.add_parser('src')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('-l', '--lib')
+        # subp.add_argument('-g', '--generated' , action = 'store_true') #
         # TODO: Check if still used in Vivado
-        subp.add_argument("-n", "--noinclude", action="store_true")
-        subp.add_argument("--cd")
-        subp.add_argument("file", nargs="+")
-        subp.add_argument("--vhdl2008", action="store_true")
+        subp.add_argument('-n', '--noinclude', action='store_true')
+        subp.add_argument('--cd')
+        subp.add_argument('file', nargs='+')
+        subp.add_argument('--vhdl2008', action='store_true')
 
         # Address table sub-parser
-        subp = parser_add.add_parser("addrtab")
-        subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("--cd")
-        subp.add_argument("-t", "--toplevel", action="store_true")
-        subp.add_argument("file", nargs="*")
+        subp = parser_add.add_parser('addrtab')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('--cd')
+        subp.add_argument('-t', '--toplevel', action='store_true')
+        subp.add_argument('file', nargs='*')
 
         # Ip repository sub-parser
-        subp = parser_add.add_parser("iprepo")
-        subp.add_argument("-c", "--component", **lCompArgOpts)
-        subp.add_argument("--cd")
-        subp.add_argument("file", nargs="*")
+        subp = parser_add.add_parser('iprepo')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('--cd')
+        subp.add_argument('file', nargs='*')
         # map parser method to self
         self.parseLine = parser.parse_args
         # --------------------------------------------------------------
@@ -383,7 +390,7 @@ class DepFileParser(object):
         if not exists(lDepFilePath):
             self.missing.append(
                 (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
-            raise OSError("File "+lDepFilePath+" does not exist")
+            raise OSError("File " + lDepFilePath + " does not exist")
 
         with open(lDepFilePath) as lDepFile:
             for lLineNum, lLine in enumerate(lDepFile):
@@ -450,7 +457,7 @@ class DepFileParser(object):
                 try:
                     lParsedLine = self.parseLine(lLine.split())
                 except DepLineParserError as e:
-                    lMsg = "Error caught while parsine line {0} in file {1}".format(lLineNum,lDepFilePath) + "\n"
+                    lMsg = "Error caught while parsine line {0} in file {1}".format(lLineNum, lDepFilePath) + "\n"
                     lMsg += "Details - " + e.message + ": '" + lLine + "'"
                     raise RuntimeError(lMsg)
 
@@ -528,8 +535,9 @@ class DepFileParser(object):
                     # else:
                     #     lTopLevel = False
 
-                    lInclude = ('noinclude' in lParsedLine and not lParsedLine.noinclude)
+                    lInclude = ('noinclude' not in lParsedLine) or (not lParsedLine.noinclude)
                     lTopLevel = ('toplevel' in lParsedLine and lParsedLine.toplevel)
+                    lFinalise = ('finalise' in lParsedLine and lParsedLine.finalise)
                     # --------------------------------------------------------------
 
                     # --------------------------------------------------------------
@@ -559,13 +567,18 @@ class DepFileParser(object):
                                       lParsedLine.cmd, lFile, lFilePath)
                             # --------------------------------------------------------------
 
-                            self.commands[lParsedLine.cmd].append(Command(
-                                lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008
-                            ))
+                            # self.commands[lParsedLine.cmd].append(Command(
+                            #     lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008
+                            # ))
 
-                            self._includes.commands.append(Command(
-                                lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008
-                            ))
+                            # self._includes.commands.append(Command(
+                            #     lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008
+                            # ))
+
+                            lCommand = Command(lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008, lFinalise)
+                            self.commands[lParsedLine.cmd].append(lCommand)
+
+                            self._includes.commands.append(lCommand)
 
                             self._revDepMap.setdefault(lFilePath, []).append(lDepFilePath)
                         # --------------------------------------------------------------

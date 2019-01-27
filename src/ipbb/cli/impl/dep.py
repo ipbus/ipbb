@@ -40,9 +40,9 @@ def dep(ctx, proj):
     lProj = proj if proj is not None else env.currentproj.name
     if lProj is not None:
         # Change directory before executing subcommand
-        from ..proj import cd
+        from .proj import cd
 
-        ctx.invoke(cd, projname=lProj)
+        cd(env, lProj, False)
         return
     else:
         if env.currentproj.name is None:

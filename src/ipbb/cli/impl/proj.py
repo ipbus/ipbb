@@ -134,7 +134,6 @@ def ls(env):
 
 
 # ------------------------------------------------------------------------------
-@click.pass_obj
 def cd(env, projname, aVerbose):
     '''Changes current working directory (command line only)
     '''

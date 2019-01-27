@@ -69,7 +69,7 @@ class VivadoProjectMaker(object):
         write('if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
         write('if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
 
-        for setup in aCommandList['setup']:
+        for setup in (c for c in aCommandList['setup'] if not c.Finalise):
             write('source {0}'.format(setup.FilePath))
 
         lXciBasenames = []
@@ -137,8 +137,9 @@ class VivadoProjectMaker(object):
         for i in lXciTargetFiles:
             write('create_ip_run [get_files {0}]'.format(i))
 
-        for finalise in aCommandList['finalise']:
-            write('source {0}'.format(finalise.FilePath))
+        for setup in (c for c in aCommandList['setup'] if c.Finalise):
+            write('source {0}'.format(setup.FilePath))
+
 
         write('close_project')
     # --------------------------------------------------------------

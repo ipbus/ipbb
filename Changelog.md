@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.4.0] - 2018-02-28
 ### Changed
-- Modified reposit structure to better with unit tests in the future
+- Modified reposit structure to better with unit tests in the future.
+- Configuration files switched to `yaml`.
 
 ### Added
 - `-f/--final` flag to the `setup` dep file command. The corresponding script will be sourced at the _end_ of the project creation sequence.

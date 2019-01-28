@@ -118,14 +118,14 @@ class VivadoProjectMaker(object):
                     f = src.FilePath
                     lCommands += [(c, f)]
 
-            for c,f in lCommands:
+            for c, f in lCommands:
                 if self.turbo:
                     lSrcCommandGroups.setdefault(c, []).append(f)
                 else:
                     write(tmpl(c).substitute(files=f).encode('ascii'))
 
         if self.turbo:
-            for c,f in lSrcCommandGroups.iteritems():
+            for c, f in lSrcCommandGroups.iteritems():
                 write(tmpl(c).substitute(files=' '.join(f)).encode('ascii'))
 
         write('set_property top top [current_fileset]')

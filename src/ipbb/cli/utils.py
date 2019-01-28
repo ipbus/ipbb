@@ -8,6 +8,7 @@ import re
 
 from click import echo, secho, style, confirm, get_current_context, ClickException, BadParameter
 from texttable import Texttable
+from os.path import join, relpath, exists, split, realpath
 
 
 # ------------------------------------------------------------------------------
@@ -21,10 +22,10 @@ class DirSentry:
         self.dir = aDir
 
     def __enter__(self):
-        if not os.path.exists(self.dir):
+        if not exists(self.dir):
             raise RuntimeError('Directory ' + self.dir + ' does not exist')
 
-        self._lOldDir = os.path.realpath(os.getcwd())
+        self._lOldDir = realpath(os.getcwd())
         os.chdir(self.dir)
         return self
 
@@ -54,10 +55,10 @@ def findFileDirInParents(aFileName, aDirPath):
     """
     lDirPath = aDirPath
     while lDirPath is not '/':
-        lBuildFile = os.path.join(lDirPath, aFileName)
-        if os.path.exists(lBuildFile):
+        lBuildFile = join(lDirPath, aFileName)
+        if exists(lBuildFile):
             return lDirPath
-        lDirPath, _ = os.path.split(lDirPath)
+        lDirPath, _ = split(lDirPath)
 
     return None
 # ------------------------------------------------------------------------------

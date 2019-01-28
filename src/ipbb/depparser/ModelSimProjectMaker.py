@@ -32,7 +32,7 @@ class ModelSimProjectMaker(object):
         write()
         write('onerror { quit -code 255 }')
 
-        for setup in aCommandList['setup']:
+        for setup in (c for c in aCommandList['setup'] if not c.Finalise):
             write('source {0}'.format(setup.FilePath))
 
         write('vlib work')
@@ -120,6 +120,10 @@ class ModelSimProjectMaker(object):
             # for cmd, files in lSrcCommandGroups.iteritems():
             for item in lSrcCommandGroups:
                 write('{0} {1}'.format(item['cmd'], ' '.join(item['files'])))
+
+        for setup in (c for c in aCommandList['setup'] if c.Finalise):
+            write('source {0}'.format(setup.FilePath))
+
 # --------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

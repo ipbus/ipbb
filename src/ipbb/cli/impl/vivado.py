@@ -258,7 +258,7 @@ def impl(env, jobs):
     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException(
-            "Vivado project %s does not exist" % lVivProjPath, fg='red'
+            "Vivado project %s does not exist" % lVivProjPath
         )
 
     ensureVivado(env)
@@ -304,7 +304,7 @@ def orderconstr(env, order):
     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
     if not exists(lVivProjPath):
         raise click.ClickException(
-            "Vivado project %s does not exist" % lVivProjPath, fg='red'
+            "Vivado project %s does not exist" % lVivProjPath
         )
 
     ensureVivado(env)

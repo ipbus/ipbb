@@ -55,7 +55,7 @@ def vivado(ctx, proj, quiet):
         # Change directory before executing subcommand
         from .proj import cd
 
-        ctx.invoke(cd, projname=proj)
+        cd(env, projname=proj)
         return
     else:
         if env.currentproj.name is None:
@@ -525,12 +525,12 @@ def package(ctx, aTag):
 
     if not exists(lTopProjPath):
         secho('Vivado project does not exist. Creating the project...', fg='yellow')
-        ctx.invoke(makeproject)
+        makeproject(env, True, True, None, False)
 
     lBitPath = join(lTopProjPath, 'top.runs', 'impl_1', 'top.bit')
     if not exists(lBitPath):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
-        ctx.invoke(bitfile)
+        bitfile(env)
 
     lPkgPath = 'package'
     lSrcPath = join(lPkgPath, 'src')

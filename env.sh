@@ -6,16 +6,22 @@ COL_YELLOW="\e[33m"
 COL_BLUE="\e[34m"
 COL_NULL="\e[0m"
 
-
 #------------------------------------------------------------------------------
 function pathadd() {
   # Assert that we got enough arguments
   if [[ $# -ne 2 ]]; then
-    echo "drop_from_path: needs 2 arguments"
+    echo "path add: needs 2 arguments"
     return 1
   fi
   PATH_NAME=$1
-  PATH_VAL=${!1}
+  if [[ "$IAM" == "bash" ]]; then
+    PATH_VAL=${!1}
+  elif [[ "$IAM" == "zsh" ]]; then
+    PATH_VAL=${(P)1}
+  else
+    echo -e "${COL_RED}ERROR: Failed to add ${PATH_ADD} to ${PATH_NAME}${COL_NULL}"
+    return
+  fi
   PATH_ADD=$2
 
   # Add the new path only if it is not already there
@@ -62,11 +68,13 @@ fi
 # SH_SOURCE=${BASH_SOURCE}
 
 if [ -n "$ZSH_VERSION" ]; then
-   # assume Zsh
-   SH_SOURCE=${(%):-%x}
+    # assume Zsh
+    SH_SOURCE=${(%):-%x}
+    IAM="zsh"
 elif [ -n "$BASH_VERSION" ]; then
-   # assume Bash
-   SH_SOURCE=${BASH_SOURCE}
+    # assume Bash
+    SH_SOURCE=${BASH_SOURCE}
+    IAM="bash"
 else
    # asume something else
    echo "Error: only bash and zsh supported"

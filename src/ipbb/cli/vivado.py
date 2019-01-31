@@ -49,7 +49,7 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
 @click.option('-r/-n', '--reverse/--natural', 'aReverse', default=True)
-@click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle sim script optimisation.")
+@click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle project script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj

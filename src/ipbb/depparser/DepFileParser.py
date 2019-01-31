@@ -35,14 +35,6 @@ class Command(object):
     def __str__(self):
 
         lFlags = self.flags()
-        # if not self.Include:
-        #     lFlags.append('noinclude')
-        # if self.TopLevel:
-        #     lFlags.append('top')
-        # if self.Vhdl2008:
-        #     lFlags.append('vhdl2008')
-        # if self.Finalise:
-        #     lFlags.append('finalise')
         return '{ \'%s\', flags: %s, component: \'%s:%s\' }' % (
             self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
         )

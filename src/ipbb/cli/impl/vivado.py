@@ -155,6 +155,12 @@ def getSynthRunProps(aConsole):
     '''Retrieve the status of synthesis runs
     
     Helper function
+    
+    Args:
+        aConsole (obj:`VivadoConsole`): Vivado Wrapper
+    
+    Returns:
+        TYPE: Description
     '''
 
     with VivadoSnoozer(aConsole):
@@ -175,6 +181,19 @@ def getSynthRunProps(aConsole):
 
 
 # -------------------------------------
+def formatRunProps(aProps):
+    lProps = aProps.itervalues().next().keys()
+
+    lSummary = Texttable(max_width=0)
+    lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+    lSummary.add_row(['Run'] + lProps)
+    for lRun in sorted(aProps):
+        lInfo = aProps[lRun]
+        lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
+
+    return lSummary.draw()
+
+# -------------------------------------
 def synth(env, jobs):
     '''Run synthesis'''
 
@@ -192,9 +211,6 @@ def synth(env, jobs):
     if jobs is not None:
         args += ['-jobs {}'.format(jobs)]
 
-    # if email is not None:
-    # args +=  ['-email_to {} -email_all'.format(email)]
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
@@ -202,6 +218,8 @@ def synth(env, jobs):
             lConsole('open_project {}'.format(lVivProjPath))
 
             lRunProps = getSynthRunProps(lConsole)
+
+            # Reset all OOC synthesis which might are stuck in a running state
             lIPRunsToReset = [
                 k
                 for k, v in lRunProps.iteritems()
@@ -220,15 +238,12 @@ def synth(env, jobs):
             while True:
 
                 lRunProps = getSynthRunProps(lConsole)
-                lProps = lRunProps.itervalues().next().keys()
 
-                lSummary = Texttable(max_width=0)
-                lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-                lSummary.add_row(['Run'] + lProps)
-                for lRun in sorted(lRunProps):
-                    lInfo = lRunProps[lRun]
-                    lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
-                secho('\n' + lSummary.draw(), fg='cyan')
+                secho('\n' + formatRunProps(lRunProps), fg='cyan')
+
+                lRunsInError = [ k for k, v in lRunProps.iteritems() if v['STATUS'] == 'synth_design ERROR']
+                if lRunsInError:
+                    raise VivadoConsoleError("Detected runs in ERROR {}. Exiting".format(' '.join(lRunsInError)))
 
                 if lRunProps['synth_1']['PROGRESS'] == '100%':
                     break

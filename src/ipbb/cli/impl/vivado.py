@@ -55,7 +55,7 @@ def vivado(ctx, proj, quiet):
         # Change directory before executing subcommand
         from .proj import cd
 
-        cd(env, projname=proj)
+        cd(env, projname=proj, aVerbose=False)
         return
     else:
         if env.currentproj.name is None:

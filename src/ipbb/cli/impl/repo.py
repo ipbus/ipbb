@@ -320,7 +320,7 @@ def status(env):
     lSrcTable = Texttable(max_width=0)
     lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSrcTable.set_chars(['-', '|', '+', '-'])
-    lSrcTable.header(['name', 'kind', 'version'])
+    lSrcTable.header(['name', 'kind', 'version', 'hash'])
     for lSrc in lSrcs:
         lSrcDir = join(env.srcdir, lSrc)
 
@@ -352,12 +352,14 @@ def status(env):
                     except sh.ErrorReturnCode_128:
                         lTag = None
 
+                    lHash = sh.git('rev-parse', '--short=8', 'HEAD').strip() + '...'
+
                     if lTag is not None:
                         lHEADId = lTag
                     elif lBranch is not None:
                         lHEADId = lBranch
                     else:
-                        lHEADId = sh.git('rev-parse', '--short', 'HEAD').strip() + '...'
+                        lHEADId = lHash
 
                     try:
                         sh.git('diff', '--no-ext-diff', '--quiet').strip()
@@ -389,7 +391,9 @@ def status(env):
                 if len(lSVNStatus):
                     lHEADId += '*'
 
-        lSrcTable.add_row([lSrc, lKind, lHEADId])
+                lHash = lSVNInfo['Revision']
+
+        lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
     echo(lSrcTable.draw())
 
 

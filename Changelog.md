@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 ### Added
 - Protection against synthesis OOC runs in error sending `ipbb` in an infinite loop.
+- `zsh` autocompletion support.
+- Hash/version added to the source repository status reported by `srcs status`.
 
 ## [0.4.1] - 2018-02-05
 ### Fixes

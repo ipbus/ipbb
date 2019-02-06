@@ -133,9 +133,15 @@ pathadd PATH ${IPBB_ROOT}/tools/bin
 # Temporary
 pathadd PYTHONPATH "${IPBB_ROOT}/src"
 
+
 # Obscure click vodoo to enable bash autocompletion
-eval "$(_IPBB_COMPLETE=source ipbb)"
-eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"
+if [[ "$IAM" == "bash" ]]; then
+  eval "$(_IPBB_COMPLETE=source ipbb)"
+  eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"  
+elif [[ "$IAM" == "zsh" ]]; then
+  eval "$(_IPBB_COMPLETE=source_zsh ipbb)"
+  eval "$(_IPB_PROG_COMPLETE=source_zsh ipb-prog)"  
+fi
 
 echo -e "${COL_GREEN}ipbb environment successfully loaded${COL_NULL}"
 

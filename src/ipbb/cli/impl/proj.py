@@ -54,24 +54,32 @@ def create(env, kind, projname, component, topdep):
         raiseError("Top-level package {} not found".format(lTopPackage))
         # raise click.ClickException('Top-level package %s not found' % lTopPackage)
 
-    if not exists(lPathmaker.getPath(lTopPackage, lTopComponent)):
-        lTopPkgPath = lPathmaker.getPath(lTopPackage)
+    lTopComponentPath = lPathmaker.getPath(lTopPackage, lTopComponent)
+    if not exists(lTopComponentPath):
         secho(
-            'Top-level component {}:{} not found'.format(lTopPackage, lTopComponent),
+            "Top-level component '{}:{}'' not found".format(lTopPackage, lTopComponent),
             fg='red',
         )
-        echo('Available components')
+
+        # Search for the first existing parent  folder in path
+        p = lTopComponent
+        while True:
+            if not p or exists(lPathmaker.getPath(lTopPackage, p)):
+                break
+            p, _ = os.path.split(p)
+
+        lParent = lPathmaker.getPath(lTopPackage, p)
+        secho('\nSuggestions (based on the first existing parent path)', fg='cyan')
         # When in Py3 https://docs.python.org/3/library/os.html#os.scandir
         for d in [
-            join(lTopPkgPath, s)
-            for s in os.listdir(lTopPkgPath)
-            if isdir(join(lTopPkgPath, s))
+            join(lParent, s)
+            for s in os.listdir(lParent)
+            if isdir(join(lParent, s))
         ]:
             echo(' - ' + d)
+        echo()
 
-        raiseError(
-            "Top-level component {}:{} not found".format(lTopPackage, lTopComponent)
-        )
+        raise click.Abort()
 
     lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
     if not exists(lTopDepPath):

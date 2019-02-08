@@ -243,7 +243,7 @@ def synth(env, jobs):
 
                 lRunsInError = [ k for k, v in lRunProps.iteritems() if v['STATUS'] == 'synth_design ERROR']
                 if lRunsInError:
-                    raise VivadoConsoleError("Detected runs in ERROR {}. Exiting".format(' '.join(lRunsInError)))
+                    raise RuntimeError("Detected runs in ERROR {}. Exiting".format(', '.join(lRunsInError)))
 
                 if lRunProps['synth_1']['PROGRESS'] == '100%':
                     break
@@ -252,6 +252,12 @@ def synth(env, jobs):
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho(
+            "ERROR: \n" + "\n".join(lExc),
+            fg='red',
+        )
         raise click.Abort()
 
     secho(
@@ -373,10 +379,6 @@ def orderconstr(env, order):
 def resourceusage(env):
 
     lSessionId = 'usage'
-
-    # if env.currentproj.name is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
 
     # Check
     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')

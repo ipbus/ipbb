@@ -12,6 +12,7 @@ import time
 import types
 import socket
 import yaml
+import re
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
@@ -453,45 +454,66 @@ def status(env):
     lProps = [
         'STATUS',
         'PROGRESS',
-        'IS_IMPLEMENTATION',
-        'IS_SYNTHESIS',
+        # 'IS_IMPLEMENTATION',
+        # 'IS_SYNTHESIS',
         'STATS.ELAPSED',
     ]
+
+    lOOCRegex = re.compile(r'.*_synth_\d+')
+    lRunRegex = re.compile(r'(synth|impl)_\d+')
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
             echo('Opening project')
-            lConsole(lOpenCmds)
 
-            lIPs = lConsole('get_ips')[0].split()
+            with VivadoSnoozer(lConsole):
+                lConsole(lOpenCmds)
 
-            echo('Retrieving run information')
-            # Gather data about existing runs
-            lRuns = lConsole('get_runs')[0].split()
-            for lRun in sorted(lRuns):
-                secho(lRun, fg='blue')
+                # lIPs = lConsole('get_ips')[0].split()
 
-                lCmds = [
-                    'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-                    for lProp in lProps
-                ]
-                lValues = lConsole(lCmds)
-                lInfos[lRun] = dict(zip(lProps, lValues))
+                echo('Retrieving run information')
+                # Gather data about existing runs
+                lRuns = lConsole('get_runs')[0].split()
+
+                # lOOCRuns = [ r for r in lRuns if r.startswith('synth') or r.startswith('impl') ]
+                # lOOCRuns = [ r for r in lRuns if lOOCRegex.match(r) ]
+                for lRun in sorted(lRuns):
+                    secho(' - ' + lRun, fg='cyan')
+
+                    lCmds = [
+                        'get_property {0} [get_runs {1}]'.format(lProp, lRun)
+                        for lProp in lProps
+                    ]
+                    lValues = lConsole(lCmds)
+                    lInfos[lRun] = dict(zip(lProps, lValues))
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
 
+    def makeRunsTable(lInfos):
+        lSummary = Texttable(max_width=0)
+        lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lSummary.header(['Run'] + lProps)
+        for lRun in sorted(lInfos):
+            lInfo = lInfos[lRun]
+            lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
+
+        return lSummary
+
     echo()
-    lSummary = Texttable(max_width=0)
-    lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lSummary.header(['Run'] + lProps)
-    for lRun in sorted(lInfos):
-        lInfo = lInfos[lRun]
-        lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
-    echo(lSummary.draw())
-
-
+    # lSummary = Texttable(max_width=0)
+    # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+    # lSummary.header(['Run'] + lProps)
+    # for lRun in sorted(lInfos):
+    #     lInfo = lInfos[lRun]
+    #     lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
+    # echo(lSummary.draw())
+    #
+    aaa = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lOOCRegex.match(k)})
+    echo(aaa.draw())
+    aaa = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lRunRegex.match(k)})
+    echo(aaa.draw())
 # ------------------------------------------------------------------------------
 
 

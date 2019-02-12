@@ -95,6 +95,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
                 else None
             )
         ) as lConsole:
+
             lVivadoMaker.write(
                 lConsole,
                 lDepFileParser.vars,
@@ -102,6 +103,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -136,7 +138,7 @@ def checksyntax(env):
 
             # Change message severity to ERROR for the isses we're interested in
             # lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
-            lConsole.console.changeMsgSeverity(lStopOn, 'ERROR')
+            lConsole.changeMsgSeverity(lStopOn, 'ERROR')
 
             # Execute the syntax check
             lConsole('check_syntax')
@@ -162,6 +164,11 @@ def getSynthRunProps(aConsole):
     
     Returns:
         TYPE: Description
+    '''
+
+    '''
+    To find OOC runs
+     "BlockSrcs" == [get_property FILESET_TYPE [get_property SRCSET [get_runs <run_name>]]]
     '''
 
     with VivadoSnoozer(aConsole):
@@ -291,11 +298,12 @@ def impl(env, jobs):
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
-            # Change message severity to ERROR for the isses we're interested in
-            lConsole.console.changeMsgSeverity(lStopOn, "ERROR")
-
             # Open the project
             lConsole('open_project {}'.format(lVivProjPath))
+
+            # Change message severity to ERROR for the isses we're interested in
+            lConsole.changeMsgSeverity(lStopOn, "ERROR")
+
             lConsole(
                 [
                     'reset_run impl_1',
@@ -318,85 +326,85 @@ def impl(env, jobs):
 
 
 # ------------------------------------------------------------------------------
-def orderconstr(env, order):
-    '''Reorder constraint set'''
+# def orderconstr(env, order):
+#     '''Reorder constraint set'''
 
-    lSessionId = 'order-constr'
-    # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
-    if not exists(lVivProjPath):
-        raise click.ClickException(
-            "Vivado project %s does not exist" % lVivProjPath
-        )
+#     lSessionId = 'order-constr'
+#     # Check
+#     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+#     if not exists(lVivProjPath):
+#         raise click.ClickException(
+#             "Vivado project %s does not exist" % lVivProjPath
+#         )
 
-    ensureVivado(env)
+#     ensureVivado(env)
 
-    lDepFileParser = env.depParser
-    lConstrSrc = [
-        src.FilePath
-        for src in lDepFileParser.commands['src']
-        if splitext(src.FilePath)[1] in ['.tcl', '.xdc']
-    ]
-    lCmdTemplate = (
-        'reorder_files -fileset constrs_1 -after [get_files {0}] [get_files {1}]'
-    )
+#     lDepFileParser = env.depParser
+#     lConstrSrc = [
+#         src.FilePath
+#         for src in lDepFileParser.commands['src']
+#         if splitext(src.FilePath)[1] in ['.tcl', '.xdc']
+#     ]
+#     lCmdTemplate = (
+#         'reorder_files -fileset constrs_1 -after [get_files {0}] [get_files {1}]'
+#     )
 
-    lConstrOrder = lConstrSrc if order else [f for f in reversed(lConstrSrc)]
-    # echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstrOrder ))
+#     lConstrOrder = lConstrSrc if order else [f for f in reversed(lConstrSrc)]
+#     # echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstrOrder ))
 
-    try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            # Open vivado project
-            lConsole('open_project {}'.format(lVivProjPath))
-            # lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
-            # print()
-            # print('\n'.join( ' * {}'.format(c) for c in lConstraints ))
+#     try:
+#         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
+#             # Open vivado project
+#             lConsole('open_project {}'.format(lVivProjPath))
+#             # lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
+#             # print()
+#             # print('\n'.join( ' * {}'.format(c) for c in lConstraints ))
 
-            lCmds = [
-                lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i + 1])
-                for i in xrange(len(lConstrOrder) - 1)
-            ]
-            lConsole(lCmds)
+#             lCmds = [
+#                 lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i + 1])
+#                 for i in xrange(len(lConstrOrder) - 1)
+#             ]
+#             lConsole(lCmds)
 
-            lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[
-                0
-            ].split()
+#             lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[
+#                 0
+#             ].split()
 
-        echo('\nNew constraint order:')
-        echo('\n'.join(' * {}'.format(style(c, fg='blue')) for c in lConstraints))
+#         echo('\nNew constraint order:')
+#         echo('\n'.join(' * {}'.format(style(c, fg='blue')) for c in lConstraints))
 
-    # 'reorder_files -fileset constrs_1 -before [get_files {0}] [get_files {1}]'.format(,to)
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
+#     # 'reorder_files -fileset constrs_1 -before [get_files {0}] [get_files {1}]'.format(,to)
+#     except VivadoConsoleError as lExc:
+#         echoVivadoConsoleError(lExc)
+#         raise click.Abort()
 
-    secho("\n{}: Constraint order set to.\n".format(env.currentproj.name), fg='green')
-
-
-# ------------------------------------------------------------------------------
+#     secho("\n{}: Constraint order set to.\n".format(env.currentproj.name), fg='green')
 
 
 # ------------------------------------------------------------------------------
-def resourceusage(env):
 
-    lSessionId = 'usage'
 
-    # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
-    if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+# ------------------------------------------------------------------------------
+# def resourceusage(env):
 
-    ensureVivado(env)
+#     lSessionId = 'usage'
 
-    lOpenCmds = ['open_project %s' % lVivProjPath, 'open_run impl_1']
+#     # Check
+#     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+#     if not exists(lVivProjPath):
+#         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
-    try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            # lConsole(lImplCmds)
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
+#     ensureVivado(env)
+
+#     lOpenCmds = ['open_project %s' % lVivProjPath, 'open_run impl_1']
+
+#     try:
+#         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
+#             lConsole(lOpenCmds)
+#             # lConsole(lImplCmds)
+#     except VivadoConsoleError as lExc:
+#         echoVivadoConsoleError(lExc)
+#         raise click.Abort()
 
 
 # ------------------------------------------------------------------------------
@@ -453,9 +461,11 @@ def status(env):
     lInfos = {}
     lProps = [
         'STATUS',
+        'NEEDS_REFRESH',
         'PROGRESS',
         # 'IS_IMPLEMENTATION',
         # 'IS_SYNTHESIS',
+        'STATS.ELAPSED',
         'STATS.ELAPSED',
     ]
 
@@ -493,7 +503,9 @@ def status(env):
 
     def makeRunsTable(lInfos):
         lSummary = Texttable(max_width=0)
+        # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
         lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lSummary.set_chars( ['-', '|', '+', '-'] )
         lSummary.header(['Run'] + lProps)
         for lRun in sorted(lInfos):
             lInfo = lInfos[lRun]
@@ -502,16 +514,12 @@ def status(env):
         return lSummary
 
     echo()
-    # lSummary = Texttable(max_width=0)
-    # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-    # lSummary.header(['Run'] + lProps)
-    # for lRun in sorted(lInfos):
-    #     lInfo = lInfos[lRun]
-    #     lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
-    # echo(lSummary.draw())
-    #
-    aaa = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lOOCRegex.match(k)})
-    echo(aaa.draw())
+
+    lOocTable = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lOOCRegex.match(k)})
+    secho("Out of context runs", fg='blue')
+    echo(lOocTable.draw())
+    echo()
+    secho("Design runs", fg='blue')
     aaa = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lRunRegex.match(k)})
     echo(aaa.draw())
 # ------------------------------------------------------------------------------

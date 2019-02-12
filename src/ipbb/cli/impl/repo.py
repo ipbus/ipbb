@@ -312,6 +312,7 @@ def status(env):
         secho('ERROR: No ipbb work area detected', fg='red')
         return
 
+    echo()
     secho("Packages", fg='blue')
     lSrcs = env.sources
     if not lSrcs:

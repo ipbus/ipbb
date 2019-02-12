@@ -74,7 +74,7 @@ def vivado(obj, aHwServerURI):
 # ------------------------------------------------------------------------------
 @vivado.command('list', short_help="Vivado programmer interface.")
 @click.pass_obj
-@click.option('-v/-q', 'aVerbosity', default=False)
+@click.option('-v/-q', 'aVerbosity', default=False, help="Verbose output.")
 def list(obj, aVerbosity):
 
     lHwServerURI = obj.options['vivado.hw_server']
@@ -140,9 +140,10 @@ def _validateDevice(ctx, param, value):
 @vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
-@click.option('-v/-q', 'aVerbosity', default=False)
+@click.option('-y', 'yes', is_flag=True, default=False, help="Proceed with asking for confirmation.")
+@click.option('-v/-q', 'aVerbosity', default=False, help="Verbose output.")
 @click.pass_obj
-def program(obj, deviceid, bitfile, aVerbosity):
+def program(obj, deviceid, bitfile, yes, aVerbosity):
 
     target, device = deviceid
 
@@ -218,7 +219,7 @@ def program(obj, deviceid, bitfile, aVerbosity):
                 % (device, ', '.join(lHWDevices))
             )
 
-        if click.confirm(
+        if yes or click.confirm(
             style(
                 "Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format(
                     bitfile, lTarget

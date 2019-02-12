@@ -17,10 +17,9 @@ import psutil
 
 # Elements
 from os.path import join, split, exists, splitext, basename
-from .common import which, OutputFormatter
 from click import style
+from .common import which, OutputFormatter
 from .termui import *
-from collections import Iterable
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -402,7 +401,7 @@ class VivadoConsole(object):
                 break
             elif lIndex == 2:
                 lTimeoutCounts += 1
-                print ("<Time elapsed since last command: {0}s>".format(
+                print ("VivadoConsole >> Time since last command: {0}s".format(
                     lTimeoutCounts * self._process.timeout))
             # ----------------------------------------------------------
 
@@ -490,8 +489,8 @@ class VivadoConsole(object):
             aIds (str or list): List of message ids to update
             aSeverity (str): Target severity
         """
-        lIds = aIds if isinstance(aIds, Iterable) else [aIds]
-        self.executeMany(['set_msg_config -id "{}" -new_severity "{}"'.format(i, aSeverity) for i in lIds])
+        lIds = aIds if isinstance(aIds, list) else [aIds]
+        self.executeMany(['set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds])
 
 
 # -------------------------------------------------------------------------
@@ -555,22 +554,23 @@ class VivadoHWServer(VivadoConsole):
 
 # -------------------------------------------------------------------------
 class VivadoOpen(object):
-    """VivadoConsole wrapper for with statements"""
+    """VivadoConsole wrapper for with statements
+    """
 
     # --------------------------------------------------------------
-    @property
-    def quiet(self):
-        return self._console.quiet
+    def __getattr__(self, name):
+        if name.startswith('_'):
+            # bail out early
+            raise AttributeError(name)
+        return getattr(self._console, name)
 
     # --------------------------------------------------------------
-    @quiet.setter
-    def quiet(self, value):
-        self._console.quiet = value
-
-    # --------------------------------------------------------------
-    @property
-    def console(self):
-        return self._console
+    def __setattr__(self, name, value):
+        print (name, value)
+        if name.startswith('_'):
+            self.__dict__[name] = value
+            return
+        return setattr(self._console, name, value)
 
     # --------------------------------------------------------------
     def __init__(self, *args, **kwargs):

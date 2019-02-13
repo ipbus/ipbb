@@ -566,7 +566,6 @@ class VivadoOpen(object):
 
     # --------------------------------------------------------------
     def __setattr__(self, name, value):
-        print (name, value)
         if name.startswith('_'):
             self.__dict__[name] = value
             return

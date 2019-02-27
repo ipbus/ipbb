@@ -10,6 +10,7 @@ setup(
     url='https://github.com/ipbus/ipbb',
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    package_data={'': 'src/ipbb/data'},
     include_package_data=True,
     install_requires=[
         'Click',

@@ -10,8 +10,7 @@ from .utils import validateComponent
 @click.pass_obj
 def toolbox(env):
     '''Miscelaneous useful commands'''
-    # -------------------------------------------------------------------------
-    # Must be in a build area
+
     from impl.toolbox import toolbox
     toolbox(env)
 
@@ -27,3 +26,16 @@ def check_depfile(env, verbose, component, depfile, toolset):
     '''Perform basic checks on dependency files'''
     from impl.toolbox import check_depfile
     check_depfile(env, verbose, component, depfile, toolset)
+
+
+@toolbox.command('vhdl-beautify', short_help="Performs basic checks on dependency files")
+@click.pass_obj
+def vhdl_beautify(env):
+    '''Perform basic checks on dependency files
+    
+    Args:
+        env (TYPE): Description
+    '''
+    from impl.toolbox import vhdl_beautify
+    vhdl_beautify(env)
+

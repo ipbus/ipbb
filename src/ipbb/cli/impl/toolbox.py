@@ -1,10 +1,12 @@
+from __future__ import print_function
 import click
 
 import re
 import ipaddress
+import sh
 
 from click import echo, style, secho
-from os.path import basename, relpath, exists
+from os.path import basename, dirname, relpath, abspath, exists, splitext, join
 from texttable import Texttable
 
 from ...depparser.Pathmaker import Pathmaker
@@ -147,3 +149,29 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 lPathMaker.getPath(lPackage, lComponent, 'include', depfile)
             )
         )
+
+
+# ------------------------------------------------------------------------------
+def vhdl_beautify(env):
+    """
+    emacs --batch -q --e '(setq load-path (cons (expand-file-name "vhdl-mode-3.38.1") load-path))'  /home/ale/devel/emp-fwk/build_ku115/src/emp-fwk/components/payload/firmware/hdl/emp_payload.vhd -f 'vhdl-beautify-buffer'
+    """
+    if env.currentproj.name is None:
+        raise click.ClickException(
+            'Project area not defined. Move to a project area and try again'
+        )
+
+    import ipbb, sys
+
+    _ROOT = abspath(dirname(ipbb.__file__))
+
+    def get_data(path):
+        return join(_ROOT, 'data', path)
+
+    lDepFileParser = env.depParser
+
+    lVHDLFiles = [ src.FilePath for src in lDepFileParser.commands['src'] if splitext(src.FilePath)[1] in ['.vhd', '.vhdl']]
+
+    for f in lVHDLFiles:
+        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % get_data('vhdl-mode-3.38.1,'), f, '-f', 'vhdl-beautify-buffer', _out=sys.stdout, _err=sys.stdout)
+

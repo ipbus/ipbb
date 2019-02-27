@@ -6,7 +6,7 @@ import ipaddress
 import sh
 
 from click import echo, style, secho
-from os.path import basename, dirname, relpath, abspath, exists, splitext, join
+from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep
 from texttable import Texttable
 
 from ...depparser.Pathmaker import Pathmaker
@@ -161,17 +161,42 @@ def vhdl_beautify(env):
             'Project area not defined. Move to a project area and try again'
         )
 
-    import ipbb, sys
-
-    _ROOT = abspath(dirname(ipbb.__file__))
-
-    def get_data(path):
-        return join(_ROOT, 'data', path)
-
+    import ipbb
+    import sys
+    import tempfile
+    import shutil
+    import os
+    from ...tools.common import which
+    
     lDepFileParser = env.depParser
 
     lVHDLFiles = [ src.FilePath for src in lDepFileParser.commands['src'] if splitext(src.FilePath)[1] in ['.vhd', '.vhdl']]
+    lVHDLModePath = join(abspath(dirname(ipbb.__file__)), 'data', 'vhdl-mode-3.38.1')
+
+    lTmpDir = tempfile.mkdtemp()
+    print(lTmpDir)
+    lBeautifiedFiles = []
 
     for f in lVHDLFiles:
-        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % get_data('vhdl-mode-3.38.1,'), f, '-f', 'vhdl-beautify-buffer', _out=sys.stdout, _err=sys.stdout)
 
+        lTmpVHDLPath = join(lTmpDir, f.lstrip(sep))
+
+        if not exists(dirname(lTmpVHDLPath)):
+            os.makedirs(dirname(lTmpVHDLPath))
+
+        shutil.copy(f, dirname(lTmpVHDLPath))
+
+        print('Processing',f)
+        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '-f', 'vhdl-beautify-buffer')
+
+        diff = sh.colordiff if which('colordiff') else sh.diff
+        try:
+            diff('-u', f, lTmpVHDLPath)
+            print('No beautification needed!')
+        except sh.ErrorReturnCode as e:
+            print(e.stdout)
+            print('Beautified!')
+            lBeautifiedFiles.append((f, lTmpVHDLPath))
+    shutil.rmtree(lTmpDir)
+
+    print (lBeautifiedFiles)

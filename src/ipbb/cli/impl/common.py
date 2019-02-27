@@ -94,7 +94,7 @@ def gendecoders(ctx):
     # Extract context
     env = ctx.obj
 
-    with DirSentry(env.currentproj.path) as lProjDir:
+    with DirSentry(env.currentproj.path):
         sh.rm('-rf', lDecodersDir)
         # Gather address tables
         ctx.invoke(addrtab, aDest=lDecodersDir)

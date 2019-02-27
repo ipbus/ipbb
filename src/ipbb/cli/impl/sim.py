@@ -9,7 +9,6 @@ import subprocess
 import sys
 import sh
 import shutil
-import tempfile
 import getpass
 import collections
 

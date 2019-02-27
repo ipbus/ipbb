@@ -10,7 +10,6 @@ import sh
 import hashlib
 import collections
 import contextlib
-import tempfile
 import sys
 import re
 

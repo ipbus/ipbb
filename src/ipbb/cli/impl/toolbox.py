@@ -6,8 +6,8 @@ import ipaddress
 import sh
 import os
 
-from click import echo, style, secho
-from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep
+from click import echo, style, secho, confirm
+from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep, isdir, isfile
 from texttable import Texttable
 
 from ...depparser.Pathmaker import Pathmaker
@@ -168,30 +168,44 @@ def vhdl_beautify(env, component, path):
     import sys
     from ...tools.common import which
 
+    if not which('emacs'):
+        raise click.ClickException(
+            'Emacs not found. Please install emacs and try again.'
+        )
+        
+    # Put explicit file paths into a pot
     lAllPaths = [abspath(p) for p in path]
+
+    # Add references to working area paths
     if component:
         lPathmaker = Pathmaker(env.srcdir, 0)
 
         for c in component:
             lAllPaths.append(str(lPathmaker.getPath(*c)))
 
+    # Chech that they all exist
     lPathsNotFound = [ p for p in lAllPaths if not exists(p)]
 
+    # And complain about the ones that don't
     if lPathsNotFound:
         raise click.ClickException("Couldn't find the following paths: {}".format(', '.join(lPathsNotFound)))
 
+    # Find VHDL files
     lVHDLFiles = []
     for p in lAllPaths:
-        for root, dirs, files in os.walk(p):
-            for f in files:
-                if not splitext(f)[1] in ('.vhd', '.vhdl'):
-                    continue
-                lVHDLFiles.append(join(root, f))
+        if isfile(p) and splitext(p)[1] in ('.vhd', '.vhdl'):
+            lVHDLFiles.append(p)
+        elif isdir(p):
+            for root, dirs, files in os.walk(p):
+                for f in files:
+                    if not splitext(f)[1] in ('.vhd', '.vhdl'):
+                        continue
+                    lVHDLFiles.append(join(root, f))
 
     lVHDLModePath = join(abspath(dirname(ipbb.__file__)), 'data', 'vhdl-mode-3.38.1')
 
+    # Create a temporary folder
     lTmpDir = tempfile.mkdtemp()
-    print(lTmpDir)
     lBeautifiedFiles = []
 
     for f in lVHDLFiles:
@@ -203,7 +217,7 @@ def vhdl_beautify(env, component, path):
 
         shutil.copy(f, dirname(lTmpVHDLPath))
 
-        print('Processing',f)
+        echo('Processing vhdl file ' + style(f, fg="cyan"))
         sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
 
         diff = sh.colordiff if which('colordiff') else sh.diff
@@ -214,6 +228,15 @@ def vhdl_beautify(env, component, path):
             print(e.stdout)
             print('Beautified!')
             lBeautifiedFiles.append((f, lTmpVHDLPath))
+
+    echo(
+        'The following vhdl files are ready to be beautified:\n'
+        + '\n'.join(map(lambda s: '* ' + style(s[0], fg='blue'), lBeautifiedFiles))
+        + '\n'
+    )
+    confirm('Do you want to continue?', abort=True)
+    for lTarget, lBeautified in lBeautifiedFiles:
+        print(sh.cp('-av', lBeautified, lTarget))
+
     shutil.rmtree(lTmpDir)
 
-    print (lBeautifiedFiles)

@@ -325,7 +325,7 @@ def status(env):
     for lSrc in lSrcs:
         lSrcDir = join(env.srcdir, lSrc)
 
-        lKind, lHEADId = "unknown", None
+        lKind, lHEADId, lHash = "unknown", None, None
 
         # Check if a git repository
         if exists(join(lSrcDir, '.git')):

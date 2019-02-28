@@ -4,6 +4,7 @@ import click
 import re
 import ipaddress
 import sh
+import os
 
 from click import echo, style, secho
 from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep
@@ -152,25 +153,41 @@ def check_depfile(env, verbose, component, depfile, toolset):
 
 
 # ------------------------------------------------------------------------------
-def vhdl_beautify(env):
+def vhdl_beautify(env, component, path):
     """
-    emacs --batch -q --e '(setq load-path (cons (expand-file-name "vhdl-mode-3.38.1") load-path))'  /home/ale/devel/emp-fwk/build_ku115/src/emp-fwk/components/payload/firmware/hdl/emp_payload.vhd -f 'vhdl-beautify-buffer'
-    """
-    if env.currentproj.name is None:
-        raise click.ClickException(
-            'Project area not defined. Move to a project area and try again'
-        )
+    Helper command to beautify vhdl files.
 
+    Beautifies
+    - single files
+    - folders
+    - packages/components
+    """
     import ipbb
-    import sys
     import tempfile
     import shutil
-    import os
+    import sys
     from ...tools.common import which
-    
-    lDepFileParser = env.depParser
 
-    lVHDLFiles = [ src.FilePath for src in lDepFileParser.commands['src'] if splitext(src.FilePath)[1] in ['.vhd', '.vhdl']]
+    lAllPaths = [abspath(p) for p in path]
+    if component:
+        lPathmaker = Pathmaker(env.srcdir, 0)
+
+        for c in component:
+            lAllPaths.append(str(lPathmaker.getPath(*c)))
+
+    lPathsNotFound = [ p for p in lAllPaths if not exists(p)]
+
+    if lPathsNotFound:
+        raise click.ClickException("Couldn't find the following paths: {}".format(', '.join(lPathsNotFound)))
+
+    lVHDLFiles = []
+    for p in lAllPaths:
+        for root, dirs, files in os.walk(p):
+            for f in files:
+                if not splitext(f)[1] in ('.vhd', '.vhdl'):
+                    continue
+                lVHDLFiles.append(join(root, f))
+
     lVHDLModePath = join(abspath(dirname(ipbb.__file__)), 'data', 'vhdl-mode-3.38.1')
 
     lTmpDir = tempfile.mkdtemp()
@@ -187,7 +204,7 @@ def vhdl_beautify(env):
         shutil.copy(f, dirname(lTmpVHDLPath))
 
         print('Processing',f)
-        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '-f', 'vhdl-beautify-buffer')
+        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
 
         diff = sh.colordiff if which('colordiff') else sh.diff
         try:

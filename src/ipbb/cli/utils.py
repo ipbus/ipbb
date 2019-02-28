@@ -112,6 +112,21 @@ def validateComponent(ctx, param, value):
 
 
 # ------------------------------------------------------------------------------
+def validateMultiplePackageOrComponents(ctx, param, value):
+    pocs = []
+    for v in value:
+        lSeparators = v.count(':')
+        # Validate the format
+        if lSeparators > 1:
+            raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
+
+        pocs.append(tuple(v.split(':')))
+
+    return tuple(pocs)
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 def validateIpAddress(value):
     if value is None:
         return

@@ -9,8 +9,8 @@ setup(
     author_email='alessandro.thea@stfc.ac.uk',
     url='https://github.com/ipbus/ipbb',
     packages=find_packages('src'),
-    package_dir={'ipbb': 'src/ipbb'},
-    package_data={'ipbb': 'data'},
+    package_dir={'': 'src'},
+    package_data={'': 'data'},
     include_package_data=True,
     install_requires=[
         'Click',

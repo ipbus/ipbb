@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import click
 
-from .utils import validateComponent
+from .utils import validateComponent, validateMultiplePackageOrComponents
 
 
 # ------------------------------------------------------------------------------
@@ -10,7 +10,6 @@ from .utils import validateComponent
 @click.pass_obj
 def toolbox(env):
     '''Miscelaneous useful commands'''
-
     from impl.toolbox import toolbox
     toolbox(env)
 
@@ -28,14 +27,17 @@ def check_depfile(env, verbose, component, depfile, toolset):
     check_depfile(env, verbose, component, depfile, toolset)
 
 
-@toolbox.command('vhdl-beautify', short_help="Performs basic checks on dependency files")
+@toolbox.command('vhdl-beautify', short_help="Beautifies VHDL files in components within an ipbb work area or standalone files/directories")
+@click.option('-c', '--component', callback=validateMultiplePackageOrComponents, multiple=True)
+@click.option('-p', '--path', type=click.Path(), multiple=True)
 @click.pass_obj
-def vhdl_beautify(env):
+def vhdl_beautify(env, component, path):
     '''Perform basic checks on dependency files
     
     Args:
         env (TYPE): Description
     '''
     from impl.toolbox import vhdl_beautify
-    vhdl_beautify(env)
+    vhdl_beautify(env, component, path)
+
 

@@ -95,7 +95,7 @@ def sim(ctx, proj):
         # Change directory before executing subcommand
         from .proj import cd
 
-        ctx.invoke(cd, projname=proj, aVerbose=False)
+        cd(env, projname=proj, aVerbose=False)
     else:
         if env.currentproj.name is None:
             raise click.ClickException(

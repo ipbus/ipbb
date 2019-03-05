@@ -97,7 +97,7 @@ def gendecoders(ctx):
     with DirSentry(env.currentproj.path):
         sh.rm('-rf', lDecodersDir)
         # Gather address tables
-        ctx.invoke(addrtab, aDest=lDecodersDir)
+        addrtab(env, aDest=lDecodersDir)
 
     lGenScript = 'gen_ipbus_addr_decode'
     lGenToolPath = '/opt/cactus/bin/uhal/tools'

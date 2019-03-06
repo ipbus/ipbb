@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.4.3] - 2018-03-06
+### Fixes
+- Fixed bug in `vivado gendecoders` and `sim --cd` preventing the commands from running. 
+
 ### Changed
 - Installation and setup helper scripts re-organised. In development mode the virtualenv path renamed `venv` (was `externals`).
 
 ### Added
-- VHDL beautify command! `toolbox vhdl-beautify`.
+- VHDL beautify command! `toolbox vhdl-beautify` (required emacs).
+- First implementation of resource usage report from ipbb `vivado resources`.
 
 ## [0.4.2] - 2018-02-13
 ### Fixes

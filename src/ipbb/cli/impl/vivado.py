@@ -385,26 +385,29 @@ def impl(env, jobs):
 
 
 # ------------------------------------------------------------------------------
-# def resourceusage(env):
+def resource_usage(env):
 
-#     lSessionId = 'usage'
+    lSessionId = 'usage'
 
-#     # Check
-#     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
-#     if not exists(lVivProjPath):
-#         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+    # Check
+    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+    if not exists(lVivProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
-#     ensureVivado(env)
+    ensureVivado(env)
 
-#     lOpenCmds = ['open_project %s' % lVivProjPath, 'open_run impl_1']
+    lCmds = [
+        'open_project %s' % lVivProjPath, 'open_run impl_1',
+        'report_utilization -hierarchical -hierarchical_depth 1 -hierarchical_percentages'
+        ]
 
-#     try:
-#         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-#             lConsole(lOpenCmds)
-#             # lConsole(lImplCmds)
-#     except VivadoConsoleError as lExc:
-#         echoVivadoConsoleError(lExc)
-#         raise click.Abort()
+    try:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
+            lConsole(lCmds)
+            # lConsole(lImplCmds)
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
 
 
 # ------------------------------------------------------------------------------

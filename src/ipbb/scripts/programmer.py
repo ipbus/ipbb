@@ -105,7 +105,7 @@ def list(obj, aVerbosity):
         try:
             v.openHwTarget(target)
         except VivadoConsoleError as lExc:
-            echoVivadoConsoleError(lExc)
+            # echoVivadoConsoleError(lExc)
             # raise click.Abort()
             v.closeHwTarget(target)
             continue

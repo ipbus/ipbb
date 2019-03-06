@@ -89,18 +89,24 @@ def impl(env, jobs):
     impl(env, jobs)
 
 
-# ------------------------------------------------------------------------------
-@vivado.command('order-constr', short_help='Change the order with which constraints are processed')
-@click.option('-i/-r', '--initial/--reverse', 'order', default=True, help='Reset or invert the order of evaluation of constraint files.')
+# # ------------------------------------------------------------------------------
+# @vivado.command('order-constr', short_help='Change the order with which constraints are processed')
+# @click.option('-i/-r', '--initial/--reverse', 'order', default=True, help='Reset or invert the order of evaluation of constraint files.')
+# @click.pass_obj
+# def orderconstr(env, order):
+#     '''Reorder constraint set'''
+#     from impl.vivado import orderconstr
+#     orderconstr(env, order)
+
+@vivado.command('resource-usage', short_help="Resource usage")
 @click.pass_obj
-def orderconstr(env, order):
-    '''Reorder constraint set'''
-    from impl.vivado import orderconstr
-    orderconstr(env, order)
-
+def resource_usage(env):
+    '''Create a resource_usage'''
+    from impl.vivado import resource_usage
+    resource_usage(env)
 
 # ------------------------------------------------------------------------------
-@vivado.command('bitfile', short_help="Generate a bitfile.")
+@vivado.command('bitfile', short_help="Generate the bitfile.")
 @click.pass_obj
 def bitfile(env):
     '''Create a bitfile'''

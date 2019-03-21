@@ -18,6 +18,7 @@ import re
 from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 from texttable import Texttable
+from collections import OrderedDict
 
 from .dep import hash
 
@@ -154,52 +155,52 @@ def checksyntax(env):
 
 
 # -------------------------------------
-def getSynthRunProps(aConsole):
-    '''Retrieve the status of synthesis runs
+# def getSynthRunProps(aConsole):
+#     '''Retrieve the status of synthesis runs
     
-    Helper function
+#     Helper function
     
-    Args:
-        aConsole (obj:`VivadoConsole`): Vivado Wrapper
+#     Args:
+#         aConsole (obj:`VivadoConsole`): Vivado Wrapper
     
-    Returns:
-        TYPE: Description
-    '''
+#     Returns:
+#         TYPE: Description
+#     '''
 
-    '''
-    To find OOC runs
-     "BlockSrcs" == [get_property FILESET_TYPE [get_property SRCSET [get_runs <run_name>]]]
-    '''
+#     '''
+#     To find OOC runs
+#      "BlockSrcs" == [get_property FILESET_TYPE [get_property SRCSET [get_runs <run_name>]]]
+#     '''
 
-    with VivadoSnoozer(aConsole):
-        lSynthesisRuns = aConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
-        lRunProps = {}
+#     with VivadoSnoozer(aConsole):
+#         lSynthesisRuns = aConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
+#         lRunProps = {}
 
-        lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
+#         lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
 
-        for lRun in lSynthesisRuns:
-            lValues = aConsole(
-                [
-                    'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-                    for lProp in lProps
-                ]
-            )
-            lRunProps[lRun] = dict(zip(lProps, lValues))
-    return lRunProps
+#         for lRun in lSynthesisRuns:
+#             lValues = aConsole(
+#                 [
+#                     'get_property {0} [get_runs {1}]'.format(lProp, lRun)
+#                     for lProp in lProps
+#                 ]
+#             )
+#             lRunProps[lRun] = dict(zip(lProps, lValues))
+#     return lRunProps
 
 
-# -------------------------------------
-def formatRunProps(aProps):
-    lProps = aProps.itervalues().next().keys()
+# # -------------------------------------
+# def formatRunProps(aProps):
+#     lProps = aProps.itervalues().next().keys()
 
-    lSummary = Texttable(max_width=0)
-    lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lSummary.add_row(['Run'] + lProps)
-    for lRun in sorted(aProps):
-        lInfo = aProps[lRun]
-        lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
+#     lSummary = Texttable(max_width=0)
+#     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+#     lSummary.add_row(['Run'] + lProps)
+#     for lRun in sorted(aProps):
+#         lInfo = aProps[lRun]
+#         lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
 
-    return lSummary.draw()
+#     return lSummary.draw()
 
 # -------------------------------------
 def synth(env, jobs):
@@ -214,10 +215,13 @@ def synth(env, jobs):
 
     ensureVivado(env)
 
-    args = []
+    lArgs = []
 
     if jobs is not None:
-        args += ['-jobs {}'.format(jobs)]
+        lArgs += ['-jobs {}'.format(jobs)]
+
+    lOOCRegex = re.compile(r'.*_synth_\d+')
+    lSynthRun = 'synth_1'
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -225,13 +229,13 @@ def synth(env, jobs):
             # Open the project
             lConsole('open_project {}'.format(lVivProjPath))
 
-            lRunProps = getSynthRunProps(lConsole)
+            with VivadoSnoozer(lConsole):
+                lRunProps = { k: v for k, v in readRunInfo(lConsole).iteritems() if lOOCRegex.match(k) }
 
             # Reset all OOC synthesis which might are stuck in a running state
             lIPRunsToReset = [
-                k
-                for k, v in lRunProps.iteritems()
-                if (not k.startswith('synth') and v['STATUS'].startswith('Running'))
+                k for k, v in lRunProps.iteritems()
+                if v['STATUS'].startswith('Running')
             ]
 
             for run in lIPRunsToReset:
@@ -241,13 +245,29 @@ def synth(env, jobs):
                 )
                 lConsole('reset_run {}'.format(run))
 
-            lConsole(['reset_run synth_1', ' '.join(['launch_runs synth_1'] + args)])
+            lConsole([
+                ' '.join(['reset_run', lSynthRun]),
+                ' '.join(['launch_runs', lSynthRun] + lArgs)])
 
             while True:
 
-                lRunProps = getSynthRunProps(lConsole)
+                with VivadoSnoozer(lConsole):
+                    lRunProps = readRunInfo(lConsole)
 
-                secho('\n' + formatRunProps(lRunProps), fg='cyan')
+                lOOCRunProps = { k: v for k, v in lRunProps.iteritems() if lOOCRegex.match(k) }
+
+                # if none of the 
+                # if next((k for k, v in lRunProps.iteritems() if v['PROGRESS'] == '100%'), None) is not None:
+                secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+
+                lSynthProps = { k: v for k, v in lRunProps.iteritems() if k == lSynthRun }
+
+                # secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+
+
+                # lRunProps = getSynthRunProps(lConsole)
+
+                secho('\n' + makeRunsTable(lSynthProps).draw(), fg='cyan')
 
                 lRunsInError = [ k for k, v in lRunProps.iteritems() if v['STATUS'] == 'synth_design ERROR']
                 if lRunsInError:
@@ -445,6 +465,47 @@ def bitfile(env):
 
 
 # ------------------------------------------------------------------------------
+def readRunInfo(aConsole, aProps=None):
+    lInfos = {}
+    lProps = aProps if aProps is not None else [
+        'STATUS',
+        'NEEDS_REFRESH',
+        'PROGRESS',
+        # 'IS_IMPLEMENTATION',
+        # 'IS_SYNTHESIS',
+        'STATS.ELAPSED',
+        # 'STATS.ELAPSED',
+    ]
+
+    # Gather data about existing runs
+    lRuns = aConsole('get_runs')[0].split()
+
+    for lRun in sorted(lRuns):
+
+        lCmds = [
+            'get_property {0} [get_runs {1}]'.format(lProp, lRun)
+            for lProp in lProps
+        ]
+        lValues = aConsole(lCmds)
+        lInfos[lRun] = OrderedDict(zip(lProps, lValues))
+
+    return lInfos
+
+# ------------------------------------------------------------------------------
+def makeRunsTable(lInfos):
+    lSummary = Texttable(max_width=0)
+    if not lInfos:
+        return lSummary
+
+    # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+    lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
+    lSummary.set_chars( ['-', '|', '+', '-'] )
+    lSummary.header(['Run'] + next(iter(lInfos.itervalues())).keys())
+    for lRun in sorted(lInfos):
+        lInfo = lInfos[lRun]
+        lSummary.add_row([lRun] + lInfo.values())
+
+    return lSummary
 
 
 # ------------------------------------------------------------------------------
@@ -469,7 +530,6 @@ def status(env):
         # 'IS_IMPLEMENTATION',
         # 'IS_SYNTHESIS',
         'STATS.ELAPSED',
-        'STATS.ELAPSED',
     ]
 
     lOOCRegex = re.compile(r'.*_synth_\d+')
@@ -481,40 +541,11 @@ def status(env):
 
             with VivadoSnoozer(lConsole):
                 lConsole(lOpenCmds)
-
-                # lIPs = lConsole('get_ips')[0].split()
-
-                echo('Retrieving run information')
-                # Gather data about existing runs
-                lRuns = lConsole('get_runs')[0].split()
-
-                # lOOCRuns = [ r for r in lRuns if r.startswith('synth') or r.startswith('impl') ]
-                # lOOCRuns = [ r for r in lRuns if lOOCRegex.match(r) ]
-                for lRun in sorted(lRuns):
-                    secho(' - ' + lRun, fg='cyan')
-
-                    lCmds = [
-                        'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-                        for lProp in lProps
-                    ]
-                    lValues = lConsole(lCmds)
-                    lInfos[lRun] = dict(zip(lProps, lValues))
+                lInfos = readRunInfo(lConsole, lProps)
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
-
-    def makeRunsTable(lInfos):
-        lSummary = Texttable(max_width=0)
-        # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-        lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-        lSummary.set_chars( ['-', '|', '+', '-'] )
-        lSummary.header(['Run'] + lProps)
-        for lRun in sorted(lInfos):
-            lInfo = lInfos[lRun]
-            lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
-
-        return lSummary
 
     echo()
 

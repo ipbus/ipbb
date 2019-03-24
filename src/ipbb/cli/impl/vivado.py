@@ -45,12 +45,12 @@ def ensureVivado(env):
 
 
 # ------------------------------------------------------------------------------
-def vivado(ctx, proj, quiet):
+def vivado(ctx, proj, verbosity):
     '''Vivado command group'''
 
     env = ctx.obj
 
-    env.vivadoEcho = not quiet
+    env.vivadoEcho = (verbosity == 'all')
 
     # lProj = proj if proj is not None else env.currentproj.name
     if proj is not None:
@@ -203,7 +203,7 @@ def checksyntax(env):
 #     return lSummary.draw()
 
 # -------------------------------------
-def synth(env, jobs):
+def synth(env, aJobs, aUpdateInt):
     '''Run synthesis'''
 
     lSessionId = 'synth'
@@ -217,8 +217,8 @@ def synth(env, jobs):
 
     lArgs = []
 
-    if jobs is not None:
-        lArgs += ['-jobs {}'.format(jobs)]
+    if aJobs is not None:
+        lArgs += ['-jobs {}'.format(aJobs)]
 
     lOOCRegex = re.compile(r'.*_synth_\d+')
     lSynthRun = 'synth_1'
@@ -249,34 +249,34 @@ def synth(env, jobs):
                 ' '.join(['reset_run', lSynthRun]),
                 ' '.join(['launch_runs', lSynthRun] + lArgs)])
 
-            while True:
+            # 
+            if not aUpdateInt:
+                secho("Run monitoring disabled", fg='cyan')
+                lConsole(['wait_on_run synth_1'])
+            else:
+                secho("Starting run monitoring loop, update interval: {} min(s)".format(aUpdateInt), fg='cyan')
+                while True:
 
-                with VivadoSnoozer(lConsole):
-                    lRunProps = readRunInfo(lConsole)
+                    with VivadoSnoozer(lConsole):
+                        lRunProps = readRunInfo(lConsole)
 
-                lOOCRunProps = { k: v for k, v in lRunProps.iteritems() if lOOCRegex.match(k) }
+                    lOOCRunProps = { k: v for k, v in iteritems(lRunProps) if lOOCRegex.match(k) }
 
-                # if none of the 
-                # if next((k for k, v in lRunProps.iteritems() if v['PROGRESS'] == '100%'), None) is not None:
-                secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+                    secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
 
-                lSynthProps = { k: v for k, v in lRunProps.iteritems() if k == lSynthRun }
+                    lSynthProps = { k: v for k, v in iteritems(lRunProps) if k == lSynthRun }
 
-                # secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+                    secho('\n' + makeRunsTable(lSynthProps).draw(), fg='cyan')
 
+                    lRunsInError = [ k for k, v in iteritems(lRunProps) if v['STATUS'] == 'synth_design ERROR']
+                    if lRunsInError:
+                        raise RuntimeError("Detected runs in ERROR {}. Exiting".format(', '.join(lRunsInError)))
 
-                # lRunProps = getSynthRunProps(lConsole)
+                    # Synthesis finished, get out of there
+                    if lRunProps['synth_1']['PROGRESS'] == '100%':
+                        break
 
-                secho('\n' + makeRunsTable(lSynthProps).draw(), fg='cyan')
-
-                lRunsInError = [ k for k, v in lRunProps.iteritems() if v['STATUS'] == 'synth_design ERROR']
-                if lRunsInError:
-                    raise RuntimeError("Detected runs in ERROR {}. Exiting".format(', '.join(lRunsInError)))
-
-                if lRunProps['synth_1']['PROGRESS'] == '100%':
-                    break
-
-                lConsole(['wait_on_run synth_1 -timeout 1'])
+                    lConsole(['wait_on_run synth_1 -timeout {}'.format(aUpdateInt)])
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)

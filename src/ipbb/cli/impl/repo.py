@@ -29,8 +29,8 @@ def init(env, workarea):
             'Cannot create a new work area inside an existing one %s' % env.work.path
         )
 
-    if exists(workarea):
-        raise click.ClickException('Directory \'%s\' already exists' % workarea)
+    if exists(workarea) and os.listdir(workarea):
+        raise click.ClickException('Directory \'%s\' already exists and it\'s not empty' % workarea)
 
     # Build source code directory
     mkpath(join(workarea, kSourceDir))

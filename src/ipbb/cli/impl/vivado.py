@@ -1,5 +1,5 @@
-from __future__ import print_function
-
+from __future__ import print_function, absolute_import
+from future.utils import iterkeys, itervalues, iteritems
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -230,11 +230,11 @@ def synth(env, aJobs, aUpdateInt):
             lConsole('open_project {}'.format(lVivProjPath))
 
             with VivadoSnoozer(lConsole):
-                lRunProps = { k: v for k, v in readRunInfo(lConsole).iteritems() if lOOCRegex.match(k) }
+                lRunProps = { k: v for k, v in iteritems(readRunInfo(lConsole)) if lOOCRegex.match(k) }
 
             # Reset all OOC synthesis which might are stuck in a running state
             lIPRunsToReset = [
-                k for k, v in lRunProps.iteritems()
+                k for k, v in iteritems(lRunProps)
                 if v['STATUS'].startswith('Running')
             ]
 
@@ -500,10 +500,10 @@ def makeRunsTable(lInfos):
     # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.set_chars( ['-', '|', '+', '-'] )
-    lSummary.header(['Run'] + next(iter(lInfos.itervalues())).keys())
+    lSummary.header(['Run'] + list(next(iter(itervalues(lInfos)))))
     for lRun in sorted(lInfos):
         lInfo = lInfos[lRun]
-        lSummary.add_row([lRun] + lInfo.values())
+        lSummary.add_row([lRun] + list(itervalues(lInfo)))
 
     return lSummary
 
@@ -549,12 +549,12 @@ def status(env):
 
     echo()
 
-    lOocTable = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lOOCRegex.match(k)})
+    lOocTable = makeRunsTable({ k: v for k, v in iteritems(lInfos) if lOOCRegex.match(k)})
     secho("Out of context runs", fg='blue')
     echo(lOocTable.draw())
     echo()
     secho("Design runs", fg='blue')
-    aaa = makeRunsTable({ k: v for k, v in lInfos.iteritems() if lRunRegex.match(k)})
+    aaa = makeRunsTable({ k: v for k, v in iteritems(lInfos) if lRunRegex.match(k)})
     echo(aaa.draw())
 # ------------------------------------------------------------------------------
 

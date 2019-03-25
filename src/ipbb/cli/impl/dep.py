@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-
+from __future__ import print_function, absolute_import
+from future.utils import iterkeys, itervalues, iteritems
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -143,7 +143,7 @@ def report(env, filters):
     # lString += '+----------------------------------+\n'
     # lString += '|  Resolved packages & components  |\n'
     # lString += '+----------------------------------+\n'
-    lString += 'packages: ' + ' '.join(list(lParser.components.iterkeys())) + '\n'
+    lString += 'packages: ' + ' '.join(iterkeys(lParser.components)) + '\n'
     lString += 'components:\n'
     for pkg in sorted(lParser.components):
         lString += u'* %s (%d)\n' % (pkg, len(lParser.components[pkg]))
@@ -221,7 +221,7 @@ def ls(env, group, output):
 def components(env, output):
 
     with SmartOpen(output) as lWriter:
-        for lPkt, lCmps in env.depParser.components.iteritems():
+        for lPkt, lCmps in iteritems(env.depParser.components):
             lWriter('[' + lPkt + ']')
             for lCmp in lCmps:
                 lWriter(lCmp)
@@ -331,7 +331,7 @@ def hash(env, output, verbose):
 
         lProjHash = lAlgo()
         lGrpHashes = collections.OrderedDict()
-        for lGrp, lCmds in env.depParser.commands.iteritems():
+        for lGrp, lCmds in iteritems(env.depParser.commands):
             lGrpHash = lAlgo()
             if verbose:
                 lWriter("#" + "-" * 79)
@@ -353,7 +353,7 @@ def hash(env, output, verbose):
             lWriter("#" + "-" * 79)
             lWriter("# Per cmd-group hashes")
             lWriter("#" + "-" * 79)
-            for lGrp, lHash in lGrpHashes.iteritems():
+            for lGrp, lHash in iteritems(lGrpHashes):
                 lWriter(lHash.hexdigest(), lGrp)
             lWriter()
 

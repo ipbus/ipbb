@@ -1,4 +1,5 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
+from builtins import range
 # ------------------------------------------------------------------------------
 
 
@@ -70,7 +71,7 @@ IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
 Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
     """
 
-    lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
+    lVerExpr = u'(Vivado[\s\w]*)\sv(\d+\.\d)'
 
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
 
@@ -94,10 +95,10 @@ class VivadoBatch(object):
     """
     Wrapper class to run Vivado jobs in batch mode
     """
-    _reInfo = re.compile(r'^INFO:')
-    _reWarn = re.compile(r'^WARNING:')
-    _reCritWarn = re.compile(r'^CRITICAL WARNING:')
-    _reError = re.compile(r'^ERROR:')
+    _reInfo = re.compile(u'^INFO:')
+    _reWarn = re.compile(u'^WARNING:')
+    _reCritWarn = re.compile(u'^CRITICAL WARNING:')
+    _reError = re.compile(u'^ERROR:')
 
     # --------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
@@ -124,9 +125,9 @@ class VivadoBatch(object):
 
     # --------------------------------------------
     def __exit__(self, type, value, traceback):
-            if not self.dryrun:
-                self._run()
-            self.script.close()
+        if not self.dryrun:
+            self._run()
+        self.script.close()
 
     # --------------------------------------------
     def __call__(self, *strings):
@@ -246,13 +247,13 @@ class VivadoConsole(object):
     
     """
 
-    __reCharBackspace = re.compile(r'.\x08')
-    __reError = re.compile(r'^ERROR:')
-    __reCriticalWarning = re.compile(r'^CRITICAL WARNING:')
+    __reCharBackspace = re.compile(u'.\x08')
+    __reError = re.compile(u'^ERROR:')
+    __reCriticalWarning = re.compile(u'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado': r'Vivado%\s',
-        'vivado_lab': r'vivado_lab%\s'
+        'vivado': u'Vivado%\s',
+        'vivado_lab': u'vivado_lab%\s'
     }
 
     # --------------------------------------------------------------
@@ -318,7 +319,7 @@ class VivadoConsole(object):
         )
 
         self._out.write('\n' + '-' * 40 + '\n')
-        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
             echo=echo,
@@ -350,7 +351,7 @@ class VivadoConsole(object):
         self._process.sendline(aText)
         # --------------------------------------------------------------
         # Hard check: First line of output must match the injected command
-        lIndex = self._process.expect([r'\r\n'])
+        self._process.expect([u'\r\n'])
 
         lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
         lCmdSent = aText.split('\n')[0]
@@ -360,16 +361,16 @@ class VivadoConsole(object):
             print ('Echo character-by-character diff')
             # Find where the 2 strings don't match
             print ('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
-            for i in xrange(min(len(lCmdRcvd), len(lCmdSent))):
+            for i in range(min(len(lCmdRcvd), len(lCmdSent))):
                 r = lCmdRcvd[i]
                 s = lCmdSent[i]
                 # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
                 # ord(s) > 128
                 print (i, '\t', r, s, r == s, ord(r))
 
-            print (''.join([str(i % 10) for i in xrange(len(lCmdRcvd))]))
+            print (''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
             print (lCmdRcvd)
-            print (''.join([str(i % 10) for i in xrange(len(lCmdSent))]))
+            print (''.join([str(i % 10) for i in range(len(lCmdSent))]))
             print (lCmdSent)
             # --------------------------------------------------------------
             raise RuntimeError(
@@ -379,7 +380,7 @@ class VivadoConsole(object):
     def __expectPrompt(self, aMaxLen=100):
         # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
         lCpl = self._process.compile_pattern_list(
-            [r'\r\n', self._prompt, pexpect.TIMEOUT]
+            [u'\r\n', self._prompt, pexpect.TIMEOUT]
         )
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
@@ -391,7 +392,6 @@ class VivadoConsole(object):
         while True:
             # Search for newlines, prompt, end-of-file
             lIndex = self._process.expect_list(lCpl)
-            # print '>',self._process.before
 
             # ----------------------------------------------------------
             # Break if prompt
@@ -405,14 +405,15 @@ class VivadoConsole(object):
                     lTimeoutCounts * self._process.timeout))
             # ----------------------------------------------------------
 
+            lBefore = str(self._process.before)
             # Store the output in the circular buffer
-            lBuffer.append(self._process.before)
+            lBuffer.append(lBefore)
 
-            if self.__reError.match(self._process.before):
-                lErrors.append(self._process.before)
+            if self.__reError.match(lBefore):
+                lErrors.append(lBefore)
 
-            if self.__reCriticalWarning.match(self._process.before):
-                lCriticalWarnings.append(self._process.before)
+            if self.__reCriticalWarning.match(lBefore):
+                lCriticalWarnings.append(lBefore)
 
         # --------------------------------------------------------------
 

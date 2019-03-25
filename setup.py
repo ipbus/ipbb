@@ -4,7 +4,7 @@ exec(open('src/ipbb/_version.py').read())
 
 setup(
     name='ipbb',
-    python_requires='<2.8',
+    # python_requires='<2.8',
     version=__version__,
     author='Alessandro Thea',
     author_email='alessandro.thea@stfc.ac.uk',

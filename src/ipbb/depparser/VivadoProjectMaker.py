@@ -1,4 +1,7 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
+from future.utils import iterkeys, itervalues, iteritems
+# ------------------------------------------------------------------------------
+
 import time
 import os
 import collections
@@ -122,11 +125,11 @@ class VivadoProjectMaker(object):
                 if self.turbo:
                     lSrcCommandGroups.setdefault(c, []).append(f)
                 else:
-                    write(tmpl(c).substitute(files=f).encode('ascii'))
+                    write(tmpl(c).substitute(files=f))
 
         if self.turbo:
-            for c, f in lSrcCommandGroups.iteritems():
-                write(tmpl(c).substitute(files=' '.join(f)).encode('ascii'))
+            for c, f in iteritems(lSrcCommandGroups):
+                write(tmpl(c).substitute(files=' '.join(f)))
 
         write('set_property top top [current_fileset]')
 

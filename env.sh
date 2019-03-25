@@ -12,6 +12,10 @@ fi
 if [ -z ${VIRTUAL_ENV+X} ] ; then
     echo -e "${COL_GREEN}Activating ipbb environment${COL_NULL}"
     source ${IPBB_VENV}/bin/activate
+    
+    # Locale settings
+    export LANG=en_US.utf-8
+    export LC_ALL=en_US.utf-8
 
     # Consistency check
     if [[ ! ${IPBB_VENV} -ef ${VIRTUAL_ENV} ]]; then

@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -17,7 +17,7 @@ from os.path import join
 @click.option('-p', '--proj', metavar='<name>', default=None, help='Switch to <name> before running subcommands.')
 def sim(ctx, proj):
     '''Simulation commands group'''
-    from impl.sim import sim
+    from .impl.sim import sim
     sim(ctx, proj)
 
 
@@ -29,7 +29,7 @@ def sim(ctx, proj):
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
 def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
-    from impl.sim import setupsimlib
+    from .impl.sim import setupsimlib
     setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce)
 
 
@@ -44,7 +44,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     Generate the vivado libraries and cores required to simulate the current design.
 
     '''
-    from impl.sim import ipcores
+    from .impl.sim import ipcores
     ipcores(env, aXilSimLibsPath, aToScript, aToStdout)
 
 
@@ -57,7 +57,7 @@ def fli(env, dev, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
-    from impl.sim import fli
+    from .impl.sim import fli
     fli(env, dev, ipbuspkg)
 
 
@@ -83,7 +83,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     - 'ipbus.fli.ip_address': mapped to IP_ADDR top-level generic
 
     """
-    from impl.sim import makeproject
+    from .impl.sim import makeproject
     makeproject(env, aReverse, aOptimise, aToScript, aToStdout)
 
 
@@ -111,7 +111,7 @@ sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 def virtualtap(env, dev, ip):
     """VirtualTap
     """
-    from impl.sim import virtualtap
+    from .impl.sim import virtualtap
     virtualtap(env, dev, ip)
 
 
@@ -121,5 +121,5 @@ def virtualtap(env, dev, ip):
 def mifs(env):
     """Import MIF files from project
     """
-    from impl.sim import mifs
+    from .impl.sim import mifs
     mifs(env)

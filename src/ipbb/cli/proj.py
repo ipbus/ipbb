@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 # Modules
 import click
@@ -39,7 +39,7 @@ def create( env, kind, projname, component, topdep ):
 
       COMPONENT: Component <package:component> contaning the top-level
     '''
-    from impl.proj import create
+    from .impl.proj import create
     create(env, kind, projname, component, topdep)
 
 
@@ -49,7 +49,7 @@ def create( env, kind, projname, component, topdep ):
 def ls( env ):
     '''Lists all available project areas
     '''
-    from impl.proj import ls
+    from .impl.proj import ls
     ls(env)
 
 
@@ -62,5 +62,5 @@ def cd( env, projname, aVerbose ):
     '''Changes current working directory (command line only)
     '''
 
-    from impl.proj import cd
+    from .impl.proj import cd
     cd(env, projname, aVerbose)

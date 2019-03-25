@@ -72,10 +72,9 @@ if [[ "${IPBB_VENV}" != "${IPBB_ROOT}/venv/ipbb" ]]; then
 fi
 
 
-
 # -----------------------------------------------------------------------------
 # Python version
-PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
-PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')
-PYTHON_VERSION="${PYTHON_MAJOR}.${PYTHON_MINOR}"
+# PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
+# PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')
+# PYTHON_VERSION="${PYTHON_MAJOR}.${PYTHON_MINOR}"
 

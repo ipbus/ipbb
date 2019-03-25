@@ -1,8 +1,9 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
+
 import argparse
 import os
 import glob
-import Pathmaker
+from . import Pathmaker
 from collections import OrderedDict
 from os.path import exists
 

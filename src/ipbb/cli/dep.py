@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -12,7 +12,7 @@ import click
 @click.option('-p', '--proj', default=None)
 def dep(ctx, proj):
     '''Dependencies command group'''
-    from impl.dep import dep
+    from .impl.dep import dep
     dep(ctx, proj)
 # ------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ def dep(ctx, proj):
 @click.option('-f', '--filter', 'filters', help='Select dep entries with regexes.', multiple=True)
 def report(env, filters):
     '''Summarise the dependency tree of the current project'''
-    from impl.dep import report
+    from .impl.dep import report
     report(env, filters)
 
 
@@ -41,7 +41,7 @@ def ls(env, group, output):
     - cgpfile: ?
     '''
 
-    from impl.dep import ls
+    from .impl.dep import ls
     ls(env, group, output)
 
 
@@ -50,7 +50,7 @@ def ls(env, group, output):
 @click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.pass_obj
 def components(env, output):
-    from impl.dep import components
+    from .impl.dep import components
     components(env, output)
 
 
@@ -60,7 +60,7 @@ def components(env, output):
 @click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.option('-v', '--verbose', count=True)
 def hash(env, output, verbose):
-    from impl.dep import hash
+    from .impl.dep import hash
     hash(env, output, verbose)
 
 
@@ -68,6 +68,6 @@ def hash(env, output, verbose):
 @dep.command()
 @click.pass_context
 def archive(ctx):
-    from impl.dep import archive
+    from .impl.dep import archive
     archive(ctx)
 

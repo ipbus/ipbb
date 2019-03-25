@@ -1,4 +1,7 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
+from future.standard_library import install_aliases
+install_aliases()
+# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -13,7 +16,7 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from .. import kSourceDir, kProjDir, kWorkAreaFile
 from ..utils import DirSentry, findFileInParents
-from urlparse import urlparse
+from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable
 

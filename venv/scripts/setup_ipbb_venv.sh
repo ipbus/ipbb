@@ -15,7 +15,7 @@ else
     IPBB_PIP_INSTALLOPT="-U -I -q"
     IPBB_PIP_INSTALLOPT="-U -I"
 
-    virtualenv ${IPBB_VENV} --no-site-packages
+    virtualenv-3.6 ${IPBB_VENV} --no-site-packages
     source ${IPBB_VENV}/bin/activate
 
     echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"

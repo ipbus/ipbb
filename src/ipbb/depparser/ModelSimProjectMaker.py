@@ -1,9 +1,9 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import time
 import os
 
-from Pathmaker import Pathmaker
 from os.path import join, split, exists, splitext, abspath
+from .Pathmaker import Pathmaker
 from ..tools.common import SmartOpen
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

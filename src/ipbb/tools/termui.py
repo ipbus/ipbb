@@ -1,3 +1,5 @@
+from future.utils import iteritems
+
 kColorMap = {
     'black': 0,
     'red': 1,
@@ -10,7 +12,7 @@ kColorMap = {
     'orange': 215
 }
 
-for n, c in kColorMap.iteritems():
+for n, c in iteritems(kColorMap):
     vars()['k' + n.capitalize()] = '\x1b[38;5;{}m'.format(c)
 
 kReset = '\x1b[0m'

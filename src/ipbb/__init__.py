@@ -1,7 +1,9 @@
-from _version import __version__
+from __future__ import absolute_import
 
-import cli
-import tools
-import depparser
+from ._version import __version__
+
+from . import cli
+from . import tools
+from . import depparser
 
 

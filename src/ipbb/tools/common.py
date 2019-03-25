@@ -1,5 +1,5 @@
-from __future__ import print_function
-
+from __future__ import print_function, absolute_import
+from past.builtins import basestring
 # -------------------------------------------------------------------------
 
 import os
@@ -127,7 +127,7 @@ def which(aExecutable):
 
 
 # ------------------------------------------------------------------------------
-def mkdir(path, mode=0777):
+def mkdir(path, mode=0o777):
     try:
         os.makedirs(path, mode)
     except OSError:

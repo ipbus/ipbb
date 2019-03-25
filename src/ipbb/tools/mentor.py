@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -50,7 +50,7 @@ def autodetect( executable=_vcom ):
 
     if not which(executable):
         raise ModelSimNotFoundError(
-            "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % executable)
+            "'%s' not found in PATH. Failed to detect ModelSim/QuestaSim." % executable)
 
     lExe = sh.Command(executable)
     lVerStr = lExe('-version')
@@ -58,7 +58,7 @@ def autodetect( executable=_vcom ):
     m = lVerRe.search(str(lVerStr))
 
     if m is None:
-        raise ModelSimNotFoundError("Failed to detect ModelSim/QuestaSim variant")
+        raise ModelSimNotFoundError("Failed to detect ModelSim/QuestaSim variant.")
 
     return m.groups()
 # --------------------------------------------------------------
@@ -114,7 +114,7 @@ class ModelSimBatch(object):
         # Guard against missing vivado executable
         if not which('vsim'):
             raise ModelSimNotFoundError(
-                "'%s' not found in PATH. Have you sourced Modelsim's setup script?" % _vsim)
+                "'%s' not found in PATH. Failed to detect ModelSim/QuestaSim" % _vsim)
 
         vsim = sh.Command(_vsim)
         #TODO:

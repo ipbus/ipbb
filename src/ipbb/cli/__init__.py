@@ -1,9 +1,10 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 # Import click for ansi colors
 import click
 import yaml
-import utils
+
+from . import utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
@@ -85,7 +86,7 @@ class ProjectInfo(FolderInfo):
 
         # Import project settings
         with open(self.filepath, 'r') as f:
-            self.settings = yaml.load(f)
+            self.settings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
     def loadUserSettings(self):
@@ -93,7 +94,7 @@ class ProjectInfo(FolderInfo):
             return
 
         with open(self.userfilepath, 'r') as f:
-            self.usersettings = yaml.load(f)
+            self.usersettings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
     def saveSettings(self, jsonindent=2):

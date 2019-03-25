@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 
 # Modules
@@ -14,7 +14,7 @@ def debug(ctx):
     Args:
         ctx (`obj`): Click context object.
     """
-    from impl.debug import debug
+    from .impl.debug import debug
     debug(ctx)
 
 
@@ -22,7 +22,7 @@ def debug(ctx):
 @debug.command('dump')
 @click.pass_context
 def dump(ctx):
-    from impl.debug import dump
+    from .impl.debug import dump
     dump(ctx)
 
 
@@ -35,7 +35,7 @@ def ipy(ctx):
     Args:
         ctx (`obj:Context`): Click context object.
     """
-    from impl.debug import ipy
+    from .impl.debug import ipy
     ipy(ctx)
 
 
@@ -48,7 +48,7 @@ def test_vivado_formatter(ctx):
     Args:
         ctx (`obj:Context`): Click context object.
     """
-    from impl.debug import test_vivado_formatter
+    from .impl.debug import test_vivado_formatter
     test_vivado_formatter(ctx)
 
 
@@ -61,5 +61,5 @@ def test_vivado_console(ctx):
     Args:
         ctx (`obj:Context`): Click context object.
     """
-    from impl.debug import test_vivado_console
+    from .impl.debug import test_vivado_console
     test_vivado_console(ctx)

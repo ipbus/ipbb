@@ -1,7 +1,6 @@
-from __future__ import print_function
-
-
+from __future__ import print_function, absolute_import
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 # Modules
 import click
 import click_didyoumean
@@ -9,7 +8,7 @@ import click_didyoumean
 import ipbb
 import sys
 import traceback
-import StringIO
+from io import StringIO, BytesIO
 
 from texttable import Texttable
 from click import echo, style, secho
@@ -216,7 +215,8 @@ def main():
         # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         # 'Error: exception of type {} throw'
         # print(e, exc_type.__name__, fname, exc_tb.tb_lineno)
-        lExc = StringIO.StringIO()
+        # lExc = BytesIO()
+        lExc = StringIO()
         traceback.print_exc(file=lExc)
         print("Exception in user code:")
         print('-' * 60)

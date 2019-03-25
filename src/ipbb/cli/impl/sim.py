@@ -1,5 +1,5 @@
-from __future__ import print_function
-
+from __future__ import print_function, absolute_import
+from future.utils import raise_with_traceback, raise_from
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -63,9 +63,7 @@ def ensureModelsim(env):
     try:
         env.siminfo = mentor.autodetect()
     except mentor.ModelSimNotFoundError as lExc:
-        raise click.ClickException, click.ClickException(lExc.message), sys.exc_info()[
-            2
-        ]
+        raise raise_with_traceback(click.ClickException(str(lExc)))
 
     try:
         env.vivadoinfo = xilinx.autodetect()
@@ -546,7 +544,7 @@ vsim {} "$@"
         lVsimSh(lVsimBody)
 
     # Make it executable
-    os.chmod('vsim', 0755)
+    os.chmod('vsim', 0o755)
 
 
 # ------------------------------------------------------------------------------

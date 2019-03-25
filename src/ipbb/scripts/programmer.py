@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
@@ -8,7 +8,7 @@ import traceback
 import tempfile
 import tarfile
 
-from os.path import join, split, exists, basename, abspath, splitext, relpath, basename
+from os.path import join, split, exists, basename, abspath, splitext, relpath
 from click import echo, secho, style
 from ..cli.utils import echoVivadoConsoleError
 from ..tools.common import which

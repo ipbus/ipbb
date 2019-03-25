@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -24,12 +24,19 @@ def ensureVivado(env):
 # ------------------------------------------------------------------------------
 @click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)
 @click.option('-p', '--proj', default=None, help="Selected project, if not current")
-@click.option('-q', '--quiet', is_flag=True, default=False, help="Suppress most of Vivado messages")
+@click.option('-v', '--verbosity', type=click.Choice(['all', 'warnings-only', 'none']), default='all', help="Silence vivado messages")
 @click.pass_context
-def vivado(ctx, proj, quiet):
-    '''Vivado command group'''
-    from impl.vivado import vivado
-    vivado(ctx, proj, quiet)
+def vivado(ctx, proj, verbosity):
+    '''Vivado command group
+    
+    \b
+    Verbosity levels
+    - all:
+    - warnings-only:
+    - none:
+    '''
+    from .impl.vivado import vivado
+    vivado(ctx, proj, verbosity)
 
 
 # ------------------------------------------------------------------------------
@@ -55,7 +62,7 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 @click.pass_obj
 def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
-    from impl.vivado import makeproject
+    from .impl.vivado import makeproject
     makeproject(env, aReverse, aOptimise, aToScript, aToStdout)
 
 
@@ -63,29 +70,29 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
 @click.pass_obj
 def checksyntax(env):
-    from impl.vivado import checksyntax
+    from .impl.vivado import checksyntax
     checksyntax(env)
 
 
 # -------------------------------------
 @vivado.command('synth', short_help='Run the synthesis step on the current project.')
-@click.option('-j', '--jobs', type=int, default=None)
-# @click.option('-e', '--email', default=None)
+@click.option('-j', '--jobs', 'aNumJobs',  type=int, default=None, help="Number of parallel jobs")
+@click.option('-i', '--status-update-interval', 'aUpdateInt', type=int, default=1, help="Interal between status updates in minutes")
 @click.pass_obj
-def synth(env, jobs):
+def synth(env, aNumJobs, aUpdateInt):
     '''Run synthesis'''
-    from impl.vivado import synth
-    synth(env, jobs)
+    from .impl.vivado import synth
+    synth(env, aNumJobs, aUpdateInt)
 
 
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
-@click.option('-j', '--jobs', type=int, default=None)
+@click.option('-j', '--jobs', type=int, default=None, help="Number of parallel jobs")
 @click.pass_obj
 def impl(env, jobs):
     '''Launch an implementation run'''
     '''Run synthesis'''
-    from impl.vivado import impl
+    from .impl.vivado import impl
     impl(env, jobs)
 
 
@@ -95,14 +102,14 @@ def impl(env, jobs):
 # @click.pass_obj
 # def orderconstr(env, order):
 #     '''Reorder constraint set'''
-#     from impl.vivado import orderconstr
+#     from .impl.vivado import orderconstr
 #     orderconstr(env, order)
 
 @vivado.command('resource-usage', short_help="Resource usage")
 @click.pass_obj
 def resource_usage(env):
     '''Create a resource_usage'''
-    from impl.vivado import resource_usage
+    from .impl.vivado import resource_usage
     resource_usage(env)
 
 # ------------------------------------------------------------------------------
@@ -110,7 +117,7 @@ def resource_usage(env):
 @click.pass_obj
 def bitfile(env):
     '''Create a bitfile'''
-    from impl.vivado import bitfile
+    from .impl.vivado import bitfile
     bitfile(env)
 
 
@@ -119,7 +126,7 @@ def bitfile(env):
 @click.pass_obj
 def status(env):
     '''Show the status of all runs in the current project.'''
-    from impl.vivado import status
+    from .impl.vivado import status
     status(env)
 
 
@@ -129,7 +136,7 @@ def status(env):
 def reset(env):
     '''Reset synth and impl runs'''
 
-    from impl.vivado import reset
+    from .impl.vivado import reset
     reset(env)
 
 
@@ -141,7 +148,7 @@ def package(ctx, aTag):
     '''Package bitfile with address table and file list
 
     '''
-    from impl.vivado import package
+    from .impl.vivado import package
     package(ctx, aTag)
 
 
@@ -149,5 +156,5 @@ def package(ctx, aTag):
 @vivado.command()
 @click.pass_context
 def archive(ctx):
-    from impl.vivado import archive
+    from .impl.vivado import archive
     archive(ctx)

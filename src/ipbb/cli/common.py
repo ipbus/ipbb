@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 
 import click
@@ -18,7 +18,7 @@ def cleanup(env):
     Args:
         env (`obj`): ipbb environment object
     """
-    from impl.common import cleanup
+    from .impl.common import cleanup
     cleanup(env)
 
 # ------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ def user_config(env, aList, aAdd, aUnset):
         aAdd (bool): 'add' flag
         aUnset (bool): 'unset' flag
     """
-    from impl.common import user_config
+    from .impl.common import user_config
     user_config(env, aList, aAdd, aUnset)
 
 
@@ -51,7 +51,7 @@ def addrtab(env, aDest):
         env (`obj`): ipbb environment object
         aDest (string): Target address table folder
     '''
-    from impl.common import addrtab
+    from .impl.common import addrtab
     addrtab(env, aDest)
 
 # ------------------------------------------------------------------------------
@@ -66,5 +66,5 @@ def gendecoders(ctx):
     Args:
         ctx (`obj`): Click context
     """
-    from impl.common import gendecoders
+    from .impl.common import gendecoders
     gendecoders(ctx)

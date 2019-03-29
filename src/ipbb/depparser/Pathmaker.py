@@ -22,7 +22,7 @@ class Pathmaker(object):
     }
 
     # --------------------------------------------------------------
-    def __init__(self, rootdir, verbosity):
+    def __init__(self, rootdir, verbosity=0):
         self.rootdir = rootdir
         self.verbosity = verbosity
 

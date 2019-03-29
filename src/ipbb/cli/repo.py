@@ -1,5 +1,7 @@
 from __future__ import print_function, absolute_import
 
+from .utils import validateComponent
+
 # Modules
 import click
 
@@ -70,11 +72,20 @@ def srcs(env):
     pass
 
 # ------------------------------------------------------------------------------
-@srcs.command('status', short_help="Summary of the status of source packages.")
+@srcs.command('info', short_help="Information of the status of source packages.")
 @click.pass_obj
-def status(env):
-    from .impl.repo import status
-    status(env)
+def info(env):
+    from .impl.repo import info
+    info(env)
+
+
+# ------------------------------------------------------------------------------
+@srcs.command('create-component', short_help="Information of the status of source packages.")
+@click.argument('component', callback=validateComponent)
+@click.pass_obj
+def create_component(env, component):
+    from .impl.repo import create_component
+    create_component(env, component)
 
 
 # ------------------------------------------------------------------------------

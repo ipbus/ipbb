@@ -16,9 +16,12 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from .. import kSourceDir, kProjDir, kWorkAreaFile
 from ..utils import DirSentry, findFileInParents
+from ...depparser.Pathmaker import Pathmaker
+from ...tools.common import mkdir
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable
+
 
 
 # ------------------------------------------------------------------------------
@@ -277,39 +280,7 @@ def srcs(env):
 
 
 # ------------------------------------------------------------------------------
-def run(env, pkg, cmd, args):
-
-    if pkg:
-        if pkg not in env.sources:
-            secho(
-                "ERROR: '{}' package not known.\nKnown packages:\n{}".format(
-                    pkg, '\n'.join((' * ' + s for s in env.sources))
-                ),
-                fg='red',
-            )
-            raise click.ClickException("Command failed")
-        wd = join(env.srcdir, pkg)
-    else:
-        wd = env.srcdir
-
-    try:
-        lCmd = sh.Command(cmd)
-    except sh.CommandNotFound as lExc:
-        secho("ERROR: Command '{}' not found in path".format(cmd), fg='red')
-        raise click.ClickException("Command aborted")
-
-    try:
-        lCmd(*args, _cwd=wd, _out=sys.stdout, _err=sys.stderr)
-    except sh.ErrorReturnCode as lExc:
-        raise click.ClickException(
-            "Command '{}' failed with error code {}".format(
-                lExc.full_cmd, lExc.exit_code
-            )
-        )
-
-
-# ------------------------------------------------------------------------------
-def status(env):
+def info(env):
 
     if not env.work.path:
         secho('ERROR: No ipbb work area detected', fg='red')
@@ -399,6 +370,53 @@ def status(env):
 
         lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
     echo(lSrcTable.draw())
+
+
+# ------------------------------------------------------------------------------
+def create_component(env, component):
+    lPathMaker = Pathmaker(env.srcdir, env._verbosity)
+
+    lCmpPath = lPathMaker.getPath(*component)
+    if exists(lPathMaker.getPath(*component)):
+        secho("ERROR: Component '{}' already exists".format(lCmpPath), fg='red')
+        raise click.ClickException("Command aborted")
+
+    for sd in ['src', 'include', 'iprepo', 'addrtab']:
+        lPath = lPathMaker.getPath(*component, command=sd)
+        mkdir(lPath)
+        secho("Folder {} created.".format(lPath), fg='cyan')
+
+
+# ------------------------------------------------------------------------------
+def run(env, pkg, cmd, args):
+
+    if pkg:
+        if pkg not in env.sources:
+            secho(
+                "ERROR: '{}' package not known.\nKnown packages:\n{}".format(
+                    pkg, '\n'.join((' * ' + s for s in env.sources))
+                ),
+                fg='red',
+            )
+            raise click.ClickException("Command failed")
+        wd = join(env.srcdir, pkg)
+    else:
+        wd = env.srcdir
+
+    try:
+        lCmd = sh.Command(cmd)
+    except sh.CommandNotFound as lExc:
+        secho("ERROR: Command '{}' not found in path".format(cmd), fg='red')
+        raise click.ClickException("Command aborted")
+
+    try:
+        lCmd(*args, _cwd=wd, _out=sys.stdout, _err=sys.stderr)
+    except sh.ErrorReturnCode as lExc:
+        raise click.ClickException(
+            "Command '{}' failed with error code {}".format(
+                lExc.full_cmd, lExc.exit_code
+            )
+        )
 
 
 # ------------------------------------------------------------------------------

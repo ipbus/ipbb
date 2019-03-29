@@ -193,6 +193,7 @@ def main():
     try:
         climain()
     except Exception as e:
+        from sys import version_info
         exc_type, exc_obj, exc_tb = sys.exc_info()
         lFirstFrame = traceback.extract_tb(exc_tb)[-1]
 
@@ -209,14 +210,8 @@ def main():
         )
 
         "File \"{}\", line {}, in {}"
-        # secho("{}".format(),fg='red')
-        # print(lFirstFrame)
-        # ipdb.set_trace()
-        # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        # 'Error: exception of type {} throw'
-        # print(e, exc_type.__name__, fname, exc_tb.tb_lineno)
-        # lExc = BytesIO()
-        lExc = StringIO()
+
+        lExc = (BytesIO() if (version_info[0] <= 2) else StringIO())
         traceback.print_exc(file=lExc)
         print("Exception in user code:")
         print('-' * 60)

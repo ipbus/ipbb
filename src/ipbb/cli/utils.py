@@ -103,9 +103,10 @@ def echoVivadoConsoleError( aExc ):
 
 # ------------------------------------------------------------------------------
 def validateComponent(ctx, param, value):
-    lSeparators = value.count(':')
+    lTopSeps = value.count(':')
+    lPathSeps = value.count(os.path.sep)
     # Validate the format
-    if lSeparators != 1:
+    if not ((lTopSeps == 1) or (lTopSeps == 0 and lPathSeps == 0)):
         raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
 
     return tuple(value.split(':'))

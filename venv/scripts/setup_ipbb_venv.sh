@@ -5,6 +5,8 @@ HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
 # Loading common stuff
 source ${HERE}/common_ipbb_venv.sh
 
+VENV_COMMAND=virtualenv-3
+
 
 if [ -d "${IPBB_VENV}" ] ; then
     echo -e "${COL_YELLOW}WARNING: ${IPBB_VENV} already exists. Delete it before running $(basename $SH_SOURCE).${COL_NULL}"
@@ -15,7 +17,7 @@ else
     IPBB_PIP_INSTALLOPT="-U -I -q"
     IPBB_PIP_INSTALLOPT="-U -I"
 
-    virtualenv-3.6 ${IPBB_VENV} --no-site-packages
+    ${VENV_COMMAND} ${IPBB_VENV} --no-site-packages
     source ${IPBB_VENV}/bin/activate
 
     echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"

@@ -4,6 +4,32 @@ IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 
 source $IPBB_ROOT/venv/scripts/common_ipbb_venv.sh
 
+opts=$(getopt -o r -- "$@")
+[ $? -eq 0 ] || { 
+    echo "Incorrect options provided"
+    return
+}
+
+RESET_VENV=false
+eval set -- "$opts"
+while true; do
+    case "$1" in
+    -r)
+        RESET_VENV=true
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+    shift
+done
+
+if [ ${RESET_VENV} = true ]; then
+  echo "Resetting VENV"
+  $IPBB_ROOT/venv/scripts/reset_ipbb_venv.sh
+fi
+
 # Build the virtual environment
 if [ ! -d "${IPBB_VENV}" ] ; then
    $IPBB_ROOT/venv/scripts/setup_ipbb_venv.sh

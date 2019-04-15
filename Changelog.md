@@ -4,9 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2018-04-XX
+### Fixes
+- Minor bug in environment loading from yaml files fixed.
+
+### Changed
+- `vivado synth` and `status`: standardised run status table format
+- Status update interval made configurable via command-line option in `vivado synth`.
+
 ## [0.4.3] - 2018-03-06
 ### Fixes
-- Fixed bug in `vivado gendecoders` and `sim --cd` preventing the commands from running. 
+- Bug in `vivado gendecoders` and `sim --cd` preventing the commands from running fixed.
 
 ### Changed
 - Installation and setup helper scripts re-organised. In development mode the virtualenv path renamed `venv` (was `externals`).

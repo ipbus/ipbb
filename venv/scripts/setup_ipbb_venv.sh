@@ -5,8 +5,30 @@ HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
 # Loading common stuff
 source ${HERE}/common_ipbb_venv.sh
 
-VENV_COMMAND=virtualenv-3
+# pts=$(getopt -o 32 -- "$@")
+# [ $? -eq 0 ] || { 
+#     echo "${SH_SOURCE}: Incorrect options provided"
+#     return
+# }
 
+# eval set -- "$opts"
+# while true; do
+#     case "$1" in
+#     -2) [[ -n "${FORCE_PYTHON_VER}" ]] && usage || FORCE_PYTHON_VER='-2' ;;
+#     -3) [[ -n "${FORCE_PYTHON_VER}" ]] && usage || FORCE_PYTHON_VER='-3' ;;
+#     --)
+#         shift
+#         break
+#         ;;
+#     esac
+#     shift
+# done
+
+PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
+
+VENV2_CMD="virtualenv"
+VENV3_CMD="python3 -m venv"
+VENV_CMD=${VENV3_CMD}
 
 if [ -d "${IPBB_VENV}" ] ; then
     echo -e "${COL_YELLOW}WARNING: ${IPBB_VENV} already exists. Delete it before running $(basename $SH_SOURCE).${COL_NULL}"
@@ -17,7 +39,7 @@ else
     IPBB_PIP_INSTALLOPT="-U -I -q"
     IPBB_PIP_INSTALLOPT="-U -I"
 
-    ${VENV_COMMAND} ${IPBB_VENV} --no-site-packages
+    ${VENV_CMD} ${IPBB_VENV}
     source ${IPBB_VENV}/bin/activate
 
     echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"

@@ -82,7 +82,6 @@ class ModelSimBatch(object):
         self.terminal = sys.stdout if echo else None
         self.cwd = cwd
         self.dryrun = dryrun
-    #--------------------------------------------
 
     #--------------------------------------------
     def __enter__(self):
@@ -91,14 +90,12 @@ class ModelSimBatch(object):
                 else tempfile.NamedTemporaryFile(suffix='.do')
             )
         return self
-    #--------------------------------------------
 
     #--------------------------------------------
     def __exit__(self, type, value, traceback):
             if not self.dryrun:
                 self._run()
             self.script.close()
-    #--------------------------------------------
 
     #--------------------------------------------
     def __call__(self, *strings):
@@ -106,7 +103,6 @@ class ModelSimBatch(object):
             if not f: continue
             f.write(' '.join(strings)+'\n')
             f.flush()
-    #--------------------------------------------
 
     #--------------------------------------------
     def _run(self):
@@ -124,7 +120,6 @@ class ModelSimBatch(object):
         lLog = (self.log if self.log else 'transcript_{}.log'.format(lRoot))
 
         vsim('-c', '-l', lLog, '-do', self.script.name, '-do', 'quit', _out=sys.stdout, _err=sys.stderr, _cwd=self.cwd)
-    #--------------------------------------------
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

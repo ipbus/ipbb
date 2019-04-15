@@ -6,7 +6,7 @@ source $IPBB_ROOT/venv/scripts/common_ipbb_venv.sh
 
 opts=$(getopt -o r -- "$@")
 [ $? -eq 0 ] || { 
-    echo "Incorrect options provided"
+    echo "${SH_SOURCE}: Incorrect options provided"
     return
 }
 

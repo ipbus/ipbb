@@ -63,8 +63,8 @@ COL_NULL="\e[0m"
 SH_SOURCE=${BASH_SOURCE[0]:-${(%):-%x}}
 HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
 
-IPBB_VENV=$(cd ${HERE}/.. && pwd)/ipbb
-IPBB_ROOT=$(cd ${HERE}/../.. && pwd)
+export IPBB_VENV=$(cd ${HERE}/.. && pwd)/ipbb
+export IPBB_ROOT=$(cd ${HERE}/../.. && pwd)
 
 if [[ "${IPBB_VENV}" != "${IPBB_ROOT}/venv/ipbb" ]]; then
   echo -e "${COL_YELLOW}WARNING: Looks like this script was moved from its original location. Stopping here.${COL_NULL}"

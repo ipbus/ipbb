@@ -30,11 +30,13 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 #     context_settings=CONTEXT_SETTINGS
 # )
 @click.group(cls=click_didyoumean.DYMGroup, context_settings=CONTEXT_SETTINGS)
+@click.option('-e', '--exception-stack', 'aExcStack', is_flag=True, help="Display full exception stack")
 @click.pass_context
 @click.version_option()
-def climain(ctx):
-    # Manually add the Environment to the top-level context.
-    ctx.obj = Environment()
+def climain(ctx, aExcStack):
+    env = ctx.obj
+
+    env.printExceptionStack = aExcStack
 
 
 # ------------------------------------------------------------------------------
@@ -191,8 +193,9 @@ def main():
 
     climain.add_command(debug.debug)
 
+    obj = Environment()
     try:
-        climain()
+        climain(obj=obj)
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         lFirstFrame = traceback.extract_tb(exc_tb)[-1]
@@ -209,19 +212,13 @@ def main():
             fg='red',
         )
 
-        "File \"{}\", line {}, in {}"
-        # secho("{}".format(),fg='red')
-        # print(lFirstFrame)
-        # ipdb.set_trace()
-        # fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        # 'Error: exception of type {} throw'
-        # print(e, exc_type.__name__, fname, exc_tb.tb_lineno)
-        lExc = StringIO.StringIO()
-        traceback.print_exc(file=lExc)
-        print("Exception in user code:")
-        print('-' * 60)
-        secho(lExc.getvalue(), fg='red')
-        print('-' * 60)
+        if obj.printExceptionStack:
+            lExc = StringIO.StringIO()
+            traceback.print_exc(file=lExc)
+            print("Exception in user code:")
+            print('-' * 60)
+            secho(lExc.getvalue(), fg='red')
+            print('-' * 60)
         raise SystemExit(-1)
 
 

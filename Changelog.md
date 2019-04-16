@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.4.4] - 2018-04-XX
 ### Fixes
 - Minor bug in environment loading from yaml files fixed.
+- Environment variables `IPBB_ROOT` and `IPBB_VENV` now properly exported.
 
 ### Changed
 - `vivado synth` and `status`: standardised run status table format

@@ -260,15 +260,15 @@ def synth(env, aJobs, aUpdateInt):
                     with VivadoSnoozer(lConsole):
                         lRunProps = readRunInfo(lConsole)
 
-                    lOOCRunProps = { k: v for k, v in iteritems(lRunProps) if lOOCRegex.match(k) }
+                    lOOCRunProps = { k: v for k, v in lRunProps.iteritems() if lOOCRegex.match(k) }
 
                     secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
 
-                    lSynthProps = { k: v for k, v in iteritems(lRunProps) if k == lSynthRun }
+                    lSynthProps = { k: v for k, v in lRunProps.iteritems() if k == lSynthRun }
 
                     secho('\n' + makeRunsTable(lSynthProps).draw(), fg='cyan')
 
-                    lRunsInError = [ k for k, v in iteritems(lRunProps) if v['STATUS'] == 'synth_design ERROR']
+                    lRunsInError = [ k for k, v in lRunProps.iteritems() if v['STATUS'] == 'synth_design ERROR']
                     if lRunsInError:
                         raise RuntimeError("Detected runs in ERROR {}. Exiting".format(', '.join(lRunsInError)))
 

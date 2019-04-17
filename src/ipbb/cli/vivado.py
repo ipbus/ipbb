@@ -69,13 +69,14 @@ def checksyntax(env):
 
 # -------------------------------------
 @vivado.command('synth', short_help='Run the synthesis step on the current project.')
-@click.option('-j', '--jobs', type=int, default=None)
-# @click.option('-e', '--email', default=None)
+@click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
+@click.option('-i', '--status-update-interval', 'aUpdateInt', type=int, default=1, help="Interal between status updates in minutes")
 @click.pass_obj
-def synth(env, jobs):
+def synth(env, aNumJobs, aUpdateInt):
     '''Run synthesis'''
-    from impl.vivado import synth
-    synth(env, jobs)
+    from .impl.vivado import synth
+    synth(env, aNumJobs, aUpdateInt)
+
 
 
 # ------------------------------------------------------------------------------

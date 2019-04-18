@@ -88,7 +88,7 @@ def addrtab(env, aDest):
 
 
 # ------------------------------------------------------------------------------
-def gendecoders(ctx):
+def gendecoders(ctx, aCheckUpToDate):
 
     lDecodersDir = 'decoders'
     # Extract context
@@ -154,7 +154,7 @@ def gendecoders(ctx):
             try:
                 diff('-u', '-I', '^-- START automatically', lTarget, lDecoder)
             except sh.ErrorReturnCode as e:
-                print(e.stdout)
+                print(e.stdout.decode())
 
                 lUpdatedDecoders.append((lDecoder, lTarget))
 
@@ -168,13 +168,16 @@ def gendecoders(ctx):
                 fg='green',
             )
             return
-        # ------------------------------------------------------------------------------
 
+        # ------------------------------------------------------------------------------
         echo(
             'The following decoders have changed and must be updated:\n'
             + '\n'.join(map(lambda s: '* ' + style(s[0], fg='blue'), lUpdatedDecoders))
             + '\n'
         )
+        if aCheckUpToDate:
+            raise SystemExit(-1)
+
         confirm('Do you want to continue?', abort=True)
         for lDecoder, lTarget in lUpdatedDecoders:
             print(sh.cp('-av', lDecoder, lTarget))

@@ -59,12 +59,13 @@ def addrtab(env, aDest):
     'gendecoders',
     short_help='Generate or update the ipbus address decoders references by dep files.',
 )
+@click.option('-c', '--check-up-to-date', 'aCheckUpToDate', is_flag=True, help='Checks for out-of-date or missing decoders. Returns error if any of the two are found.')
 @click.pass_context
-def gendecoders(ctx):
+def gendecoders(ctx, aCheckUpToDate):
     """Generates the ipbus address decoder modules
     
     Args:
         ctx (`obj`): Click context
     """
     from .impl.common import gendecoders
-    gendecoders(ctx)
+    gendecoders(ctx, aCheckUpToDate)

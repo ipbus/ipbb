@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+## Unreleased
+## Changed
+- Added `--check-up-to-date` flag to `gendecoders`. When specified makes the command exit with error if any decoder is not up to date.
+
 ## [0.4.4] - 2018-04-XX
 ### Fixes
 - Minor bug in environment loading from yaml files fixed.
+- Environment variables `IPBB_ROOT` and `IPBB_VENV` now properly exported.
 
 ### Changed
 - `vivado synth` and `status`: standardised run status table format

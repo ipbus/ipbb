@@ -4,6 +4,7 @@ IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 
 source $IPBB_ROOT/venv/scripts/common_ipbb_venv.sh
 
+#--------------------------
 opts=$(getopt -o r -- "$@")
 [ $? -eq 0 ] || { 
     echo "${SH_SOURCE}: Incorrect options provided"
@@ -24,6 +25,8 @@ while true; do
     esac
     shift
 done
+#--------------------------
+
 
 if [ ${RESET_VENV} = true ]; then
   echo "Resetting VENV"

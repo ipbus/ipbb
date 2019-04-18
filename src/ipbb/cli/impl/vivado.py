@@ -116,6 +116,19 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         raise click.Abort()
     # -------------------------------------------------------------------------
 
+    if not lDryRun:
+
+        with SmartOpen('hashproj.tcl') as lPreSynth:
+            lPreSynth('puts [current_fileset]')
+            lPreSynth(
+                'set ipbb_hash [exec bash -c "source {0} > /dev/null; cd {1}; ipbb dep hash"]'.format(
+                    join(os.environ['IPBB_ROOT'], 'env.sh'),
+                    os.getcwd()
+                )
+            )
+            lPreSynth('puts IPBB_HASH=$ipbb_hash')
+
+        
 
 # ------------------------------------------------------------------------------
 def checksyntax(env):

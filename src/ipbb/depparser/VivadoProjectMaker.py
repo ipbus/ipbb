@@ -144,6 +144,13 @@ class VivadoProjectMaker(object):
             write('source {0}'.format(setup.FilePath))
 
 
+        # Pass ipbb_hash as calculated by hashproj.tcl to the top-level as a generic.
+        write(
+            'set_property -name {steps.synth_design.more options}'
+            ' -value {-generic IPBB_HASH=$ipbb_hash}'
+            ' -objects [get_runs synth_1]'
+        )
+        
         write('close_project')
     # --------------------------------------------------------------
 

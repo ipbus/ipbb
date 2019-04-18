@@ -1,2 +1,2 @@
 *.pyc
-external
+venv/ipbb

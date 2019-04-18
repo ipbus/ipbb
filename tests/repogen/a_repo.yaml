@@ -1,0 +1,25 @@
+# srcs:
+#   - pippo:
+#       - boards
+#       - components:
+#         - firmware:
+#           - cfg:
+#             - pippo.dep: >
+#               stocazz aaa
+#               stocazz aaaa
+#               stocazz aaaa
+
+srcs:
+  aaa/bbb/cc/pippo.dep: |
+    stocazz aaa
+    stocazz aaaa
+    stocazz aaaa
+  aaa/bbb/cc/pluto.dep: |
+    xxxx
+  array: 
+    - 1
+    - 2
+    - 3
+    - 4: a
+      5: b
+

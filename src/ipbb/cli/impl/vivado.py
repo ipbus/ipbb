@@ -45,12 +45,12 @@ def ensureVivado(env):
 
 
 # ------------------------------------------------------------------------------
-def vivado(ctx, proj, verbosity):
+def vivado(ctx, proj, quiet):
     '''Vivado command group'''
 
     env = ctx.obj
 
-    env.vivadoEcho = (verbosity == 'all')
+    env.vivadoEcho = not quiet
 
     # lProj = proj if proj is not None else env.currentproj.name
     if proj is not None:

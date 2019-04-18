@@ -78,7 +78,6 @@ def synth(env, aNumJobs, aUpdateInt):
     synth(env, aNumJobs, aUpdateInt)
 
 
-
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
 @click.option('-j', '--jobs', type=int, default=None)

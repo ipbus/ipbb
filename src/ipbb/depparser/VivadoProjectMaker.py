@@ -40,7 +40,7 @@ class VivadoProjectMaker(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
+    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs, aHashTCLPath=None):
         if 'device_name' not in aScriptVariables:
             raise RuntimeError("Variable 'device_name' not defined in dep files.")
 
@@ -143,14 +143,19 @@ class VivadoProjectMaker(object):
         for setup in (c for c in aCommandList['setup'] if c.Finalise):
             write('source {0}'.format(setup.FilePath))
 
+        if aHashTCLPath:
 
-        # Pass ipbb_hash as calculated by hashproj.tcl to the top-level as a generic.
-        write(
-            'set_property -name {steps.synth_design.more options}'
-            ' -value {-generic IPBB_HASH=$ipbb_hash}'
-            ' -objects [get_runs synth_1]'
-        )
-        
+            # Register pre-synthesys script to compute fresh hash codes
+            write('set_property "steps.synth_design.tcl.pre" "{0}" [get_runs synth_1]'.format(aHashTCLPath))
+
+            # Pass ipbb_hash as calculated by hashproj.tcl to the top-level as a generic.
+            write(
+                'set_property -name {steps.synth_design.more options}'
+                ' -value {-generic IPBB_PROJECT_HASH=$ipbb_hash}' +
+                ' -objects [get_runs synth_1]'
+            )
+
+
         write('close_project')
     # --------------------------------------------------------------
 

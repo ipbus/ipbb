@@ -26,7 +26,7 @@ def check_depfile(env, verbose, component, depfile, toolset):
     from .impl.toolbox import check_depfile
     check_depfile(env, verbose, component, depfile, toolset)
 
-
+# ------------------------------------------------------------------------------
 @toolbox.command('vhdl-beautify', short_help="Beautifies VHDL files in components within an ipbb work area or standalone files/directories")
 @click.option('-c', '--component', callback=validateMultiplePackageOrComponents, multiple=True)
 @click.option('-p', '--path', type=click.Path(), multiple=True)

@@ -15,7 +15,7 @@ import yaml
 import re
 
 # Elements
-from os.path import join, split, exists, splitext, abspath, basename
+from os.path import join, split, exists, splitext, abspath, basename, dirname
 from click import echo, secho, style, confirm
 from texttable import Texttable
 from collections import OrderedDict
@@ -84,6 +84,10 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
     lDryRun = aToScript or aToStdout
 
+
+    lHashTCLPath = join(abspath(dirname(ipbb.__file__)), 'data', 'helpers', 'compute_ipbb_hash.tcl')
+
+
     try:
         with (
             VivadoOpen(lSessionId, echo=env.vivadoEcho)
@@ -103,6 +107,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
                 lDepFileParser.components,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
+                lHashTCLPath,
             )
 
     except VivadoConsoleError as lExc:
@@ -116,19 +121,6 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         raise click.Abort()
     # -------------------------------------------------------------------------
 
-    if not lDryRun:
-
-        with SmartOpen('hashproj.tcl') as lPreSynth:
-            lPreSynth('puts [current_fileset]')
-            lPreSynth(
-                'set ipbb_hash [exec bash -c "source {0} > /dev/null; cd {1}; ipbb dep hash"]'.format(
-                    join(os.environ['IPBB_ROOT'], 'env.sh'),
-                    os.getcwd()
-                )
-            )
-            lPreSynth('puts IPBB_HASH=$ipbb_hash')
-
-        
 
 # ------------------------------------------------------------------------------
 def checksyntax(env):

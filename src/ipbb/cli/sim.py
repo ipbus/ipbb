@@ -49,16 +49,16 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
-@sim.command('fli')
+@sim.command('fli-eth')
 @click.option('-d', '--dev', metavar='DEVICE', default='tap0', help='Virtual network device')
 @click.option('-i', '--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
-def fli(env, dev, ipbuspkg):
+def fli_eth(env, dev, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
-    from .impl.sim import fli
-    fli(env, dev, ipbuspkg)
+    from .impl.sim import fli_eth
+    fli_eth(env, dev, ipbuspkg)
 
 
 # ------------------------------------------------------------------------------
@@ -110,7 +110,8 @@ def sim_get_command_aliases(self, ctx, cmd_name):
         return rv
     if cmd_name == 'project':
         return click.Group.get_command(self, ctx, 'make-project')
-
+    if cmd_name == 'fli':
+        return click.Group.get_command(self, ctx, 'fli-eth')
 
 sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 # ------------------------------------------------------------------------------

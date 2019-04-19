@@ -50,8 +50,8 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
 # ------------------------------------------------------------------------------
 @sim.command('fli')
-@click.option('--dev', metavar='DEVICE', default='tap0', help='Virtual network device')
-@click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
+@click.option('-d', '--dev', metavar='DEVICE', default='tap0', help='Virtual network device')
+@click.option('-i', '--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
 def fli(env, dev, ipbuspkg):
     """
@@ -63,8 +63,8 @@ def fli(env, dev, ipbuspkg):
 
 # ------------------------------------------------------------------------------
 @sim.command('fli-udp')
-@click.option('--port', metavar='PORT', default='50001', help='UPD interface port')
-@click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
+@click.option('-p', '--port', metavar='PORT', default='50001', help='UPD interface port')
+@click.option('-i', '--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
 def fli(env, port, ipbuspkg):
     """

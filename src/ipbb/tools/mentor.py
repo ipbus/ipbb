@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -15,8 +16,11 @@ import tempfile
 
 # Elements
 from os.path import join, split, exists, splitext, basename
-from .common import which, OutputFormatter
 from click import echo, secho, style
+from .common import which, OutputFormatter
+from .termui import *
+
+from builtins import range
 
 # Reminder, prompts are not all the same
 # QuestaSim>
@@ -29,15 +33,16 @@ _vcom = 'vcom'
 
 # ------------------------------------------------
 class ModelSimNotFoundError(Exception):
-
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
         super(ModelSimNotFoundError, self).__init__(message)
+
+
 # ------------------------------------------------
 
 
 # --------------------------------------------------------------
-def autodetect( executable=_vcom ):
+def autodetect(executable=_vcom):
 
     """
     QuestaSim-64 vcom 10.6c_3 Compiler 2017.12 Dec 21 2017
@@ -50,7 +55,8 @@ def autodetect( executable=_vcom ):
 
     if not which(executable):
         raise ModelSimNotFoundError(
-            "'%s' not found in PATH. Failed to detect ModelSim/QuestaSim." % executable)
+            "'%s' not found in PATH. Failed to detect ModelSim/QuestaSim." % executable
+        )
 
     lExe = sh.Command(executable)
     lVerStr = lExe('-version')
@@ -61,6 +67,8 @@ def autodetect( executable=_vcom ):
         raise ModelSimNotFoundError("Failed to detect ModelSim/QuestaSim variant.")
 
     return m.groups()
+
+
 # --------------------------------------------------------------
 
 
@@ -68,14 +76,16 @@ def autodetect( executable=_vcom ):
 class ModelSimBatch(object):
     """docstring for VivadoBatch"""
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
         super(ModelSimBatch, self).__init__()
 
         if scriptpath:
             _, lExt = splitext(scriptpath)
             if lExt not in ['.tcl', '.do']:
-                raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
+                raise ValueError(
+                    'Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt)
+                )
 
         self.scriptpath = scriptpath
         self.log = log
@@ -83,43 +93,58 @@ class ModelSimBatch(object):
         self.cwd = cwd
         self.dryrun = dryrun
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __enter__(self):
         self.script = (
-            open(self.scriptpath, 'w') if self.scriptpath 
-                else tempfile.NamedTemporaryFile(suffix='.do')
-            )
+            open(self.scriptpath, 'w')
+            if self.scriptpath
+            else tempfile.NamedTemporaryFile(mode='w+t', suffix='.do')
+        )
         return self
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __exit__(self, type, value, traceback):
-            if not self.dryrun:
-                self._run()
-            self.script.close()
+        if not self.dryrun:
+            self._run()
+        self.script.close()
 
-    #--------------------------------------------
+    # --------------------------------------------
     def __call__(self, *strings):
         for f in [self.script, self.terminal]:
-            if not f: continue
-            f.write(' '.join(strings)+'\n')
+            if not f:
+                continue
+            f.write(' '.join(strings) + '\n')
             f.flush()
 
-    #--------------------------------------------
+    # --------------------------------------------
     def _run(self):
 
         # Guard against missing vivado executable
         if not which('vsim'):
             raise ModelSimNotFoundError(
-                "'%s' not found in PATH. Failed to detect ModelSim/QuestaSim" % _vsim)
+                "'%s' not found in PATH. Failed to detect ModelSim/QuestaSim" % _vsim
+            )
 
         vsim = sh.Command(_vsim)
-        #TODO:
+        # TODO:
 
-        lRoot,_ = splitext(basename(self.script.name))
+        lRoot, _ = splitext(basename(self.script.name))
 
-        lLog = (self.log if self.log else 'transcript_{}.log'.format(lRoot))
+        lLog = self.log if self.log else 'transcript_{}.log'.format(lRoot)
 
-        vsim('-c', '-l', lLog, '-do', self.script.name, '-do', 'quit', _out=sys.stdout, _err=sys.stderr, _cwd=self.cwd)
+        vsim(
+            '-c',
+            '-l',
+            lLog,
+            '-do',
+            self.script.name,
+            '-do',
+            'quit',
+            _out=sys.stdout,
+            _err=sys.stderr,
+            _cwd=self.cwd,
+        )
+
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -131,6 +156,7 @@ class ModelSimOutputFormatter(OutputFormatter):
     Arguments:
         prefix (string): String to prepend to each line of output
     """
+
     def __init__(self, prefix=None, quiet=False):
         super(ModelSimOutputFormatter, self).__init__(prefix, quiet)
 
@@ -168,6 +194,8 @@ class ModelSimOutputFormatter(OutputFormatter):
                 lLine = lColor + lLine + kReset
 
             self._write((self.prefix if self.prefix else '') + lLine + '\n')
+
+
 # -------------------------------------------------------------------------
 
 
@@ -184,6 +212,8 @@ class ModelSimConsoleError(Exception):
 
         self.errors = errors
         self.command = command
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -196,7 +226,7 @@ class ModelSimConsole(object):
     __instances = set()
     __promptMap = {
         'ModelSim': r'ModelSim> \rModelSim> ',
-        'QuestaSim': r'QuestaSim> \rQuestaSim> '
+        'QuestaSim': r'QuestaSim> \rQuestaSim> ',
     }
     __cmdPromptMaxLen = 500
 
@@ -206,10 +236,13 @@ class ModelSimConsole(object):
         lInstances = set(cls.__instances)
         for lInstance in lInstances:
             lInstance.quit()
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable=_vsim, prompt=None):
+    def __init__(
+        self, sessionid=None, echo=True, echoprefix=None, executable=_vsim, prompt=None
+    ):
         super(ModelSimConsole, self).__init__()
 
         # Set up logger first
@@ -217,9 +250,12 @@ class ModelSimConsole(object):
         self._log.debug('Starting Modelsim')
 
         # define what executable to run
-        self._executable=executable
+        self._executable = executable
         if not which(self._executable):
-            raise ModelsimNotFoundError(self._executable+" not found in PATH. Have you sourced Vivado\'s setup script?")
+            raise ModelSimNotFoundError(
+                self._executable
+                + " not found in PATH. Have you sourced Vivado\'s setup script?"
+            )
 
         # Define the prompt to use
         if prompt is None or prompt == 'autodetect':
@@ -236,23 +272,20 @@ class ModelSimConsole(object):
 
         # Set up the output formatter
         self._out = OutputFormatter(
-            echoprefix if ( echoprefix or (sessionid is None) )
-            else (sessionid + ' | '),
-            quiet=(not echo)
+            echoprefix if (echoprefix or (sessionid is None)) else (sessionid + ' | '),
+            quiet=(not echo),
         )
 
         self._process = pexpect.spawn(
             '{0} -l {1}.log -c'.format(
-                self._executable,
-                'transcript' + ('_' + sessionid) if sessionid else ''
+                self._executable, 'transcript' + ('_' + sessionid) if sessionid else ''
             ),
             env=lEnv,
             echo=echo,
-            logfile=self._out
+            logfile=self._out,
         )
 
         self._process.delaybeforesend = 0.00  # 1
-
 
         # Wait Modelsim to wake up
         self.__expectPrompt()
@@ -262,16 +295,19 @@ class ModelSimConsole(object):
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __del__(self):
         self.quit()
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
         return self.execute(aCmd, aMaxLen)
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -286,43 +322,43 @@ class ModelSimConsole(object):
         lCmdSent = aText.split('\n')[0]
         if lCmdRcvd != lCmdSent:
             # --------------------------------------------------------------
-            print ('-' * 20)
+            print('-' * 20)
             # Find where the 2 strings don't match
-            print (' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
+            print(' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
 
             # find the first mismatching character
             minlen = min(len(lCmdRcvd), len(lCmdSent))
             maxlen = max(len(lCmdRcvd), len(lCmdSent))
-            x = next( 
-                (
-                    i for i in xrange(minlen) 
-                    if lCmdRcvd[i] != lCmdSent[i]
-                ), minlen  
-            )
+            x = next((i for i in range(minlen) if lCmdRcvd[i] != lCmdSent[i]), minlen)
 
-            a = x-10
-            b = x+10
-            for i in xrange(max(a, 0),min(b, maxlen)):
+            a = x - 10
+            b = x + 10
+            for i in range(max(a, 0), min(b, maxlen)):
                 r = lCmdRcvd[i] if len(lCmdRcvd) > i else ' '
                 s = lCmdSent[i] if len(lCmdSent) > i else ' '
                 # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
                 # ord(s) > 128
-                print (i, '\t', repr(s),  repr(r), r == s, ord(r))
+                print(i, '\t', repr(s), repr(r), r == s, ord(r))
 
-            print (''.join([str(i % 10) for i in xrange(len(lCmdRcvd))]))
-            print (lCmdRcvd)
-            print (''.join([str(i % 10) for i in xrange(len(lCmdSent))]))
-            print (lCmdSent)
+            print(''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
+            print(lCmdRcvd)
+            print(''.join([str(i % 10) for i in range(len(lCmdSent))]))
+            print(lCmdSent)
             # --------------------------------------------------------------
             raise RuntimeError(
-                "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent, lCmdRcvd))
+                "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(
+                    lCmdSent, lCmdRcvd
+                )
+            )
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __expectPrompt(self, aMaxLen=100):
         # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
         lCpl = self._process.compile_pattern_list(
-            ['\r\n', '\n\r', self._prompt, pexpect.TIMEOUT])
+            ['\r\n', '\n\r', self._prompt, pexpect.TIMEOUT]
+        )
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []
@@ -337,7 +373,7 @@ class ModelSimConsole(object):
             if lIndex in [1, 2]:
                 break
             elif lIndex == 3:
-                print ('-->> timeout caught')
+                print('-->> timeout caught')
             # ----------------------------------------------------------
 
             # Store the output in the circular buffer
@@ -350,6 +386,7 @@ class ModelSimConsole(object):
         # --------------------------------------------------------------
 
         return lBuffer, (lErrors if lErrors else None)
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -374,6 +411,7 @@ class ModelSimConsole(object):
         self._process.terminate(True)
 
         self.__instances.remove(self)
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -385,13 +423,18 @@ class ModelSimConsole(object):
             raise ValueError('format error. Newline not allowed in commands')
 
         if len(aCmd) > self.__cmdPromptMaxLen:
-            raise RuntimeError('modelsim prompt command length limited to 500 characters, while current command is {} characters long.'.format(len(aCmd)))
+            raise RuntimeError(
+                'modelsim prompt command length limited to 500 characters, while current command is {} characters long.'.format(
+                    len(aCmd)
+                )
+            )
 
         self.__send(aCmd)
         lBuffer, lErrors = self.__expectPrompt(aMaxLen)
         if lErrors is not None:
             raise ModelSimConsoleError(lErrors, aCmd)
         return list(lBuffer)
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -403,7 +446,10 @@ class ModelSimConsole(object):
         for lCmd in aCmds:
             lOutput.extend(self.execute(lCmd, aMaxLen))
         return lOutput
+
     # --------------------------------------------------------------
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -416,17 +462,20 @@ class ModelSimOpen(object):
         super(ModelSimOpen, self).__init__()
         self._args = args
         self._kwargs = kwargs
+
     # --------------------------------------------------------------
-    
+
     # --------------------------------------------------------------
     def __enter__(self):
         self._console = ModelSimConsole(*self._args, **self._kwargs)
         return self
+
     # --------------------------------------------------------------
-    
+
     # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
         self._console.quit()
+
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -435,7 +484,7 @@ class ModelSimOpen(object):
         # Fix at source and remove
         if aCmd is None:
             return
-        
+
         if aCmd.count('\n') is not 0:
             aCmd = aCmd.split('\n')
 
@@ -443,7 +492,10 @@ class ModelSimOpen(object):
             return self._console.execute(aCmd, aMaxLen)
         elif isinstance(aCmd, list):
             return self._console.executeMany(aCmd, aMaxLen)
+
     # --------------------------------------------------------------
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -451,4 +503,6 @@ class ModelSimOpen(object):
 @atexit.register
 def __goodbye():
     ModelSimConsole.killAllInstances()
+
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

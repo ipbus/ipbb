@@ -450,8 +450,8 @@ class DepFileParser(object):
                 try:
                     lParsedLine = self.parseLine(lLine.split())
                 except DepLineParserError as e:
-                    lMsg = "Error caught while parsine line {0} in file {1}".format(lLineNum, lDepFilePath) + "\n"
-                    lMsg += "Details - " + e.message + ": '" + lLine + "'"
+                    lMsg = "Error caught while parsing line {0} in file {1}".format(lLineNum, lDepFilePath) + "\n"
+                    lMsg += "Details - " + str(e) + ": '" + lLine + "'"
                     raise RuntimeError(lMsg)
 
                 if self._verbosity > 1:

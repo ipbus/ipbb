@@ -49,8 +49,8 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
-@sim.command()
-@click.option('--dev', metavar='DEVICE', default='tap0', help='new virtual device')
+@sim.command('fli')
+@click.option('--dev', metavar='DEVICE', default='tap0', help='Virtual network device')
 @click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
 def fli(env, dev, ipbuspkg):
@@ -59,6 +59,19 @@ def fli(env, dev, ipbuspkg):
     """
     from .impl.sim import fli
     fli(env, dev, ipbuspkg)
+
+
+# ------------------------------------------------------------------------------
+@sim.command('fli-udp')
+@click.option('--port', metavar='PORT', default='50001', help='UPD interface port')
+@click.option('--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
+@click.pass_obj
+def fli(env, port, ipbuspkg):
+    """
+    Build the Modelsim-ipbus foreign language interface
+    """
+    from .impl.sim import fli_udp
+    fli_udp(env, port, ipbuspkg)
 
 
 # ------------------------------------------------------------------------------

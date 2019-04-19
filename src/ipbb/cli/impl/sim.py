@@ -1,5 +1,6 @@
 from __future__ import print_function, absolute_import
 from future.utils import raise_with_traceback, raise_from
+from future.utils import iterkeys, itervalues, iteritems
 # ------------------------------------------------------------------------------
 
 # Modules
@@ -372,22 +373,22 @@ def fli(env, dev, ipbuspkg):
 
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.currentproj.name is None:
-        raise click.ClickException(
-            'Project area not defined. Move into a project area and try again.'
-        )
+    # if env.currentproj.name is None:
+    #     raise click.ClickException(
+    #         'Project area not defined. Move into a project area and try again.'
+    #     )
 
-    if env.currentproj.settings['toolset'] != 'sim':
-        raise click.ClickException(
-            "Work area toolset mismatch. Expected 'sim', found '%s'"
-            % env.currentproj.settings['toolset']
-        )
+    # if env.currentproj.settings['toolset'] != 'sim':
+    #     raise click.ClickException(
+    #         "Work area toolset mismatch. Expected 'sim', found '%s'"
+    #         % env.currentproj.settings['toolset']
+    #     )
 
     # -------------------------------------------------------------------------
-    if not which('vsim'):
-        raise click.ClickException(
-            "ModelSim is not available. Have you sourced the environment script?"
-        )
+    # if not which('vsim'):
+    #     raise click.ClickException(
+    #         "ModelSim is not available. Have you sourced the environment script?"
+    #     )
 
     # -------------------------------------------------------------------------
     if ipbuspkg not in env.sources:
@@ -404,7 +405,8 @@ def fli(env, dev, ipbuspkg):
         env.srcdir,
         ipbuspkg,
         'components',
-        'ipbus_eth',
+        'modelsim_fli',
+        'eth',
         'firmware',
         'sim',
         'modelsim_fli',
@@ -420,6 +422,46 @@ def fli(env, dev, ipbuspkg):
     sh.make('-C', 'modelsim_fli', 'TAP_DEV={0}'.format(dev), _out=sys.stdout)
     # Link
     sh.ln('-s', 'modelsim_fli/mac_fli.so', '.', _out=sys.stdout)
+
+
+# ------------------------------------------------------------------------------
+def fli_udp(env, port, ipbuspkg):
+    """
+    Build the Modelsim-ipbus foreign language interface
+    """
+
+    # -------------------------------------------------------------------------
+    if ipbuspkg not in env.sources:
+        raise click.ClickException(
+            "Package %s not found in source/. The FLI cannot be built." % ipbuspkg
+        )
+
+    # Set ModelSim root based on vsim's path
+    os.environ['MODELSIM_ROOT'] = dirname(dirname(which('vsim')))
+    # Apply set
+    # os.environ['MTI_VCO_MODE']='64'
+
+    lFliSrc = join(
+        env.srcdir,
+        ipbuspkg,
+        'components',
+        'modelsim_fli',
+        'transport_udp',
+        'firmware',
+        'sim',
+        'modelsim_fli',
+    )
+
+    import sh
+
+    # Clean-up
+    sh.rm('-rf', 'modelsim_fli', 'sim_udp_fli.so', _out=sys.stdout)
+    # Copy
+    sh.cp('-a', lFliSrc, './', _out=sys.stdout)
+    # Make
+    sh.make('-C', 'modelsim_fli', 'IP_PORT={0}'.format(port), _out=sys.stdout)
+    # Link
+    sh.ln('-s', 'modelsim_fli/sim_udp_fli.so', '.', _out=sys.stdout)
 
 
 # ------------------------------------------------------------------------------
@@ -494,13 +536,13 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
             fg='red',
         )
         raise click.ClickException("Compilation failed")
-    except Exception as e:
-        import traceback, StringIO
+    # except Exception as e:
+    #     import traceback, StringIO
 
-        lBuf = StringIO.StringIO()
-        traceback.print_exc(file=lBuf)
-        secho(lBuf.getvalue(), fg='red')
-        raise click.ClickException("Compilation failed")
+    #     lBuf = StringIO.StringIO()
+    #     traceback.print_exc(file=lBuf)
+    #     secho(lBuf.getvalue(), fg='red')
+    #     raise click.ClickException("Compilation failed")
 
     if lDryRun:
         return
@@ -526,7 +568,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     )
 
     lVsimExtraArgs = ' '.join(
-        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimArgs.iteritems() if v is not None]
+        ['-G{}=\'{}\''.format(k, v) for k, v in iteritems(lVsimArgs) if v is not None]
     )
     lVsimBody = '''#!/bin/sh
 

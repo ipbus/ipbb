@@ -118,8 +118,8 @@ class VivadoBatch(object):
     # --------------------------------------------
     def __enter__(self):
         self.script = (
-            open(self.scriptpath, 'w') if self.scriptpath
-            else tempfile.NamedTemporaryFile(suffix='.do')
+            open(self.scriptpath, 'wt') if self.scriptpath
+            else tempfile.NamedTemporaryFile(mode='w+t', suffix='.do')
         )
         return self
 

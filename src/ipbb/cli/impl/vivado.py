@@ -639,8 +639,8 @@ def package(ctx, aTag):
     lSummary = dict(env.currentproj.settings)
     lSummary.update(
         {
-            'time': socket.gethostname().replace('.', '_'),
-            'build host': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+            'build host': socket.gethostname().replace('.', '_'),
+            'time': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
             'md5': lHash.hexdigest(),
         }
     )
@@ -656,7 +656,7 @@ def package(ctx, aTag):
     sh.cp('-av', lBitPath, lSrcPath, _out=sys.stdout)
     echo()
 
-    secho("Collecting addresstable", fg='blue')
+    secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:
         sh.cp('-av', addrtab.FilePath, join(lSrcPath, 'addrtab'), _out=sys.stdout)
     echo()

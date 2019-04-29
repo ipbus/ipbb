@@ -336,9 +336,9 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     # add newly generated libraries to modelsim.ini
     echo('Adding generated simulation libraries to modelsim.ini')
-    import ConfigParser
+    from configparser import RawConfigParser
 
-    lIniParser = ConfigParser.RawConfigParser()
+    lIniParser = RawConfigParser()
     lIniParser.read(lIpCoresModelsimIni)
     for lSimLib in lSimLibs:
         echo(' - ' + lSimLib)

@@ -25,8 +25,9 @@ setup(
         'IPdb',
         'PyTest',
         'PyYAML',
+        'configparser'
         'Future',
-        'Six'
+        'Six',
     ],
     entry_points='''
         [console_scripts]

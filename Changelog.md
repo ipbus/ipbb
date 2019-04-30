@@ -5,11 +5,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-## Unreleased
-## Changed
+## [0.5.0] - 2018-04-31
+### Changed
 - Added `--check-up-to-date` flag to `gendecoders`. When specified makes the command exit with error if any decoder is not up to date.
 
-## [0.4.4] - 2018-04-XX
+### Added
+- **Python3** support!
+- Support for ipbus v1.4 Modelsim UDP foreing langiate interface.
+- Setup script `-r` flag, to reset and install ipbb's virtual environment.
+
+## [0.4.4] - 2018-04-18
 ### Fixes
 - Minor bug in environment loading from yaml files fixed.
 - Environment variables `IPBB_ROOT` and `IPBB_VENV` now properly exported.

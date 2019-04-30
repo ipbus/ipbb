@@ -25,7 +25,7 @@ setup(
         'IPdb',
         'PyTest',
         'PyYAML',
-        'configparser'
+        'configparser',
         'Future',
         'Six',
     ],

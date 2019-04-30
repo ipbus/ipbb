@@ -22,7 +22,7 @@ def cleanup(env):
 
         lFiles.remove(f)
 
-    if not click.confirm(
+    if lFiles and not click.confirm(
         style(
             "All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format(
                 env.currentproj.path

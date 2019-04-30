@@ -202,7 +202,7 @@ def vhdl_beautify(env, component, path):
                         continue
                     lVHDLFiles.append(join(root, f))
 
-    lVHDLModePath = join(abspath(dirname(ipbb.__file__)), 'data', 'vhdl-mode-3.38.1')
+    lVHDLModePath = join(abspath(dirname(ipbb.__file__)), 'externals', 'vhdl-mode-3.38.1')
 
     # Create a temporary folder
     lTmpDir = tempfile.mkdtemp()
@@ -225,7 +225,7 @@ def vhdl_beautify(env, component, path):
             diff('-u', f, lTmpVHDLPath)
             print('No beautification needed!')
         except sh.ErrorReturnCode as e:
-            print(e.stdout)
+            print(e.stdout.decode())
             print('Beautified!')
             lBeautifiedFiles.append((f, lTmpVHDLPath))
 

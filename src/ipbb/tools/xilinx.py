@@ -1,5 +1,6 @@
 from __future__ import print_function, absolute_import
 from builtins import range
+import six
 # ------------------------------------------------------------------------------
 
 
@@ -458,8 +459,8 @@ class VivadoConsole(object):
 
     # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
-        if not isinstance(aCmd, str):
-            raise TypeError('expected string')
+        if not isinstance(aCmd, six.string_types):
+            raise TypeError('expected string, found '+str(type(aCmd)))
 
         if aCmd.count('\n') != 0:
             raise ValueError('Format error. Newline not allowed in commands')

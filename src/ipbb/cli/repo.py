@@ -66,6 +66,16 @@ def tar(env, repo, dest, strip):
 
 
 # ------------------------------------------------------------------------------
+@add.command('symlink', short_help="Add new source as symlink.")
+@click.argument('path', type=click.Path(exists=True))
+@click.pass_obj
+def symlink(env, path):
+    '''Add a tarball-ed package to the source area'''
+    from .impl.repo import symlink
+    symlink(env, path)
+
+
+# ------------------------------------------------------------------------------
 @click.group('srcs', short_help="Utility commands to handle source packagess.")
 @click.pass_obj
 def srcs(env):

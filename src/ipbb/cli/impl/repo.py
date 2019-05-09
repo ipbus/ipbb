@@ -274,6 +274,23 @@ def tar(env, repo, dest, strip):
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
 
+def symlink(env, path):
+
+    lRepoName = basename(path)
+    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
+
+    if exists(lRepoLocalPath):
+        raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
+
+    echo(
+        'Adding symlink '
+        + style(path, fg='blue')
+        + ' as '
+        + style(lRepoName, fg='blue')
+    )
+
+    sh.ln('-s', abspath(path), _cwd=lRepoLocalPath )
+
 # ------------------------------------------------------------------------------
 def srcs(env):
     pass

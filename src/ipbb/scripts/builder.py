@@ -201,7 +201,7 @@ def main():
         lFirstFrame = traceback.extract_tb(exc_tb)[-1]
 
         secho(
-            "ERROR ('{}' exception): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
+            u"ERROR ('{}' exception caught): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
                 exc_type.__name__,
                 e,
                 lFirstFrame[0],

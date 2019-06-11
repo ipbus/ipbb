@@ -41,8 +41,10 @@ class VivadoProjectMaker(object):
 
     # --------------------------------------------------------------
     def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
-        if 'device_name' not in aScriptVariables:
-            raise RuntimeError("Variable 'device_name' not defined in dep files.")
+        
+        lReqVariables = {'device_name', 'device_package', 'device_speed'}
+        if not lReqVariables.issubset(aScriptVariables):
+            raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aScriptVariables)))
 
         # ----------------------------------------------------------
         # FIXME: Tempourary assignments

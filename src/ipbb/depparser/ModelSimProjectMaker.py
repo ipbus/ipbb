@@ -81,6 +81,10 @@ class ModelSimProjectMaker(object):
                         raise IOError(
                             'No simulation source found for core \'' + lBasename + '\'')
                     # ----------------------------------------------------------
+
+                    # And stop here w/o including the file to the source list.
+                    # Because it's already been compiled in the ipcores modelsim libraries by vivado.
+                    continue
                 else:
                     file = src.FilePath
                 # ----------------------------------------------------------

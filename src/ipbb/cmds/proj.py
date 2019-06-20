@@ -7,10 +7,10 @@ import ipbb
 import subprocess
 
 # Elements
-from ...tools.common import SmartOpen
-from .. import kProjAreaFile, kProjDir, ProjectInfo
-from ..utils import DirSentry, raiseError, validateComponent
-from ...depparser.Pathmaker import Pathmaker
+from ..tools.common import SmartOpen
+from ..defaults import kProjAreaFile, kProjDir, ProjectInfo
+from ..cli.utils import DirSentry, raiseError, validateComponent
+from ..depparser.Pathmaker import Pathmaker
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho

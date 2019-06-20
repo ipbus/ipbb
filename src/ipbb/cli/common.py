@@ -18,7 +18,7 @@ def cleanup(env):
     Args:
         env (`obj`): ipbb environment object
     """
-    from .impl.common import cleanup
+    from ..cmds.common import cleanup
     cleanup(env)
 
 # ------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ def user_config(env, aList, aAdd, aUnset):
         aAdd (bool): 'add' flag
         aUnset (bool): 'unset' flag
     """
-    from .impl.common import user_config
+    from ..cmds.common import user_config
     user_config(env, aList, aAdd, aUnset)
 
 
@@ -51,7 +51,7 @@ def addrtab(env, aDest):
         env (`obj`): ipbb environment object
         aDest (string): Target address table folder
     '''
-    from .impl.common import addrtab
+    from ..cmds.common import addrtab
     addrtab(env, aDest)
 
 # ------------------------------------------------------------------------------
@@ -60,12 +60,12 @@ def addrtab(env, aDest):
     short_help='Generate or update the ipbus address decoders references by dep files.',
 )
 @click.option('-c', '--check-up-to-date', 'aCheckUpToDate', is_flag=True, help='Checks for out-of-date or missing decoders. Returns error if any of the two are found.')
-@click.pass_context
-def gendecoders(ctx, aCheckUpToDate):
+@click.pass_obj
+def gendecoders(env, aCheckUpToDate):
     """Generates the ipbus address decoder modules
     
     Args:
-        ctx (`obj`): Click context
+        env (`obj`): Click context
     """
-    from .impl.common import gendecoders
-    gendecoders(ctx, aCheckUpToDate)
+    from ..cmds.common import gendecoders
+    gendecoders(env, aCheckUpToDate)

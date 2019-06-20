@@ -22,11 +22,11 @@ from collections import OrderedDict
 
 from .dep import hash
 
-from ...tools.common import which, SmartOpen
-from ..utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
+from ..tools.common import which, SmartOpen
+from ..cli.utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ...depparser.VivadoProjectMaker import VivadoProjectMaker
-from ...tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
+from ..depparser.VivadoProjectMaker import VivadoProjectMaker
+from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
 
 
 # ------------------------------------------------------------------------------

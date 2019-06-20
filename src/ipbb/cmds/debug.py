@@ -3,7 +3,7 @@ import os
 
 # Elements
 from click import echo, style, secho
-from ...tools.xilinx import (
+from ..tools.xilinx import (
     VivadoOpen,
     VivadoConsoleError,
     VivadoSnoozer,
@@ -12,26 +12,25 @@ from ...tools.xilinx import (
 
 
 # ------------------------------------------------------------------------------
-def debug(ctx):
+def debug(env):
     pass
 
 
 # ------------------------------------------------------------------------------
-def dump(ctx):
+def dump(env):
 
     if 'IPBB_ROOT' in os.environ:
         echo(style('IPBB_ROOT', fg='blue') + ': ' + os.environ['IPBB_ROOT'])
 
-    env = ctx.obj
+    env = env.obj
     echo(style('src dir', fg='blue') + ': ' + env.srcdir)
     echo(style('proj dir', fg='blue') + ': ' + env.projdir)
     echo(style('project name', fg='blue') + ': ' + env.currentproj.name)
 
 
 # ------------------------------------------------------------------------------
-def ipy(ctx):
+def ipy(env):
     '''Opens IPython to inspect the parser'''
-    # env = ctx.obj
 
     import IPython
 
@@ -39,7 +38,7 @@ def ipy(ctx):
 
 
 # ------------------------------------------------------------------------------
-def test_vivado_formatter(ctx):
+def test_vivado_formatter(env):
 
     out = VivadoOutputFormatter('test | ')
 
@@ -57,6 +56,6 @@ def test_vivado_formatter(ctx):
 
 
 # ------------------------------------------------------------------------------
-def test_vivado_console(ctx):
+def test_vivado_console(env):
     with VivadoOpen('debug') as lConsole:
         lConsole('puts "Hello Xilinx World"')

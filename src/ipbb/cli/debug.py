@@ -7,59 +7,59 @@ import click
 
 # ------------------------------------------------------------------------------
 @click.group()
-@click.pass_context
-def debug(ctx):
+@click.pass_env
+def debug(env):
     """Collection of debug/utility commands
     
     Args:
-        ctx (`obj`): Click context object.
+        env (`obj`): Environment object.
     """
-    from .impl.debug import debug
-    debug(ctx)
+    from ..cmds.debug import debug
+    debug(env)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('dump')
-@click.pass_context
-def dump(ctx):
-    from .impl.debug import dump
-    dump(ctx)
+@click.pass_env
+def dump(env):
+    from ..cmds.debug import dump
+    dump(env)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('ipy')
-@click.pass_context
-def ipy(ctx):
+@click.pass_env
+def ipy(env):
     """Loads the ipbb environment and opens a python shell
     
     Args:
-        ctx (`obj:Context`): Click context object.
+        env (`obj:Context`): Environment object.
     """
-    from .impl.debug import ipy
-    ipy(ctx)
+    from ..cmds.debug import ipy
+    ipy(env)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('test-vivado-formatter')
-@click.pass_context
-def test_vivado_formatter(ctx):
+@click.pass_env
+def test_vivado_formatter(env):
     """Test vivado formatter
     
     Args:
-        ctx (`obj:Context`): Click context object.
+        env (`obj:Context`): Environment object.
     """
-    from .impl.debug import test_vivado_formatter
-    test_vivado_formatter(ctx)
+    from ..cmds.debug import test_vivado_formatter
+    test_vivado_formatter(env)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('test-vivado-console')
-@click.pass_context
-def test_vivado_console(ctx):
+@click.pass_env
+def test_vivado_console(env):
     """Test Vivado console
     
     Args:
-        ctx (`obj:Context`): Click context object.
+        env (`obj:Context`): Environment object.
     """
-    from .impl.debug import test_vivado_console
-    test_vivado_console(ctx)
+    from ..cmds.debug import test_vivado_console
+    test_vivado_console(env)

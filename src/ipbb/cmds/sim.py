@@ -32,7 +32,7 @@ from os.path import (
 from click import echo, secho, style, confirm
 
 # Tools imports
-from ..utils import (
+from ..cli.utils import (
     DirSentry,
     ensureNoMissingFiles,
     echoVivadoConsoleError,
@@ -40,12 +40,12 @@ from ..utils import (
     validateIpAddress,
     validateMacAddress,
 )
-from ...tools.common import which, mkdir, SmartOpen
+from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
-from ...depparser.IPCoresSimMaker import IPCoresSimMaker
-from ...depparser.SimlibMaker import SimlibMaker
-from ...depparser.ModelSimProjectMaker import ModelSimProjectMaker
+from ..depparser.IPCoresSimMaker import IPCoresSimMaker
+from ..depparser.SimlibMaker import SimlibMaker
+from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
 
 
 kIPExportDir = 'ipcores_sim'
@@ -85,10 +85,8 @@ def simlibPath(env, aBasePath):
 
 
 # ------------------------------------------------------------------------------
-def sim(ctx, proj):
+def sim(env, proj):
     '''Simulation commands group'''
-
-    env = ctx.obj
 
     if proj is not None:
         # Change directory before executing subcommand

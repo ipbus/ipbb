@@ -25,8 +25,8 @@ def ensureVivado(env):
 @click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)
 @click.option('-p', '--proj', default=None, help="Selected project, if not current")
 @click.option('-v', '--verbosity', type=click.Choice(['all', 'warnings-only', 'none']), default='all', help="Silence vivado messages")
-@click.pass_context
-def vivado(ctx, proj, verbosity):
+@click.pass_obj
+def vivado(env, proj, verbosity):
     '''Vivado command group
     
     \b
@@ -35,8 +35,8 @@ def vivado(ctx, proj, verbosity):
     - warnings-only:
     - none:
     '''
-    from .impl.vivado import vivado
-    vivado(ctx, proj, verbosity)
+    from ..cmds.vivado import vivado
+    vivado(env, proj, verbosity)
 
 
 # ------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 @click.pass_obj
 def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
-    from .impl.vivado import makeproject
+    from ..cmds.vivado import makeproject
     makeproject(env, aReverse, aOptimise, aToScript, aToStdout)
 
 
@@ -70,7 +70,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
 @click.pass_obj
 def checksyntax(env):
-    from .impl.vivado import checksyntax
+    from ..cmds.vivado import checksyntax
     checksyntax(env)
 
 
@@ -81,7 +81,7 @@ def checksyntax(env):
 @click.pass_obj
 def synth(env, aNumJobs, aUpdateInt):
     '''Run synthesis'''
-    from .impl.vivado import synth
+    from ..cmds.vivado import synth
     synth(env, aNumJobs, aUpdateInt)
 
 
@@ -92,7 +92,7 @@ def synth(env, aNumJobs, aUpdateInt):
 def impl(env, jobs):
     '''Launch an implementation run'''
     '''Run synthesis'''
-    from .impl.vivado import impl
+    from ..cmds.vivado import impl
     impl(env, jobs)
 
 
@@ -102,14 +102,14 @@ def impl(env, jobs):
 # @click.pass_obj
 # def orderconstr(env, order):
 #     '''Reorder constraint set'''
-#     from .impl.vivado import orderconstr
+#     from ..cmds.vivado import orderconstr
 #     orderconstr(env, order)
 
 @vivado.command('resource-usage', short_help="Resource usage")
 @click.pass_obj
 def resource_usage(env):
     '''Create a resource_usage'''
-    from .impl.vivado import resource_usage
+    from ..cmds.vivado import resource_usage
     resource_usage(env)
 
 # ------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ def resource_usage(env):
 @click.pass_obj
 def bitfile(env):
     '''Create a bitfile'''
-    from .impl.vivado import bitfile
+    from ..cmds.vivado import bitfile
     bitfile(env)
 
 
@@ -126,7 +126,7 @@ def bitfile(env):
 @click.pass_obj
 def status(env):
     '''Show the status of all runs in the current project.'''
-    from .impl.vivado import status
+    from ..cmds.vivado import status
     status(env)
 
 
@@ -136,25 +136,25 @@ def status(env):
 def reset(env):
     '''Reset synth and impl runs'''
 
-    from .impl.vivado import reset
+    from ..cmds.vivado import reset
     reset(env)
 
 
 # ------------------------------------------------------------------------------
 @vivado.command('package', short_help="Package the firmware image and metadata into a standalone archive")
-@click.pass_context
+@click.pass_obj
 @click.option('--tag', '-t', 'aTag', default=None, help="Optional tag to add to the archive name.")
-def package(ctx, aTag):
+def package(env, aTag):
     '''Package bitfile with address table and file list
 
     '''
-    from .impl.vivado import package
-    package(ctx, aTag)
+    from ..cmds.vivado import package
+    package(env, aTag)
 
 
 # ------------------------------------------------------------------------------
 @vivado.command()
-@click.pass_context
-def archive(ctx):
-    from .impl.vivado import archive
-    archive(ctx)
+@click.pass_obj
+def archive(env):
+    from ..cmds.vivado import archive
+    archive(env)

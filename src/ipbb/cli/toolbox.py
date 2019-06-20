@@ -10,7 +10,7 @@ from .utils import validateComponent, validateMultiplePackageOrComponents
 @click.pass_obj
 def toolbox(env):
     '''Miscelaneous useful commands'''
-    from .impl.toolbox import toolbox
+    from ..cmds.toolbox import toolbox
     toolbox(env)
 
 
@@ -23,7 +23,7 @@ def toolbox(env):
 @click.pass_obj
 def check_depfile(env, verbose, component, depfile, toolset):
     '''Perform basic checks on dependency files'''
-    from .impl.toolbox import check_depfile
+    from ..cmds.toolbox import check_depfile
     check_depfile(env, verbose, component, depfile, toolset)
 
 
@@ -37,7 +37,7 @@ def vhdl_beautify(env, component, path):
     Args:
         env (TYPE): Description
     '''
-    from .impl.toolbox import vhdl_beautify
+    from ..cmds.toolbox import vhdl_beautify
     vhdl_beautify(env, component, path)
 
 

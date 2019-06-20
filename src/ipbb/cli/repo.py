@@ -11,7 +11,7 @@ import click
 @click.pass_obj
 def init(env, workarea):
     '''Initialise a new firmware development area'''
-    from .impl.repo import init
+    from ..cmds.repo import init
     init(env, workarea)
 # ------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ def add(env):
     '''Add a new package to the source area'''
     # -------------------------------------------------------------------------
     # Must be in a build area
-    from .impl.repo import add
+    from ..cmds.repo import add
     add(env)
 
 
@@ -35,7 +35,7 @@ def add(env):
 @click.pass_obj
 def git(env, repo, branch, dest):
     '''Add a git repository to the source area'''
-    from .impl.repo import git
+    from ..cmds.repo import git
     git(env, repo, branch, dest)
 
 
@@ -49,7 +49,7 @@ def git(env, repo, branch, dest):
 @click.pass_obj
 def svn(env, repo, dest, rev, dryrun, sparse):
     '''Add a svn repository REPO to the source area'''
-    from .impl.repo import svn
+    from ..cmds.repo import svn
     svn(env, repo, dest, rev, dryrun, sparse)
 
 
@@ -61,7 +61,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 @click.pass_obj
 def tar(env, repo, dest, strip):
     '''Add a tarball-ed package to the source area'''
-    from .impl.repo import tar
+    from ..cmds.repo import tar
     tar(env, repo, dest, strip)
 
 
@@ -71,7 +71,7 @@ def tar(env, repo, dest, strip):
 @click.pass_obj
 def symlink(env, path):
     '''Add a tarball-ed package to the source area'''
-    from .impl.repo import symlink
+    from ..cmds.repo import symlink
     symlink(env, path)
 
 
@@ -85,7 +85,7 @@ def srcs(env):
 @srcs.command('info', short_help="Information of the status of source packages.")
 @click.pass_obj
 def info(env):
-    from .impl.repo import info
+    from ..cmds.repo import info
     info(env)
 
 
@@ -94,7 +94,7 @@ def info(env):
 @click.argument('component', callback=validateComponent)
 @click.pass_obj
 def create_component(env, component):
-    from .impl.repo import create_component
+    from ..cmds.repo import create_component
     create_component(env, component)
 
 
@@ -105,7 +105,7 @@ def create_component(env, component):
 @click.argument('args', nargs=-1)
 @click.pass_obj
 def run(env, pkg, cmd, args):
-    from .impl.repo import run
+    from ..cmds.repo import run
     run(env, pkg, cmd, args)
 
 
@@ -113,5 +113,5 @@ def run(env, pkg, cmd, args):
 @srcs.command('find', short_help="Find src files.")
 @click.pass_obj
 def find(env):
-    from .impl.repo import find
+    from ..cmds.repo import find
     find(env)

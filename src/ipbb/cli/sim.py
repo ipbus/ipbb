@@ -13,12 +13,12 @@ from os.path import join
 
 # ------------------------------------------------------------------------------
 @click.group('sim', short_help="Set up simulation projects.", chain=True)
-@click.pass_context
+@click.pass_obj
 @click.option('-p', '--proj', metavar='<name>', default=None, help='Switch to <name> before running subcommands.')
-def sim(ctx, proj):
+def sim(env, proj):
     '''Simulation commands group'''
-    from .impl.sim import sim
-    sim(ctx, proj)
+    from ..cmds.sim import sim
+    sim(env, proj)
 
 
 # ------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ def sim(ctx, proj):
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
 def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
-    from .impl.sim import setupsimlib
+    from ..cmds.sim import setupsimlib
     setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce)
 
 
@@ -44,7 +44,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     Generate the vivado libraries and cores required to simulate the current design.
 
     '''
-    from .impl.sim import ipcores
+    from ..cmds.sim import ipcores
     ipcores(env, aXilSimLibsPath, aToScript, aToStdout)
 
 
@@ -57,7 +57,7 @@ def fli_eth(env, dev, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
-    from .impl.sim import fli_eth
+    from ..cmds.sim import fli_eth
     fli_eth(env, dev, ipbuspkg)
 
 
@@ -70,7 +70,7 @@ def fli(env, port, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
-    from .impl.sim import fli_udp
+    from ..cmds.sim import fli_udp
     fli_udp(env, port, ipbuspkg)
 
 
@@ -96,7 +96,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     - 'ipbus.fli.ip_address': mapped to IP_ADDR top-level generic
 
     """
-    from .impl.sim import makeproject
+    from ..cmds.sim import makeproject
     makeproject(env, aReverse, aOptimise, aToScript, aToStdout)
 
 
@@ -125,7 +125,7 @@ sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 def virtualtap(env, dev, ip):
     """VirtualTap
     """
-    from .impl.sim import virtualtap
+    from ..cmds.sim import virtualtap
     virtualtap(env, dev, ip)
 
 
@@ -135,5 +135,5 @@ def virtualtap(env, dev, ip):
 def mifs(env):
     """Import MIF files from project
     """
-    from .impl.sim import mifs
+    from ..cmds.sim import mifs
     mifs(env)

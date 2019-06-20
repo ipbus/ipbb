@@ -7,9 +7,9 @@ import click
 
 from click import echo, secho, style, confirm
 from os.path import join, split, exists, abspath, splitext, relpath, basename
-from .. import kProjAreaFile, kProjUserFile
-from ..utils import DirSentry, formatDictTable
-from ...tools.common import which
+from ..defaults import kProjAreaFile, kProjUserFile
+from ..cli.utils import DirSentry, formatDictTable
+from ..tools.common import which
 
 
 # ------------------------------------------------------------------------------
@@ -88,11 +88,9 @@ def addrtab(env, aDest):
 
 
 # ------------------------------------------------------------------------------
-def gendecoders(ctx, aCheckUpToDate):
+def gendecoders(env, aCheckUpToDate):
 
     lDecodersDir = 'decoders'
-    # Extract context
-    env = ctx.obj
 
     with DirSentry(env.currentproj.path):
         sh.rm('-rf', lDecodersDir)

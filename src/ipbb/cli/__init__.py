@@ -11,12 +11,7 @@ from os.path import join, split, exists, splitext, basename, dirname
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepFileParser import DepFileParser
 
-# Constants
-kWorkAreaFile = '.ipbbwork'
-kProjAreaFile = '.ipbbproj'
-kProjUserFile = '.ipbbuser'
-kSourceDir = 'src'
-kProjDir = 'proj'
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
 
 
 # ------------------------------------------------------------------------------

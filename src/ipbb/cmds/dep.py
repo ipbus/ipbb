@@ -24,17 +24,15 @@ from os.path import (
     isfile,
     isdir,
 )
-from ...tools.common import which, SmartOpen
-from ..utils import DirSentry, printDictTable
+from ..tools.common import which, SmartOpen
+from ..cli.utils import DirSentry, printDictTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
 
 
 # ------------------------------------------------------------------------------
-def dep(ctx, proj):
+def dep(env, proj):
     '''Dependencies command group'''
-
-    env = ctx.obj
 
     lProj = proj if proj is not None else env.currentproj.name
     if lProj is not None:
@@ -369,7 +367,7 @@ def hash(env, output, verbose):
 
 
 # ------------------------------------------------------------------------------
-def archive(ctx):
+def archive(env):
     print('archive')
 
 

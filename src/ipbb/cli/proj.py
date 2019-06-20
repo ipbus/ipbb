@@ -30,7 +30,7 @@ def proj():
 @click.argument('component', callback=validateComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 @click.pass_obj
-def create( env, kind, projname, component, topdep ):
+def create(env, kind, projname, component, topdep ):
     '''Creates a new area of name PROJNAME of kind KIND
 
       KIND: Area kind, choices: vivado, sim
@@ -39,7 +39,7 @@ def create( env, kind, projname, component, topdep ):
 
       COMPONENT: Component <package:component> contaning the top-level
     '''
-    from .impl.proj import create
+    from ..cmds.proj import create
     create(env, kind, projname, component, topdep)
 
 
@@ -49,7 +49,7 @@ def create( env, kind, projname, component, topdep ):
 def ls( env ):
     '''Lists all available project areas
     '''
-    from .impl.proj import ls
+    from ..cmds.proj import ls
     ls(env)
 
 
@@ -62,5 +62,5 @@ def cd( env, projname, aVerbose ):
     '''Changes current working directory (command line only)
     '''
 
-    from .impl.proj import cd
+    from ..cmds.proj import cd
     cd(env, projname, aVerbose)

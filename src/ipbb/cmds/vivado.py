@@ -23,7 +23,7 @@ from collections import OrderedDict
 from .dep import hash
 
 from ..tools.common import which, SmartOpen
-from ..cli.utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
+from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
@@ -45,10 +45,8 @@ def ensureVivado(env):
 
 
 # ------------------------------------------------------------------------------
-def vivado(ctx, proj, verbosity):
+def vivado(env, proj, verbosity):
     '''Vivado command group'''
-
-    env = ctx.obj
 
     env.vivadoEcho = (verbosity == 'all')
 
@@ -593,12 +591,10 @@ def reset(env):
 
 
 # ------------------------------------------------------------------------------
-def package(ctx, aTag):
+def package(env, aTag):
     '''Package bitfile with address table and file list
 
     '''
-
-    env = ctx.obj
 
     ensureVivado(env)
 

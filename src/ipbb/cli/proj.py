@@ -8,8 +8,9 @@ import subprocess
 
 # Elements
 from ..tools.common import SmartOpen
-from . import kProjAreaFile, kProjDir, ProjectInfo
-from .utils import DirSentry, raiseError, validateComponent
+# from . import kProjAreaFile, kProjDir, ProjectInfo
+# from ..cli.utils import DirSentry, raiseError, validateComponent
+from ..cmds.utils import validateComponent
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho

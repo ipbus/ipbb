@@ -25,7 +25,7 @@ from os.path import (
     isdir,
 )
 from ..tools.common import which, SmartOpen
-from ..cli.utils import DirSentry, printDictTable
+from .utils import DirSentry, printDictTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
 

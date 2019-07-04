@@ -4,6 +4,7 @@ from __future__ import print_function, absolute_import
 # Modules
 import click
 
+# from ..cmds import sim
 
 # kIPExportDir = 'ipcores_sim'
 import types
@@ -16,6 +17,8 @@ from os.path import join
 @click.pass_obj
 @click.option('-p', '--proj', metavar='<name>', default=None, help='Switch to <name> before running subcommands.')
 def sim(env, proj):
+    # import ipdb
+    # ipdb.set_trace()
     '''Simulation commands group'''
     from ..cmds.sim import sim
     sim(env, proj)

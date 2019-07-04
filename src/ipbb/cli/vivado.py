@@ -8,6 +8,7 @@ import types
 
 from ..tools.common import which
 
+
 # ------------------------------------------------------------------------------
 def ensureVivado(env):
     if env.currentproj.settings['toolset'] != 'vivado':

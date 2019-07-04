@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 
 import click
 
-from .utils import validateComponent, validateMultiplePackageOrComponents
+from ..cmds.utils import validateComponent, validateMultiplePackageOrComponents
 
 
 # ------------------------------------------------------------------------------

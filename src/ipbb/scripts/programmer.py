@@ -10,7 +10,7 @@ import tarfile
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath
 from click import echo, secho, style
-from ..cli.utils import echoVivadoConsoleError
+from ..cmds.utils import echoVivadoConsoleError
 from ..tools.common import which
 from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
 from .._version import __version__
@@ -59,25 +59,34 @@ def cli(ctx):
 # ------------------------------------------------------------------------------
 @cli.group()
 @click.pass_obj
+@click.option('-v/-q', 'aVerbosity', default=False, help="Verbose output.")
 @click.option(
     '--hwsrv-uri',
     'aHwServerURI',
     default=None,
     help="Hardware server URI <host>:<port>",
 )
-def vivado(obj, aHwServerURI):
+@click.option(
+    '--add-xvc',
+    'aVirtualCables',
+    default=[],
+    help="Add virtual cable <host>:<port>",
+    multiple=True,
+)
+def vivado(obj, aVerbosity, aHwServerURI, aVirtualCables):
+    obj.options['vivado.verbosity'] = aVerbosity
     obj.options['vivado.hw_server'] = aHwServerURI
-
-
+    obj.options['vivado.virtualcables'] = aVirtualCables
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @vivado.command('list', short_help="Vivado programmer interface.")
 @click.pass_obj
-@click.option('-v/-q', 'aVerbosity', default=False, help="Verbose output.")
-def list(obj, aVerbosity):
+def list(obj):
 
+    lVerbosity = obj.options['vivado.verbosity']
     lHwServerURI = obj.options['vivado.hw_server']
+    lVirtualCables = obj.options['vivado.virtualcables']
 
     lVivado = autodetectVivadoVariant()
     if not lVivado:
@@ -88,25 +97,40 @@ def list(obj, aVerbosity):
     # Build vivado interface
     echo('Starting ' + lVivado + '...')
     try:
-        v = VivadoHWServer(executable=lVivado, echo=aVerbosity)
+        v = VivadoHWServer(executable=lVivado, echo=lVerbosity)
         echo('... done')
 
         echo("Looking for targets")
         v.openHw()
-        v.connect(lHwServerURI)
-        hw_targets = v.getHwTargets()
+        lConnectedHwServer = v.connect(lHwServerURI)[0]
+        lHwTargets = v.getHwTargets()
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
 
-    for target in hw_targets:
+    if lVirtualCables:
+        for vc in lVirtualCables:
+            lVCTarget = lConnectedHwServer + '/xilinx_tcf/Xilix/' + vc
+            if lVCTarget in lHwTargets:
+                continue
+
+            # for lRetries in range(5):
+            try:
+                v.openHwTarget(vc, is_xvc=True)
+                v.closeHwTarget()
+            except VivadoConsoleError as lExc:
+                continue
+            break
+            # Update the list
+            # lHwTargets = v.getHwTargets()
+            lHwTargets += [lVCTarget]
+
+    for target in lHwTargets:
         echo("- target " + style(target, fg='blue'))
 
         try:
             v.openHwTarget(target)
         except VivadoConsoleError as lExc:
-            # echoVivadoConsoleError(lExc)
-            # raise click.Abort()
             v.closeHwTarget(target)
             continue
 
@@ -141,9 +165,10 @@ def _validateDevice(ctx, param, value):
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
 @click.option('-y', 'yes', is_flag=True, default=False, help="Proceed with asking for confirmation.")
-@click.option('-v/-q', 'aVerbosity', default=False, help="Verbose output.")
 @click.pass_obj
-def program(obj, deviceid, bitfile, yes, aVerbosity):
+def program(obj, deviceid, bitfile, yes):
+
+    lVerbosity = obj.options['vivado.verbosity']
 
     target, device = deviceid
 
@@ -175,7 +200,7 @@ def program(obj, deviceid, bitfile, yes, aVerbosity):
 
     echo('Starting {}...'.format(lVivado))
     try:
-        v = VivadoHWServer(executable=lVivado, echo=aVerbosity, stopOnCWarnings=False)
+        v = VivadoHWServer(executable=lVivado, echo=lVerbosity, stopOnCWarnings=False)
         echo('... done')
         v.openHw()
         v.connect(lHwServerURI)

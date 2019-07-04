@@ -32,7 +32,7 @@ from os.path import (
 from click import echo, secho, style, confirm
 
 # Tools imports
-from ..cli.utils import (
+from .utils import (
     DirSentry,
     ensureNoMissingFiles,
     echoVivadoConsoleError,
@@ -82,6 +82,17 @@ def simlibPath(env, aBasePath):
             aBasePath, lVivadoVersion, '{}_{}'.format(lSimVariant.lower(), lSimVersion)
         )
     )
+
+
+# ------------------------------------------------------------------------------
+def findIPSrcs( srcs ):
+    return [
+        split(name)[1]
+        for name, ext in (
+            splitext(src.FilePath) for src in srcs
+        )
+        if ext in [".xci"]
+    ]
 
 
 # ------------------------------------------------------------------------------
@@ -192,7 +203,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     '''
     lSessionId = 'ipcores'
-    lIpCoresModelsimIni = 'modelsim.ipcores.ini'
+    lIPCoresModelsimIni = 'modelsim.ipcores.ini'
 
     lDryRun = aToScript or aToStdout
 
@@ -237,13 +248,15 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     # -------------------------------------------------------------------------
     # Extract the list of cores
-    lIPCores = [
-        split(name)[1]
-        for name, ext in (
-            splitext(src.FilePath) for src in lDepFileParser.commands["src"]
-        )
-        if ext in [".xci", ".edn"]
-    ]
+    # lIPCores = [
+    #     split(name)[1]
+    #     for name, ext in (
+    #         splitext(src.FilePath) for src in lDepFileParser.commands["src"]
+    #     )
+    #     if ext in [".xci", ".edn"]
+    # ]
+
+    lIPCores = findIPSrcs(lDepFileParser.commands["src"])
 
     if not lIPCores:
         secho("WARNING: No ipcore files detected in this project", fg='yellow')
@@ -292,10 +305,10 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     # Copy the generated modelsim ini file locally, with a new name
     shutil.copy(
-        join(lSimlibPath, 'modelsim.ini'), join(os.getcwd(), lIpCoresModelsimIni)
+        join(lSimlibPath, 'modelsim.ini'), join(os.getcwd(), lIPCoresModelsimIni)
     )
     secho(
-        "Imported modelsim.ini from {} to {}".format(lSimlibPath, lIpCoresModelsimIni),
+        "Imported modelsim.ini from {} to {}".format(lSimlibPath, lIPCoresModelsimIni),
         fg='blue',
     )
 
@@ -337,7 +350,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     from configparser import RawConfigParser
 
     lIniParser = RawConfigParser()
-    lIniParser.read(lIpCoresModelsimIni, 'utf-8')
+    lIniParser.read(lIPCoresModelsimIni, 'utf-8')
     for lSimLib in lSimLibs:
         echo(' - ' + lSimLib)
         lIniParser.set('Library', lSimLib, join(lCoreSimDir, lSimLib))
@@ -515,13 +528,6 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
             fg='red',
         )
         raise click.ClickException("Compilation failed")
-    # except Exception as e:
-    #     import traceback, StringIO
-
-    #     lBuf = StringIO.StringIO()
-    #     traceback.print_exc(file=lBuf)
-    #     secho(lBuf.getvalue(), fg='red')
-    #     raise click.ClickException("Compilation failed")
 
     if lDryRun:
         return
@@ -596,22 +602,54 @@ sudo chmod a+rw /dev/net/tun
         sh.chmod('a+rw', '/dev/net/tun', _out=sys.stdout)
 
 
+def detectIPSimSrcs(projpath, ipcores):
+    lWorkingDir = abspath(join(projpath, 'top'))
+
+    lIPPaths = {}
+    for lIP in ipcores:
+
+        lIPPaths[lIP] = None
+        for lSubDir in ['', 'sim']:
+            # Hack required. The Vivado generated hdl files sometimes
+            # have 'sim' in their path, sometimes don't
+            p = abspath(
+                join(lWorkingDir, 'top.srcs', 'sources_1', 'ip', lSubDir, lIP))
+
+            if exists(p):
+                lIPPaths[lIP] = p
+                break
+
+    return lIPPaths
+
 # ------------------------------------------------------------------------------
 def mifs(env):
 
-    lDepFileParser = env.depParser
+    srcs = env.depParser.commands['src']
 
-    # print (env.depParser.commands)
-
+    # Seek mif files in sources
     lPaths = []
-    for c in env.depParser.commands['src']:
+    for c in srcs:
         if splitext(c.FilePath)[1] != '.mif':
             continue
         lPaths.append(c.FilePath)
 
-    if not lPaths:
-        return
+    if lPaths:
+        sh.mkdir('-p', 'mif')
+        for p in lPaths:
+            sh.cp(p, 'mif/')
 
-    sh.mkdir('-p', 'mif')
-    for p in lPaths:
-        sh.cp(p, 'mif/')
+    # IPCores may generate mif files behinds the scenes
+    lIPCores = [ f for f in findIPSrcs(srcs)]
+    # lWorkingDir = abspath(join(env.currentproj.path, 'top'))
+
+    lIPSrcs = detectIPSimSrcs(env.currentproj.path, lIPCores)
+
+    lMissingIPSimSrcs = [ k for k,v in iteritems(lIPSrcs) if v is None]
+    if lMissingIPSimSrcs:
+        raise click.ClickException('Failed to collect mifs. Simulation sources not found for cores: {}'.format(', '.join(lMissingIPSimSrcs)))
+
+    for c, p in iteritems(lIPSrcs):
+        for file in os.listdir(p):
+            if file.endswith(".mif"):
+                sh.cp((os.path.join(p, file), '.'))
+

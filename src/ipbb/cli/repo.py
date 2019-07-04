@@ -1,6 +1,6 @@
 from __future__ import print_function, absolute_import
 
-from .utils import validateComponent
+from ..cmds.utils import validateComponent
 
 # Modules
 import click

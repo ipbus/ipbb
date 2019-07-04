@@ -15,7 +15,7 @@ from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile
-from ..cli.utils import DirSentry, findFileInParents
+from .utils import DirSentry, findFileInParents
 from ..depparser.Pathmaker import Pathmaker
 from ..tools.common import mkdir
 from urllib.parse import urlparse

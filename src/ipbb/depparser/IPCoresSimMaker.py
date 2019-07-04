@@ -68,7 +68,6 @@ set_property "target_language" "VHDL" $proj_top
 
         write()
         lXCIs = []
-        # write('set f [open 'xil_ip_compile.tcl' w]' )
         for src in reversed(aCommandList['src']):
             lPath, lBasename = os.path.split(src.FilePath)
             lName, lExt = os.path.splitext(lBasename)

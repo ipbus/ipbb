@@ -523,8 +523,8 @@ class VivadoHWServer(VivadoConsole):
         return self.execute('get_hw_targets')[0].split()
 
     # --------------------------------------------------------------
-    def openHwTarget(self, target):
-        return self.execute('open_hw_target {{{0}}}'.format(target))
+    def openHwTarget(self, target, is_xvc=False):
+        return self.execute('open_hw_target {1} {{{0}}}'.format(target, '-xvc_url' if is_xvc else ''))
 
     # --------------------------------------------------------------
     def closeHwTarget(self, target=None):

@@ -7,7 +7,7 @@ import click
 
 # ------------------------------------------------------------------------------
 @click.group()
-@click.pass_env
+@click.pass_obj
 def debug(env):
     """Collection of debug/utility commands
     
@@ -20,7 +20,7 @@ def debug(env):
 
 # ------------------------------------------------------------------------------
 @debug.command('dump')
-@click.pass_env
+@click.pass_obj
 def dump(env):
     from ..cmds.debug import dump
     dump(env)
@@ -28,7 +28,7 @@ def dump(env):
 
 # ------------------------------------------------------------------------------
 @debug.command('ipy')
-@click.pass_env
+@click.pass_obj
 def ipy(env):
     """Loads the ipbb environment and opens a python shell
     
@@ -41,7 +41,7 @@ def ipy(env):
 
 # ------------------------------------------------------------------------------
 @debug.command('test-vivado-formatter')
-@click.pass_env
+@click.pass_obj
 def test_vivado_formatter(env):
     """Test vivado formatter
     
@@ -54,7 +54,7 @@ def test_vivado_formatter(env):
 
 # ------------------------------------------------------------------------------
 @debug.command('test-vivado-console')
-@click.pass_env
+@click.pass_obj
 def test_vivado_console(env):
     """Test Vivado console
     

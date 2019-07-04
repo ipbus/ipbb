@@ -13,7 +13,7 @@ from io import StringIO, BytesIO
 from texttable import Texttable
 from click import echo, style, secho
 
-from ..cli import Environment, utils
+from ..cmds import Environment, utils
 from .._version import __version__
 
 # ------------------------------------------------------------------------------

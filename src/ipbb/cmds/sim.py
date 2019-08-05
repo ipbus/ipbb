@@ -288,6 +288,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
+                env.currentproj.path,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,
@@ -515,6 +516,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
+                env.currentproj.path,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,

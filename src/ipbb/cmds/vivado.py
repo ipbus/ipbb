@@ -27,6 +27,7 @@ from .utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
+from ..defaults import kTopEntity
 
 
 # ------------------------------------------------------------------------------
@@ -63,6 +64,9 @@ def vivado(env, proj, verbosity):
                 'Project area not defined. Move to a project area and try again'
             )
 
+    env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
+    env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
+
 
 # ------------------------------------------------------------------------------
 def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
@@ -97,6 +101,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
             lVivadoMaker.write(
                 lConsole,
+                env.currentproj,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,
@@ -123,7 +128,7 @@ def checksyntax(env):
     lStopOn = ['HDL 9-806', 'HDL 9-69']  # Syntax errors  # Type not declared
 
     # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+    lVivProjPath = env.vivadoProjFile
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
@@ -207,7 +212,7 @@ def synth(env, aJobs, aUpdateInt):
     lSessionId = 'synth'
 
     # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+    lVivProjPath = env.vivadoProjFile
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
@@ -302,7 +307,7 @@ def impl(env, jobs):
     lSessionId = 'impl'
 
     # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+    lVivProjPath = env.vivadoProjFile
     if not exists(lVivProjPath):
         raise click.ClickException(
             "Vivado project %s does not exist" % lVivProjPath
@@ -408,7 +413,7 @@ def resource_usage(env):
     lSessionId = 'usage'
 
     # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
+    lVivProjPath = env.vivadoProjFile
     if not exists(lVivProjPath):
         raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
 
@@ -417,7 +422,7 @@ def resource_usage(env):
     lCmds = [
         'open_project %s' % lVivProjPath, 'open_run impl_1',
         'report_utilization -hierarchical -hierarchical_depth 1 -hierarchical_percentages'
-        ]
+    ]
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -439,13 +444,12 @@ def bitfile(env):
     #         'Project area not defined. Move into a project area and try again')
 
     # Check
-    lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
-    if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+    if not exists(env.vivadoProjFile):
+        raise click.ClickException("Vivado project %s does not exist" % env.vivadoProjFile)
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % lVivProjPath]
+    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
 
     lBitFileCmds = ['launch_runs impl_1 -to_step write_bitstream', 'wait_on_run impl_1']
 
@@ -598,13 +602,15 @@ def package(env, aTag):
 
     ensureVivado(env)
 
-    lTopProjPath = 'top'
-
-    if not exists(lTopProjPath):
+    if not exists(env.vivadoProjFile):
         secho('Vivado project does not exist. Creating the project...', fg='yellow')
         makeproject(env, True, True, None, False)
 
-    lBitPath = join(lTopProjPath, 'top.runs', 'impl_1', 'top.bit')
+    lProjName = env.currentproj.name
+    lDepFileParser = env.depParser
+    lTopEntity = lDepFileParser.vars.get('top_entity', kTopEntity)
+
+    lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
     if not exists(lBitPath):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         bitfile(env)

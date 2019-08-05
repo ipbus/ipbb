@@ -20,7 +20,7 @@ class IPCoresSimMaker(object):
     def targetSimulator(self):
         return self.simulator
 
-    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
+    def write(self, aTarget, aProjPath, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
@@ -32,7 +32,7 @@ class IPCoresSimMaker(object):
         write(time.strftime('# %c'))
         write()
 
-        lWorkingDir = os.path.abspath(os.path.join(os.getcwd(), 'top'))
+        lWorkingDir = os.path.abspath(os.path.join(aProjPath, 'top'))
 
         write('set outputDir {0}'.format(lWorkingDir))
         write('file mkdir $outputDir')

@@ -11,18 +11,19 @@ from ..tools.common import SmartOpen
 
 class ModelSimProjectMaker(object):
     # --------------------------------------------------------------
-    def __init__(self, aReverse = False, aTurbo=True):
+    def __init__(self, aIPProjName, aReverse = False, aTurbo=True):
+        self.ipProjName = aIPProjName
         self.reverse = aReverse
         self.turbo = aTurbo
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aProjPath, aScriptVariables, aComponentPaths, aCommandList, aLibs):
+    def write(self, aTarget, aProjInfo, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         # ----------------------------------------------------------
         # FIXME: Temp assignments
         write = aTarget
-        lIPProjDir = abspath(join(aProjPath, 'top'))
+        lIPProjDir = abspath(join(aProjInfo.path, self.ipProjName))
         # ----------------------------------------------------------
 
         # ----------------------------------------------------------
@@ -60,7 +61,7 @@ class ModelSimProjectMaker(object):
                     # have 'sim' in their path, sometimes don't
                     file = None
                     lIpPath = abspath(
-                        join(lIPProjDir, 'top.srcs', 'sources_1', 'ip'))
+                        join(lIPProjDir, self.ipProjName + '.srcs', 'sources_1', 'ip'))
 
                     # ----------------------------------------------------------
                     for lDir in ['', 'sim']:

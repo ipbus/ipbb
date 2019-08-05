@@ -4,23 +4,27 @@ from __future__ import print_function, absolute_import
 import time
 import os
 import shutil
-
+from os.path import abspath, join, split, splitext
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class IPCoresSimMaker(object):
 
     _compiler = 'vcom'
 
-    def __init__(self, aSimlibPath, aSimulator, aExportDir):
+    # --------------------------------------------------------------
+    def __init__(self, aSimlibPath, aSimulator, aExportDir, aIPProjName):
         self.simlibPath = aSimlibPath
         self.simulator = aSimulator
         self.exportdir = aExportDir
+        self.ipProjName = aIPProjName
 
+    # --------------------------------------------------------------
     @property
     def targetSimulator(self):
         return self.simulator
 
-    def write(self, aTarget, aProjPath, aScriptVariables, aComponentPaths, aCommandList, aLibs):
+    # --------------------------------------------------------------
+    def write(self, aTarget, aProjInfo, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
@@ -32,14 +36,14 @@ class IPCoresSimMaker(object):
         write(time.strftime('# %c'))
         write()
 
-        lWorkingDir = os.path.abspath(os.path.join(aProjPath, 'top'))
+        lWorkingDir = abspath(join(aProjInfo.path, self.ipProjName))
 
-        write('set outputDir {0}'.format(lWorkingDir))
-        write('file mkdir $outputDir')
+        # write('set outputDir {0}'.format(lWorkingDir))
+        write('file mkdir {0}'.format(lWorkingDir))
 
         write(
-            'create_project top $outputDir -part {device_name}{device_package}{device_speed} -force'.format(
-                **aScriptVariables
+            'create_project {0} {1} -part {device_name}{device_package}{device_speed} -force'.format(
+                self.ipProjName, lWorkingDir, **aScriptVariables
             )
         )
 
@@ -50,11 +54,10 @@ class IPCoresSimMaker(object):
         )
 
         write('''
-set proj_top [get_projects top]
-set_property "default_lib" "xil_defaultlib" $proj_top
-set_property "simulator_language" "Mixed" $proj_top
-set_property "source_mgmt_mode" "DisplayOnly" $proj_top
-set_property "target_language" "VHDL" $proj_top
+set_property "default_lib" "xil_defaultlib" [current_project]
+set_property "simulator_language" "Mixed" [current_project]
+set_property "source_mgmt_mode" "DisplayOnly" [current_project]
+set_property "target_language" "VHDL" [current_project]
 ''')
 
         write('set_property target_simulator ' + self.targetSimulator + ' [current_project]')
@@ -69,18 +72,14 @@ set_property "target_language" "VHDL" $proj_top
         write()
         lXCIs = []
         for src in reversed(aCommandList['src']):
-            lPath, lBasename = os.path.split(src.FilePath)
-            lName, lExt = os.path.splitext(lBasename)
+            lPath, lBasename = split(src.FilePath)
+            lName, lExt = splitext(lBasename)
 
             if lExt in ['.xci', '.edn']:
                 write(
                     'import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
                 if lExt == '.xci':
                     lXCIs.append( (lName, lBasename) )
-                #     write('upgrade_ip [get_ips {0}]'.format(lName))
-                #     write(
-                #         'generate_target simulation [get_files {0}]'.format(lBasename)
-                #         )
 
         if lXCIs:
             lIPs, lIPFiles = zip(*lXCIs)
@@ -89,6 +88,7 @@ set_property "target_language" "VHDL" $proj_top
             for lFile in lIPFiles:
                 write('generate_target simulation [get_files {0}]'.format(lFile))
 
+            # Is this needed?
             write('set_property top top [get_filesets sim_1]')
             write('export_simulation -force -simulator {} -directory {} -lib_map_path {}'.format(self.targetSimulator, self.exportdir, self.simlibPath))
 

@@ -9,6 +9,7 @@ import copy
 
 from string import Template as tmpl
 from ..defaults import kTopEntity
+from os.path import abspath, join, split, splitext
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectMaker(object):
@@ -38,18 +39,17 @@ class VivadoProjectMaker(object):
     def __init__(self, aReverse = False, aTurbo=True):
         self.reverse = aReverse
         self.turbo = aTurbo
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def write(self, aTarget, aProjInfo, aScriptVariables, aComponentPaths, aCommandList, aLibs):
-        
+
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
             raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aScriptVariables)))
 
         # ----------------------------------------------------------
         write = aTarget
-        lWorkingDir = os.path.abspath(os.path.join(aProjInfo.path, aProjInfo.name))
+        lWorkingDir = abspath(join(aProjInfo.path, aProjInfo.name))
         # lVariables = copy.deepcopy(aScriptVariables)
         # if not 'top_entity' in lVariables:
         lTopEntity = aScriptVariables.get('top_entity', kTopEntity)
@@ -59,12 +59,11 @@ class VivadoProjectMaker(object):
         write(time.strftime("# %c"))
         write()
 
-        write('set outputDir {0}'.format(lWorkingDir))
-        write('file mkdir $outputDir')
+        write('file mkdir {0}'.format(lWorkingDir))
 
         write(
-            'create_project {0} $outputDir -part {device_name}{device_package}{device_speed} -force'.format(
-                aProjInfo.name, **aScriptVariables
+            'create_project {0} {1} -part {device_name}{device_package}{device_speed} -force'.format(
+                aProjInfo.name, lWorkingDir, **aScriptVariables
             )
         )
 
@@ -90,9 +89,9 @@ class VivadoProjectMaker(object):
 
         for src in lSrcs:
             # Extract path tokens
-            lPath, lBasename = os.path.split(src.FilePath)
-            lName, lExt = os.path.splitext(lBasename)
-            lTargetFile = os.path.join('$outputDir/{0}.srcs/sources_1/ip'.format(aProjInfo.name), lName, lBasename)
+            lPath, lBasename = split(src.FilePath)
+            lName, lExt = splitext(lBasename)
+            # lTargetFile = join(lWorkingDir, aProjInfo.name + '.srcs', 'sources_1', 'ip', lName, lBasename)
 
             # local list of commands
             lCommands = []
@@ -105,7 +104,7 @@ class VivadoProjectMaker(object):
                 lCommands += [(c, f)]
 
                 lXciBasenames.append(lName)
-                lXciTargetFiles.append(lTargetFile)
+                # lXciTargetFiles.append(lTargetFile)
             else:
                 if src.Include:
 
@@ -142,8 +141,10 @@ class VivadoProjectMaker(object):
 
         for i in lXciBasenames:
             write('upgrade_ip [get_ips {0}]'.format(i))
-        for i in lXciTargetFiles:
-            write('create_ip_run [get_files {0}]'.format(i))
+        # for i in lXciTargetFiles:
+            # write('create_ip_run [get_files {0}]'.format(i))
+        for i in lXciBasenames:
+            write('create_ip_run [get_ips {0}]'.format(i))
 
         for setup in (c for c in aCommandList['setup'] if c.Finalise):
             write('source {0}'.format(setup.FilePath))

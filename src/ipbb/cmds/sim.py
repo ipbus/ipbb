@@ -49,6 +49,7 @@ from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
 
 
 kIPExportDir = 'ipcores_sim'
+kIPVivadoProjName = 'ipcores_proj'
 
 
 # ------------------------------------------------------------------------------
@@ -268,7 +269,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # -------------------------------------------------------------------------
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lSimulator, kIPExportDir)
+    lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
 
     secho("Generating ipcore simulation code", fg='blue')
 
@@ -288,7 +289,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
-                env.currentproj.path,
+                env.currentproj,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,
@@ -505,7 +506,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(aReverse, aOptimise)
+    lSimProjMaker = ModelSimProjectMaker(kIPVivadoProjName, aReverse, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
@@ -516,7 +517,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                env.currentproj.path,
+                env.currentproj,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,

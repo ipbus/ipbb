@@ -36,12 +36,14 @@ class VivadoProjectMaker(object):
     }
 
     # --------------------------------------------------------------
-    def __init__(self, aReverse = False, aTurbo=True):
+    def __init__(self, aProjInfo, aIPCachePath=None, aReverse=False, aTurbo=True):
+        self.projInfo = aProjInfo
+        self.ipCachePath = aIPCachePath
         self.reverse = aReverse
         self.turbo = aTurbo
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aProjInfo, aScriptVariables, aComponentPaths, aCommandList, aLibs):
+    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
@@ -49,9 +51,8 @@ class VivadoProjectMaker(object):
 
         # ----------------------------------------------------------
         write = aTarget
-        lWorkingDir = abspath(join(aProjInfo.path, aProjInfo.name))
-        # lVariables = copy.deepcopy(aScriptVariables)
-        # if not 'top_entity' in lVariables:
+
+        lWorkingDir = abspath(join(self.projInfo.path, self.projInfo.name))
         lTopEntity = aScriptVariables.get('top_entity', kTopEntity)
         # ----------------------------------------------------------
 
@@ -59,11 +60,9 @@ class VivadoProjectMaker(object):
         write(time.strftime("# %c"))
         write()
 
-        write('file mkdir {0}'.format(lWorkingDir))
-
         write(
             'create_project {0} {1} -part {device_name}{device_package}{device_speed} -force'.format(
-                aProjInfo.name, lWorkingDir, **aScriptVariables
+                self.projInfo.name, lWorkingDir, **aScriptVariables
             )
         )
 
@@ -80,7 +79,7 @@ class VivadoProjectMaker(object):
             write('source {0}'.format(setup.FilePath))
 
         lXciBasenames = []
-        lXciTargetFiles = []
+        # lXciTargetFiles = []
 
         lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
 
@@ -138,6 +137,9 @@ class VivadoProjectMaker(object):
         write('set_property top {0} [current_fileset]'.format(lTopEntity))
 
         write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
+
+        if self.ipCachePath:
+            write('config_ip_cache -import_from_project -use_cache_location {0}'.format(abspath(self.ipCachePath)))
 
         for i in lXciBasenames:
             write('upgrade_ip [get_ips {0}]'.format(i))

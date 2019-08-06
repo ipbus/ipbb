@@ -12,7 +12,8 @@ class IPCoresSimMaker(object):
     _compiler = 'vcom'
 
     # --------------------------------------------------------------
-    def __init__(self, aSimlibPath, aSimulator, aExportDir, aIPProjName):
+    def __init__(self, aProjInfo, aSimlibPath, aSimulator, aExportDir, aIPProjName):
+        self.projInfo = aProjInfo
         self.simlibPath = aSimlibPath
         self.simulator = aSimulator
         self.exportdir = aExportDir
@@ -24,7 +25,7 @@ class IPCoresSimMaker(object):
         return self.simulator
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aProjInfo, aScriptVariables, aComponentPaths, aCommandList, aLibs):
+    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
@@ -36,10 +37,10 @@ class IPCoresSimMaker(object):
         write(time.strftime('# %c'))
         write()
 
-        lWorkingDir = abspath(join(aProjInfo.path, self.ipProjName))
+        lWorkingDir = abspath(join(self.projInfo.path, self.ipProjName))
 
         # write('set outputDir {0}'.format(lWorkingDir))
-        write('file mkdir {0}'.format(lWorkingDir))
+        # write('file mkdir {0}'.format(lWorkingDir))
 
         write(
             'create_project {0} {1} -part {device_name}{device_package}{device_speed} -force'.format(

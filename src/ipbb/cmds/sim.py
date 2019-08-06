@@ -506,7 +506,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(kIPVivadoProjName, aReverse, aOptimise)
+    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aReverse, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
@@ -517,7 +517,6 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                env.currentproj,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,

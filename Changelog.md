@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+##  [0.5.1] - 2018-04-30
+### Fixes
+- Added `MANIFEST.in` to fix a bug in `setup.py` exposed by the newest versions of setuptools.
+
 ### Added
 - Top-level entity in Vivado project can be now specified via the dep-file variable `top_entity`. 
 
 ### Changed
 
-## [0.5.0] - 2018-04-30
+## [0.5.0] - 2019-04-30
 ### Changed
 - Added `--check-up-to-date` flag to `gendecoders`. When specified makes the command exit with error if any decoder is not up to date.
 
@@ -19,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support for ipbus v1.4 Modelsim UDP foreing langiate interface.
 - Setup script `-r` flag, to reset and install ipbb's virtual environment.
 
-## [0.4.4] - 2018-04-18
+## [0.4.4] - 2019-04-18
 ### Fixes
 - Minor bug in environment loading from yaml files fixed.
 - Environment variables `IPBB_ROOT` and `IPBB_VENV` now properly exported.
@@ -28,7 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `vivado synth` and `status`: standardised run status table format
 - Status update interval made configurable via command-line option in `vivado synth`.
 
-## [0.4.3] - 2018-03-06
+## [0.4.3] - 2019-03-06
 ### Fixes
 - Fixed bug in `vivado gendecoders` and `sim --cd` preventing the commands from running. 
 
@@ -39,7 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - VHDL beautify command! `toolbox vhdl-beautify` (required emacs).
 - First implementation of resource usage report from ipbb `vivado resources`.
 
-## [0.4.2] - 2018-02-13
+## [0.4.2] - 2019-02-13
 ### Fixes
 - `vivado impl` timing failures severity is now raised to ERROR. 
 
@@ -48,11 +51,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `zsh` autocompletion support.
 - Hash/version added to the source repository status reported by `srcs status`.
 
-## [0.4.1] - 2018-02-05
+## [0.4.1] - 2019-02-05
 ### Fixes
 - Minor remaining issues from the splitting of cli commands in interface/implementation addressed.
 
-## [0.4.0] - 2018-01-28
+## [0.4.0] - 2019-01-28
 ### Changed
 - Modified reposit structure to better with unit tests in the future.
 - Configuration files switched to `yaml`.

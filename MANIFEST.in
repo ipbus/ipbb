@@ -1,0 +1,3 @@
+graft src/ipbb
+graft doc
+global-exclude *.py[cod] __pycache__ *.so

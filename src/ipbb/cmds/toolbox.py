@@ -166,7 +166,7 @@ def vhdl_beautify(env, component, path):
     import tempfile
     import shutil
     import sys
-    from ...tools.common import which
+    from ..tools.common import which
 
     if not which('emacs'):
         raise click.ClickException(
@@ -203,6 +203,7 @@ def vhdl_beautify(env, component, path):
                     lVHDLFiles.append(join(root, f))
 
     lVHDLModePath = join(abspath(dirname(ipbb.__file__)), 'externals', 'vhdl-mode-3.38.1')
+    print(lVHDLModePath)
 
     # Create a temporary folder
     lTmpDir = tempfile.mkdtemp()

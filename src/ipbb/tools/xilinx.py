@@ -72,7 +72,7 @@ IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
 Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
     """
 
-    lVerExpr = u'(Vivado[\s\w]*)\sv(\d+\.\d)'
+    lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
 
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
 

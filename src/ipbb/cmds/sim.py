@@ -269,7 +269,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # -------------------------------------------------------------------------
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lIPCoreSimMaker = IPCoresSimMaker(lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
+    lIPCoreSimMaker = IPCoresSimMaker(env.currentproj, lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
 
     secho("Generating ipcore simulation code", fg='blue')
 
@@ -289,7 +289,6 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
-                env.currentproj,
                 lDepFileParser.vars,
                 lDepFileParser.components,
                 lDepFileParser.commands,

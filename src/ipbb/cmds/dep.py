@@ -149,8 +149,10 @@ def report(env, filters):
         for cmp in lSortCmp[:-1]:
             lString += u'  ├── ' + str(cmp) + '\n'
         lString += u'  └── ' + str(lSortCmp[-1]) + '\n'
-    if lParser.missing:
+    echo(lString)
 
+    if lParser.missing:
+        lString = ''
         if lParser.missingPackages:
             secho('Missing packages:', fg='red')
             echo(' '.join(list(lParser.missingPackages)))
@@ -170,7 +172,7 @@ def report(env, filters):
         # ------
 
         # ------
-    echo(lString)
+        echo(lString)
 
     lFNF = lParser.missingFiles
 

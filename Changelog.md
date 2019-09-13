@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-##  [0.5.1] - 2019-08-22
+## [0.5.2] - 2019-09-13
+### Fixes
+- Solved an issue in `dep report` leading missing components to be displayed in the wrong place.
+- Fixed few small bugs preventing `sim make-project` to work.
+
+## [0.5.1] - 2019-08-22
 ### Fixes
 - Added `MANIFEST.in` to fix a bug in `setup.py` exposed by the newest versions of setuptools.
 

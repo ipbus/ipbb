@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixes
 - Solved an issue in `dep report` leading missing components to be displayed in the wrong place.
 - Fixed few small bugs preventing `sim make-project` to work.
+- Fixed ip path in `sim mifs`
 
 ## [0.5.1] - 2019-08-22
 ### Fixes

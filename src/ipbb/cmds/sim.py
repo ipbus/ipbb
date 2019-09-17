@@ -604,7 +604,7 @@ sudo chmod a+rw /dev/net/tun
 
 
 def detectIPSimSrcs(projpath, ipcores):
-    lWorkingDir = abspath(join(projpath, 'top'))
+    lSrcDir = abspath(join(projpath, kIPVivadoProjName, kIPVivadoProjName + '.srcs'))
 
     lIPPaths = {}
     for lIP in ipcores:
@@ -614,7 +614,7 @@ def detectIPSimSrcs(projpath, ipcores):
             # Hack required. The Vivado generated hdl files sometimes
             # have 'sim' in their path, sometimes don't
             p = abspath(
-                join(lWorkingDir, 'top.srcs', 'sources_1', 'ip', lSubDir, lIP))
+                join(lSrcDir, 'sources_1', 'ip', lSubDir, lIP))
 
             if exists(p):
                 lIPPaths[lIP] = p

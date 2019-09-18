@@ -637,6 +637,7 @@ def mifs(env):
     if lPaths:
         sh.mkdir('-p', 'mif')
         for p in lPaths:
+            echo('Copying {} to the project area'.format(p))
             sh.cp(p, 'mif/')
 
     # IPCores may generate mif files behinds the scenes
@@ -645,12 +646,13 @@ def mifs(env):
 
     lIPSrcs = detectIPSimSrcs(env.currentproj.path, lIPCores)
 
-    lMissingIPSimSrcs = [ k for k,v in iteritems(lIPSrcs) if v is None]
+    lMissingIPSimSrcs = [ k for k, v in iteritems(lIPSrcs) if v is None]
     if lMissingIPSimSrcs:
         raise click.ClickException('Failed to collect mifs. Simulation sources not found for cores: {}'.format(', '.join(lMissingIPSimSrcs)))
 
-    for c, p in iteritems(lIPSrcs):
-        for file in os.listdir(p):
+    for c, d in iteritems(lIPSrcs):
+        for file in os.listdir(d):
             if file.endswith(".mif"):
-                sh.cp((os.path.join(p, file), '.'))
-
+                p = os.path.join(d, file)
+                echo('Copying {} to the project area'.format(p))
+                sh.cp(p, '.')

@@ -6,6 +6,7 @@ import glob
 from . import Pathmaker
 from collections import OrderedDict
 from os.path import exists
+from string import Template
 
 # -----------------------------------------------------------------------------
 class Command(object):
@@ -143,7 +144,7 @@ class DepFileParser(object):
         self.pathMaker = aPathmaker
 
         self.vars = {}
-        self.commands = {'setup': [], 'src': [], 'addrtab': [], 'iprepo': []}  # , 'finalise': []}
+        self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
         self.libs = list()
         self.components = OrderedDict()
 
@@ -192,11 +193,10 @@ class DepFileParser(object):
         subp.add_argument('file', nargs='*')
         subp.add_argument('-f', '--finalise', action='store_true')
 
-        # Finalise sub-parser
-        # subp = parser_add.add_parser('finalise')
-        # subp.add_argument('-c', '--component', **lCompArgOpts)
-        # subp.add_argument('--cd')
-        # subp.add_argument('file', nargs='*')
+        subp = parser_add.add_parser('util')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('--cd')
+        subp.add_argument('file', nargs='*')
 
         # Source sub-parser
         subp = parser_add.add_parser('src')
@@ -444,6 +444,13 @@ class DepFileParser(object):
                     # front and carry on
                     lLine = lLine[lTokens[1] + 1:].strip()
                 # --------------------------------------------------------------
+
+                try:
+                    lLine = Template(lLine).substitute(self.vars)
+                except RuntimeError as e:
+                    lMsg = "Template substitution caught while parsing line {0} in file {1}".format(lLineNum, lDepFilePath) + "\n"
+                    lMsg += "Details - " + str(e) + ": '" + lLine + "'"
+                    raise RuntimeError(lMsg)
 
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse

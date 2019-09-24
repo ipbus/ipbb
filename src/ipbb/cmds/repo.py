@@ -181,6 +181,8 @@ def git(env, repo, branch, dest):
         fg='green',
     )
 
+    _repoSetup(env, dest)
+
 
 # ------------------------------------------------------------------------------
 def svn(env, repo, dest, rev, dryrun, sparse):
@@ -251,6 +253,9 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
+
+    _repoSetup(env, dest)
+
     # -------------------------------------------------------------------------
 
 
@@ -321,6 +326,8 @@ def tar(env, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
+    _repoSetup(env, dest)
+
 
 # ------------------------------------------------------------------------------
 def symlink(env, path):
@@ -339,6 +346,7 @@ def symlink(env, path):
     )
 
     sh.ln('-s', abspath(path), _cwd=lRepoLocalPath )
+
 
 # ------------------------------------------------------------------------------
 def srcs(env):

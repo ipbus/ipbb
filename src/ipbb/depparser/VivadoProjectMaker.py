@@ -24,6 +24,7 @@ class VivadoProjectMaker(object):
         '.tcl': 'constrs_1',
         '.mif': 'sources_1',
         '.vhd': 'sources_1',
+        '.vhdl': 'sources_1',
         '.v': 'sources_1',
         '.sv': 'sources_1',
         '.xci': 'sources_1',
@@ -69,8 +70,10 @@ class VivadoProjectMaker(object):
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
             ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
-            )
-        )
+        ))
+
+        for util in (c for c in aCommandList['util']):
+            write('add_files -norecurse -fileset utils_1 {0}'.format(util.FilePath))
 
         write('if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
         write('if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')

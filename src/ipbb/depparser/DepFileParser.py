@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+from future.utils import raise_from
 
 import argparse
 import os
@@ -120,65 +121,22 @@ class ComponentAction(argparse.Action):
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-class DepLineParserError(Exception):
+class DepCmdParserError(Exception):
     pass
 
 
-class DepLineParser(argparse.ArgumentParser):
+class DepCmdParser(argparse.ArgumentParser):
     def error(self, message):
-        raise DepLineParserError(message)
-# ------------------------------------------------------------------------------
+        raise DepCmdParserError(message)
 
+    # ---------------------------------
+    def __init__(self):
+        super(DepCmdParser, self).__init__()
 
-class DepFileParser(object):
-    # ----------------------------------------------------------------------------------------------------------------------------
-    def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
-        # --------------------------------------------------------------
-        # Member variables
-        self._toolset = aToolSet
-        self._depth = 0
-        self._includes = None
-        self._verbosity = aVerbosity
-        self._revDepMap = {}
-
-        self.pathMaker = aPathmaker
-
-        self.vars = {}
-        self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
-        self.libs = list()
-        self.components = OrderedDict()
-
-        self.missing = list()
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
-        # Add to or override the Script Variables with user commandline
-        for lArgs in aVariables:
-            lKey, lVal = lArgs.split('=')
-            self.vars[lKey] = lVal
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
-        # Set the toolset
-        if self._toolset == 'xtclsh':
-            self.vars['toolset'] = 'ISE'
-        elif self._toolset == 'vivado':
-            self.vars['toolset'] = 'Vivado'
-        elif self._toolset == 'sim':
-            self.vars['toolset'] = 'Modelsim'
-        else:
-            self.vars['toolset'] = 'other'
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
-        # Special options
+        # Common options
         lCompArgOpts = dict(action=ComponentAction, default=(None, None))
-        # --------------------------------------------------------------
 
-        # --------------------------------------------------------------
-        # Set up the parser
-        parser = DepLineParser(usage=argparse.SUPPRESS)
-        parser_add = parser.add_subparsers(dest='cmd')
+        parser_add = self.add_subparsers(dest='cmd')
 
         # Include sub-parser
         subp = parser_add.add_parser('include')
@@ -221,8 +179,114 @@ class DepFileParser(object):
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('--cd')
         subp.add_argument('file', nargs='*')
-        # map parser method to self
-        self.parseLine = parser.parse_args
+
+        # --------------------------------------------------------------
+
+    def parseLine(self, *args, **kwargs):
+
+        return self.parse_args(*args, **kwargs)
+# ------------------------------------------------------------------------------
+
+
+
+class DepLineError(Exception):
+    """Exception class for pre-parsing errors"""
+    pass
+        
+# ------------------------------------------------------------------------------
+class DepFileParser(object):
+    # ----------------------------------------------------------------------------------------------------------------------------
+    def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
+        # --------------------------------------------------------------
+        # Member variables
+        self._toolset = aToolSet
+        self._depth = 0
+        self._includes = None
+        self._verbosity = aVerbosity
+        self._revDepMap = {}
+
+        self.pathMaker = aPathmaker
+
+        self.vars = {}
+        self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
+        self.libs = list()
+        self.components = OrderedDict()
+
+        self.missing = list()
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # Add to or override the Script Variables with user commandline
+        for lArgs in aVariables:
+            lKey, lVal = lArgs.split('=')
+            self.vars[lKey] = lVal
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # Set the toolset
+        if self._toolset == 'xtclsh':
+            self.vars['toolset'] = 'ISE'
+        elif self._toolset == 'vivado':
+            self.vars['toolset'] = 'Vivado'
+        elif self._toolset == 'sim':
+            self.vars['toolset'] = 'Modelsim'
+        else:
+            self.vars['toolset'] = 'other'
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # Special options
+        # lCompArgOpts = dict(action=ComponentAction, default=(None, None))
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # Set up the parser
+        parser = DepCmdParser(usage=argparse.SUPPRESS)
+        # parser_add = parser.add_subparsers(dest='cmd')
+
+        # # Include sub-parser
+        # subp = parser_add.add_parser('include')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('--cd')
+        # subp.add_argument('file', nargs='*')
+
+        # # Setup sub-parser
+        # subp = parser_add.add_parser('setup')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('--cd')
+        # subp.add_argument('file', nargs='*')
+        # subp.add_argument('-f', '--finalise', action='store_true')
+
+        # subp = parser_add.add_parser('util')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('--cd')
+        # subp.add_argument('file', nargs='*')
+
+        # # Source sub-parser
+        # subp = parser_add.add_parser('src')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('-l', '--lib')
+        # # subp.add_argument('-g', '--generated' , action = 'store_true') #
+        # # TODO: Check if still used in Vivado
+        # subp.add_argument('-n', '--noinclude', action='store_true')
+        # subp.add_argument('--cd')
+        # subp.add_argument('file', nargs='+')
+        # subp.add_argument('--vhdl2008', action='store_true')
+
+        # # Address table sub-parser
+        # subp = parser_add.add_parser('addrtab')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('--cd')
+        # subp.add_argument('-t', '--toplevel', action='store_true')
+        # subp.add_argument('file', nargs='*')
+
+        # # Ip repository sub-parser
+        # subp = parser_add.add_parser('iprepo')
+        # subp.add_argument('-c', '--component', **lCompArgOpts)
+        # subp.add_argument('--cd')
+        # subp.add_argument('file', nargs='*')
+        # # map parser method to self
+        self.parseLine = parser.parseLine
         # --------------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------------------------
 
@@ -357,7 +421,71 @@ class DepFileParser(object):
 
             lNotFound.add(lPackage)
         return lNotFound
+
     # ----------------------------------------------------------------------------------------------------------------------------
+    def pre_process(self, aLine):
+        '''Pre-processes depfile lines
+
+        '''
+        lLine = aLine.strip()
+
+        # --------------------------------------------------------------
+        # Ignore blank lines and comments
+        if lLine == "" or lLine[0] == "#":
+            # Return None (i.e. continue)
+            return
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # Process the assignment directive
+        if lLine[0] == "@":
+            lTokenized = lLine[1:].split("=")
+            if len(lTokenized) != 2:
+                raise DepLineError("@ directives must be key=value pairs")
+            if lTokenized[0].strip() in self.vars:
+                print("Warning!", lTokenized[0].strip(
+                ), "already defined. Not redefining.")
+            else:
+                try:
+                    exec(lLine[1:], None, self.vars)
+                except Exception as lExc:
+                    raise_from(DepLineError("Parsing directive failed"), lExc)
+
+            # Return None (i.e. continue)
+            return
+        # --------------------------------------------------------------
+
+        # --------------------------------------------------------------
+        # Process the conditional directive
+        if lLine[0] == "?":
+            lTokens = [i for i, letter in enumerate(
+                lLine) if letter == "?"]
+            if len(lTokens) != 2:
+                raise DepLineError(
+                    "There must be precisely two '?' tokens per line. Found {0}'".format(len(lTokens))
+                )
+
+            try:
+                lExprValue = eval(
+                    lLine[lTokens[0] + 1: lTokens[1]], None, self.vars)
+            except Exception as lExc:
+                raise_from(DepLineError("Parsing directive failed"), lExc)
+
+            if not isinstance(lExprValue, bool):
+                raise DepLineError("Directive does not evaluate to boolean type in {0}".format(lExprValue))
+
+            if not lExprValue:
+                return
+
+            # if line is accepted, strip the conditionality from the
+            # front and carry on
+            lLine = lLine[lTokens[1] + 1:].strip()
+        # --------------------------------------------------------------
+
+        try:
+            lLine = Template(lLine).substitute(self.vars)
+        except RuntimeError as lExc:
+            raise_from(DepLineError("Template substitution failed"), lExc)
 
     # ----------------------------------------------------------------------------------------------------------------------------
     def parse(self, aPackage, aComponent, aDepFileName):
@@ -386,78 +514,85 @@ class DepFileParser(object):
             raise OSError("File " + lDepFilePath + " does not exist")
 
         with open(lDepFilePath) as lDepFile:
-            for lLineNum, lLine in enumerate(lDepFile):
+            for lLineNr, lLine in enumerate(lDepFile):
 
-                lLine = lLine.strip()
-                # --------------------------------------------------------------
-                # Ignore blank lines and comments
-                if lLine == "" or lLine[0] == "#":
-                    continue
-                # --------------------------------------------------------------
+                # lLine = lLine.strip()
+                # # --------------------------------------------------------------
+                # # Ignore blank lines and comments
+                # if lLine == "" or lLine[0] == "#":
+                #     continue
+                # # --------------------------------------------------------------
 
-                # --------------------------------------------------------------
-                # Process the assignment directive
-                if lLine[0] == "@":
-                    lTokenized = lLine[1:].split("=")
-                    if len(lTokenized) != 2:
-                        raise SystemExit("@ directives must be key=value pairs. Found '{0}' in {1}".format(
-                            lLine, aDepFileName))
-                    if lTokenized[0].strip() in self.vars:
-                        print("Warning!", lTokenized[0].strip(
-                        ), "already defined. Not redefining.")
-                    else:
-                        try:
-                            exec(lLine[1:], None, self.vars)
-                        except:
-                            raise SystemExit(
-                                "Parsing directive failed in {0} , line '{1}'".format(aDepFileName, lLine))
-                    continue
-                # --------------------------------------------------------------
+                # # --------------------------------------------------------------
+                # # Process the assignment directive
+                # if lLine[0] == "@":
+                #     lTokenized = lLine[1:].split("=")
+                #     if len(lTokenized) != 2:
+                #         raise SystemExit("@ directives must be key=value pairs. Found '{0}' in {1}".format(
+                #             lLine, aDepFileName))
+                #     if lTokenized[0].strip() in self.vars:
+                #         print("Warning!", lTokenized[0].strip(
+                #         ), "already defined. Not redefining.")
+                #     else:
+                #         try:
+                #             exec(lLine[1:], None, self.vars)
+                #         except:
+                #             raise SystemExit(
+                #                 "Parsing directive failed in {0} , line '{1}'".format(aDepFileName, lLine))
+                #     continue
+                # # --------------------------------------------------------------
 
-                # --------------------------------------------------------------
-                # Process the conditional directive
-                if lLine[0] == "?":
-                    lTokens = [i for i, letter in enumerate(
-                        lLine) if letter == "?"]
-                    if len(lTokens) != 2:
-                        raise SystemExit(
-                            "There must be precisely two '?' tokens per line. Found {0} in {1} , line '{2}'".format(
-                                len(lTokens), aDepFileName, lLine
-                            )
-                        )
+                # # --------------------------------------------------------------
+                # # Process the conditional directive
+                # if lLine[0] == "?":
+                #     lTokens = [i for i, letter in enumerate(
+                #         lLine) if letter == "?"]
+                #     if len(lTokens) != 2:
+                #         raise SystemExit(
+                #             "There must be precisely two '?' tokens per line. Found {0} in {1} , line '{2}'".format(
+                #                 len(lTokens), aDepFileName, lLine
+                #             )
+                #         )
 
-                    try:
-                        lExprValue = eval(
-                            lLine[lTokens[0] + 1: lTokens[1]], None, self.vars)
-                    except:
-                        raise SystemExit(
-                            "Parsing directive failed in {0} , line '{1}'".format(aDepFileName, lLine))
+                #     try:
+                #         lExprValue = eval(
+                #             lLine[lTokens[0] + 1: lTokens[1]], None, self.vars)
+                #     except:
+                #         raise SystemExit(
+                #             "Parsing directive failed in {0} , line '{1}'".format(aDepFileName, lLine))
 
-                    if not isinstance(lExprValue, bool):
-                        raise SystemExit("Directive does not evaluate to boolean type in {0} , line '{1}'".format(
-                            aDepFileName, lLine))
+                #     if not isinstance(lExprValue, bool):
+                #         raise SystemExit("Directive does not evaluate to boolean type in {0} , line '{1}'".format(
+                #             aDepFileName, lLine))
 
-                    if not lExprValue:
-                        continue
+                #     if not lExprValue:
+                #         continue
 
-                    # if line is accepted, strip the conditionality from the
-                    # front and carry on
-                    lLine = lLine[lTokens[1] + 1:].strip()
-                # --------------------------------------------------------------
+                #     # if line is accepted, strip the conditionality from the
+                #     # front and carry on
+                #     lLine = lLine[lTokens[1] + 1:].strip()
+                # # --------------------------------------------------------------
+
+                # try:
+                #     lLine = Template(lLine).substitute(self.vars)
+                # except RuntimeError as e:
+                #     lMsg = "Template substitution caught while parsing line {0} in file {1}".format(lLineNr, lDepFilePath) + "\n"
+                #     lMsg += "Details - " + str(e) + ": '" + lLine + "'"
+                #     raise RuntimeError(lMsg)
 
                 try:
-                    lLine = Template(lLine).substitute(self.vars)
-                except RuntimeError as e:
-                    lMsg = "Template substitution caught while parsing line {0} in file {1}".format(lLineNum, lDepFilePath) + "\n"
-                    lMsg += "Details - " + str(e) + ": '" + lLine + "'"
-                    raise RuntimeError(lMsg)
+                    lLine = self.pre_process(lLine)
+                except DepLineError as lExc:
+                    raise_from(RuntimeError("Parsing failed in {0}, line {1}".format(lDepFilePath, lLineNr)), lExc)
 
+                if not lLine:
+                    continue
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
                 try:
                     lParsedLine = self.parseLine(lLine.split())
-                except DepLineParserError as e:
-                    lMsg = "Error caught while parsing line {0} in file {1}".format(lLineNum, lDepFilePath) + "\n"
+                except DepCmdParserError as e:
+                    lMsg = "Error caught while parsing line {0} in file {1}".format(lLineNr, lDepFilePath) + "\n"
                     lMsg += "Details - " + str(e) + ": '" + lLine + "'"
                     raise RuntimeError(lMsg)
 

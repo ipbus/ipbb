@@ -139,7 +139,7 @@ class VivadoProjectMaker(object):
 
         write('set_property top {0} [current_fileset]'.format(lTopEntity))
 
-        write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
+        # write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
 
         if self.ipCachePath:
             write('config_ip_cache -import_from_project -use_cache_location {0}'.format(abspath(self.ipCachePath)))

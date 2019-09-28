@@ -69,3 +69,5 @@ elif [[ "$IAM" == "zsh" ]]; then
   eval "$(_IPBB_COMPLETE=source_zsh ipbb)"
   eval "$(_IPB_PROG_COMPLETE=source_zsh ipb-prog)"  
 fi
+
+alias reset-ipbb-env='reset_ipbb_venv.sh; deactivate'

@@ -69,7 +69,7 @@ def fli_eth(env, dev, ipbuspkg):
 @click.option('-p', '--port', metavar='PORT', default='50001', help='UPD interface port')
 @click.option('-i', '--ipbuspkg', metavar='IPBUSPACKAGE', default='ipbus-firmware', help='ipbus firmware package')
 @click.pass_obj
-def fli(env, port, ipbuspkg):
+def fli_udp(env, port, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """

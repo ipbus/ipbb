@@ -181,7 +181,7 @@ def git(env, repo, branch, dest):
         fg='green',
     )
 
-    _repoSetup(env, dest)
+    _repoSetup(env, lRepoName)
 
 
 # ------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoSetup(env, dest)
+    _repoSetup(env, lRepoName)
 
     # -------------------------------------------------------------------------
 
@@ -326,7 +326,7 @@ def tar(env, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoSetup(env, dest)
+    _repoSetup(env, lRepoName)
 
 
 # ------------------------------------------------------------------------------

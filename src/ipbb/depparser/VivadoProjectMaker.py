@@ -37,10 +37,9 @@ class VivadoProjectMaker(object):
     }
 
     # --------------------------------------------------------------
-    def __init__(self, aProjInfo, aIPCachePath=None, aReverse=False, aTurbo=True):
+    def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True):
         self.projInfo = aProjInfo
         self.ipCachePath = aIPCachePath
-        self.reverse = aReverse
         self.turbo = aTurbo
 
     # --------------------------------------------------------------
@@ -84,7 +83,7 @@ class VivadoProjectMaker(object):
         lXciBasenames = []
         # lXciTargetFiles = []
 
-        lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
+        lSrcs = aCommandList['src']
 
         # Grouping commands here, where the order matters only for constraint files
         lSrcCommandGroups = collections.OrderedDict()

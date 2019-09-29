@@ -79,12 +79,11 @@ def fli_udp(env, port, ipbuspkg):
 
 # ------------------------------------------------------------------------------
 @sim.command('make-project', short_help="Assemble the simulation project from sources")
-@click.option('-r/-n', '--reverse/--natural', 'aReverse', default=True)
 @click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle sim script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
+def makeproject(env, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
 
@@ -100,7 +99,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
     """
     from ..cmds.sim import makeproject
-    makeproject(env, aReverse, aOptimise, aToScript, aToStdout)
+    makeproject(env, aOptimise, aToScript, aToStdout)
 
 
 # ------------------------------------------------------------------------------

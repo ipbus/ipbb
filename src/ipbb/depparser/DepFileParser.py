@@ -6,7 +6,7 @@ import os
 import glob
 from . import Pathmaker
 from collections import OrderedDict
-from os.path import exists
+from os.path import exists, splitext
 from string import Template
 
 # -----------------------------------------------------------------------------
@@ -451,7 +451,7 @@ class DepFileParser(object):
         return lLine
 
     # -------------------------------------------------------------------------
-    def post_process(self, aParsedLine, aDepFilePath, aPackage, aComponent):
+    def post_process(self, aParsedLine, aDepFilePath, aPackage, aComponent, aReverse):
         # --------------------------------------------------------------
         # Set package and module variables, whether specified or not
         lPackage, lComponent = aParsedLine.component
@@ -474,6 +474,9 @@ class DepFileParser(object):
                 aParsedLine.cmd, lComponentName)]
         else:
             lFileExprList = aParsedLine.file
+
+        if aReverse:
+            lFileExprList.reverse()
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -483,6 +486,9 @@ class DepFileParser(object):
             # Expand file expression
             lPathExpr, lFileList = self.pathMaker.glob(
                 lPackage, lComponent, aParsedLine.cmd, lFileExpr, cd=aParsedLine.cd)
+
+            if aReverse:
+                lFileList.reverse()
 
             # --------------------------------------------------------------
             # Store the result and move on
@@ -578,6 +584,7 @@ class DepFileParser(object):
                 (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
             raise OSError("File " + lDepFilePath + " does not exist")
 
+        lParsedTuples = []
         with open(lDepFilePath) as lDepFile:
             for lLineNr, lLine in enumerate(lDepFile):
 
@@ -603,7 +610,16 @@ class DepFileParser(object):
                     print(' ' * self._depth, '- Parsed line', vars(lParsedLine))
                 # --------------------------------------------------------------
 
-                self.post_process(lParsedLine, lDepFilePath, aPackage, aComponent)
+                lParsedTuples.append((lParsedLine, lDepFilePath, aPackage, aComponent))
+
+        # import ipdb; ipdb.set_trace()
+        lRev = (splitext(aDepFileName)[1] == '.dep')
+        # lRev = False
+        if lRev:
+            lParsedTuples.reverse()
+
+        for lParsedTuple in lParsedTuples:
+            self.post_process(*lParsedTuple, aReverse=lRev)
 
         # --------------------------------------------------------------
 
@@ -621,6 +637,13 @@ class DepFileParser(object):
         # If we are exiting the top-level, uniquify the commands list, keeping
         # the order as defined in Dave's origianl voodoo
         if self._depth == 0:
+
+            for i in self.commands:
+                lTemp = list()
+                for j in self.commands[i]:
+                    if j not in lTemp:
+                        lTemp.append(j)
+                self.commands[i] = lTemp
 
             # If we are exiting the top-level, uniquify the component list
             for lPkg in self.components:

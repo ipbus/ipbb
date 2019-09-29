@@ -69,7 +69,7 @@ def vivado(env, proj, verbosity):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aEnableIPCache, aReverse, aOptimise, aToScript, aToStdout):
+def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
     lSessionId = 'make-project'
@@ -83,7 +83,7 @@ def makeproject(env, aEnableIPCache, aReverse, aOptimise, aToScript, aToStdout):
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lVivadoIPCache = join(env.work.path, 'var', 'vivado-ip-cache') if aEnableIPCache else None
-    lVivadoMaker = VivadoProjectMaker(env.currentproj, lVivadoIPCache, aReverse, aOptimise)
+    lVivadoMaker = VivadoProjectMaker(env.currentproj, lVivadoIPCache, aOptimise)
 
     lDryRun = aToScript or aToStdout
 

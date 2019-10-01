@@ -10,6 +10,7 @@ from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepFileParser import DepFileParser
+from ..depparser.DepFileParser2g import DepFileParser2g
 
 from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
 
@@ -113,7 +114,7 @@ class ProjectInfo(FolderInfo):
 class Environment(object):
     """docstring for Environment"""
 
-    _verbosity = 0
+    _verbosity = 2
 
     # ----------------------------------------------------------------------------
     def __init__(self):
@@ -180,6 +181,27 @@ class Environment(object):
         if self._depParser is None:
 
             self._depParser = DepFileParser(
+                self.currentproj.settings['toolset'],
+                self.pathMaker,
+                aVerbosity=self._verbosity,
+            )
+
+            try:
+                self._depParser.parse(
+                    self.currentproj.settings['topPkg'],
+                    self.currentproj.settings['topCmp'],
+                    self.currentproj.settings['topDep'],
+                )
+            except OSError as e:
+                pass
+
+        return self._depParser
+
+    # -----------------------------------------------------------------------------
+    def depParser2g(self, aParse=False):
+        if self._depParser is None:
+
+            self._depParser = DepFileParser2g(
                 self.currentproj.settings['toolset'],
                 self.pathMaker,
                 aVerbosity=self._verbosity,

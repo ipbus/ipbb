@@ -1,0 +1,19 @@
+files:
+  firmware/cfg:
+    top.dep: |
+      src t0.vhd
+      src t1.vhd
+      include defs.dep
+      ? var_A == True ? src t2.vhd
+      src t3.vhd
+    defs.dep: |
+      @var_A=False
+      src d1.vhd
+      src d2.vhd
+  firmware/hdl:
+    t0.vhd: ""
+    t1.vhd: ""
+    t2.vhd: ""
+    t3.vhd: ""
+    d1.vhd: ""
+    d2.vhd: ""

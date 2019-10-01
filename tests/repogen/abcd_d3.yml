@@ -1,0 +1,32 @@
+name: abcd
+top:
+  - a.d3
+files:
+  firmware/cfg:
+    a.d3: |
+      setup settings.tcl
+      src a0.vhd
+      src a1.vhd
+      include b.d3
+      # ? var_A == True ? src a3.vhd
+      src a4.vhd
+      include c.d3
+    b.d3: |
+      include d.d3
+      src b1.vhd
+    c.d3: |
+      src c2.vhd
+      include d.d3
+    d.d3: |
+      src d3.vhd
+      src d4.vhd
+    settings.tcl: ""
+  firmware/hdl:
+    a0.vhd: ""
+    a1.vhd: ""
+    a2.vhd: ""
+    a4.vhd: ""
+    b1.vhd: ""
+    c2.vhd: ""
+    d3.vhd: ""
+    d4.vhd: ""

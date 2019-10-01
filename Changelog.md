@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Fixes
+- Fixed several `vivado` subcommands still using `top` as Vivado project name.
+
+### Added
+- Introducing custom repository setup files `.ipbb.setup`. When included in a package repository, they provide instructions on how to correctly setup the package once checked out e.g. setup git submodules in repositories using them.
+- Parameter substitution added in dep files commands
+
 ## [0.5.2] - 2019-09-13
 ### Fixes
 - Solved an issue in `dep report` leading missing components to be displayed in the wrong place.

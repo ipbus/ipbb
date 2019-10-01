@@ -522,7 +522,7 @@ def status(env):
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % join(env.currentproj.path, 'top', 'top')]
+    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
 
     lInfos = {}
     lProps = [
@@ -567,13 +567,9 @@ def reset(env):
 
     lSessionId = 'reset'
 
-    # if env.currentproj.name is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % join(env.currentproj.path, 'top', 'top')]
+    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
 
     lResetCmds = ['reset_run synth_1', 'reset_run impl_1']
 
@@ -704,7 +700,7 @@ def archive(ctx):
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % join(env.currentproj.path, 'top', 'top')]
+    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
     lArchiveCmds = [
         'archive_project %s -force'
         % join(

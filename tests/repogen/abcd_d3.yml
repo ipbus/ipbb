@@ -1,6 +1,7 @@
 name: abcd
 top:
-  - a.d3
+  - cmp: ""
+    file: a.d3
 files:
   firmware/cfg:
     a.d3: |

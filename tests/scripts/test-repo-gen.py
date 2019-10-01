@@ -10,7 +10,7 @@ from click import echo, secho
 from os.path import exists, dirname, join, basename, splitext
 from os import mkdir, makedirs
 from shutil import rmtree
-from ipbb.depparser.DepParser2g import DepParser2g
+from ipbb.depparser.DepParser2g import DepFileParser2g
 from ipbb.depparser.Pathmaker import Pathmaker
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -40,11 +40,20 @@ def cli(repofile, dest):
             with open(join(ad, f), 'w') as f:
                 f.write(t)
 
+    pm = Pathmaker(dest)
+    dp = DepFileParser2g('vivado', pm, {}, 2)
 
-    pm = Pathmaker(repopath)
-    dp = DepParser2g(pm, 2)
+    for t in repocfg['top']:
+        dp.parse(reponame, t['cmp'], t['file'])
 
-    dp.parser
+    print('\n\n\n')
+    print('-'*80)
+    print('   Summary   ')
+    print('-'*80)
+    print(">>> Commands")
+    pprint.pprint(dp.commands)
+    print(">>> Libs")
+    pprint.pprint(dp.libs)
 
 
 def main():

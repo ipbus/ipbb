@@ -10,15 +10,41 @@ from collections import OrderedDict
 from os.path import exists, splitext
 from string import Template
 
+
 # -----------------------------------------------------------------------------
 class Command(object):
     """Container class for dep commands parsed form dep files
 
     Attributes:
+        cmd       (str): command directive
         FilePath  (str): absolute, normalised path to the command target.
         Package   (str): package the target belongs to.
         Component (str): component withon 'Package' the target belongs to
-        Lib       (str): library the file will be added to
+    """
+
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent):
+        super(Command, self).__init__()
+        self.cmd = aCmd
+        self.FilePath = aFilePath
+        self.Package = aPackage
+        self.Component = aComponent
+
+    def __str__(self):
+        return '{ \'{}\', component: \'{}:{}\' }' % (
+            self.cmd, self.FilePath, self.Package, self.Component
+        )
+
+
+# -----------------------------------------------------------------------------
+class FileCommand(Command):
+    """Container class for dep commands parsed form dep files
+
+    Attributes:
+        cmd       (str):  command directive
+        FilePath  (str):  absolute, normalised path to the command target.
+        Package   (str):  package the target belongs to.
+        Component (str):  component withon 'Package' the target belongs to
+        Lib       (str):  library the file will be added to
         Include   (bool): src-only flag, used to include/exclude target from projects
         TopLevel  (bool): addrtab-only flag, identifies address table as top-level
         Vhdl2008  (bool): src-only flag, toggles the vhdl 2008 syntax for .vhd files
@@ -26,16 +52,16 @@ class Command(object):
 
     """
     # --------------------------------------------------------------
-    def __init__(self, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008, aFinalise):
-        self.FilePath = aFilePath
-        self.Package = aPackage
-        self.Component = aComponent
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008, aFinalise):
+        super(FileCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent)
+
         self.Lib = aLib
         self.Include = aInclude
         self.TopLevel = aTopLevel
         self.Vhdl2008 = aVhdl2008
         self.Finalise = aFinalise
 
+    # --------------------------------------------------------------
     def __str__(self):
 
         lFlags = self.flags()
@@ -43,6 +69,7 @@ class Command(object):
             self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
         )
 
+    # --------------------------------------------------------------
     def flags(self):
         lFlags = []
         if not self.Include:
@@ -60,6 +87,13 @@ class Command(object):
     def __eq__(self, other):
         return (self.FilePath == other.FilePath) and (self.Lib == other.Lib)
     # --------------------------------------------------------------
+
+class IncludeCommand(Command):
+    """docstring for IncludeCommand"""
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aDepFileObj=None):
+        super(IncludeCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent)
+        self.depfile = aDepFileObj
+
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
@@ -91,12 +125,17 @@ class DepFile(object):
     # -----------------------------------------------------------------------------
     def itercmd(self):
         for en in self.entries:
-            if isinstance(en, DepFile):
-                for rn in en.itercmd():
+            if isinstance(en, IncludeCommand):
+                for rn in en.depfile.itercmd():
                     yield rn
             else:
                 yield en
 
+    def iterchildren(self):
+        yield self
+        for f in self.children:
+            for sf in f.iterchildren():
+                yield sf
 
 # -----------------------------------------------------------------------------
 class ComponentAction(argparse.Action):
@@ -194,6 +233,7 @@ class DepLineError(Exception):
     pass
 # -----------------------------------------------------------------------------
 
+
 class State(object):
     """Utility class that holds the current status of the parser 
     while iterating through the tree of dependencies"""
@@ -204,7 +244,7 @@ class State(object):
 
     @property
     def tab(self):
-        return ' ' * self.depth
+        return ' ' * 4 * self.depth
 
 # -----------------------------------------------------------------------------
 class DepFileParser2g(object):
@@ -230,10 +270,12 @@ class DepFileParser2g(object):
         self._pathMaker = aPathmaker
         # Helper object holding the parser state while traversing the dependency tree 
         self._state = None
+        # list of all known depfiles
+        self._depregistry = OrderedDict()
 
         # Results
-        self.vars = {}
-        self.libs = list()
+        self.vars = dict()
+        self.libs = set()
         self.components = OrderedDict()
 
         self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
@@ -416,42 +458,31 @@ class DepFileParser2g(object):
 
             for lFileList in aFileLists:
                 for lFile, lFilePath in lFileList:
-                    lEntries.append(self._parseFile(aPackage, aComponent, lFile))
+                    lEntries.append(IncludeCommand(aParsedLine.cmd, lFilePath, aPackage, aComponent, self._parseFile(aPackage, aComponent, lFile)))
         else:
+            # --------------------------------------------------------------
             lInclude = ('noinclude' not in aParsedLine) or (not aParsedLine.noinclude)
             lTopLevel = ('toplevel' in aParsedLine and aParsedLine.toplevel)
             lFinalise = ('finalise' in aParsedLine and aParsedLine.finalise)
-            # --------------------------------------------------------------
 
             # --------------------------------------------------------------
-            # Set the target library, whether specified explicitly or
-            # not
-            if ('lib' in aParsedLine) and (aParsedLine.lib):
-                lLib = aParsedLine.lib
-                # TO CHECK
-                # self.libs.append(lLib)
-            else:
-                lLib = None
-            # --------------------------------------------------------------
+            # Set the target library, whether specified explicitly or not
+            lLib = aParsedLine.lib if ('lib' in aParsedLine) and (aParsedLine.lib) else None
 
             # --------------------------------------------------------------
             # Specifies the files should be read as VHDL 2008
-            if aParsedLine.cmd == 'src' or aParsedLine.cmd == 'include' in aParsedLine:
-                lVhdl2008 = aParsedLine.vhdl2008
-            else:
-                lVhdl2008 = False
-            # --------------------------------------------------------------
+            lVhdl2008 = aParsedLine.vhdl2008 if aParsedLine.cmd == 'src' else False
 
             for lFileList in aFileLists:
                 for lFile, lFilePath in lFileList:
                     # --------------------------------------------------------------
                     # Debugging
                     if self._verbosity > 0:
-                        print(self._state.tab, ':',
+                        print(self._state.tab, ' ',
                               aParsedLine.cmd, lFile, lFilePath)
                     # --------------------------------------------------------------
 
-                    lEntries.append(Command(lFilePath, aPackage, aComponent, lLib, lInclude, lTopLevel, lVhdl2008, lFinalise))
+                    lEntries.append(FileCommand(aParsedLine.cmd, lFilePath, aPackage, aComponent, lLib, lInclude, lTopLevel, lVhdl2008, lFinalise))
 
         return lEntries
         # --------------------------------------------------------------
@@ -459,19 +490,27 @@ class DepFileParser2g(object):
     # -------------------------------------------------------------------------
     def _parseFile(self, aPackage, aComponent, aDepFileName):
 
-        self._state.depth += 1
-        lCurrentFile = DepFile(aPackage, aComponent, aDepFileName)
+        lDepFilePath = self._pathMaker.getPath(
+            aPackage, aComponent, 'include', aDepFileName)
+
+        if lDepFilePath in self._depregistry:
+            return self._depregistry[lDepFilePath]
+
         if self._verbosity > 1:
             print('>' * self._state.depth, 'Parsing',
                   aPackage, aComponent, aDepFileName)
 
-        lDepFilePath = self._pathMaker.getPath(
-            aPackage, aComponent, 'include', aDepFileName)
-
+        # This shouldn't be needed, already covered by the 
         if not exists(lDepFilePath):
             self.missing.append(
                 (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
             raise OSError("File " + lDepFilePath + " does not exist")
+
+        # Ok, this is a new file. Let's dig in
+        self._state.depth += 1
+
+        lCurrentFile = DepFile(aPackage, aComponent, aDepFileName)
+        self._depregistry[lDepFilePath] = lCurrentFile
 
         with open(lDepFilePath) as lDepFile:
             for lLineNr, lLine in enumerate(lDepFile):
@@ -522,6 +561,9 @@ class DepFileParser2g(object):
 
                 lEntries = self._finalise(lParsedLine, lFileLists, aPackage, aComponent)
                 lCurrentFile.entries += lEntries
+                if lParsedLine.cmd == 'include':
+                    for inc in lEntries:
+                        lCurrentFile.children.append(inc.depfile)
 
                 if self._verbosity > 1:
                     print(self._state.tab, '  -- Entries of', aDepFileName, ':', lEntries)
@@ -553,9 +595,20 @@ class DepFileParser2g(object):
             raise RuntimeError("Something went wrong")
         self._state = None
 
-        if self._verbosity > 0:
-            for c in self.depfile.itercmd():
+
+        # fill up parsr results
+        for c in self.depfile.itercmd():
+            if self._verbosity > 0:
                 print (c)
+            self.commands[c.cmd].append(c)
+            self.components.setdefault(
+                c.Package, []).append(c.Component)
+            if c.Lib is not None:
+                self.libs.add(c.Lib)
+
+        # Gather undresolved files and errors
+        for f in self.depfile.iterchildren():
+            print(f)
 
         for i in self.commands:
             lTemp = list()

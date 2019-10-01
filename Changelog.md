@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Introducing custom repository setup files `.ipbb.setup`. When included in a package repository, they provide instructions on how to correctly setup the package once checked out e.g. setup git submodules in repositories using them.
 - Parameter substitution added in dep files commands
 
+
 ## [0.5.2] - 2019-09-13
 ### Fixes
 - Solved an issue in `dep report` leading missing components to be displayed in the wrong place.

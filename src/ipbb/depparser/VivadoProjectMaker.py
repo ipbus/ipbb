@@ -120,7 +120,7 @@ class VivadoProjectMaker(object):
                         f = src.FilePath
                         lCommands += [(c, f)]
                 if src.Lib:
-                    c = 'set_property library {0} [ get_files [ {{$files}} ] ]'.format(src.Lib)
+                    c = 'set_property library {0} [ get_files {{$files}} ]'.format(src.Lib)
                     f = src.FilePath
                     lCommands += [(c, f)]
 

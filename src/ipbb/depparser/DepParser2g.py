@@ -1,5 +1,6 @@
 from __future__ import print_function, absolute_import
 from future.utils import raise_from
+from future.utils import iterkeys, itervalues, iteritems
 
 import argparse
 import os
@@ -100,11 +101,12 @@ class IncludeCommand(Command):
 # Experimental
 class DepFile(object):
     """docstring for DepFile"""
-    def __init__(self, aPackage, aComponent, aRelPath):
+    def __init__(self, aPackage, aComponent, aName, aPath):
         super(DepFile, self).__init__()
         self.pkg = aPackage
         self.cmp = aComponent
-        self.relpath = aRelPath
+        self.name = aName
+        self.path = aPath
         self.entries = list()
 
         self.errors = list()
@@ -117,8 +119,8 @@ class DepFile(object):
     # -----------------------------------------------------------------------------
     def __str__(self):
         pathmaker = Pathmaker.Pathmaker('', 1)
-        return 'depfile {}:{} - entries {}, errors {}, unresolved {}'.format(
-            self.pkg, pathmaker.getPath('', self.cmp, 'include', self.relpath),
+        return 'depfile {} | {}:{} - entries {}, errors {}, unresolved {}'.format(
+            self.path, self.pkg, pathmaker.getPath('', self.cmp, 'include', self.name),
             len(self.entries), len(self.errors), len(self.unresolved)
         )
 
@@ -235,7 +237,7 @@ class DepLineError(Exception):
 
 
 class State(object):
-    """Utility class that holds the current status of the parser 
+    """Utility class that holds the current status of the parser
     while iterating through the tree of dependencies"""
     def __init__(self):
         super(State, self).__init__()
@@ -245,6 +247,7 @@ class State(object):
     @property
     def tab(self):
         return ' ' * 4 * self.depth
+
 
 # -----------------------------------------------------------------------------
 class DepFileParser2g(object):
@@ -281,6 +284,7 @@ class DepFileParser2g(object):
         self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
 
         self.missing = list()
+        self.unresolved = list()
         self.errors = list()
         # --------------------------------------------------------------
 
@@ -509,7 +513,7 @@ class DepFileParser2g(object):
         # Ok, this is a new file. Let's dig in
         self._state.depth += 1
 
-        lCurrentFile = DepFile(aPackage, aComponent, aDepFileName)
+        lCurrentFile = DepFile(aPackage, aComponent, aDepFileName, lDepFilePath)
         self._depregistry[lDepFilePath] = lCurrentFile
 
         with open(lDepFilePath) as lDepFile:
@@ -546,8 +550,8 @@ class DepFileParser2g(object):
                 try:
                     lParsedLine = self.parseLine(lLine.split())
                 except DepCmdParserError as lExc:
-                    lCurrentFile.errors.append((aPackage, aComponent, lLineNr, lExc))
-                    raise_from(RuntimeError("Parsing failed in {0}, line {1}: {2}\n{3}".format(lDepFilePath, lLineNr, lExc.message, lLine)), lExc)
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lLineNr, lExc))
+                    # raise_from(RuntimeError("Parsing failed in {0}, line {1}: {2}\n{3}".format(lDepFilePath, lLineNr, lExc.message, lLine)), lExc)
                     # lMsg = "Error caught while parsing line {0} in file {1}".format(lLineNr, lDepFilePath) + "\n"
                     # lMsg += "Details - " + str(lExc) + ": '" + lLine + "'"
                     # raise RuntimeError(lMsg)
@@ -557,7 +561,7 @@ class DepFileParser2g(object):
                     print(self._state.tab, '- Parsed line', vars(lParsedLine))
 
                 lFileLists, lUnresolvedExpr = self._resolvePaths(lParsedLine, lDepFilePath, aPackage, aComponent)
-                lCurrentFile.unresolved += [ (e, lParsedLine.cmd, aPackage, aComponent, lDepFilePath) for e in lUnresolvedExpr]
+                lCurrentFile.unresolved += [ (lExpr, lParsedLine.cmd, aPackage, aComponent, lDepFilePath) for lExpr in lUnresolvedExpr]
 
                 lEntries = self._finalise(lParsedLine, lFileLists, aPackage, aComponent)
                 lCurrentFile.entries += lEntries
@@ -606,9 +610,11 @@ class DepFileParser2g(object):
             if c.Lib is not None:
                 self.libs.add(c.Lib)
 
+        print ('>>>>')
         # Gather undresolved files and errors
-        for f in self.depfile.iterchildren():
-            print(f)
+        for dp, f in iteritems(self._depregistry):
+            self.errors.extend(f.errors)
+            self.unresolved.extend(f.unresolved)
 
         for i in self.commands:
             lTemp = list()

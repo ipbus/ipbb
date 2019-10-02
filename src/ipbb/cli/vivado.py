@@ -88,13 +88,14 @@ def synth(env, aNumJobs, aUpdateInt):
 
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
-@click.option('-j', '--jobs', type=int, default=None, help="Number of parallel jobs")
+@click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
+@click.option('-s/-f', '--stop-on-timing-failure/--continuing-timing-failure', 'aStopOnTimingErr', 'aEnableIPCache', default=True)
 @click.pass_obj
-def impl(env, jobs):
+def impl(env, aNumJobs, aStopOnTimingErr):
     '''Launch an implementation run'''
     '''Run synthesis'''
     from ..cmds.vivado import impl
-    impl(env, jobs)
+    impl(env, aNumJobs, aStopOnTimingErr)
 
 
 # # ------------------------------------------------------------------------------

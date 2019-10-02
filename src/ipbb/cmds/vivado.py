@@ -301,7 +301,7 @@ def synth(env, aJobs, aUpdateInt):
 
 
 # ------------------------------------------------------------------------------
-def impl(env, jobs):
+def impl(env, jobs, aStopOnTimingErr):
     '''Launch an implementation run'''
 
     lSessionId = 'impl'
@@ -315,8 +315,9 @@ def impl(env, jobs):
 
     ensureVivado(env)
 
-    # List of vivado message that are expected to result into an error.
-    lStopOn = ['Timing 38-282']  # Force error when timing is not met
+    if aStopOnTimingErr:
+        # List of vivado message that are expected to result into an error.
+        lStopOn = ['Timing 38-282']  # Force error when timing is not met
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
@@ -343,65 +344,6 @@ def impl(env, jobs):
         "\n{}: Implementation completed successfully.\n".format(env.currentproj.name),
         fg='green',
     )
-
-
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-# def orderconstr(env, order):
-#     '''Reorder constraint set'''
-
-#     lSessionId = 'order-constr'
-#     # Check
-#     lVivProjPath = join(env.currentproj.path, 'top', 'top.xpr')
-#     if not exists(lVivProjPath):
-#         raise click.ClickException(
-#             "Vivado project %s does not exist" % lVivProjPath
-#         )
-
-#     ensureVivado(env)
-
-#     lDepFileParser = env.depParser
-#     lConstrSrc = [
-#         src.FilePath
-#         for src in lDepFileParser.commands['src']
-#         if splitext(src.FilePath)[1] in ['.tcl', '.xdc']
-#     ]
-#     lCmdTemplate = (
-#         'reorder_files -fileset constrs_1 -after [get_files {0}] [get_files {1}]'
-#     )
-
-#     lConstrOrder = lConstrSrc if order else [f for f in reversed(lConstrSrc)]
-#     # echo('\n'.join( ' * {}'.format(style(c, fg='blue')) for c in lConstrOrder ))
-
-#     try:
-#         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-#             # Open vivado project
-#             lConsole('open_project {}'.format(lVivProjPath))
-#             # lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[0].split()
-#             # print()
-#             # print('\n'.join( ' * {}'.format(c) for c in lConstraints ))
-
-#             lCmds = [
-#                 lCmdTemplate.format(lConstrOrder[i], lConstrOrder[i + 1])
-#                 for i in xrange(len(lConstrOrder) - 1)
-#             ]
-#             lConsole(lCmds)
-
-#             lConstraints = lConsole('get_files -of_objects [get_filesets constrs_1]')[
-#                 0
-#             ].split()
-
-#         echo('\nNew constraint order:')
-#         echo('\n'.join(' * {}'.format(style(c, fg='blue')) for c in lConstraints))
-
-#     # 'reorder_files -fileset constrs_1 -before [get_files {0}] [get_files {1}]'.format(,to)
-#     except VivadoConsoleError as lExc:
-#         echoVivadoConsoleError(lExc)
-#         raise click.Abort()
-
-#     secho("\n{}: Constraint order set to.\n".format(env.currentproj.name), fg='green')
 
 
 # ------------------------------------------------------------------------------

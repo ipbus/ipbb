@@ -1,3 +1,7 @@
+name: simple_d3
+top:
+  - cmp: ""
+    file: top.d3
 files:
   firmware/cfg:
     top.d3: |

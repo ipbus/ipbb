@@ -41,19 +41,23 @@ def cli(repofile, dest):
                 f.write(t)
 
     pm = Pathmaker(dest)
-    dp = DepFileParser2g('vivado', pm, {}, 2)
 
     for t in repocfg['top']:
+        dp = DepFileParser2g('vivado', pm, {}, 2)
         dp.parse(reponame, t['cmp'], t['file'])
 
-    print('\n\n\n')
-    print('-'*80)
-    print('   Summary   ')
-    print('-'*80)
-    print(">>> Commands")
-    pprint.pprint(dp.commands)
-    print(">>> Libs")
-    pprint.pprint(dp.libs)
+        print('\n\n\n')
+        print('-'*80)
+        print('   Summary   ', t['file'])
+        print('-'*80)
+        print(">>> Commands")
+        pprint.pprint(dp.commands)
+        print(">>> Libs")
+        pprint.pprint(dp.libs)
+        print(">>> Errors")
+        pprint.pprint(dp.errors)
+        print(">>> Lost files")
+        pprint.pprint(dp.unresolved)
 
 
 def main():

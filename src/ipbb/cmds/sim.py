@@ -290,7 +290,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
             lIPCoreSimMaker.write(
                 lVivadoConsole,
                 lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )
@@ -517,7 +517,7 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
             lSimProjMaker.write(
                 lSim,
                 lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )

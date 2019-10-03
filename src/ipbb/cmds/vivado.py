@@ -103,7 +103,7 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
             lVivadoMaker.write(
                 lConsole,
                 lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )

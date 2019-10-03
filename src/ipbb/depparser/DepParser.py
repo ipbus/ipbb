@@ -1,23 +1,55 @@
 from __future__ import print_function, absolute_import
 from future.utils import raise_from
+from future.utils import iterkeys, itervalues, iteritems
 
 import argparse
 import os
 import glob
 from . import Pathmaker
+from ..tools.common import DictObj
 from collections import OrderedDict
 from os.path import exists, splitext
 from string import Template
+
+depfiletypes = {
+    '.dep': {'fwd': False},
+    '.d3': {'fwd': True},
+}
 
 # -----------------------------------------------------------------------------
 class Command(object):
     """Container class for dep commands parsed form dep files
 
     Attributes:
+        cmd       (str): command directive
         FilePath  (str): absolute, normalised path to the command target.
         Package   (str): package the target belongs to.
         Component (str): component withon 'Package' the target belongs to
-        Lib       (str): library the file will be added to
+    """
+
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent):
+        super(Command, self).__init__()
+        self.cmd = aCmd
+        self.FilePath = aFilePath
+        self.Package = aPackage
+        self.Component = aComponent
+
+    def __str__(self):
+        return '{ \'{}\', component: \'{}:{}\' }' % (
+            self.cmd, self.FilePath, self.Package, self.Component
+        )
+
+
+# -----------------------------------------------------------------------------
+class FileCommand(Command):
+    """Container class for dep commands parsed form dep files
+
+    Attributes:
+        cmd       (str):  command directive
+        FilePath  (str):  absolute, normalised path to the command target.
+        Package   (str):  package the target belongs to.
+        Component (str):  component withon 'Package' the target belongs to
+        Lib       (str):  library the file will be added to
         Include   (bool): src-only flag, used to include/exclude target from projects
         TopLevel  (bool): addrtab-only flag, identifies address table as top-level
         Vhdl2008  (bool): src-only flag, toggles the vhdl 2008 syntax for .vhd files
@@ -25,16 +57,16 @@ class Command(object):
 
     """
     # --------------------------------------------------------------
-    def __init__(self, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008, aFinalise):
-        self.FilePath = aFilePath
-        self.Package = aPackage
-        self.Component = aComponent
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008, aFinalise):
+        super(FileCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent)
+
         self.Lib = aLib
         self.Include = aInclude
         self.TopLevel = aTopLevel
         self.Vhdl2008 = aVhdl2008
         self.Finalise = aFinalise
 
+    # --------------------------------------------------------------
     def __str__(self):
 
         lFlags = self.flags()
@@ -42,6 +74,7 @@ class Command(object):
             self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
         )
 
+    # --------------------------------------------------------------
     def flags(self):
         lFlags = []
         if not self.Include:
@@ -56,35 +89,60 @@ class Command(object):
 
     __repr__ = __str__
 
+    # --------------------------------------------------------------
     def __eq__(self, other):
         return (self.FilePath == other.FilePath) and (self.Lib == other.Lib)
-    # --------------------------------------------------------------
+
+
 # -----------------------------------------------------------------------------
+class IncludeCommand(Command):
+    """docstring for IncludeCommand"""
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aDepFileObj=None):
+        super(IncludeCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent)
+        self.depfile = aDepFileObj
+
 
 # -----------------------------------------------------------------------------
 # Experimental
 class DepFile(object):
     """docstring for DepFile"""
-    def __init__(self, aPackage, aComponent, aDepFileName):
+    def __init__(self, aPackage, aComponent, aName, aPath):
         super(DepFile, self).__init__()
         self.pkg = aPackage
         self.cmp = aComponent
-        self.dep = aDepFileName
-        self.commands = []
-        self.cmds = OrderedDict()
+        self.name = aName
+        self.path = aPath
+        self.entries = list()
 
+        self.errors = list()
+        self.unresolved = list()
+        self.children = list()
+        self.parents = list()
+
+        self.locals = DictObj()
+
+    # -----------------------------------------------------------------------------
     def __str__(self):
         pathmaker = Pathmaker.Pathmaker('', 1)
-        return '{}:{} - {}'.format(self.pkg, pathmaker.getPath('', self.cmp, 'include', self.dep), len(self.commands))
+        return 'depfile {} | {}:{} - entries {}, errors {}, unresolved {}'.format(
+            self.path, self.pkg, pathmaker.getPath('', self.cmp, 'include', self.name),
+            len(self.entries), len(self.errors), len(self.unresolved)
+        )
 
+    # -----------------------------------------------------------------------------
+    def itercmd(self):
+        for en in self.entries:
+            if isinstance(en, IncludeCommand):
+                for rn in en.depfile.itercmd():
+                    yield rn
+            else:
+                yield en
 
-class MissingFile(object):
-    """docstring for MissingFile"""
-    def __init__(self, aPackage, aComponent, aPathExpr):
-        super(MissingFile, self).__init__()
-        self.pkg = aPackage
-        self.cmp = aComponent
-        self.xpr = aPathExpr
+    def iterchildren(self):
+        yield self
+        for f in self.children:
+            for sf in f.iterchildren():
+                yield sf
 
 
 # -----------------------------------------------------------------------------
@@ -105,7 +163,6 @@ class ComponentAction(argparse.Action):
             lTokenized.insert(0, None)
 
         setattr(namespace, self.dest, tuple(lTokenized))
-# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
@@ -184,28 +241,55 @@ class DepLineError(Exception):
 # -----------------------------------------------------------------------------
 
 
+class State(object):
+    """Utility class that holds the current status of the parser
+    while iterating through the tree of dependencies"""
+    def __init__(self):
+        super(State, self).__init__()
+        self.depth = 0
+        self.currentfile = None
+
+    @property
+    def tab(self):
+        return ' ' * 4 * self.depth
+
+
 # -----------------------------------------------------------------------------
 class DepFileParser(object):
+    """
+    Dependency file parser class
+    """
+    # -----------------------------------------------------------------------------
+    @staticmethod
+    def forwardparsing(aDepFileName):
+
+        ftype = depfiletypes.get(splitext(aDepFileName)[1], None)
+        if ftype is not None:
+            return ftype['fwd']
+        return True
+
     # -----------------------------------------------------------------------------
     def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
         # --------------------------------------------------------------
         # Member variables
         self._toolset = aToolSet
-        self._depth = 0
-        self._includes = None
         self._verbosity = aVerbosity
-        self._revDepMap = {}
+        # helper object to resolve files in the work area
+        self._pathMaker = aPathmaker
+        # Helper object holding the parser state while traversing the dependency tree 
+        self._state = None
+        # list of all known depfiles
+        self._depregistry = OrderedDict()
 
-        self.pathMaker = aPathmaker
+        # Results
+        self.vars = dict()
+        self.libs = set()
+        self.packages = OrderedDict()
 
-        self.vars = {}
         self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
-        self.libs = list()
-        self.components = OrderedDict()
 
-        self.missing = list()
+        self.unresolved = list()
         self.errors = list()
-
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -228,11 +312,6 @@ class DepFileParser(object):
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
-        # Special options
-        # lCompArgOpts = dict(action=ComponentAction, default=(None, None))
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
         # Set up the parser
         parser = DepCmdParser(usage=argparse.SUPPRESS)
 
@@ -241,97 +320,46 @@ class DepFileParser(object):
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
-    def __str__(self):
-        string = ''
-        #  self.__repr__() + '\n'
-        string += '+------------+\n'
-        string += '|  Commands  |\n'
-        string += '+------------+\n'
-        for k in self.commands:
-            string += '+ %s (%d)\n' % (k, len(self.commands[k]))
-            for lCmd in self.commands[k]:
-                string += '  * ' + str(lCmd) + '\n'
-
-        string += '\n'
-        string += '+----------------------------------+\n'
-        string += '|  Resolved packages & components  |\n'
-        string += '+----------------------------------+\n'
-        string += 'packages: ' + str(list(self.components.iterkeys())) + '\n'
-        string += 'components:\n'
-        for pkg in sorted(self.components):
-            string += '+ %s (%d)\n' % (pkg, len(self.components[pkg]))
-            for cmp in sorted(self.components[pkg]):
-                string += '  > ' + str(cmp) + '\n'
-
-        if self.missing:
-            string += '\n'
-            string += '+----------------------------------------+\n'
-            string += '|  Missing packages, components & files  |\n'
-            string += '+----------------------------------------+\n'
-
-            if self.missingPackages:
-                string += 'packages: ' + \
-                    str(list(self.missingPackages)) + '\n'
-
-            # ------
-            lCNF = self.missingComponents
-            if lCNF:
-                string += 'components: \n'
-
-                for pkg in sorted(lCNF):
-                    string += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
-
-                    for cmp in sorted(lCNF[pkg]):
-                        string += '  > ' + str(cmp) + '\n'
-            # ------
-
-            # ------
-            lFNF = self.missingFiles
-            if lFNF:
-                string += 'missing files:\n'
-
-                for pkg in sorted(lFNF):
-                    lCmps = lFNF[pkg]
-                    string += '+ %s (%d components)\n' % (pkg, len(lCmps))
-
-                    for cmp in sorted(lCmps):
-                        lFiles = lCmps[cmp]
-                        string += '  + %s (%d files)\n' % (cmp, len(lFiles))
-
-                        lCmpPath = self.pathMaker.getPath(pkg, cmp)
-                        for lFile in sorted(lFiles):
-                            lSrcs = lFiles[lFile]
-                            string += '    + %s\n' % os.path.relpath(
-                                lFile, lCmpPath)
-                            string += '      | included by %d dep file(s)\n' % len(
-                                lSrcs)
-
-                            for lSrc in lSrcs:
-                                string += '      \ - %s\n' % os.path.relpath(
-                                    lSrc, self.pathMaker.rootdir)
-                            string += '\n'
-            # ------
-
-        # string += '\n'.join([' > '+f for f in sorted(self.missingFiles)])
-        return string
-    # -----------------------------------------------------------------------------
-
-    # -----------------------------------------------------------------------------
     @property
-    def missingPaths(self):
+    def unresolvedPaths(self):
         lNotFound = set()
 
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.missing:
+        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
             lNotFound.add(lPathExpr)
 
         return lNotFound
     # -----------------------------------------------------------------------------
 
+    # -------------------------------------------------------------------------
+    @property
+    def unresolvedPackages(self):
+        lNotFound = set()
+
+        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
+            if os.path.exists(self._pathMaker.getPath(lPackage)):
+                continue
+
+            lNotFound.add(lPackage)
+        return lNotFound
+
+    # -------------------------------------------------------------------------
+    @property
+    def unresolvedComponents(self):
+        lNotFound = OrderedDict()
+
+        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
+            if os.path.exists(self._pathMaker.getPath(lPackage, lComponent)):
+                continue
+
+            lNotFound.setdefault(lPackage, set()).add(lComponent)
+
+        return lNotFound
+
     # -----------------------------------------------------------------------------
     @property
-    def missingFiles(self):
+    def unresolvedFiles(self):
         lNotFound = OrderedDict()
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.missing:
+        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
             lNotFound.setdefault(
                 lPackage,
                 OrderedDict()
@@ -343,33 +371,6 @@ class DepFileParser(object):
                 set()
             ).add(lDepFilePath)
 
-        return lNotFound
-    # -------------------------------------------------------------------------
-
-    # -------------------------------------------------------------------------
-    @property
-    def missingComponents(self):
-        lNotFound = OrderedDict()
-
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.missing:
-            if os.path.exists(self.pathMaker.getPath(lPackage, lComponent)):
-                continue
-
-            lNotFound.setdefault(lPackage, set()).add(lComponent)
-
-        return lNotFound
-    # -------------------------------------------------------------------------
-
-    # -------------------------------------------------------------------------
-    @property
-    def missingPackages(self):
-        lNotFound = set()
-
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.missing:
-            if os.path.exists(self.pathMaker.getPath(lPackage)):
-                continue
-
-            lNotFound.add(lPackage)
         return lNotFound
 
     # -------------------------------------------------------------------------
@@ -404,8 +405,9 @@ class DepFileParser(object):
                 exec(aLine[1:], None, self.vars)
             except Exception as lExc:
                 raise_from(DepLineError("Parsing directive failed"), lExc)
+
         if self._verbosity > 1:
-            print(' ' * self._depth, ':',aLine)
+            print(self._state.tab, ':', aLine)
 
         # Return None (i.e. continue)
         return
@@ -431,7 +433,7 @@ class DepFileParser(object):
         if not isinstance(lExprValue, bool):
             raise DepLineError("Directive does not evaluate to boolean type in {0}".format(lExprValue))
 
-        # Expression evaluated false, 
+        # Expression evaluated false
         if not lExprValue:
             return
 
@@ -451,30 +453,8 @@ class DepFileParser(object):
         return lLine
 
     # -------------------------------------------------------------------------
-    def _pre_process(self, aLine):
-        '''Pre-processes depfile lines
+    def _resolvePaths(self, aParsedLine, aDepFilePath, aPackage, aComponent):
 
-        '''
-
-        lLine = self._lineDropComments(aLine)
-
-        if not lLine:
-            return
-
-        lLine = self._lineProcessAssignments(lLine)
-
-        if not lLine:
-            return
-
-        lLine = self._lineProcessConditional(lLine)
-        if not lLine:
-            return
-
-        lLine = self._lineReplaceVars(lLine)
-        return lLine
-
-    # -------------------------------------------------------------------------
-    def _post_process(self, aParsedLine, aDepFilePath, aPackage, aComponent, aReverse):
         # --------------------------------------------------------------
         # Set package and module variables, whether specified or not
         lPackage, lComponent = aParsedLine.component
@@ -493,179 +473,209 @@ class DepFileParser(object):
         # or not
         if (not aParsedLine.file):
             lComponentName = lComponent.split('/')[-1]
-            lFileExprList = [self.pathMaker.getDefName(
+            lFileExprList = [self._pathMaker.getDefName(
                 aParsedLine.cmd, lComponentName)]
         else:
             lFileExprList = aParsedLine.file
-
-        if aReverse:
-            lFileExprList.reverse()
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
         # Expand file espression into a list of files
-        lFileLists = []
+        lFileLists = list()
+        lUnmatchedExprs = list()
         for lFileExpr in lFileExprList:
             # Expand file expression
-            lPathExpr, lFileList = self.pathMaker.glob(
-                lPackage, lComponent, aParsedLine.cmd, lFileExpr, cd=aParsedLine.cd)
-
-            if aReverse:
-                lFileList.reverse()
+            lPathExpr, lFileList = self._pathMaker.glob(
+                lPackage, lComponent, aParsedLine.cmd, lFileExpr, cd=aParsedLine.cd
+            )
 
             # --------------------------------------------------------------
             # Store the result and move on
             if lFileList:
                 lFileLists.append(lFileList)
-
-                self.components.setdefault(
-                    lPackage, []).append(lComponent)
-
             else:
-                # Something's off, no files found
-                self.missing.append(
-                    (lPathExpr, aParsedLine.cmd, lPackage, lComponent, aDepFilePath))
+                lUnmatchedExprs.append(lPathExpr)
 
-                self._includes.commands.append((lPathExpr, aParsedLine.cmd, lPackage, lComponent, aDepFilePath))
-            # --------------------------------------------------------------
+        return lFileLists, lUnmatchedExprs
+
+    # -------------------------------------------------------------------------
+    def _expand(self, aParsedLine, aFileLists, aPackage, aComponent):
+        """Converts parsed command components into Command components"""
+
+        # --------------------------------------------------------------
+        # Set package and module variables, whether specified or not
+        lPackage, lComponent = aParsedLine.component
+
+        # --------------------------------------------------------------
+        # Set package and component to current ones if not defined
+        if lPackage is None:
+            lPackage = aPackage
+
+        if lComponent is None:
+            lComponent = aComponent
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
         # If an include command, parse the specified dep files
+        lEntries = list()
         if aParsedLine.cmd == "include":
-            for lFileList in lFileLists:
-                for lFile, lFilePath in lFileList:
-                    self._parse(lPackage, lComponent, lFile)
 
+            for lFileList in aFileLists:
+                for lFile, lFilePath in lFileList:
+                    lEntries.append(IncludeCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, self._parseFile(lPackage, lComponent, lFile)))
         else:
+            # --------------------------------------------------------------
             lInclude = ('noinclude' not in aParsedLine) or (not aParsedLine.noinclude)
             lTopLevel = ('toplevel' in aParsedLine and aParsedLine.toplevel)
             lFinalise = ('finalise' in aParsedLine and aParsedLine.finalise)
-            # --------------------------------------------------------------
 
             # --------------------------------------------------------------
-            # Set the target library, whether specified explicitly or
-            # not
-            if ('lib' in aParsedLine) and (aParsedLine.lib):
-                lLib = aParsedLine.lib
-                self.libs.append(lLib)
-            else:
-                lLib = None
-            # --------------------------------------------------------------
+            # Set the target library, whether specified explicitly or not
+            lLib = aParsedLine.lib if ('lib' in aParsedLine) and (aParsedLine.lib) else None
 
             # --------------------------------------------------------------
             # Specifies the files should be read as VHDL 2008
-            if aParsedLine.cmd == 'src' or aParsedLine.cmd == 'include' in aParsedLine:
-                lVhdl2008 = aParsedLine.vhdl2008
-            else:
-                lVhdl2008 = False
-            # --------------------------------------------------------------
+            lVhdl2008 = aParsedLine.vhdl2008 if aParsedLine.cmd == 'src' else False
 
-            for lFileList in lFileLists:
+            for lFileList in aFileLists:
                 for lFile, lFilePath in lFileList:
                     # --------------------------------------------------------------
                     # Debugging
                     if self._verbosity > 0:
-                        print(' ' * self._depth, ':',
+                        print(self._state.tab, ' ',
                               aParsedLine.cmd, lFile, lFilePath)
                     # --------------------------------------------------------------
 
-                    lCommand = Command(lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008, lFinalise)
-                    self.commands[aParsedLine.cmd].append(lCommand)
+                    lEntries.append(FileCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008, lFinalise))
 
-                    self._includes.commands.append(lCommand)
-
-                    self._revDepMap.setdefault(lFilePath, []).append(aDepFilePath)
-                # --------------------------------------------------------------
+        return lEntries
+        # --------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    def _parse(self, aPackage, aComponent, aDepFileName):
-        '''
-        Parses a dependency file from package aPackage/aComponent
-        '''
+    def _parseFile(self, aPackage, aComponent, aDepFileName):
+        """
+        Private method implementing depfile parsing
+        Used for recurslion
+        """
+        lDepFilePath = self._pathMaker.getPath(
+            aPackage, aComponent, 'include', aDepFileName)
 
-        # import ipdb; ipdb.set_trace() # BREAKPOINT
+        if lDepFilePath in self._depregistry:
+            return self._depregistry[lDepFilePath]
 
-        # --------------------------------------------------------------
-        # We have gone one layer further down the rabbit hole
-        lParentInclude = self._includes if self._depth != 0 else None
-
-        self._includes = DepFile(aPackage, aComponent, aDepFileName)
-        self._depth += 1
-        # --------------------------------------------------------------
         if self._verbosity > 1:
-            print('>' * self._depth, 'Parsing',
+            print('>' * self._state.depth, 'Parsing',
                   aPackage, aComponent, aDepFileName)
 
-        # --------------------------------------------------------------
-        lDepFilePath = self.pathMaker.getPath(
-            aPackage, aComponent, 'include', aDepFileName)
-        # --------------------------------------------------------------
-
+        # This shouldn't be needed, already covered by the 
         if not exists(lDepFilePath):
             self.missing.append(
                 (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
             raise OSError("File " + lDepFilePath + " does not exist")
 
-        lParsedTuples = []
+        # Ok, this is a new file. Let's dig in
+        self._state.depth += 1
+
+        lCurrentFile = DepFile(aPackage, aComponent, aDepFileName, lDepFilePath)
+        self._depregistry[lDepFilePath] = lCurrentFile
+
         with open(lDepFilePath) as lDepFile:
             for lLineNr, lLine in enumerate(lDepFile):
 
+                # --------------------------------------------------------------
+                # Pre-processing
                 try:
-                    lLine = self._pre_process(lLine)
-                except DepLineError as lExc:
-                    self.errors.append((aPackage, aComponent, lLineNr, lExc))
-                    raise_from(RuntimeError("Parsing failed in {0}, line {1}: {2}\n{3}".format(lDepFilePath, lLineNr, lExc.message, lLine)), lExc)
+                    # Sanitize/drop comments
+                    lLine = self._lineDropComments(lLine)
+                    if not lLine:
+                        continue
 
-                if not lLine:
+                    # Process variable assignment directives
+                    lLine = self._lineProcessAssignments(lLine)
+                    if not lLine:
+                        continue
+
+                    # Process conditional directives
+                    lLine = self._lineProcessConditional(lLine)
+                    if not lLine:
+                        continue
+
+                    # Replace variables
+                    lLine = self._lineReplaceVars(lLine)
+
+                except DepLineError as lExc:
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lLineNr, lExc))
                     continue
+
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
                 try:
                     lParsedLine = self.parseLine(lLine.split())
                 except DepCmdParserError as lExc:
-                    self.errors.append((aPackage, aComponent, lLineNr, lExc))
-                    lMsg = "Error caught while parsing line {0} in file {1}".format(lLineNr, lDepFilePath) + "\n"
-                    lMsg += "Details - " + str(lExc) + ": '" + lLine + "'"
-                    raise RuntimeError(lMsg)
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lLineNr, lExc))
+                    continue
 
                 if self._verbosity > 1:
-                    print(' ' * self._depth, '- Parsed line', vars(lParsedLine))
+                    print(self._state.tab, '- Parsed line', vars(lParsedLine))
+
                 # --------------------------------------------------------------
+                # Resolve files referenced by the command
+                lFileLists, lUnresolvedExpr = self._resolvePaths(lParsedLine, lDepFilePath, aPackage, aComponent)
+                lCurrentFile.unresolved += [ (lExpr, lParsedLine.cmd, aPackage, aComponent, lDepFilePath) for lExpr in lUnresolvedExpr]
 
-                lParsedTuples.append((lParsedLine, lDepFilePath, aPackage, aComponent))
+                # Convert them to commands
+                lEntries = self._expand(lParsedLine, lFileLists, aPackage, aComponent)
+                lCurrentFile.entries += lEntries
+                if lParsedLine.cmd == 'include':
+                    for inc in lEntries:
+                        lCurrentFile.children.append(inc.depfile)
 
-        lRev = (splitext(aDepFileName)[1] == '.dep')
-        if lRev:
-            lParsedTuples.reverse()
+                if self._verbosity > 1:
+                    print(self._state.tab, '  -- Entries of', aDepFileName, ':', lEntries)
 
-        for lParsedTuple in lParsedTuples:
-            self._post_process(*lParsedTuple, aReverse=lRev)
+        if not self.forwardparsing(aDepFileName):
+            lCurrentFile.entries.reverse()
 
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
-        # We are about to return one layer up the rabbit hole
         if self._verbosity > 1:
-            print('<' * self._depth)
-        self._depth -= 1
-        if lParentInclude:
-            lParentInclude.commands.append(self._includes)
-            self._includes = lParentInclude
-        # --------------------------------------------------------------
+            print(self._state.tab, lCurrentFile)
 
-    # -------------------------------------------------------------------------
+            print('<' * self._state.depth)
+        self._state.depth -= 1
+
+        # TODO
+        # Add me to the file registry
+        return lCurrentFile
 
     # -------------------------------------------------------------------------
     def parse(self, aPackage, aComponent, aDepFileName):
+        print(aPackage, aComponent, aDepFileName)
 
-        self._parse(aPackage, aComponent, aDepFileName)
+        self._state = State()
+
+        # Do the parsing here
+        self.depfile = self._parseFile(aPackage, aComponent, aDepFileName)
 
         # --------------------------------------------------------------
         # If we are exiting the top-level, uniquify the commands list, keeping
         # the order as defined in Dave's origianl voodoo
-        if self._depth != 0:
+        if self._state.depth != 0:
             raise RuntimeError("Something went wrong")
+        self._state = None
+
+        # Collect summary information
+        for lCmd in self.depfile.itercmd():
+            if self._verbosity > 0:
+                print (lCmd)
+            self.commands[lCmd.cmd].append(lCmd)
+            self.packages.setdefault(
+                lCmd.Package, []).append(lCmd.Component)
+            if lCmd.Lib is not None:
+                self.libs.add(lCmd.Lib)
+
+        # Gather undresolved files and errors
+        for dp, f in iteritems(self._depregistry):
+            self.errors.extend(f.errors)
+            self.unresolved.extend(f.unresolved)
 
         for i in self.commands:
             lTemp = list()
@@ -675,13 +685,113 @@ class DepFileParser(object):
             self.commands[i] = lTemp
 
         # If we are exiting the top-level, uniquify the component list
-        for lPkg in self.components:
+        for lPkg in self.packages:
             lTemp = list()
             lAdded = set()
-            for lCmp in self.components[lPkg]:
+            for lCmp in self.packages[lPkg]:
                 if lCmp not in lAdded:
                     lTemp.append(lCmp)
                     lAdded.add(lCmp)
-            self.components[lPkg] = lTemp
+            self.packages[lPkg] = lTemp
         # --------------------------------------------------------------
+
     # -------------------------------------------------------------------------
+
+
+class DepFormatter(object):
+    """docstring for DepFormatter"""
+    def __init__(self, aParser):
+        super(DepFormatter, self).__init__()
+        self.parser = aParser
+
+    # -----------------------------------------------------------------------------
+    def reportCommands(self):
+        lPrsr = self.parser
+        lOutTxt = ''
+        lOutTxt += 'Commands\n'
+        lOutTxt += '--------\n'
+        for k in lPrsr.commands:
+            lOutTxt += '+ %s (%d)\n' % (k, len(lPrsr.commands[k]))
+            for lCmd in lPrsr.commands[k]:
+                lOutTxt += '  * ' + str(lCmd) + '\n'
+        return lOutTxt
+
+    # -----------------------------------------------------------------------------
+    def reportPackages(self):
+        lPrsr = self.parser
+        lOutTxt = ''
+        lOutTxt += 'Resolved packages & components\n'
+        lOutTxt += '------------------------------\n'
+        lOutTxt += 'packages: ' + ', '.join(iterkeys(lPrsr.packages)) + '\n'
+        lOutTxt += 'components:\n'
+        for pkg in sorted(lPrsr.packages):
+            lOutTxt += '+ %s (%d)\n' % (pkg, len(lPrsr.packages[pkg]))
+            for cmp in sorted(lPrsr.packages[pkg]):
+                lOutTxt += '  > ' + str(cmp if cmp else '<root>') + '\n'
+        return lOutTxt
+
+    # -----------------------------------------------------------------------------
+    def reportUnresolved(self):
+        lPrsr = self.parser
+        lOutTxt = ''
+        lOutTxt += 'Missing packages, components & files\n'
+        lOutTxt += '------------------------------------\n'
+
+        lUPkgs = lPrsr.unresolvedPackages
+        if lUPkgs:
+            lOutTxt += 'packages: ' + \
+                str(list(self.lUPkgs)) + '\n'
+
+        lUCmp = lPrsr.unresolvedComponents
+        if lUCmp:
+            lOutTxt += 'components: \n'
+
+            for pkg in sorted(lUCmp):
+                lOutTxt += '+ %s (%d)\n' % (pkg, len(lUCmp[pkg]))
+
+                for cmp in sorted(lUCmp[pkg]):
+                    lOutTxt += '  > ' + str(cmp) + '\n'
+
+        lUFl = lPrsr.unresolvedFiles
+        if lUFl:
+            lOutTxt += 'files:\n'
+
+            for pkg in sorted(lUFl):
+                lCmps = lUFl[pkg]
+                lOutTxt += '+ %s (%d components)\n' % (pkg, len(lCmps))
+
+                for cmp in sorted(lCmps):
+                    lFiles = lCmps[cmp]
+                    lOutTxt += '  + %s (%d files)\n' % (cmp, len(lFiles))
+
+                    lCmpPath = lPrsr._pathMaker.getPath(pkg, cmp)
+                    for lFile in sorted(lFiles):
+                        lSrcs = lFiles[lFile]
+                        lOutTxt += '    + %s\n' % os.path.relpath(
+                            lFile, lCmpPath)
+                        lOutTxt += '      | included by %d dep file(s)\n' % len(
+                            lSrcs)
+
+                        for lSrc in lSrcs:
+                            lOutTxt += '      \\ - %s\n' % os.path.relpath(
+                                lSrc, lPrsr._pathMaker.rootdir)
+                        lOutTxt += '\n'
+        return lOutTxt
+
+    # -----------------------------------------------------------------------------
+    def summary(self):
+
+        lOutTxt = ''
+        lOutTxt += self.reportCommands()
+
+        lOutTxt += '\n'
+        lOutTxt += self.reportPackages()
+
+        if self.parser.unresolved:
+            lOutTxt += '\n'
+            lOutTxt += self.reportUnresolved()
+            return lOutTxt
+
+        return lOutTxt
+    # -----------------------------------------------------------------------------
+

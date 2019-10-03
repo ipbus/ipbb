@@ -10,7 +10,7 @@ from click import echo, secho
 from os.path import exists, dirname, join, basename, splitext
 from os import mkdir, makedirs
 from shutil import rmtree
-from ipbb.depparser.DepParser2g import DepFileParser2g
+from ipbb.depparser.DepParser import DepFileParser, DepFormatter
 from ipbb.depparser.Pathmaker import Pathmaker
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -43,7 +43,7 @@ def cli(repofile, dest):
     pm = Pathmaker(dest)
 
     for t in repocfg['top']:
-        dp = DepFileParser2g('vivado', pm, {}, 2)
+        dp = DepFileParser('vivado', pm, {}, 0)
         dp.parse(reponame, t['cmp'], t['file'])
 
         print('\n\n\n')
@@ -58,6 +58,9 @@ def cli(repofile, dest):
         pprint.pprint(dp.errors)
         print(">>> Lost files")
         pprint.pprint(dp.unresolved)
+
+        df = DepFormatter(dp)
+        print(df.summary())
 
 
 def main():

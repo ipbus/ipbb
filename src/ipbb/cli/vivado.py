@@ -89,7 +89,7 @@ def synth(env, aNumJobs, aUpdateInt):
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
 @click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
-@click.option('-s/-f', '--stop-on-timing-failure/--continuing-timing-failure', 'aStopOnTimingErr', 'aEnableIPCache', default=True)
+@click.option('-s/-f', '--stop-on-timing-failure/--continuing-timing-failure', 'aStopOnTimingErr', default=True)
 @click.pass_obj
 def impl(env, aNumJobs, aStopOnTimingErr):
     '''Launch an implementation run'''
@@ -98,15 +98,7 @@ def impl(env, aNumJobs, aStopOnTimingErr):
     impl(env, aNumJobs, aStopOnTimingErr)
 
 
-# # ------------------------------------------------------------------------------
-# @vivado.command('order-constr', short_help='Change the order with which constraints are processed')
-# @click.option('-i/-r', '--initial/--reverse', 'order', default=True, help='Reset or invert the order of evaluation of constraint files.')
-# @click.pass_obj
-# def orderconstr(env, order):
-#     '''Reorder constraint set'''
-#     from ..cmds.vivado import orderconstr
-#     orderconstr(env, order)
-
+# ------------------------------------------------------------------------------
 @vivado.command('resource-usage', short_help="Resource usage")
 @click.pass_obj
 def resource_usage(env):

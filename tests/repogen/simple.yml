@@ -6,7 +6,7 @@ files:
   firmware/cfg:
     top.dep: |
       src t0.vhd
-      src t1.vhd
+      src -l mylib t1.vhd
       include defs.dep
       ? var_A == True ? src t2.vhd
       src t3.vhd

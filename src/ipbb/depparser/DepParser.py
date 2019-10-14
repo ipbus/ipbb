@@ -569,7 +569,7 @@ class DepFileParser(object):
 
         # This shouldn't be needed, already covered by the 
         if not exists(lDepFilePath):
-            self.missing.append(
+            self.unresolved.append(
                 (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
             raise OSError("File " + lDepFilePath + " does not exist")
 

@@ -56,7 +56,7 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
-@click.option('-c', '--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
+@click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
 @click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle project script optimisation.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
@@ -89,7 +89,7 @@ def synth(env, aNumJobs, aUpdateInt):
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
 @click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
-@click.option('-s/-f', '--stop-on-timing-failure/--continuing-timing-failure', 'aStopOnTimingErr', default=True)
+@click.option('-s/-c', '--stop-on-timing-failure/--continue-on-timing-failure', 'aStopOnTimingErr', default=True)
 @click.pass_obj
 def impl(env, aNumJobs, aStopOnTimingErr):
     '''Launch an implementation run'''

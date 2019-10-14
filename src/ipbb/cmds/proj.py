@@ -73,7 +73,7 @@ def create(env, kind, projname, component, topdep):
 
         # lParent = lPathmaker.getPath(lTopPackage, p)
 
-        lParent = findFirstParentDir(lTopComponentPath, lTopPackage)
+        lParent = findFirstParentDir(lTopComponentPath, lPathmaker.getPath(lTopPackage))
         secho('\nSuggestions (based on the first existing parent path)', fg='cyan')
         # When in Py3 https://docs.python.org/3/library/os.html#os.scandir
         for d in [

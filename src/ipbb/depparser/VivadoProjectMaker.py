@@ -153,7 +153,6 @@ class VivadoProjectMaker(object):
         for setup in (c for c in aCommandList['setup'] if c.Finalise):
             write('source {0}'.format(setup.FilePath))
 
-
         write('close_project')
     # --------------------------------------------------------------
 

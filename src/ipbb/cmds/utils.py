@@ -51,7 +51,7 @@ def raiseError(aMessage):
 # ------------------------------------------------------------------------------
 def findFirstParentDir(aDirPath, aParentDir='/'):
     if not aDirPath.startswith(aParentDir):
-        raise RuntimeError("{} is not a parent folder of {}".format(aDirPath, aParentDir))
+        raise RuntimeError("{} is not a parent folder of {}".format(aParentDir, aDirPath))
 
     lDirPath = aDirPath
     while lDirPath != aParentDir:

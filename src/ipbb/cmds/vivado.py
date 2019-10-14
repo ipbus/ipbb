@@ -315,6 +315,7 @@ def impl(env, jobs, aStopOnTimingErr):
 
     ensureVivado(env)
 
+    lStopOn = []
     if aStopOnTimingErr:
         # List of vivado message that are expected to result into an error.
         lStopOn = ['Timing 38-282']  # Force error when timing is not met

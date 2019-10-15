@@ -37,10 +37,11 @@ class ModelSimProjectMaker(object):
         for setup in (c for c in aCommandList['setup'] if not c.Finalise):
             write('source {0}'.format(setup.FilePath))
 
-        write('vlib work')
+        write('vlib xil_defaultlib')
 
         for lib in set(aLibs):
             write('vlib {0}'.format(lib))
+            write('vmap {} {}'.format(lib, lib))
 
         lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
 
@@ -108,6 +109,8 @@ class ModelSimProjectMaker(object):
 
                 if src.Lib:
                     cmd = '{0} -work {1}'.format(cmd, src.Lib)
+                else:
+                    cmd = '{0} -work xil_defaultlib'.format(cmd)
                 # ----------------------------------------------------------
 
             if self.turbo:

@@ -333,19 +333,19 @@ def tar(env, repo, dest, strip):
 def symlink(env, path):
 
     lRepoName = basename(path)
-    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
+    lRepoLocalPath = join(env.srcdir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
     echo(
         'Adding symlink '
-        + style(path, fg='blue')
+        + style(abspath(path), fg='blue')
         + ' as '
         + style(lRepoName, fg='blue')
     )
 
-    sh.ln('-s', abspath(path), _cwd=lRepoLocalPath )
+    sh.ln('-s', abspath(path), _cwd=env.srcdir )
 
 
 # ------------------------------------------------------------------------------

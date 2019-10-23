@@ -57,7 +57,7 @@ def add(env):
 
 
 # ------------------------------------------------------------------------------
-def _repoSetup(env, dest):
+def _repoInit(env, dest):
 
     if dest not in env.sources:
         secho('Source package {} not found'.format(dest), fg='red')
@@ -77,12 +77,12 @@ def _repoSetup(env, dest):
     with open(setupPath, 'r') as f:
         setupCfg = yaml.safe_load(f)
 
-    initCfg = setupCfg.get('init', None)
-    if initCfg is None:
+    setupCfg = setupCfg.get('init', None)
+    if setupCfg is None:
         echo("No init configuration file. Skipping.")
         return
 
-    cmds = [ l.split() for l in initCfg ]
+    cmds = [ l.split() for l in setupCfg ]
 
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
@@ -103,6 +103,52 @@ def _repoSetup(env, dest):
             secho('> '+' '.join(cmd), fg='cyan')
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
+# ------------------------------------------------------------------------------
+def _repoReset(env, dest):
+
+    if dest not in env.sources:
+        secho('Source package {} not found'.format(dest), fg='red')
+        echo('Available repositories:')
+        for lPkg in env.sources:
+            echo(' - ' + lPkg)
+
+        raiseError("Source package {} not found".format(dest))
+
+    setupPath = join(env.srcdir, dest, kRepoSetupFile)
+    if not exists(setupPath):
+        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+        return
+    secho('Resetting up {}'.format(dest), fg='blue')
+
+    setupCfg = None
+    with open(setupPath, 'r') as f:
+        setupCfg = yaml.safe_load(f)
+
+    setupCfg = setupCfg.get('reset', None)
+    if setupCfg is None:
+        echo("No reset configuration file. Skipping.")
+        return
+
+    cmds = [ l.split() for l in setupCfg ]
+
+    # ensure that all commands exist
+    missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
+    if missingCmds:
+        secho('Some setup commands have not been found', fg='red')
+        for i, cmd in missingCmds:
+            echo(' - {} (line {})'.format(cmd, i))
+
+        raiseError("Setup commands not found".format(dest))
+
+    with sh.pushd(join(env.srcdir, dest)):
+        # TODO: add error handling
+        # Show the list of commands
+        # In green the commands executed successfully
+        # In red the failed one
+        # In white the remaining commands
+        for cmd in cmds:
+            secho('> '+' '.join(cmd), fg='cyan')
+            sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
 def git(env, repo, branch, dest):
@@ -181,7 +227,7 @@ def git(env, repo, branch, dest):
         fg='green',
     )
 
-    _repoSetup(env, lRepoName)
+    _repoInit(env, lRepoName)
 
 
 # ------------------------------------------------------------------------------
@@ -254,7 +300,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoSetup(env, lRepoName)
+    _repoInit(env, lRepoName)
 
     # -------------------------------------------------------------------------
 
@@ -326,7 +372,7 @@ def tar(env, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoSetup(env, lRepoName)
+    _repoInit(env, lRepoName)
 
 
 # ------------------------------------------------------------------------------

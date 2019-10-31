@@ -29,7 +29,8 @@ class VivadoProjectMaker(object):
         '.xci': 'sources_1',
         '.ngc': 'sources_1',
         '.edn': 'sources_1',
-        '.edf': 'sources_1'
+        '.edf': 'sources_1',
+        '.mem': 'sources_1'
         # Legacy ISE files
         # '.ucf': 'ise_1',
         # '.xco': 'ise_1',

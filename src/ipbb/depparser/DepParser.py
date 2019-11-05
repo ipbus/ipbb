@@ -138,6 +138,7 @@ class DepFile(object):
             else:
                 yield en
 
+    # -----------------------------------------------------------------------------
     def iterchildren(self):
         yield self
         for f in self.children:
@@ -268,6 +269,10 @@ class DepFileParser(object):
             return ftype['fwd']
         return True
 
+    @property
+    def rootdir(self):
+        return self._pathMaker._rootdir
+
     # -----------------------------------------------------------------------------
     def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
         # --------------------------------------------------------------
@@ -335,7 +340,7 @@ class DepFileParser(object):
     def unresolvedPackages(self):
         lNotFound = set()
 
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
+        for lPathExpr, lCmd, lPackage, lComponent, lDepPackage, lDepComponent, lDepFilePath in self.unresolved:
             if os.path.exists(self._pathMaker.getPath(lPackage)):
                 continue
 
@@ -347,7 +352,7 @@ class DepFileParser(object):
     def unresolvedComponents(self):
         lNotFound = OrderedDict()
 
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
+        for lPathExpr, lCmd, lPackage, lComponent, lDepPackage, lDepComponent, lDepFilePath in self.unresolved:
             if os.path.exists(self._pathMaker.getPath(lPackage, lComponent)):
                 continue
 
@@ -359,7 +364,7 @@ class DepFileParser(object):
     @property
     def unresolvedFiles(self):
         lNotFound = OrderedDict()
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
+        for lPathExpr, lCmd, lPackage, lComponent, lDepPackage, lDepComponent, lDepFilePath in self.unresolved:
             lNotFound.setdefault(
                 lPackage,
                 OrderedDict()
@@ -496,7 +501,7 @@ class DepFileParser(object):
             else:
                 lUnmatchedExprs.append(lPathExpr)
 
-        return lFileLists, lUnmatchedExprs
+        return lFileLists, lPackage, lComponent, lUnmatchedExprs
 
     # -------------------------------------------------------------------------
     def _expand(self, aParsedLine, aFileLists, aPackage, aComponent):
@@ -620,8 +625,11 @@ class DepFileParser(object):
 
                 # --------------------------------------------------------------
                 # Resolve files referenced by the command
-                lFileLists, lUnresolvedExpr = self._resolvePaths(lParsedLine, lDepFilePath, aPackage, aComponent)
-                lCurrentFile.unresolved += [ (lExpr, lParsedLine.cmd, aPackage, aComponent, lDepFilePath) for lExpr in lUnresolvedExpr]
+                lFileLists, lParsedPackage, lParsedComponent, lUnresolvedExpr = self._resolvePaths(lParsedLine, lDepFilePath, aPackage, aComponent)
+                lCurrentFile.unresolved += [
+                    (lExpr, lParsedLine.cmd, lParsedPackage, lParsedComponent, aPackage, aComponent, lDepFilePath)
+                    for lExpr in lUnresolvedExpr
+                ]
 
                 # Convert them to commands
                 lEntries = self._expand(lParsedLine, lFileLists, aPackage, aComponent)
@@ -672,7 +680,7 @@ class DepFileParser(object):
             if lCmd.Lib is not None:
                 self.libs.add(lCmd.Lib)
 
-        # Gather undresolved files and errors
+        # Gather unresolved files and errors
         for dp, f in iteritems(self._depregistry):
             self.errors.extend(f.errors)
             self.unresolved.extend(f.unresolved)

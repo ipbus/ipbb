@@ -108,12 +108,16 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     if not aDepFileParser.unresolved:
         return
 
-    secho("ERROR: Project '{}' contains missing dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
+    from .formatters import DepFormatter
+    fmt = DepFormatter(aDepFileParser)
+    secho("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
         aCurrentProj,
         len(aDepFileParser.unresolved),
         ("" if len(aDepFileParser.unresolved) == 1 else "s"),
-        getClickRootName(),
     ), fg='red')
+    secho(fmt.drawUnresolvedFiles(), fg='red')
+
+    secho("")
     confirm("Do you want to continue anyway?", abort=True)
 # ------------------------------------------------------------------------------
 
@@ -235,3 +239,5 @@ def formatDictTable(aDict, aHeader=True, aSort=True, aFmtr=str):
 def getClickRootName():
     return get_current_context().find_root().info_name
 # ------------------------------------------------------------------------------
+
+

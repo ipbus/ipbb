@@ -25,10 +25,10 @@ from os.path import (
     isdir,
 )
 from ..tools.common import which, SmartOpen
+from .formatters import DepFormatter
 from .utils import DirSentry, printDictTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
-
 
 # ------------------------------------------------------------------------------
 def dep(env, proj):
@@ -95,8 +95,11 @@ def report(env, filters):
             )
         )
 
+
     # return
     lParser = env.depParser
+    lDepFmt = DepFormatter(lParser)
+
     secho('* Variables', fg='blue')
     printDictTable(lParser.vars, aHeader=False)
 
@@ -141,65 +144,35 @@ def report(env, filters):
     # lString += '+----------------------------------+\n'
     # lString += '|  Resolved packages & components  |\n'
     # lString += '+----------------------------------+\n'
-    lString += 'packages: ' + ' '.join(iterkeys(lParser.packages)) + '\n'
+    lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
     lString += 'components:\n'
-    for pkg in sorted(lParser.packages):
-        lString += u'* %s (%d)\n' % (pkg, len(lParser.packages[pkg]))
-        lSortCmp = sorted(lParser.packages[pkg])
-        for cmp in lSortCmp[:-1]:
-            lString += u'  ├── ' + str(cmp) + '\n'
-        lString += u'  └── ' + str(lSortCmp[-1]) + '\n'
-    echo(lString)
+    lString += lDepFmt.drawComponents()
+    echo(lString+'\n')
 
     if lParser.unresolved:
         lString = ''
         if lParser.unresolvedPackages:
-            secho('Missing packages:', fg='red')
-            echo(' '.join(list(lParser.unresolvedPackages)))
+            secho('Unresolved packages:', fg='red')
+            echo(lDepFmt.drawUnresolvedPackages())
+            echo()
 
         # ------
         lCNF = lParser.unresolvedComponents
         if lCNF:
-            secho('Missing components:', fg='red')
+            secho('Unresolved components:', fg='red')
+            echo(lDepFmt.drawUnresolvedComponents())
+            echo()
 
-            for pkg in sorted(lCNF):
-                lString += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
-                lSortCNF = sorted(lCNF[pkg])
-                for cmp in lSortCNF[:-1]:
-                    lString += u'  ├──' + str(cmp) + '\n'
-                lString += u'  └──' + str(lSortCNF[-1]) + '\n'
 
         # ------
 
         # ------
         echo(lString)
 
-    lFNF = lParser.unresolvedFiles
-
-    if lFNF:
+    if lParser.unresolvedFiles:
         secho('Unresolved files:', fg='red')
 
-        lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(['path expression', 'package', 'component', 'included by'])
-        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-
-        for pkg in sorted(lFNF):
-            lCmps = lFNF[pkg]
-            for cmp in sorted(lCmps):
-                lPathExps = lCmps[cmp]
-                for pathexp in sorted(lPathExps):
-
-                    lFNFTable.add_row(
-                        [
-                            relpath(pathexp, env.srcdir),
-                            pkg,
-                            cmp,
-                            '\n'.join(
-                                [relpath(src, env.srcdir) for src in lPathExps[pathexp]]
-                            ),
-                        ]
-                    )
-        echo(lPrepend.sub(r'\g<1>  ', lFNFTable.draw()))
+        echo(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
 
 
 # ------------------------------------------------------------------------------

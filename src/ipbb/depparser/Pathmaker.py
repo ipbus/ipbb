@@ -23,16 +23,16 @@ class Pathmaker(object):
 
     # --------------------------------------------------------------
     def __init__(self, rootdir, verbosity=0):
-        self.rootdir = rootdir
-        self.verbosity = verbosity
+        self._rootdir = rootdir
+        self._verbosity = verbosity
 
-        if self.verbosity > 3:
+        if self._verbosity > 3:
             print("+++ Pathmaker init", rootdir)
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def getPackagePath(self, aPackage):
-        return os.path.normpath(os.path.join(self.rootdir, aPackage))
+        return os.path.normpath(os.path.join(self._rootdir, aPackage))
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -58,9 +58,9 @@ class Pathmaker(object):
         if name:
             path.append(name)
 
-        lPath = os.path.normpath(os.path.join(self.rootdir, *path))
+        lPath = os.path.normpath(os.path.join(self._rootdir, *path))
 
-        if self.verbosity > 2:
+        if self._verbosity > 2:
             print('+++ Pathmaker', package, component, command, name, cd)
         return lPath
     # --------------------------------------------------------------

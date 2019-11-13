@@ -329,7 +329,7 @@ class DepFileParser(object):
     def unresolvedPaths(self):
         lNotFound = set()
 
-        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath in self.unresolved:
+        for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath, lDepPackage, lDepComponent in self.unresolved:
             lNotFound.add(lPathExpr)
 
         return lNotFound

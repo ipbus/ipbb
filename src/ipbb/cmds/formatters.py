@@ -25,7 +25,7 @@ class DepFormatter(object):
 
     def _drawPackages(self, aPkgs):
         if not aPkgs:
-            return
+            return ''
 
         return ' '.join(list(aPkgs))
 
@@ -37,7 +37,7 @@ class DepFormatter(object):
 
     def _drawComponents(self, aPkgs):
         if not aPkgs:
-            return
+            return ''
 
         lString = ''
         for pkg in sorted(aPkgs):
@@ -69,14 +69,13 @@ class DepFormatter(object):
             for cmp in sorted(lCmps):
                 lPathExps = lCmps[cmp]
                 for pathexp in sorted(lPathExps):
-
                     lFNFTable.add_row(
                         [
                             relpath(pathexp, self.parser.rootdir),
                             pkg,
                             cmp,
                             '\n'.join(
-                                [relpath(src, self.parser.rootdir) for src in lPathExps[pathexp]]
+                                [(relpath(src, self.parser.rootdir) if src != '__top__' else '(top)') for src in lPathExps[pathexp]]
                             ),
                         ]
                     )

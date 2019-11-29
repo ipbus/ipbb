@@ -575,7 +575,7 @@ class DepFileParser(object):
         # This shouldn't be needed, already covered by the 
         if not exists(lDepFilePath):
             self.unresolved.append(
-                (lDepFilePath, 'include', aPackage, aComponent, lDepFilePath))
+                (lDepFilePath, 'include', aPackage, aComponent, '__top__', '__top__', '__top__'))
             raise OSError("File " + lDepFilePath + " does not exist")
 
         # Ok, this is a new file. Let's dig in

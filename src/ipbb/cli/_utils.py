@@ -8,7 +8,18 @@ from os.path import join, relpath, dirname, basename, exists
 
 
 # ------------------------------------------------------------------------------
-def completePackage(ctx, args, incomplete):
+def completeProject(ctx, args, incomplete):
+    env = Environment()
+
+    # nothing to complete if not in an ipbb area
+    if env.work.path is None:
+        return []
+
+    return [proj for proj in env.projects if incomplete in proj]
+
+
+# ------------------------------------------------------------------------------
+def completeSrcPackage(ctx, args, incomplete):
     env = Environment()
 
     # nothing to complete if not in an ipbb area

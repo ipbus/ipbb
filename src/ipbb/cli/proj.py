@@ -11,7 +11,7 @@ from ..tools.common import SmartOpen
 # from . import kProjAreaFile, kProjDir, ProjectInfo
 # from ..cli.utils import DirSentry, raiseError, validateComponent
 from ..cmds._utils import validateComponent
-from ._utils import completeComponent
+from ._utils import completeComponent, completeProject
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
@@ -58,7 +58,7 @@ def ls( env ):
 # ------------------------------------------------------------------------------
 @proj.command('cd', short_help="Change working directory.")
 @click.option('-v', '--verbose', 'aVerbose', count=True, help="Command verbosity")
-@click.argument( 'projname' )
+@click.argument( 'projname', autocompletion=completeProject )
 @click.pass_obj
 def cd( env, projname, aVerbose ):
     '''Changes current working directory (command line only)

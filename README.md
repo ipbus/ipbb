@@ -7,14 +7,14 @@ The IPbus Builder (IPBB) is a tool for streamlining the synthesis, implementatio
 
 Pip installation:
 ```sh
-sudo pip install https://github.com/ipbus/ipbb/archive/<tag or branch>.tar.gz
+sudo pip install https://github.com/ipbus/ipbb/archive/<tag/branch>.tar.gz
 ```
 
 VirtualEnv installation:
 ```sh
-curl -L https://github.com/ipbus/ipbb/archive/<tag or branch>.tar.gz | tar xvz
+curl -L https://github.com/ipbus/ipbb/archive/<tag/branch>.tar.gz | tar xvz
 source ipbb-<tag or branch>/env.sh
 ```
 
 ---
-<sup>1</sup> Xilinx Vivado and Mentro Graphic's Modelsim
+<sup>1</sup> Xilinx Vivado and Mentor Graphic's Modelsim

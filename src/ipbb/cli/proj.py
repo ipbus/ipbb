@@ -10,7 +10,8 @@ import subprocess
 from ..tools.common import SmartOpen
 # from . import kProjAreaFile, kProjDir, ProjectInfo
 # from ..cli.utils import DirSentry, raiseError, validateComponent
-from ..cmds.utils import validateComponent
+from ..cmds._utils import validateComponent
+from ._utils import completeComponent
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
@@ -28,7 +29,7 @@ def proj():
 @proj.command('create', short_help="Create a new project area.")
 @click.argument('kind', type=click.Choice(['vivado', 'sim']))
 @click.argument('projname')
-@click.argument('component', callback=validateComponent)
+@click.argument('component', callback=validateComponent, autocompletion=completeComponent)
 @click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
 @click.pass_obj
 def create(env, kind, projname, component, topdep ):

@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import
 
-from ..cmds.utils import validateComponent
+from ..cmds._utils import validateComponent
+from ._utils import completePackage
 
 # Modules
 import click
@@ -75,7 +76,7 @@ def symlink(env, path):
 
 
 # ------------------------------------------------------------------------------
-@click.group('srcs', short_help="Utility commands to handle source packagess.")
+@click.group('srcs', short_help="Utility commands to handle source packages.")
 @click.pass_obj
 def srcs(env):
     pass
@@ -90,7 +91,7 @@ def info(env):
 
 # ------------------------------------------------------------------------------
 @srcs.command('reset', short_help="Add new source package from a git repository")
-@click.argument('pkg', default=None)
+@click.argument('pkg', default=None, autocompletion=completePackage)
 @click.pass_obj
 def reset(env, pkg):
     '''Run setup sequence on a source package

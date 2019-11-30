@@ -32,7 +32,7 @@ from os.path import (
 from click import echo, secho, style, confirm
 
 # Tools imports
-from .utils import (
+from ._utils import (
     DirSentry,
     ensureNoMissingFiles,
     echoVivadoConsoleError,

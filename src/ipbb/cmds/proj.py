@@ -11,7 +11,7 @@ import subprocess
 from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from . import ProjectInfo
-from .utils import DirSentry, raiseError, validateComponent, findFirstParentDir
+from ._utils import DirSentry, raiseError, validateComponent, findFirstParentDir
 from ..depparser.Pathmaker import Pathmaker
 from ..depparser.DepParser import depfiletypes
 

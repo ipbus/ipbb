@@ -4,7 +4,42 @@ from future.utils import raise_with_traceback
 
 from ..cmds import Environment
 from os import walk
-from os.path import join, relpath, dirname, basename, exists
+from os.path import join, relpath, dirname, basename, exists, normpath
+
+
+# ------------------------------------------------------------------------------
+def completeDepFile(cmp_argname):
+    def completeDepFileImpl(ctx, args, incomplete):
+
+        print ('ctx.params', ctx.params)
+        print ('args', args)
+        import ipdb
+        ipdb.set_trace()
+        print (ctx.command.params)
+        if ctx.params.get(cmp_argname, None) is None:
+            return []
+        env = Environment()
+        # nothing to complete if not in an ipbb area
+        if env.work.path is None:
+            return []
+
+        lPkg, lCmp = ctx.params[cmp_argname]
+        basepath = env.pathMaker.getPath(lPkg, lCmp, 'include')
+        if not exists(basepath):
+            return []
+
+        from ..depparser.definitions import depfiletypes
+
+        # print()
+        # print(basepath)
+
+        lDepFiles = []
+        for root, dirs, files in walk(basepath):
+            lDepFiles += [normpath(f) for f in files if any([f.endswith(ext) for ext in depfiletypes])]
+
+        return [ f for f in lDepFiles if f.startswith(incomplete)]
+
+    return completeDepFileImpl
 
 
 # ------------------------------------------------------------------------------
@@ -63,7 +98,7 @@ def completeComponent(ctx, args, incomplete):
 
 
 # ------------------------------------------------------------------------------
-def _findComponentsInPackage(env, pkg, incomp_cmp='', exclude=['.git', '.svn']):
+def _findComponentsInPackage(env, pkg, incomp_cmp='', exclude=['.git', '.svn'], match_subdir='firmware'):
     """
     Helper function to find components in a package, starting from an incomplete component path
 
@@ -89,11 +124,10 @@ def _findComponentsInPackage(env, pkg, incomp_cmp='', exclude=['.git', '.svn']):
     for p in lSearchPaths:
         for root, dirs, files in walk(p, topdown=True):
 
-            if 'firmware' in dirs:
+            if match_subdir in dirs:
                 lMatchingComps += [pkg + ':' + relpath(root, lPkgPath)]
-                dirs.remove('firmware')
+                dirs.remove(match_subdir)
             dirs[:] = [d for d in dirs if d not in exclude]
             if not dirs:
                 continue
-            # print(dirs)
     return lMatchingComps

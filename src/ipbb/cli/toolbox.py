@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import
 import click
 
 from ..cmds._utils import validateComponent, validateMultiplePackageOrComponents
-from ._utils import completeComponent
+from ._utils import completeComponent, completeDepFile
 
 
 # ------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ def toolbox(env):
 @toolbox.command('check-dep', short_help="Performs basic checks on dependency files")
 @click.option('-v', '--verbose', count=True)
 @click.argument('component', callback=validateComponent, autocompletion=completeComponent)
-@click.argument('depfile', required=False, default=None)
+@click.argument('depfile', required=False, default=None, autocompletion=completeDepFile('component'))
 @click.option('-t', '--toolset', required=True, type=click.Choice(['vivado', 'sim']))
 @click.pass_obj
 def check_depfile(env, verbose, component, depfile, toolset):

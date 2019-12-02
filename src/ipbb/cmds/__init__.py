@@ -8,8 +8,6 @@ from . import _utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepParser import DepFileParser
 
 from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
 
@@ -136,6 +134,7 @@ class Environment(object):
 
     # ----------------------------------------------------------------------------
     def _autodetect(self):
+        from ..depparser.Pathmaker import Pathmaker
 
         self._clear()
 
@@ -177,6 +176,8 @@ class Environment(object):
     @property
     def depParser(self):
         if self._depParser is None:
+
+            from ..depparser.DepParser import DepFileParser
 
             self._depParser = DepFileParser(
                 self.currentproj.settings['toolset'],

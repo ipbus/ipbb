@@ -11,7 +11,7 @@ from ..tools.common import SmartOpen
 # from . import kProjAreaFile, kProjDir, ProjectInfo
 # from ..cli.utils import DirSentry, raiseError, validateComponent
 from ..cmds._utils import validateComponent
-from ._utils import completeComponent, completeProject
+from ._utils import completeComponent, completeProject, completeDepFile
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
@@ -30,7 +30,8 @@ def proj():
 @click.argument('kind', type=click.Choice(['vivado', 'sim']))
 @click.argument('projname')
 @click.argument('component', callback=validateComponent, autocompletion=completeComponent)
-@click.option('-t', '--topdep', default='top.dep', help='Top-level dependency file')
+# @click.argument('topdep', default='top.dep', autocompletion=completeDepFile('component'))
+@click.option('-t', '--topdep', default='top.dep', autocompletion=completeDepFile('component'), help='Top-level dependency file')
 @click.pass_obj
 def create(env, kind, projname, component, topdep ):
     '''Creates a new area of name PROJNAME of kind KIND

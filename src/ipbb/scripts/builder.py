@@ -239,8 +239,8 @@ def main():
 
     _compose_cli()
 
-    # if True:
-    if False:
+    if True:
+    # if False:
         from click._bashcomplete import get_choices
 
         def choices_without_help(cli, args, incomplete):
@@ -258,9 +258,27 @@ def main():
                 'felix-pie:projects/hitfinder/'
         ]:
             print("-" * 80)
-            print("Completing '" + inc + "'")
+            print("Completing component'" + inc + "'")
             print("-" * 80)
             print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG'], inc))
+            print()
+
+        for inc in [
+                '',
+        ]:
+            print("-" * 80)
+            print("Completing dep file'" + inc + "'")
+            print("-" * 80)
+            print(choices_without_help(climain, ['ipbb', 'toolbox', 'check-dep', 'felix-pie:projects/hitfinder'], inc))
+            print()
+
+        for inc in [
+                '',
+        ]:
+            print("-" * 80)
+            print("Completing dep file'" + inc + "'")
+            print("-" * 80)
+            print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG', 'felix-pie:projects/hitfinder', '-t'], inc))
             print()
         raise SystemExit(0)
 

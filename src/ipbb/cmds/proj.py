@@ -20,21 +20,21 @@ from click import echo, style, secho
 
 
 # ------------------------------------------------------------------------------
-# TODO: move the list of supported products somewhere else
-def create(env, kind, projname, component, topdep):
-    '''Creates a new area of name PROJNAME of kind KIND
+def create(env, toolset, projname, component, topdep):
+    '''Creates a new area of name PROJNAME
 
-      KIND: Area kind, choices: vivado, sim
+      TOOLSET: Toolset used for the project areas, choices: vivado, sim
 
       PROJNAME: Name of the new project area
 
       COMPONENT: Component <package:component> contaning the top-level
+
+      TOPDEP: Top dependency file.
     '''
     # ------------------------------------------------------------------------------
     # Must be in a build area
     if env.work.path is None:
         raiseError("Build area root directory not found")
-        # raise click.ClickException('Build area root directory not found')
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ def create(env, kind, projname, component, topdep):
     pi = ProjectInfo()
     pi.path = lProjAreaPath
     pi.settings = {
-        'toolset': kind,
+        'toolset': toolset,
         'topPkg': lTopPackage,
         'topCmp': lTopComponent,
         'topDep': topdep,
@@ -121,7 +121,7 @@ def create(env, kind, projname, component, topdep):
     pi.saveSettings()
 
     secho(
-        '{} project area \'{}\' created'.format(kind.capitalize(), projname), fg='green'
+        '{} project area \'{}\' created'.format(toolset.capitalize(), projname), fg='green'
     )
 
 

@@ -25,7 +25,7 @@ def toolbox(env):
 
 
 # ------------------------------------------------------------------------------
-def check_depfile(env, verbose, component, depfile, toolset):
+def check_depfile(env, verbose, toolset, component, depfile):
     '''Perform basic checks on dependency files'''
 
     lPackage, lComponent = component

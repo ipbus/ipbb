@@ -27,23 +27,24 @@ def proj():
 # ------------------------------------------------------------------------------
 # TODO: move the list of supported products somewhere else
 @proj.command('create', short_help="Create a new project area.")
-@click.argument('kind', type=click.Choice(['vivado', 'sim']))
+@click.argument('toolset', type=click.Choice(['vivado', 'sim']))
 @click.argument('projname')
 @click.argument('component', callback=validateComponent, autocompletion=completeComponent)
-# @click.argument('topdep', default='top.dep', autocompletion=completeDepFile('component'))
-@click.option('-t', '--topdep', default='top.dep', autocompletion=completeDepFile('component'), help='Top-level dependency file')
+@click.argument('topdep', default='top.dep', autocompletion=completeDepFile('component'))
 @click.pass_obj
-def create(env, kind, projname, component, topdep ):
-    '''Creates a new area of name PROJNAME of kind KIND
+def create(env, toolset, projname, component, topdep ):
+    '''Creates a new area of name PROJNAME
 
-      KIND: Area kind, choices: vivado, sim
+      TOOLSET: Toolset used for the project areas, choices: vivado, sim
 
       PROJNAME: Name of the new project area
 
       COMPONENT: Component <package:component> contaning the top-level
+
+      TOPDEP: Top dependency file.
     '''
     from ..cmds.proj import create
-    create(env, kind, projname, component, topdep)
+    create(env, toolset, projname, component, topdep)
 
 
 # ------------------------------------------------------------------------------

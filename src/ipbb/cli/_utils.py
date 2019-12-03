@@ -11,11 +11,11 @@ from os.path import join, relpath, dirname, basename, exists, normpath
 def completeDepFile(cmp_argname):
     def completeDepFileImpl(ctx, args, incomplete):
 
-        print ('ctx.params', ctx.params)
-        print ('args', args)
-        import ipdb
-        ipdb.set_trace()
-        print (ctx.command.params)
+        # print ('ctx.params', ctx.params)
+        # print ('args', args)
+        # import ipdb
+        # ipdb.set_trace()
+        # print (ctx.command.params)
         if ctx.params.get(cmp_argname, None) is None:
             return []
         env = Environment()

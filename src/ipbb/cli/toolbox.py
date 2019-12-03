@@ -18,14 +18,14 @@ def toolbox(env):
 # ------------------------------------------------------------------------------
 @toolbox.command('check-dep', short_help="Performs basic checks on dependency files")
 @click.option('-v', '--verbose', count=True)
+@click.argument('toolset', type=click.Choice(['vivado', 'sim']))
 @click.argument('component', callback=validateComponent, autocompletion=completeComponent)
 @click.argument('depfile', required=False, default=None, autocompletion=completeDepFile('component'))
-@click.option('-t', '--toolset', required=True, type=click.Choice(['vivado', 'sim']))
 @click.pass_obj
-def check_depfile(env, verbose, component, depfile, toolset):
+def check_depfile(env, verbose, toolset, component, depfile):
     '''Perform basic checks on dependency files'''
     from ..cmds.toolbox import check_depfile
-    check_depfile(env, verbose, component, depfile, toolset)
+    check_depfile(env, verbose, toolset, component, depfile)
 
 
 @toolbox.command('vhdl-beautify', short_help="Beautifies VHDL files in components within an ipbb work area or standalone files/directories")

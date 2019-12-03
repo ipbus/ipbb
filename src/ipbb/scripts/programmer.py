@@ -178,17 +178,17 @@ def program(obj, deviceid, bitfile, probe, yes):
         # Memento: delete tempdir
         lTmpDir = tempfile.mkdtemp()
         with tarfile.open(bitfile) as lTF:
-            lTopFiles = [m.name for m in lTF.getmembers() if m.name.endswith('top.bit')]
-            if len(lTopFiles) < 0:
-                raise RuntimeError('No top.bit images found in {}'.format(bitfile))
-            elif len(lTopFiles) > 1:
+            lBitFiles = [m.name for m in lTF.getmembers() if m.name.endswith('.bit')]
+            if len(lBitFiles) < 0:
+                raise RuntimeError('No .bit images found in {}'.format(bitfile))
+            elif len(lBitFiles) > 1:
                 raise RuntimeError(
-                    'Multiple top.bit images found in {}'.format(bitfile)
+                    'Multiple .bit images found in {}: {}'.format(bitfile, ' '.join(lBitFiles))
                 )
 
-            lTF.extract(lTopFiles[0], lTmpDir)
-        secho('Extracting top.bit from {} to {}'.format(bitfile, lTmpDir), fg='green')
-        bitfile = join(lTmpDir, lTopFiles[0])
+            lTF.extract(lBitFiles[0], lTmpDir)
+        secho('Extracting {} from {} to {}'.format(lBitFiles[0], bitfile, lTmpDir), fg='green')
+        bitfile = join(lTmpDir, lBitFiles[0])
 
     lHwServerURI = obj.options['vivado.hw_server']
 

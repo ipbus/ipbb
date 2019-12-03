@@ -26,19 +26,6 @@ def add(env):
     from ..cmds.repo import add
     add(env)
 
-
-@add.command('test_setup', short_help="Add new source package from a git repository")
-@click.argument('pkg', default=None)
-@click.pass_obj
-def test_setup(env, pkg):
-    '''Run setup sequence on a source package
-    
-    PKG : Name of the package to run the sequence of.
-    '''
-    from ..cmds.repo import _repoSetup
-    _repoSetup(env, pkg)
-
-
 # ------------------------------------------------------------------------------
 @add.command('git', short_help="Add new source package from a git repository")
 @click.argument('repo')
@@ -100,6 +87,19 @@ def info(env):
     from ..cmds.repo import info
     info(env)
 
+
+# ------------------------------------------------------------------------------
+@srcs.command('reset', short_help="Add new source package from a git repository")
+@click.argument('pkg', default=None)
+@click.pass_obj
+def reset(env, pkg):
+    '''Run setup sequence on a source package
+    
+    PKG : Name of the package to run the sequence of.
+    '''
+    from ..cmds.repo import _repoInit, _repoReset
+    _repoReset(env, pkg)
+    _repoInit(env, pkg)
 
 # ------------------------------------------------------------------------------
 @srcs.command('create-component', short_help="Information of the status of source packages.")

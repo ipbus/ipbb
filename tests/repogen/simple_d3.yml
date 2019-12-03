@@ -1,0 +1,25 @@
+name: simple_d3
+top:
+  - cmp: ""
+    file: top.d3
+files:
+  firmware/cfg:
+    top.d3: |
+      setup settings.tcl
+      src t0.vhd
+      src t1.vhd
+      include defs.d3
+      ? var_A == True ? src t2.vhd
+      src t3.vhd
+    defs.d3: |
+      @var_A=True
+      src d1.vhd
+      src d2.vhd
+    settings.tcl: ""
+  firmware/hdl:
+    t0.vhd: ""
+    t1.vhd: ""
+    t2.vhd: ""
+    t3.vhd: ""
+    d1.vhd: ""
+    d2.vhd: ""

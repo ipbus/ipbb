@@ -9,7 +9,7 @@ from . import utils
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepFileParser import DepFileParser
+from ..depparser.DepParser import DepFileParser
 
 from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
 
@@ -186,15 +186,12 @@ class Environment(object):
             )
 
             try:
-                self._depParser.parse(
-                    self.currentproj.settings['topPkg'],
-                    self.currentproj.settings['topCmp'],
-                    self.currentproj.settings['topDep'],
-                )
-            except OSError as e:
+                self._depParser.parse( self.currentproj.settings['topPkg'], self.currentproj.settings['topCmp'], self.currentproj.settings['topDep'],)
+            except OSError:
                 pass
 
         return self._depParser
+
 
     # -----------------------------------------------------------------------------
     @property

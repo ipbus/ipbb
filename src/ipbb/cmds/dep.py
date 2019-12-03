@@ -78,7 +78,7 @@ def report(env, filters):
             i = lCmdHeaders.index(m.group(1))
             r = re.compile(m.group(2))
             lFilters.append((i, r))
-        except RuntimeError as e:
+        except RuntimeError:
             lFilterFormatErrors.append(f)
 
     if lFilterFormatErrors:
@@ -141,24 +141,24 @@ def report(env, filters):
     # lString += '+----------------------------------+\n'
     # lString += '|  Resolved packages & components  |\n'
     # lString += '+----------------------------------+\n'
-    lString += 'packages: ' + ' '.join(iterkeys(lParser.components)) + '\n'
+    lString += 'packages: ' + ' '.join(iterkeys(lParser.packages)) + '\n'
     lString += 'components:\n'
-    for pkg in sorted(lParser.components):
-        lString += u'* %s (%d)\n' % (pkg, len(lParser.components[pkg]))
-        lSortCmp = sorted(lParser.components[pkg])
+    for pkg in sorted(lParser.packages):
+        lString += u'* %s (%d)\n' % (pkg, len(lParser.packages[pkg]))
+        lSortCmp = sorted(lParser.packages[pkg])
         for cmp in lSortCmp[:-1]:
             lString += u'  ├── ' + str(cmp) + '\n'
         lString += u'  └── ' + str(lSortCmp[-1]) + '\n'
     echo(lString)
 
-    if lParser.missing:
+    if lParser.unresolved:
         lString = ''
-        if lParser.missingPackages:
+        if lParser.unresolvedPackages:
             secho('Missing packages:', fg='red')
-            echo(' '.join(list(lParser.missingPackages)))
+            echo(' '.join(list(lParser.unresolvedPackages)))
 
         # ------
-        lCNF = lParser.missingComponents
+        lCNF = lParser.unresolvedComponents
         if lCNF:
             secho('Missing components:', fg='red')
 
@@ -174,10 +174,10 @@ def report(env, filters):
         # ------
         echo(lString)
 
-    lFNF = lParser.missingFiles
+    lFNF = lParser.unresolvedFiles
 
     if lFNF:
-        secho('Missing files:', fg='red')
+        secho('Unresolved files:', fg='red')
 
         lFNFTable = Texttable(max_width=0)
         lFNFTable.header(['path expression', 'package', 'component', 'included by'])
@@ -221,7 +221,7 @@ def ls(env, group, output):
 def components(env, output):
 
     with SmartOpen(output) as lWriter:
-        for lPkt, lCmps in iteritems(env.depParser.components):
+        for lPkt, lCmps in iteritems(env.depParser.packages):
             lWriter('[' + lPkt + ']')
             for lCmp in lCmps:
                 lWriter(lCmp)

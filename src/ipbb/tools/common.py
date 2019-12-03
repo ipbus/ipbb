@@ -111,6 +111,37 @@ class OutputFormatter(object):
 
 
 # ------------------------------------------------------------------------------
+class DictObj(object):
+    """
+    Convenience class to wrap a python dictionary in an opbject
+    """
+
+    def __init__(self, aDict={} ):
+        super(DictObj, self).__setattr__('data', aDict)
+        # for name, value in aDict.iteritems():
+        #   setattr(self, name, value)
+
+    def __setattr__(self, key, value):
+        self.data[key] = value
+
+    def __getattr__(self, key):
+        # we don't need a special call to super here because getattr is only
+        # called when an attribute is NOT found in the instance's dictionary
+        try:
+            return self.data[key]
+        except KeyError:
+            raise AttributeError
+
+    def __repr__(self):
+        type_name = type(self).__name__
+
+        arg_strings = [ '%s=%s' % (key, repr(value)) for key, value in sorted(self.data.iteritems())]
+
+        return '%s(%s)' % (type_name, ', '.join(arg_strings))
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 # Helper function equivalent to which in posix systems
 def which(aExecutable):
     '''Searches for exectable il $PATH'''

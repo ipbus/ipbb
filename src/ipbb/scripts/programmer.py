@@ -164,9 +164,10 @@ def _validateDevice(ctx, param, value):
 @vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
+@click.option('-p', '--probe', type=click.Path(), default=None, help="Probe file")
 @click.option('-y', 'yes', is_flag=True, default=False, help="Proceed with asking for confirmation.")
 @click.pass_obj
-def program(obj, deviceid, bitfile, yes):
+def program(obj, deviceid, bitfile, probe, yes):
 
     lVerbosity = obj.options['vivado.verbosity']
 
@@ -253,7 +254,7 @@ def program(obj, deviceid, bitfile, yes):
             )
         ):
             echo("Programming {}".format(lTarget))
-            v.programDevice(device, bitfile)
+            v.programDevice(device, bitfile, probe)
             echo("Done.")
             secho(
                 "{} successfully programmed on {}".format(bitfile, lTarget), fg='green'

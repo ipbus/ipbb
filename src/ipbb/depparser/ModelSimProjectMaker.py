@@ -11,10 +11,9 @@ from ..tools.common import SmartOpen
 
 class ModelSimProjectMaker(object):
     # --------------------------------------------------------------
-    def __init__(self, aProjInfo, aIPProjName, aReverse=False, aTurbo=True):
+    def __init__(self, aProjInfo, aIPProjName, aTurbo=True):
         self.projInfo = aProjInfo
         self.ipProjName = aIPProjName
-        self.reverse = aReverse
         self.turbo = aTurbo
     # --------------------------------------------------------------
 
@@ -42,7 +41,7 @@ class ModelSimProjectMaker(object):
         for lib in set(aLibs):
             write('vlib {0}'.format(lib))
 
-        lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
+        lSrcs = aCommandList['src']
 
         lSrcCommandGroups = []
         # ----------------------------------------------------------

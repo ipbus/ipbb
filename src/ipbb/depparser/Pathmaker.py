@@ -11,7 +11,7 @@ class Pathmaker(object):
         "include": "firmware/cfg",
         "addrtab": "addr_table",
         "setup": "firmware/cfg",
-        # "finalise": "firmware/cfg",
+        "util": "firmware/cfg",
         "iprepo": "firmware/cgn",
     }
     fexts = {
@@ -72,6 +72,9 @@ class Pathmaker(object):
 
     # --------------------------------------------------------------
     def glob(self, package, component, command, fileexpr, cd=None):
+        """
+        Returns the complete path expression as well as the list of files matches
+        """
         import glob
 
         lPathExpr = self.getPath(package, component, command, fileexpr, cd=cd)

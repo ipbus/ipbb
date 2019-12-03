@@ -290,7 +290,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
             lIPCoreSimMaker.write(
                 lVivadoConsole,
                 lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )
@@ -458,7 +458,7 @@ def fli_udp(env, port, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
+def makeproject(env, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
 
@@ -505,7 +505,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     # Ensure thay all dependencies have been resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aReverse, aOptimise)
+    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
@@ -517,7 +517,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
             lSimProjMaker.write(
                 lSim,
                 lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )

@@ -11,7 +11,7 @@ from os.path import basename, dirname, relpath, abspath, exists, splitext, join,
 from texttable import Texttable
 
 from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepFileParser import DepFileParser
+from ..depparser.DepParser import DepFileParser
 
 
 # ------------------------------------------------------------------------------
@@ -89,17 +89,17 @@ def check_depfile(env, verbose, component, depfile, toolset):
         secho('Resolved packages & components', fg='blue')
 
         string = ''
-        for pkg in sorted(lParser.components):
-            string += '  + %s (%d)\n' % (pkg, len(lParser.components[pkg]))
-            for cmp in sorted(lParser.components[pkg]):
+        for pkg in sorted(lParser.packages):
+            string += '  + %s (%d)\n' % (pkg, len(lParser.packages[pkg]))
+            for cmp in sorted(lParser.packages[pkg]):
                 string += '    > ' + str(cmp) + '\n'
         echo(string)
 
-    if lParser.missingPackages:
+    if lParser.unresolvedPackages:
         secho('Missing packages:', fg='red')
-        echo(str(list(lParser.missingPackages)))
+        echo(str(list(lParser.unresolvedPackages)))
 
-    lCNF = lParser.missingComponents
+    lCNF = lParser.unresolvedComponents
     if lCNF:
         secho('Missing components:', fg='red')
         string = ''
@@ -111,7 +111,7 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 string += '  > ' + str(cmp) + '\n'
         echo(string)
 
-    lFNF = lParser.missingFiles
+    lFNF = lParser.unresolvedFiles
     if lFNF:
         secho('Missing files:', fg='red')
 
@@ -138,7 +138,7 @@ def check_depfile(env, verbose, component, depfile, toolset):
         echo(lPrepend.sub('\g<1>  ', lFNFTable.draw()))
         echo()
 
-    if lParser.missingPackages or lParser.missingComponents or lParser.missingFiles:
+    if lParser.unresolvedPackages or lParser.unresolvedComponents or lParser.unresolvedFiles:
         raise click.ClickException(
             "Cannot find 1 or more files referenced by depfile {}".format(
                 lPathMaker.getPath(lPackage, lComponent, 'include', depfile)

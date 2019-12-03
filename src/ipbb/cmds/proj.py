@@ -6,12 +6,14 @@ import os
 import ipbb
 import subprocess
 
+
 # Elements
 from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from . import ProjectInfo
-from .utils import DirSentry, raiseError, validateComponent
+from .utils import DirSentry, raiseError, validateComponent, findFirstParentDir
 from ..depparser.Pathmaker import Pathmaker
+from ..depparser.DepParser import depfiletypes
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
@@ -62,14 +64,16 @@ def create(env, kind, projname, component, topdep):
             fg='red',
         )
 
-        # Search for the first existing parent  folder in path
-        p = lTopComponent
-        while True:
-            if not p or exists(lPathmaker.getPath(lTopPackage, p)):
-                break
-            p, _ = os.path.split(p)
+        # Search for the first existing parent folder of lTopComponent in lTopPackage
+        # p = lTopComponent
+        # while True:
+        #     if not p or exists(lPathmaker.getPath(lTopPackage, p)):
+        #         break
+        #     p, _ = os.path.split(p)
 
-        lParent = lPathmaker.getPath(lTopPackage, p)
+        # lParent = lPathmaker.getPath(lTopPackage, p)
+
+        lParent = findFirstParentDir(lTopComponentPath, lPathmaker.getPath(lTopPackage))
         secho('\nSuggestions (based on the first existing parent path)', fg='cyan')
         # When in Py3 https://docs.python.org/3/library/os.html#os.scandir
         for d in [
@@ -85,16 +89,18 @@ def create(env, kind, projname, component, topdep):
     lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
     if not exists(lTopDepPath):
         import glob
+        secho('Top-level dep file {} not found'.format(lTopDepPath), fg='red')
 
         lTopDepDir = lPathmaker.getPath(lTopPackage, lTopComponent, 'include')
-        lTopDepCandidates = [
-            "'{}'".format(relpath(p, lTopDepDir))
-            for p in glob.glob(join(lTopDepDir, '*.dep'))
-        ]
-        secho('Top-level dep file {} not found'.format(lTopDepPath), fg='red')
-        echo('Suggestions (*.dep):')
-        for lC in lTopDepCandidates:
-            echo(' - ' + lC)
+
+        for ft in depfiletypes:
+            lTopDepCandidates = [
+                "'{}'".format(relpath(p, lTopDepDir))
+                for p in glob.glob(join(lTopDepDir, '*' + ft))
+            ]
+            echo('Suggestions (*{}):'.format(ft))
+            for lC in lTopDepCandidates:
+                echo(' - ' + lC)
 
         raiseError("Top-level dependency file {} not found".format(lTopDepPath))
         # raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)

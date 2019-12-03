@@ -14,7 +14,8 @@ from os.path import join, relpath, exists, split, realpath
 
 # ------------------------------------------------------------------------------
 class DirSentry:
-    """Helper class implementing the guard pattern for temporary directory switches.
+    """
+    Helper class implementing the guard pattern for temporary directory switches.
     
     Attributes:
         dir (string): Destination directory
@@ -37,6 +38,10 @@ class DirSentry:
 
 # ------------------------------------------------------------------------------
 def raiseError(aMessage):
+    """
+    Print the error message to screen in bright red and a ClickException error
+    """
+
     secho("\nERROR: " + aMessage + "\n", fg='red')
     raise ClickException("Command aborted.")
 
@@ -44,18 +49,34 @@ def raiseError(aMessage):
 
 
 # ------------------------------------------------------------------------------
+def findFirstParentDir(aDirPath, aParentDir='/'):
+    if not aDirPath.startswith(aParentDir):
+        raise RuntimeError("{} is not a parent folder of {}".format(aParentDir, aDirPath))
+
+    lDirPath = aDirPath
+    while lDirPath != aParentDir:
+        if exists(lDirPath):
+            return lDirPath
+        lDirPath, _ = split(lDirPath)
+    return aParentDir
+
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 def findFileDirInParents(aFileName, aDirPath):
-    """Find, in the current directory tree, the folder in which a given file is located.
-    
+    """
+    Find, in the current directory tree, the folder in which a given file is located.
+
     Args:
         aFileName (str): Name of the file to search
         aDirPath (str, optional): Search path
-    
+
     Returns:
         TYPE: Description
     """
     lDirPath = aDirPath
-    while lDirPath is not '/':
+    while lDirPath != '/':
         lBuildFile = join(lDirPath, aFileName)
         if exists(lBuildFile):
             return lDirPath
@@ -67,6 +88,10 @@ def findFileDirInParents(aFileName, aDirPath):
 
 # ------------------------------------------------------------------------------
 def findFileInParents(aFileName, aDirPath=os.getcwd()):
+    """
+    Find a file of given name, in the current directory tree branch,
+    starting from dirpat and moving upwards
+    """
 
     lDirPath = findFileDirInParents(aFileName, aDirPath)
 
@@ -76,14 +101,17 @@ def findFileInParents(aFileName, aDirPath=os.getcwd()):
 
 # ------------------------------------------------------------------------------
 def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
+    """
+    Check th
+    """
 
-    if not aDepFileParser.missing:
+    if not aDepFileParser.unresolved:
         return
 
     secho("ERROR: Project '{}' contains missing dependencies: {} missing file{}.\n       Run '{} dep report' for details".format(
         aCurrentProj,
-        len(aDepFileParser.missing),
-        ("" if len(aDepFileParser.missing) == 1 else "s"),
+        len(aDepFileParser.unresolved),
+        ("" if len(aDepFileParser.unresolved) == 1 else "s"),
         getClickRootName(),
     ), fg='red')
     confirm("Do you want to continue anyway?", abort=True)

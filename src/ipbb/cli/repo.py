@@ -27,6 +27,18 @@ def add(env):
     add(env)
 
 
+@add.command('test_setup', short_help="Add new source package from a git repository")
+@click.argument('pkg', default=None)
+@click.pass_obj
+def test_setup(env, pkg):
+    '''Run setup sequence on a source package
+    
+    PKG : Name of the package to run the sequence of.
+    '''
+    from ..cmds.repo import _repoSetup
+    _repoSetup(env, pkg)
+
+
 # ------------------------------------------------------------------------------
 @add.command('git', short_help="Add new source package from a git repository")
 @click.argument('repo')

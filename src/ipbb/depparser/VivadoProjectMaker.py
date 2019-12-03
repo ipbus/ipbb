@@ -24,6 +24,7 @@ class VivadoProjectMaker(object):
         '.tcl': 'constrs_1',
         '.mif': 'sources_1',
         '.vhd': 'sources_1',
+        '.vhdl': 'sources_1',
         '.v': 'sources_1',
         '.sv': 'sources_1',
         '.xci': 'sources_1',
@@ -36,10 +37,9 @@ class VivadoProjectMaker(object):
     }
 
     # --------------------------------------------------------------
-    def __init__(self, aProjInfo, aIPCachePath=None, aReverse=False, aTurbo=True):
+    def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True):
         self.projInfo = aProjInfo
         self.ipCachePath = aIPCachePath
-        self.reverse = aReverse
         self.turbo = aTurbo
 
     # --------------------------------------------------------------
@@ -69,8 +69,10 @@ class VivadoProjectMaker(object):
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
             ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
-            )
-        )
+        ))
+
+        for util in (c for c in aCommandList['util']):
+            write('add_files -norecurse -fileset utils_1 {0}'.format(util.FilePath))
 
         write('if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
         write('if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
@@ -81,7 +83,7 @@ class VivadoProjectMaker(object):
         lXciBasenames = []
         # lXciTargetFiles = []
 
-        lSrcs = aCommandList['src'] if not self.reverse else reversed(aCommandList['src'])
+        lSrcs = aCommandList['src']
 
         # Grouping commands here, where the order matters only for constraint files
         lSrcCommandGroups = collections.OrderedDict()
@@ -136,7 +138,7 @@ class VivadoProjectMaker(object):
 
         write('set_property top {0} [current_fileset]'.format(lTopEntity))
 
-        write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
+        # write('set_property "steps.synth_design.args.flatten_hierarchy" "none" [get_runs synth_1]')
 
         if self.ipCachePath:
             write('config_ip_cache -import_from_project -use_cache_location {0}'.format(abspath(self.ipCachePath)))
@@ -150,7 +152,6 @@ class VivadoProjectMaker(object):
 
         for setup in (c for c in aCommandList['setup'] if c.Finalise):
             write('source {0}'.format(setup.FilePath))
-
 
         write('close_project')
     # --------------------------------------------------------------

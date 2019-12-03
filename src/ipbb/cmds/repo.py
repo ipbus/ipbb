@@ -9,13 +9,14 @@ import os
 import subprocess
 import sh
 import sys
+import yaml
 
 # Elements
 from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
-from ..defaults import kSourceDir, kProjDir, kWorkAreaFile
-from .utils import DirSentry, findFileInParents
+from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
+from .utils import DirSentry, findFileInParents, raiseError
 from ..depparser.Pathmaker import Pathmaker
 from ..tools.common import mkdir
 from urllib.parse import urlparse
@@ -53,6 +54,54 @@ def add(env):
     if env.work.path is None:
         raise click.ClickException('Build area root directory not found')
     # -------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def _repoSetup(env, dest):
+
+    if dest not in env.sources:
+        secho('Source package {} not found'.format(dest), fg='red')
+        echo('Available repositories:')
+        for lPkg in env.sources:
+            echo(' - ' + lPkg)
+
+        raiseError("Source package {} not found".format(dest))
+
+    setupPath = join(env.srcdir, dest, kRepoSetupFile)
+    if not exists(setupPath):
+        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+        return
+    secho('Setting up {}'.format(dest), fg='blue')
+
+    setupCfg = None
+    with open(setupPath, 'r') as f:
+        setupCfg = yaml.safe_load(f)
+
+    initCfg = setupCfg.get('init', None)
+    if initCfg is None:
+        echo("No init configuration file. Skipping.")
+        return
+
+    cmds = [ l.split() for l in initCfg ]
+
+    # ensure that all commands exist
+    missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
+    if missingCmds:
+        secho('Some setup commands have not been found', fg='red')
+        for i, cmd in missingCmds:
+            echo(' - {} (line {})'.format(cmd, i))
+
+        raiseError("Setup commands not found".format(dest))
+
+    with sh.pushd(join(env.srcdir, dest)):
+        # TODO: add error handling
+        # Show the list of commands
+        # In green the commands executed successfully
+        # In red the failed one
+        # In white the remaining commands
+        for cmd in cmds:
+            secho('> '+' '.join(cmd), fg='cyan')
+            sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 
 # ------------------------------------------------------------------------------
@@ -132,6 +181,8 @@ def git(env, repo, branch, dest):
         fg='green',
     )
 
+    _repoSetup(env, lRepoName)
+
 
 # ------------------------------------------------------------------------------
 def svn(env, repo, dest, rev, dryrun, sparse):
@@ -202,6 +253,9 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
+
+    _repoSetup(env, lRepoName)
+
     # -------------------------------------------------------------------------
 
 
@@ -272,23 +326,27 @@ def tar(env, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
+    _repoSetup(env, lRepoName)
 
+
+# ------------------------------------------------------------------------------
 def symlink(env, path):
 
     lRepoName = basename(path)
-    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
+    lRepoLocalPath = join(env.srcdir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
     echo(
         'Adding symlink '
-        + style(path, fg='blue')
+        + style(abspath(path), fg='blue')
         + ' as '
         + style(lRepoName, fg='blue')
     )
 
-    sh.ln('-s', abspath(path), _cwd=lRepoLocalPath )
+    sh.ln('-s', abspath(path), _cwd=env.srcdir )
+
 
 # ------------------------------------------------------------------------------
 def srcs(env):

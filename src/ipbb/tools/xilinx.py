@@ -536,7 +536,7 @@ class VivadoHWServer(VivadoConsole):
         return self.execute('get_hw_devices')[0].split()
 
     # --------------------------------------------------------------
-    def programDevice(self, device, bitfile):
+    def programDevice(self, device, bitfile, probe=None):
         from os.path import abspath, normpath
 
         bitpath = abspath(normpath(bitfile))
@@ -545,9 +545,11 @@ class VivadoHWServer(VivadoConsole):
 
         self.execute('current_hw_device {0}'.format(device))
         self.execute(
-            'refresh_hw_device -update_hw_probes false [current_hw_device]'
+            'refresh_hw_device -update_hw_probes {} [current_hw_device]'.format("True" if probe else 'False')
         )
-        self.execute('set_property PROBES.FILE {{}} [current_hw_device]')
+        self.execute(
+            'set_property PROBES.FILE {{{0}}} [current_hw_device]'.format(probe if probe else '')
+        )
         self.execute(
             'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath)
         )

@@ -89,8 +89,8 @@ set_property "target_language" "VHDL" [current_project]
             for lFile in lIPFiles:
                 write('generate_target simulation [get_files {0}]'.format(lFile))
 
-            # Is this needed?
-            write('set_property top top [get_filesets sim_1]')
-            write('export_simulation -force -simulator {} -directory {} -lib_map_path {}'.format(self.targetSimulator, self.exportdir, self.simlibPath))
+        # Is this needed?
+        write('set_property top top [get_filesets sim_1]')
+        write('export_simulation -force -simulator {} -directory {} -lib_map_path {}'.format(self.targetSimulator, self.exportdir, self.simlibPath))
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

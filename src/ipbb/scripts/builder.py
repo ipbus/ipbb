@@ -13,7 +13,7 @@ from io import StringIO, BytesIO
 from texttable import Texttable
 from click import echo, style, secho
 
-from ..cmds import Environment, utils
+from ..cmds import Environment, _utils
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -239,8 +239,8 @@ def main():
 
     _compose_cli()
 
-    if True:
-    # if False:
+    # if True:
+    if False:
         from click._bashcomplete import get_choices
 
         def choices_without_help(cli, args, incomplete):

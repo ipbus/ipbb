@@ -247,16 +247,6 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     lDepFileParser = env.depParser
 
-    # -------------------------------------------------------------------------
-    # Extract the list of cores
-    # lIPCores = [
-    #     split(name)[1]
-    #     for name, ext in (
-    #         splitext(src.FilePath) for src in lDepFileParser.commands["src"]
-    #     )
-    #     if ext in [".xci", ".edn"]
-    # ]
-
     lIPCores = findIPSrcs(lDepFileParser.commands["src"])
 
     if not lIPCores:

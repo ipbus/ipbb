@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import
 
-from ..cmds.utils import validateComponent
+from ..cmds._utils import validateComponent
+from ._utils import completeSrcPackage
 
 # Modules
 import click
@@ -75,7 +76,7 @@ def symlink(env, path):
 
 
 # ------------------------------------------------------------------------------
-@click.group('srcs', short_help="Utility commands to handle source packagess.")
+@click.group('srcs', short_help="Utility commands to handle source packages.")
 @click.pass_obj
 def srcs(env):
     pass
@@ -90,7 +91,7 @@ def info(env):
 
 # ------------------------------------------------------------------------------
 @srcs.command('reset', short_help="Add new source package from a git repository")
-@click.argument('pkg', default=None)
+@click.argument('pkg', default=None, autocompletion=completeSrcPackage)
 @click.pass_obj
 def reset(env, pkg):
     '''Run setup sequence on a source package
@@ -102,7 +103,7 @@ def reset(env, pkg):
     _repoInit(env, pkg)
 
 # ------------------------------------------------------------------------------
-@srcs.command('create-component', short_help="Information of the status of source packages.")
+@srcs.command('create-component', short_help="Create the skeleton of a new component.")
 @click.argument('component', callback=validateComponent)
 @click.pass_obj
 def create_component(env, component):
@@ -112,7 +113,7 @@ def create_component(env, component):
 
 # ------------------------------------------------------------------------------
 @srcs.command('run', short_help="Run stuff")
-@click.option('-p', '--pkg', default=None)
+@click.option('-p', '--pkg', default=None, autocompletion=completeSrcPackage)
 @click.argument('cmd', nargs=1)
 @click.argument('args', nargs=-1)
 @click.pass_obj

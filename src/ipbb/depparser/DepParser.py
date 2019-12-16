@@ -6,15 +6,12 @@ import argparse
 import os
 import glob
 from . import Pathmaker
+from .definitions import depfiletypes
 from ..tools.common import DictObj
 from collections import OrderedDict
 from os.path import exists, splitext
 from string import Template
 
-depfiletypes = {
-    '.dep': {'fwd': False},
-    '.d3': {'fwd': True},
-}
 
 # -----------------------------------------------------------------------------
 class Command(object):

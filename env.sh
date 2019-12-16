@@ -63,8 +63,10 @@ pathadd PATH ${IPBB_ROOT}/tools/bin
 
 # Obscure click vodoo to enable bash autocompletion
 if [[ "$IAM" == "bash" ]]; then
-  eval "$(_IPBB_COMPLETE=source ipbb)"
-  eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"  
+  # eval "$(_IPBB_COMPLETE=source ipbb)"
+  # eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"  
+  source ${IPBB_ROOT}/etc/bash_completion/ipbb
+  source ${IPBB_ROOT}/etc/bash_completion/ipb-prog
 elif [[ "$IAM" == "zsh" ]]; then
   eval "$(_IPBB_COMPLETE=source_zsh ipbb)"
   eval "$(_IPB_PROG_COMPLETE=source_zsh ipb-prog)"  

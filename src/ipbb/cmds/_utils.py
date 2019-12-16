@@ -11,7 +11,6 @@ from click import echo, secho, style, confirm, get_current_context, ClickExcepti
 from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
 
-
 # ------------------------------------------------------------------------------
 class DirSentry:
     """

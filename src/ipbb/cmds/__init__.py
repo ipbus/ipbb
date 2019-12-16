@@ -4,12 +4,10 @@ from __future__ import print_function, absolute_import
 import click
 import yaml
 
-from . import utils
+from . import _utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepParser import DepFileParser
 
 from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
 
@@ -114,6 +112,7 @@ class Environment(object):
     """docstring for Environment"""
 
     _verbosity = 0
+    printExceptionStack = False
 
     # ----------------------------------------------------------------------------
     def __init__(self):
@@ -124,8 +123,6 @@ class Environment(object):
     # ------------------------------------------------------------------------------
     def _clear(self):
         self._depParser = None
-        # self.workPath = None
-        # self.workCfgFile = None
 
         self.work = FolderInfo()
         self.work.path = None
@@ -137,11 +134,12 @@ class Environment(object):
 
     # ----------------------------------------------------------------------------
     def _autodetect(self):
+        from ..depparser.Pathmaker import Pathmaker
 
         self._clear()
 
         # -----------------------------
-        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile, getcwd())
+        lWorkAreaPath = _utils.findFileDirInParents(kWorkAreaFile, getcwd())
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
@@ -152,7 +150,7 @@ class Environment(object):
         # -----------------------------
 
         # -----------------------------
-        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile, getcwd())
+        lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, getcwd())
         if not lProjAreaPath:
             return
 
@@ -178,6 +176,8 @@ class Environment(object):
     @property
     def depParser(self):
         if self._depParser is None:
+
+            from ..depparser.DepParser import DepFileParser
 
             self._depParser = DepFileParser(
                 self.currentproj.settings['toolset'],

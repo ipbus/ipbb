@@ -32,7 +32,7 @@ from os.path import (
 from click import echo, secho, style, confirm
 
 # Tools imports
-from .utils import (
+from ._utils import (
     DirSentry,
     ensureNoMissingFiles,
     echoVivadoConsoleError,
@@ -246,16 +246,6 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # -------------------------------------------------------------------------
 
     lDepFileParser = env.depParser
-
-    # -------------------------------------------------------------------------
-    # Extract the list of cores
-    # lIPCores = [
-    #     split(name)[1]
-    #     for name, ext in (
-    #         splitext(src.FilePath) for src in lDepFileParser.commands["src"]
-    #     )
-    #     if ext in [".xci", ".edn"]
-    # ]
 
     lIPCores = findIPSrcs(lDepFileParser.commands["src"])
 

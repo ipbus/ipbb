@@ -31,7 +31,7 @@ setup_cc7:
     - docker
   before_script:
     - yum install -y python2-pip python-virtualenv gcc
-    - pip install -U pip
+    - pip install -U pip 'setuptools==41.2.0'
   script:
     - pip install .
 
@@ -53,6 +53,6 @@ setup_cc8:
   before_script:
     - yum install -y gcc python36-devel python3-pip 
     - alternatives --set python /usr/bin/python3
-    - pip-3 install -U pip
+    - pip-3 install -U pip setuptools
   script:
     - pip install .

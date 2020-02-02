@@ -1,6 +1,6 @@
 ---
 stages:
-    - setup
+  - setup
 
 
 variables:

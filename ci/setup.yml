@@ -1,5 +1,6 @@
 ---
 .template_setup:
+  stage: setup
   when: always
   tags:
     - docker

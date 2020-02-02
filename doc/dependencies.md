@@ -38,7 +38,7 @@ Mention the minimal requirements for a component (`firmware` subdirectory with c
 
 * `include`: Include a sub dep-file.
 
-* `util`: Include an *utility* file, a file which is not directly part of the source code but is relevant for the project
+* `util`: Include *utility* files, not directly part of the source gateware but relevant for the project (e.g. a Vivado diagnostic scripts)
 
 * `iprepo`: Adds the path to the list of available ip repositories.
 

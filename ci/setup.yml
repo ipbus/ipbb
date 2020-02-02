@@ -1,0 +1,13 @@
+---
+.template_setup:
+  when: always
+  tags:
+    - docker
+
+
+setup_cc7:
+  image: cern/cc7-base:20191107
+  extends: .template_setup
+  script:
+    - source env.sh
+

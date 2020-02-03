@@ -7,8 +7,8 @@
 #   GITHUB_REPO_API_URL: "https://api.github.com/repos/ipbus/ipbus-firmware"
 
 
-# include:
-#   - local: '/ci/setup.yml'
+include:
+  - local: '/ci/setup.yml'
 
 
 # .template_setup:
@@ -16,43 +16,43 @@
 #   when: always
 
 
-setup_cc7_editable:
-  image: cern/cc7-base:20191107
-  tags:
-    - docker
-  before_script:
-    - yum install -y python2-pip python-virtualenv gcc
-  script:
-    - source env.sh
+# setup_cc7_editable:
+#   image: cern/cc7-base:20191107
+#   tags:
+#     - docker
+#   before_script:
+#     - yum install -y python2-pip python-virtualenv gcc
+#   script:
+#     - source env.sh
 
-setup_cc7:
-  image: cern/cc7-base:20191107
-  tags:
-    - docker
-  before_script:
-    - yum install -y python2-pip python-virtualenv gcc
-    - pip install -U pip 'setuptools==41.2.0'
-  script:
-    - pip install .
+# setup_cc7:
+#   image: cern/cc7-base:20191107
+#   tags:
+#     - docker
+#   before_script:
+#     - yum install -y python2-pip python-virtualenv gcc
+#     - pip install -U pip 'setuptools==41.2.0'
+#   script:
+#     - pip install .
 
 
-setup_cc8_editable:
-  image: centos:centos8.1.1911
-  tags:
-    - docker
-  before_script:
-    - yum install -y gcc python36-devel python3-pip 
-    - alternatives --set python /usr/bin/python3
-  script:
-    - source env.sh
+# setup_cc8_editable:
+#   image: centos:centos8.1.1911
+#   tags:
+#     - docker
+#   before_script:
+#     - yum install -y gcc python36-devel python3-pip 
+#     - alternatives --set python /usr/bin/python3
+#   script:
+#     - source env.sh
 
-setup_cc8:
-  image: centos:centos8.1.1911
-  tags:
-    - docker
-  before_script:
-    - yum install -y gcc python36-devel python3-pip 
-    - alternatives --set python /usr/bin/python3
-    - pip-3 install -U pip setuptools
-  script:
-    - pip install .
+# setup_cc8:
+#   image: centos:centos8.1.1911
+#   tags:
+#     - docker
+#   before_script:
+#     - yum install -y gcc python36-devel python3-pip 
+#     - alternatives --set python /usr/bin/python3
+#     - pip-3 install -U pip setuptools
+#   script:
+#     - pip install .

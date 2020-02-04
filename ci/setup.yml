@@ -1,48 +1,56 @@
-# ---
-# .template_setup:
-#   stage: setup
-#   when: always
-#   tags:
-#     - docker
-
-
-setup_cc7_editable:
-  image: cern/cc7-base:20191107
+---
+.template_setup:
+  stage: setup
   tags:
     - docker
+
+
+setup_cc7_py2_venv:
+  extends: .template_setup
+  image: cern/cc7-base:20191107
   before_script:
     - yum install -y python2-pip python-virtualenv gcc
   script:
     - source env.sh
+    - ipbb --version
+  artifacts:
+    when: on_success
+    paths:
+      - venv/ipbb
+      - src/ipbb.egg-info
+    expire_in: 1 hour
 
-setup_cc7:
+
+setup_cc7_py2_system:
+  extends: .template_setup
   image: cern/cc7-base:20191107
-  tags:
-    - docker
   before_script:
     - yum install -y python2-pip python-virtualenv gcc
     - pip install -U pip 'setuptools==41.2.0'
   script:
     - pip install .
+    - ipbb --version
 
 
-setup_cc8_editable:
+setup_cc8_py3_venv:
+  extends: .template_setup
   image: centos:centos8.1.1911
-  tags:
-    - docker
   before_script:
     - yum install -y gcc python36-devel python3-pip 
     - alternatives --set python /usr/bin/python3
   script:
     - source env.sh
+    - ipbb --version
 
-setup_cc8:
+
+setup_cc8_py3_sys:
+  extends: .template_setup
   image: centos:centos8.1.1911
-  tags:
-    - docker
   before_script:
     - yum install -y gcc python36-devel python3-pip 
     - alternatives --set python /usr/bin/python3
     - pip-3 install -U pip setuptools
   script:
     - pip install .
+    - ipbb --version
+

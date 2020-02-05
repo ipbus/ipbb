@@ -21,7 +21,7 @@ while getopts ":s:d:c:" opt; do
 done
 shift $((OPTIND -1))
 
-echo curl -H "Authorization: token ${GITHUB_API_TOKEN}" --data '{"state" : "'"${state}"'", "target_url" : "'"${CI_PROJECT_URL}"'/pipelines/'"${CI_PIPELINE_ID}"'", "description" : "'"${desc}"'", "context" : "'"${context}"'"}' ${GITHUB_REPO_API_URL}/statuses/${CI_COMMIT_SHA}
+curl -H "Authorization: token ${GITHUB_API_TOKEN}" --data '{"state" : "'"${state}"'", "target_url" : "'"${CI_PROJECT_URL}"'/pipelines/'"${CI_PIPELINE_ID}"'", "description" : "'"${desc}"'", "context" : "'"${context}"'"}' ${GITHUB_REPO_API_URL}/statuses/${CI_COMMIT_SHA}
 
 
 

@@ -216,6 +216,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('--cd')
         subp.add_argument('-t', '--toplevel', action='store_true')
+        # subp.add_argument('-g', '--gendecoders', action='store_true')
         subp.add_argument('file', nargs='*')
 
         # Ip repository sub-parser

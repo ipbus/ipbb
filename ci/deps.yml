@@ -1,0 +1,11 @@
+---
+test_venv_cc7_py2:
+  stage: deps
+  image: cern/cc7-base:20191107
+  dependencies:
+    - setup_cc7_py2_venv
+  # before_script:
+    # - yum install -y python2-pip python-virtualenv gcc
+  script:
+    - source env.sh
+    - ipbb --version

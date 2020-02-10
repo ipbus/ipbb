@@ -1,0 +1,31 @@
+
+.template_github_commit_status:
+  image: cern/cc7-base:20170113
+  tags:
+    - docker
+  # only:
+  #   - branches
+  #   - web
+  dependencies: []
+
+github_commit_status:start:
+  extends: .template_github_commit_status
+  stage: initial_report
+  when: always
+  script:
+    - ci/github-set-status.sh -s "pending" -c "gitlab-ci" -d "CI pipeline has started"
+
+github_commit_status:end:failure:
+  extends: .template_github_commit_status
+  stage: final_report
+  when: on_failure
+  script:
+    - ci/github-set-status.sh -s "failure" -c "gitlab-ci" -d "Jobs have failed in CI pipeline!"
+
+github_commit_status:end:success:
+  extends: .template_github_commit_status
+  stage: final_report
+  when: on_success
+  script:
+    - ci/github-set-status.sh -s "success" -c "gitlab-ci" -d "CI pipeline completed successfully!"
+

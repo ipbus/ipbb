@@ -96,13 +96,13 @@ def info(env, verbose):
     # ], header=False)
     # echo  ( lProjSettingsTable.draw() )
 
-    echo(utils.formatDictTable(env.currentproj.settings, aHeader=False))
+    echo(_utils.formatDictTable(env.currentproj.settings, aHeader=False))
 
     echo()
 
     if env.currentproj.usersettings:
         secho("User settings", fg='blue')
-        echo(utils.formatDictTable(env.currentproj.usersettings, aHeader=False))
+        echo(_utils.formatDictTable(env.currentproj.usersettings, aHeader=False))
 
         echo()
 

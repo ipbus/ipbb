@@ -187,8 +187,7 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             raise click.Abort()
         except RuntimeError as lExc:
             secho(
-                "Error caught while generating Vivado TCL commands:\n"
-                + "\n".join(lExc),
+                "Error caught while generating Vivado TCL commands:\n" + "\n" + str(lExc),
                 fg='red',
             )
             raise click.Abort()
@@ -289,7 +288,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
         raise click.Abort()
     except RuntimeError as lExc:
         secho(
-            "Error caught while generating Vivado TCL commands:\n" + "\n".join(lExc),
+            "Error caught while generating Vivado TCL commands:\n" + str(lExc),
             fg='red',
         )
         raise click.Abort()

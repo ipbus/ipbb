@@ -113,7 +113,7 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
         raise click.Abort()
     except RuntimeError as lExc:
         secho(
-            "Error caught while generating Vivado TCL commands:\n" + "\n".join(lExc),
+            "Error caught while generating Vivado TCL commands:\n" + str(lExc),
             fg='red',
         )
         raise click.Abort()

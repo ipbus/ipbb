@@ -187,7 +187,7 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             raise click.Abort()
         except RuntimeError as lExc:
             secho(
-                "Error caught while generating Vivado TCL commands:\n" + "\n" + str(lExc),
+                "Error caught while generating Vivado TCL commands:\n" + str(lExc),
                 fg='red',
             )
             raise click.Abort()

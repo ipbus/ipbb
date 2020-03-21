@@ -607,7 +607,7 @@ class DepFileParser(object):
                     lLine = self._lineReplaceVars(lLine)
 
                 except DepLineError as lExc:
-                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lExc))
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
 
                 # --------------------------------------------------------------
@@ -615,7 +615,7 @@ class DepFileParser(object):
                 try:
                     lParsedLine = self.parseLine(lLine.split())
                 except DepCmdParserError as lExc:
-                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lExc))
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
 
                 if self._verbosity > 1:

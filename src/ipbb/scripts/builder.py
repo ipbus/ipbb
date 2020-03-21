@@ -98,7 +98,7 @@ def info(env, verbose):
 
     if env.depParser.errors:
 
-        secho("Dep parsing error(s) detected: "+str(len(env.depParser.errors)), fg='red')
+        secho("Dep tree parsing error(s): "+str(len(env.depParser.errors)), fg='red')
         echo()
 
     secho("Dependecy tree elements", fg='blue')

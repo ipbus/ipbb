@@ -149,17 +149,20 @@ def report(env, filters):
     lString += lDepFmt.drawComponents()
     echo(lString+'\n')
 
+    secho("Dep tree parsing error:", fg='red')
+    echo(lDepFmt.drawParsingErrors())
+
     if lParser.unresolved:
         lString = ''
         if lParser.unresolvedPackages:
-            secho('Unresolved packages:', fg='red')
+            secho("Unresolved packages:", fg='red')
             echo(lDepFmt.drawUnresolvedPackages())
             echo()
 
         # ------
         lCNF = lParser.unresolvedComponents
         if lCNF:
-            secho('Unresolved components:', fg='red')
+            secho("Unresolved components:", fg='red')
             echo(lDepFmt.drawUnresolvedComponents())
             echo()
 
@@ -170,7 +173,7 @@ def report(env, filters):
         echo(lString)
 
     if lParser.unresolvedFiles:
-        secho('Unresolved files:', fg='red')
+        secho("Unresolved files:", fg='red')
 
         echo(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
 

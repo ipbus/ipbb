@@ -163,6 +163,23 @@ class ComponentAction(argparse.Action):
 class DepCmdParserError(Exception):
     pass
 
+# -----------------------------------------------------------------------------
+class SrcTypeAction(argparse.Action):
+    def __init__(self, *args, **kwargs):
+        super(SrcTypeAction, self).__init__(*args, **kwargs)
+        self._choices = ['synth', 'sim']
+        self.default = self._choices
+
+    def __call__(self, parser, namespace, values, option_string=None):
+
+        tokens = values.split(',')
+        
+        lInvalid = [t for t in tokens if t not in self._choices]
+        if lInvalid:
+            raise ValueError('Invalid source types '+','.join(lInvalid))
+
+        setattr(namespace, self.dest, tokens )
+
 
 # -----------------------------------------------------------------------------
 class DepCmdParser(argparse.ArgumentParser):
@@ -204,6 +221,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('--cd')
         subp.add_argument('file', nargs='+')
         subp.add_argument('--vhdl2008', action='store_true')
+        subp.add_argument('-t', '--tyoe', action=SrcTypeAction)
 
         # Address table sub-parser
         subp = parser_add.add_parser('addrtab')

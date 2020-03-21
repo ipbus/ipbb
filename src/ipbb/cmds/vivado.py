@@ -502,10 +502,6 @@ def status(env):
 
     lSessionId = 'status'
 
-    # if env.currentproj.name is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     ensureVivado(env)
 
     lOpenCmds = ['open_project %s' % env.vivadoProjFile]

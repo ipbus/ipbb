@@ -47,7 +47,6 @@ class FileCommand(Command):
         Package   (str):  package the target belongs to.
         Component (str):  component withon 'Package' the target belongs to
         Lib       (str):  library the file will be added to
-        Include   (bool): src-only flag, used to include/exclude target from projects
         TopLevel  (bool): addrtab-only flag, identifies address table as top-level
         Vhdl2008  (bool): src-only flag, toggles the vhdl 2008 syntax for .vhd files
         Finalise  (bool): setup-only flag, identifies setup scripts to be executed at the end
@@ -58,7 +57,6 @@ class FileCommand(Command):
         super(FileCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent)
 
         self.Lib = aLib
-        self.Include = aInclude
         self.TopLevel = aTopLevel
         self.Vhdl2008 = aVhdl2008
         self.Finalise = aFinalise
@@ -74,8 +72,6 @@ class FileCommand(Command):
     # --------------------------------------------------------------
     def flags(self):
         lFlags = []
-        if not self.Include:
-            lFlags.append('noinclude')
         if self.TopLevel:
             lFlags.append('top')
         if self.Vhdl2008:
@@ -195,6 +191,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('file', nargs='*')
         subp.add_argument('-f', '--finalise', action='store_true')
 
+        # Utilites sub-parser
         subp = parser_add.add_parser('util')
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('--cd')
@@ -204,9 +201,6 @@ class DepCmdParser(argparse.ArgumentParser):
         subp = parser_add.add_parser('src')
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('-l', '--lib')
-        # subp.add_argument('-g', '--generated' , action = 'store_true') #
-        # TODO: Check if still used in Vivado
-        subp.add_argument('-n', '--noinclude', action='store_true')
         subp.add_argument('--cd')
         subp.add_argument('file', nargs='+')
         subp.add_argument('--vhdl2008', action='store_true')
@@ -216,7 +210,6 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('--cd')
         subp.add_argument('-t', '--toplevel', action='store_true')
-        # subp.add_argument('-g', '--gendecoders', action='store_true')
         subp.add_argument('file', nargs='*')
 
         # Ip repository sub-parser
@@ -528,7 +521,6 @@ class DepFileParser(object):
                     lEntries.append(IncludeCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, self._parseFile(lPackage, lComponent, lFile)))
         else:
             # --------------------------------------------------------------
-            lInclude = ('noinclude' not in aParsedLine) or (not aParsedLine.noinclude)
             lTopLevel = ('toplevel' in aParsedLine and aParsedLine.toplevel)
             lFinalise = ('finalise' in aParsedLine and aParsedLine.finalise)
 
@@ -549,7 +541,7 @@ class DepFileParser(object):
                               aParsedLine.cmd, lFile, lFilePath)
                     # --------------------------------------------------------------
 
-                    lEntries.append(FileCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, lLib, lInclude, lTopLevel, lVhdl2008, lFinalise))
+                    lEntries.append(FileCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, lLib, lTopLevel, lVhdl2008, lFinalise))
 
         return lEntries
         # --------------------------------------------------------------

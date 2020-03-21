@@ -43,7 +43,10 @@ def cli(repofile, dest):
     pm = Pathmaker(dest)
 
     for t in repocfg['top']:
+        print('++++++++++++++++++++++++ Parsing',t, '+++++++++')
         dp = DepFileParser('vivado', pm, {}, 0)
+        # import ipdb
+        # ipdb.set_trace()
         dp.parse(reponame, t['cmp'], t['file'])
 
         print('\n\n\n')

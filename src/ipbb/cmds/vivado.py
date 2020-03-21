@@ -23,7 +23,7 @@ from collections import OrderedDict
 from .dep import hash
 
 from ..tools.common import which, SmartOpen
-from ._utils import DirSentry, ensureNoMissingFiles, echoVivadoConsoleError
+from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..depparser.VivadoProjectMaker import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
@@ -79,7 +79,10 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = env.depParser
 
-    # Ensure thay all dependencies have been resolved
+    # Ensure that no parsing errors are present
+    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+
+    # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lVivadoIPCache = join(env.work.path, 'var', 'vivado-ip-cache') if aEnableIPCache else None

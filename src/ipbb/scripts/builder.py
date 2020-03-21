@@ -84,17 +84,7 @@ def info(env, verbose):
     if not env.currentproj.settings:
         return
 
-    # lProjSettingsTable = Texttable()
-    # lProjSettingsTable.set_deco(Texttable.VLINES | Texttable.BORDER)
-
     secho("Project '%s'" % env.currentproj.name, fg='blue')
-    # lProjSettingsTable.add_rows([
-    #     ["toolset", env.currentproj.settings['toolset']],
-    #     ["top package", env.currentproj.settings['topPkg']],
-    #     ["top component", env.currentproj.settings['topCmp']],
-    #     ["top dep file", env.currentproj.settings['topDep']],
-    # ], header=False)
-    # echo  ( lProjSettingsTable.draw() )
 
     echo(_utils.formatDictTable(env.currentproj.settings, aHeader=False))
 
@@ -104,6 +94,11 @@ def info(env, verbose):
         secho("User settings", fg='blue')
         echo(_utils.formatDictTable(env.currentproj.usersettings, aHeader=False))
 
+        echo()
+
+    if env.depParser.errors:
+
+        secho("Dep parsing error(s) detected: "+str(len(env.depParser.errors)), fg='red')
         echo()
 
     secho("Dependecy tree elements", fg='blue')
@@ -116,22 +111,22 @@ def info(env, verbose):
 
     echo()
 
-    if not env.depParser.unresolved:
-        return
-    secho("Unresolved item(s)", fg='red')
+    if  env.depParser.unresolved:
 
-    lUnresolved = Texttable()
-    lUnresolved.add_row(["packages", "components", "paths"])
-    lUnresolved.add_row(
-        [
-            len(env.depParser.unresolvedPackages),
-            len(env.depParser.unresolvedComponents),
-            len(env.depParser.unresolvedPaths),
-        ]
-    )
-    echo(lUnresolved.draw())
+        secho("Unresolved item(s)", fg='red')
 
-    echo()
+        lUnresolved = Texttable()
+        lUnresolved.add_row(["packages", "components", "paths"])
+        lUnresolved.add_row(
+            [
+                len(env.depParser.unresolvedPackages),
+                len(env.depParser.unresolvedComponents),
+                len(env.depParser.unresolvedPaths),
+            ]
+        )
+        echo(lUnresolved.draw())
+
+        echo()
 # ------------------------------------------------------------------------------
 
 

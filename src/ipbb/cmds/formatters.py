@@ -80,3 +80,24 @@ class DepFormatter(object):
                         ]
                     )
         return lFNFTable.draw()
+
+    def drawParsingErrors(self):
+
+        lErrors = self.parser.errors
+
+        lErrTable = Texttable(max_width=0)
+        lErrTable.header(['dep file', 'line', 'error'])
+        lErrTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+
+        for lPkg, lCmp, lDepName, lDepPath, lLineNo, lErr in lErrors:
+            
+            lErrTable.add_row(
+                [
+                    relpath(lDepPath, self.parser.rootdir),
+                    str(lLineNo),
+                    str(lErr)
+                ]
+            )
+
+        return lErrTable.draw()
+

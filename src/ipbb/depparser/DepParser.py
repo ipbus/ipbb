@@ -607,7 +607,7 @@ class DepFileParser(object):
                     lLine = self._lineReplaceVars(lLine)
 
                 except DepLineError as lExc:
-                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lLineNr, lExc))
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
 
                 # --------------------------------------------------------------
@@ -615,7 +615,7 @@ class DepFileParser(object):
                 try:
                     lParsedLine = self.parseLine(lLine.split())
                 except DepCmdParserError as lExc:
-                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lLineNr, lExc))
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
 
                 if self._verbosity > 1:
@@ -654,8 +654,6 @@ class DepFileParser(object):
 
     # -------------------------------------------------------------------------
     def parse(self, aPackage, aComponent, aDepFileName):
-        print(aPackage, aComponent, aDepFileName)
-
         self._state = State()
 
         # Do the parsing here
@@ -780,7 +778,7 @@ class DepFormatter(object):
 
                         for lSrc in lSrcs:
                             lOutTxt += '      \\ - %s\n' % os.path.relpath(
-                                lSrc, lPrsr._pathMaker.rootdir)
+                                lSrc, lPrsr.rootdir)
                         lOutTxt += '\n'
         return lOutTxt
 

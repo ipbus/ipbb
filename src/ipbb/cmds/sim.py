@@ -246,6 +246,12 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     lDepFileParser = env.depParser
 
+    # Ensure that no parsing errors are present
+    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+
+    # Ensure that all dependencies are resolved
+    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
+
     lIPCores = findIPSrcs(lDepFileParser.commands["src"])
 
     if not lIPCores:
@@ -491,7 +497,10 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = env.depParser
 
-    # Ensure thay all dependencies have been resolved
+    # Ensure that no parsing errors are present
+    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+
+    # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aOptimise)

@@ -7,7 +7,7 @@ import ipaddress
 import sys
 import re
 
-from click import echo, secho, style, confirm, get_current_context, ClickException, BadParameter
+from click import echo, secho, style, confirm, get_current_context, ClickException, Abort, BadParameter
 from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
 
@@ -99,9 +99,31 @@ def findFileInParents(aFileName, aDirPath=os.getcwd()):
 
 
 # ------------------------------------------------------------------------------
+def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
+    """
+    { item_description }
+    """
+    if not aDepFileParser.errors:
+        return
+
+    from .formatters import DepFormatter
+    fmt = DepFormatter(aDepFileParser)
+    secho("ERROR: Project '{}' contains {} parsing error{}.".format(
+        aCurrentProj,
+        len(aDepFileParser.errors),
+        ("" if len(aDepFileParser.errors) == 1 else "s"),
+    ), fg='red')
+    secho(fmt.drawParsingErrors(), fg='red')
+
+    raise Abort()
+
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     """
-    Check th
+    Check the dependency file tree for unresolved files.
+    If detected, ask the user for confirmation to continue
     """
 
     if not aDepFileParser.unresolved:

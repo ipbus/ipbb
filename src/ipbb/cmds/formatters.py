@@ -80,3 +80,30 @@ class DepFormatter(object):
                         ]
                     )
         return lFNFTable.draw()
+
+    def drawParsingErrors(self):
+        """
+        Draws a text table detailing parsing errors.
+        
+        :returns:   { description_of_the_return_value }
+        :rtype:     { return_type_description }
+        """
+
+        lErrors = self.parser.errors
+
+        lErrTable = Texttable(max_width=0)
+        lErrTable.header(['dep file', 'line', 'error'])
+        lErrTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+
+        for lPkg, lCmp, lDepName, lDepPath, lLineNo, lLine, lErr in lErrors:
+            
+            lErrTable.add_row(
+                [
+                    relpath(lDepPath, self.parser.rootdir)+':'+str(lLineNo),
+                    "'"+lLine+"'",
+                    str(lErr),
+                ]
+            )
+
+        return lErrTable.draw()
+

@@ -68,6 +68,14 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
+@vivado.command('list-project', short_help='List files in the project.')
+@click.pass_obj
+def listproject(env):
+    from ..cmds.vivado import listproject
+    listproject(env)
+
+
+# ------------------------------------------------------------------------------
 @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
 @click.pass_obj
 def checksyntax(env):

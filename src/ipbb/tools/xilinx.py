@@ -283,15 +283,15 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
+    def __init__(self, sessionid=None, echo=True, echobanner=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
         """
         Args:
             sessionid (str): Name of the Vivado session
-            echo (bool):
-            echoprefix (str):
-            executable (str):
+            echo (bool): Switch to enable echo messages
+            echoprefix (str): Prefix to echo message
+            executable (str): Executable name
             prompt (str):
-            stopOnCWarnings (str):
+            stopOnCWarnings (bool): Stop on Critical Warnings
         """
         super(VivadoConsole, self).__init__()
 
@@ -319,13 +319,18 @@ class VivadoConsole(object):
             quiet=(not echo)
         )
 
+        self._out.quiet = (not echobanner)
         self._out.write('\n' + '-' * 40 + '\n')
+       
         self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
             echo=echo,
             logfile=self._out
         )
+
+        self._out.quiet = (not echo)
+
 
         self._process.delaybeforesend = 0.00  # 1
 

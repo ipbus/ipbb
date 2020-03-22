@@ -520,8 +520,8 @@ def status(env):
     lRunRegex = re.compile(r'(synth|impl)_\d+')
 
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            echo('Opening project')
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho, echobanner=False) as lConsole:
+            echo('Opening project ' + env.currentproj.name)
 
             with VivadoSnoozer(lConsole):
                 lConsole(lOpenCmds)

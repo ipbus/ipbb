@@ -595,7 +595,7 @@ def package(env, aTag):
         bitfile(env)
 
     wantBinFile = False
-    if env.depParser.vars.has_key('prom_file_cmd'):
+    if env.depParser.vars.has_key('vivado_binfile_options'):
         wantBinFile = True
     if wantBinFile:
         lBinPath = lBitPath.replace('.bit', '.bin')

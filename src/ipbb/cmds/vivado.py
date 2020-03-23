@@ -116,7 +116,7 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
         raise click.Abort()
     except RuntimeError as lExc:
         secho(
-            "Error caught while generating Vivado TCL commands:\n" + str(lExc),
+            "Error caught while generating Vivado TCL commands:\n" + "\n".join(lExc),
             fg='red',
         )
         raise click.Abort()
@@ -413,6 +413,46 @@ def bitfile(env):
 
 
 # ------------------------------------------------------------------------------
+def binfile(env):
+    '''Create a binfile for PROM programming'''
+
+    lSessionId = 'binfile'
+
+    # Check
+    if not exists(env.vivadoProjFile):
+        raise click.ClickException("Vivado project %s does not exist" % env.vivadoProjFile)
+
+    lProjName = env.currentproj.name
+    lDepFileParser = env.depParser
+    lTopEntity = lDepFileParser.vars.get('top_entity', kTopEntity)
+    lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
+    lBinPath = lBitPath.replace('.bit', '.bin')
+    if not exists(lBitPath):
+        raise click.ClickException("Bitfile does not exist. Can't create binfile.")
+
+    lBinFileCmdOptions = lDepFileParser.vars['vivado_binfile_options']
+
+    ensureVivado(env)
+
+    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
+
+    lBinFileCmd  = 'write_cfgmem -format bin %s -loadbit {up 0x00000000 "%s" } -file "%s"' % (lBinFileCmdOptions, lBitPath, lBinPath)
+    lBinFileCmds = [lBinFileCmd]
+
+    try:
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
+            lConsole(lOpenCmds)
+            lConsole(lBinFileCmds)
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
+
+    secho(
+        "\n{}: Binfile successfully written.\n".format(env.currentproj.name), fg='green'
+    )
+
+
+# ------------------------------------------------------------------------------
 def readRunInfo(aConsole, aProps=None):
     lInfos = {}
     lProps = aProps if aProps is not None else [
@@ -557,6 +597,15 @@ def package(env, aTag):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         bitfile(env)
 
+    wantBinFile = False
+    if env.depParser.vars.has_key('vivado_binfile_options'):
+        wantBinFile = True
+    if wantBinFile:
+        lBinPath = lBitPath.replace('.bit', '.bin')
+        if not exists(lBinPath):
+            secho('Binfile does not exist. Attempting to create it ...', fg='yellow')
+            binfile(env)
+
     lPkgPath = 'package'
     lSrcPath = join(lPkgPath, 'src')
 
@@ -595,10 +644,15 @@ def package(env, aTag):
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    # Copy bitfile and address table into the packaging area
+    # Copy bitfile, binfile, and address table into the packaging area
     secho("Collecting bitfile", fg='blue')
     sh.cp('-av', lBitPath, lSrcPath, _out=sys.stdout)
     echo()
+
+    if wantBinFile:
+        secho("Collecting binfile", fg='blue')
+        sh.cp('-av', lBinPath, lSrcPath, _out=sys.stdout)
+        echo()
 
     secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:

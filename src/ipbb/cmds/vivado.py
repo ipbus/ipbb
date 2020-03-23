@@ -427,13 +427,13 @@ def binfile(env):
     if not exists(lBitPath):
         raise click.ClickException("Bitfile does not exist. Can't create binfile.")
 
-    lBinFileCmdBase = lDepFileParser.vars['prom_file_cmd']
+    lBinFileCmdOptions = lDepFileParser.vars['vivado_binfile_options']
 
     ensureVivado(env)
 
     lOpenCmds = ['open_project %s' % env.vivadoProjFile]
 
-    lBinFileCmd  = '%s -loadbit {up 0x00000000 "%s" } -file "%s"' % (lBinFileCmdBase, lBitPath, lBinPath)
+    lBinFileCmd  = 'write_cfgmem -format bin %s -loadbit {up 0x00000000 "%s" } -file "%s"' % (lBinFileCmdOptions, lBitPath, lBinPath)
     lBinFileCmds = [lBinFileCmd]
 
     try:

@@ -46,7 +46,7 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
     # locale -a | grep -e "^C"
     if [[ "${PYTHON_MAJOR}" == "3" ]]; then
         echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
-        export IPBB_LANG=C.utf
+        export IPBB_LANG=C.utf8
     elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
         echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
         export IPBB_LANG=C

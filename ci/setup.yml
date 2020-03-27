@@ -7,9 +7,9 @@
 
 setup_cc7_py2_venv:
   extends: .template_setup
-  image: cern/cc7-base:20191107
-  before_script:
-    - yum install -y python2-pip python-virtualenv gcc
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbus-fw-dev-cc7:2019-09-17__ipbb0.5.2
+  # before_script:
+    # - yum install -y python2-pip python-virtualenv gcc
   script:
     - source env.sh
     - ipbb --version
@@ -23,10 +23,10 @@ setup_cc7_py2_venv:
 
 setup_cc7_py2_sys:
   extends: .template_setup
-  image: cern/cc7-base:20191107
-  before_script:
-    - yum install -y python2-pip python-virtualenv gcc
-    - pip install -U pip 'setuptools==41.2.0'
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbus-fw-dev-cc7:2019-09-17__ipbb0.5.2
+  # before_script:
+    # - yum install -y python2-pip python-virtualenv gcc
+    # - pip install -U pip 'setuptools==41.2.0'
   script:
     - pip install .
     - ipbb --version

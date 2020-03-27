@@ -18,7 +18,9 @@ if [[ "${PYTHON_MAJOR}" == "3" ]]; then
     chkpypkg venv
 elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
     # chkpypkg virtualenv
-    # TODO:  virtualenv is not a python package. need to check for the excutable
+    if ! [ -x "$(command -v virtualenv)" ]; then
+        missing_pypkg+=('virtualenv')
+    fi
 fi
 
 chkpypkg pip

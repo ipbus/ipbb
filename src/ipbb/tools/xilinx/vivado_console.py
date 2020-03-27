@@ -20,8 +20,8 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from .common import which, OutputFormatter
-from .termui import *
+from ..common import which, OutputFormatter
+from ..termui import *
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -89,84 +89,6 @@ Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 
     return m.groups()
 # ------------------------------------------------
-
-
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class VivadoBatch(object):
-    """
-    Wrapper class to run Vivado jobs in batch mode
-    """
-    _reInfo = re.compile(u'^INFO:')
-    _reWarn = re.compile(u'^WARNING:')
-    _reCritWarn = re.compile(u'^CRITICAL WARNING:')
-    _reError = re.compile(u'^ERROR:')
-
-    # --------------------------------------------
-    def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
-        super(VivadoBatch, self).__init__()
-
-        if scriptpath:
-            _, lExt = splitext(scriptpath)
-            if lExt not in ['.tcl', '.do']:
-                raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
-
-        self.scriptpath = scriptpath
-        self.log = log
-        self.terminal = sys.stdout if echo else None
-        self.cwd = cwd
-        self.dryrun = dryrun
-
-    # --------------------------------------------
-    def __enter__(self):
-        self.script = (
-            open(self.scriptpath, 'wt') if self.scriptpath
-            else tempfile.NamedTemporaryFile(mode='w+t', suffix='.do')
-        )
-        return self
-
-    # --------------------------------------------
-    def __exit__(self, type, value, traceback):
-        if not self.dryrun:
-            self._run()
-        self.script.close()
-
-    # --------------------------------------------
-    def __call__(self, *strings):
-        for f in [self.script, self.terminal]:
-            if not f:
-                continue
-            f.write(' '.join(strings) + '\n')
-            f.flush()
-
-    # --------------------------------------------
-    def _run(self):
-
-        # Define custom log file
-        lRoot, _ = splitext(basename(self.script.name))
-        lLog = 'vivado_{0}.log'.format(lRoot)
-        lJou = 'vivado_{0}.jou'.format(lRoot)
-
-        # Guard against missing vivado executable
-        if not which('vivado'):
-            raise VivadoNotFoundError(
-                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?'
-            )
-
-        sh.vivado('-mode', 'batch', '-source', self.script.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
-        self.errors = []
-        self.info = []
-        self.warnings = []
-
-        with open(lLog) as lLogFile:
-            for i, l in enumerate(lLogFile):
-                if self._reError.match(l):
-                    self.errors.append((i, l))
-                elif self._reWarn.match(l):
-                    self.warnings.append((i, l))
-                elif self._reInfo.match(l):
-                    self.info.append((i, l))
-    # --------------------------------------------
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -498,67 +420,6 @@ class VivadoConsole(object):
         """
         lIds = aIds if isinstance(aIds, list) else [aIds]
         self.executeMany(['set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds])
-
-
-# -------------------------------------------------------------------------
-class VivadoHWServer(VivadoConsole):
-
-    """Vivado Harware server object
-
-    Exposes a standard interface for programming devices.
-    """
-    
-    # --------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        super(VivadoHWServer, self).__init__(*args, **kwargs)
-
-    # --------------------------------------------------------------
-    def openHw(self):
-        return self.execute('open_hw')
-
-    # --------------------------------------------------------------
-    def connect(self, uri=None):
-        lCmd = ['connect_hw_server']
-        if uri is not None:
-            lCmd += ['-url ' + uri]
-        return self.execute(' '.join(lCmd))
-
-    # --------------------------------------------------------------
-    def getHwTargets(self):
-        return self.execute('get_hw_targets')[0].split()
-
-    # --------------------------------------------------------------
-    def openHwTarget(self, target, is_xvc=False):
-        return self.execute('open_hw_target {1} {{{0}}}'.format(target, '-xvc_url' if is_xvc else ''))
-
-    # --------------------------------------------------------------
-    def closeHwTarget(self, target=None):
-        lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
-        return self.execute(lCmd)
-
-    # --------------------------------------------------------------
-    def getHwDevices(self):
-        return self.execute('get_hw_devices')[0].split()
-
-    # --------------------------------------------------------------
-    def programDevice(self, device, bitfile, probe=None):
-        from os.path import abspath, normpath
-
-        bitpath = abspath(normpath(bitfile))
-
-        self._log.debug('Programming %s with %s', device, bitfile)
-
-        self.execute('current_hw_device {0}'.format(device))
-        self.execute(
-            'refresh_hw_device -update_hw_probes {} [current_hw_device]'.format("True" if probe else 'False')
-        )
-        self.execute(
-            'set_property PROBES.FILE {{{0}}} [current_hw_device]'.format(probe if probe else '')
-        )
-        self.execute(
-            'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath)
-        )
-        self.execute('program_hw_devices [current_hw_device]')
 
 
 # -------------------------------------------------------------------------

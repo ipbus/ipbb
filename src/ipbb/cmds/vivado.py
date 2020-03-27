@@ -124,41 +124,6 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
-def listproject(env):
-
-    lSessionId = 'list'
-
-    # Check
-    lVivProjPath = env.vivadoProjFile
-    if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
-
-    ensureVivado(env)
-
-    try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
-            lFileSets = lConsole('get_filesets')[0].split()
-            print(lFileSets)
-            lSources = lConsole('get_files -of [get_fileset sources_1]')[0].split()
-            lConstrs = lConsole('get_files -of [get_fileset constrs_1]')[0].split()
-            lUtils = lConsole('get_files -of [get_fileset utils_1]')[0].split()
-            lIPs = lConsole('get_ips')[0]
-            print(lIPs)
-            lXcis = []
-            for ip in lIPs.split():
-                lXcis += lConsole('get_property IMPORTED_FROM [get_files -of [get_filesets {0}] {0}.xci]'.format(ip))
-            print(lXcis)
-
-
-
-
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
-
-# ------------------------------------------------------------------------------
 def checksyntax(env):
 
     lSessionId = 'chk-syn'

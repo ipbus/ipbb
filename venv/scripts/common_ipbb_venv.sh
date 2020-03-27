@@ -71,6 +71,7 @@ if [[ "${IPBB_VENV}" != "${IPBB_ROOT}/venv/ipbb" ]]; then
   [[ ${SH_SOURCED} -eq 0 ]] && return -1 || exit -1
 fi
 
+PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
 
 # -----------------------------------------------------------------------------
 # Python version

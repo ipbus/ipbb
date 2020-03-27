@@ -11,9 +11,16 @@ else
     missing_pypkg+=(${1})
 fi
 }
+# -----------------------------------------------------------------------------
 
+# Bash/Zsh independent way of determining the source path
+SH_SOURCE=${BASH_SOURCE[0]:-${(%):-%x}}
+HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
 
-# basic package checks
+# Load common stuff
+source ${HERE}/common_ipbb_venv.sh
+
+# Basic package checks
 if [[ "${PYTHON_MAJOR}" == "3" ]]; then
     chkpypkg venv
 elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
@@ -31,17 +38,10 @@ if (( ${#missing_pypkg[@]} > 0 )); then
   return 1
 fi
 unset missing_pypkg
+# End package checks
 
 
-# Bash/Zsh independent way of determining the source path
-SH_SOURCE=${BASH_SOURCE[0]:-${(%):-%x}}
-HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
-
-# Load common stuff
-source ${HERE}/common_ipbb_venv.sh
-
-PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
-
+# Virtualenv Setup
 VENV2_CMD="virtualenv"
 VENV3_CMD="python3 -m venv"
 

@@ -43,8 +43,10 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
     source ${IPBB_VENV}/bin/activate
     
     # Locale settings
-    export LANG=C.utf-8
-    export LC_ALL=C.utf-8
+    # export LANG=C.utf-8
+    # export LC_ALL=C.utf-8
+    export LANG=C
+    export LC_ALL=C
 
     # Consistency check
     if [[ ! ${IPBB_VENV} -ef ${VIRTUAL_ENV} ]]; then

@@ -9,3 +9,4 @@ test_venv_cc7_py2:
   script:
     - source env.sh
     - ipbb --version
+    - run-ipbb-pytests.sh

@@ -1,28 +1,42 @@
 #!/bin/bash
+
+
+declare -a missing_pypkg
+
+function chkpypkg() {
+  if python -c "import pkgutil; raise SystemExit(1 if pkgutil.find_loader('${1}') is None else 0)" &> /dev/null; then
+    echo "${1} is installed"
+else
+    echo "Error: package '${1}' is not installed"
+    missing_pypkg+=(${1})
+fi
+}
+
+
+# basic package checks
+if [[ "${PYTHON_MAJOR}" == "3" ]]; then
+    chkpypkg venv
+elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
+    # chkpypkg virtualenv
+    # TODO:  virtualenv is not a python package. need to check for the excutable
+fi
+
+chkpypkg pip
+
+if (( ${#missing_pypkg[@]} > 0 )); then
+  echo "Aborting."
+  unset missing_pypkg
+  return 1
+fi
+unset missing_pypkg
+
+
 # Bash/Zsh independent way of determining the source path
 SH_SOURCE=${BASH_SOURCE[0]:-${(%):-%x}}
 HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
-# Loading common stuff
+
+# Load common stuff
 source ${HERE}/common_ipbb_venv.sh
-
-# pts=$(getopt -o 32 -- "$@")
-# [ $? -eq 0 ] || { 
-#     echo "${SH_SOURCE}: Incorrect options provided"
-#     return
-# }
-
-# eval set -- "$opts"
-# while true; do
-#     case "$1" in
-#     -2) [[ -n "${FORCE_PYTHON_VER}" ]] && usage || FORCE_PYTHON_VER='-2' ;;
-#     -3) [[ -n "${FORCE_PYTHON_VER}" ]] && usage || FORCE_PYTHON_VER='-3' ;;
-#     --)
-#         shift
-#         break
-#         ;;
-#     esac
-#     shift
-# done
 
 PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
 

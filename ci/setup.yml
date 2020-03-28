@@ -28,7 +28,7 @@ setup_cc7_py2_sys:
     - ipbb --version
 
 
-setup_cc8_py3_venv:
+setup_centos8_py3_venv:
   extends: .template_setup
   image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
   script:
@@ -36,7 +36,7 @@ setup_cc8_py3_venv:
     - ipbb --version
 
 
-setup_cc8_py3_sys:
+setup_centos8_py3_sys:
   extends: .template_setup
   image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
   script:

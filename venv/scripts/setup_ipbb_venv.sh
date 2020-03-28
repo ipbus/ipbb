@@ -72,7 +72,8 @@ else
     echo -e "${COL_BLUE}Upgrading python tools...${COL_NULL}"
 
     # upgrade pip to the latest greatest version
-    pip install ${IPBB_PIP_INSTALLOPT} pip setuptools
+    pip install ${IPBB_PIP_INSTALLOPT} pip 
+    pip install ${IPBB_PIP_INSTALLOPT} setuptools virtualenv
 
     echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 

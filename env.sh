@@ -43,13 +43,13 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
     source ${IPBB_VENV}/bin/activate
     
     # Locale settings
-    # locale -a | grep -e "^C"
+    locale -a | grep -e "^C"
     if [[ "${PYTHON_MAJOR}" == "3" ]]; then
         echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
         export IPBB_LANG=C.utf8
     elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
         echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
-        export IPBB_LANG=C
+        export IPBB_LANG=C.utf8
     else
         echo -e "${COL_RED}Unupported python version ${PYTHON_MAJOR}${COL_NULL}"
         return

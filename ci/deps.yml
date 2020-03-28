@@ -2,6 +2,9 @@
 test_venv_cc7_py2:
   stage: deps
   image: cern/cc7-base:20191107
+  tags:
+    - docker
+    - xilinx-tools
   dependencies:
     - setup_cc7_py2_venv
   script:

@@ -220,7 +220,7 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echobanner=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
+    def __init__(self, sessionid=None, echo=True, echobanner=False, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
         """
         Args:
             sessionid (str): Name of the Vivado session
@@ -256,30 +256,43 @@ class VivadoConsole(object):
             quiet=(not echo)
         )
 
+        self._out.write('\n' + '- Starting Vivado -'+'-' * 40 + '\n')
         self._out.quiet = (not echobanner)
-        self._out.write('\n' + '-' * 40 + '\n')
        
-        self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
             echo=echo,
-            logfile=self._out
+            logfile=self._out,
+            # preexec_fn=on_parent_exit('SIGTERM')
         )
 
-        self._out.quiet = (not echo)
 
 
         self._process.delaybeforesend = 0.00  # 1
 
         # Wait for vivado to wake up
-        self.__expectPrompt()
+        startupstr = self.__expectPrompt()
+        self._variant, self._version = _parseversion(''.join(startupstr[0]))
+        self._out.quiet = (not echo)
         self._log.debug('Vivado up and running')
+        self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
 
         self._processinfo = psutil.Process(self._process.pid)
         # Method mapping
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
+
+    @property
+    def variant(self):
+        return self._variant
+    
+    @property
+    def version(self):
+        return self._version
+    
 
     # --------------------------------------------------------------
     def __del__(self):
@@ -382,7 +395,7 @@ class VivadoConsole(object):
             pass
 
         # Write one last newline
-        self._out.write('-' * 40 + '\n')
+        self._out.write('- Terminating Vivado (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
         # Just in case
         self._process.terminate(True)
 

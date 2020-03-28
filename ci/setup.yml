@@ -52,6 +52,6 @@ setup_cc8_py3_sys:
     # - alternatives --set python /usr/bin/python3
     # - pip-3 install -U pip setuptools
   script:
-    - sudo pip install .
+    - sudo python -m pip install .
     - ipbb --version
 

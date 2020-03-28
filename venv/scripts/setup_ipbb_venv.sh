@@ -46,10 +46,10 @@ VENV2_CMD="virtualenv"
 VENV3_CMD="python3 -m venv"
 
 if [[ "${PYTHON_MAJOR}" == "3" ]]; then
-    echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
+    # echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
     VENV_CMD=${VENV3_CMD}
 elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
-    echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
+    # echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
     VENV_CMD=${VENV2_CMD}
 else
     echo -e "${COL_RED}Unupported python version ${PYTHON_MAJOR}${COL_NULL}"

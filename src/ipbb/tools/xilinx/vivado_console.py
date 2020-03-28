@@ -64,30 +64,45 @@ class VivadoNotFoundError(Exception):
 
 
 # ------------------------------------------------
-def autodetect(executable='vivado'):
-    """
-Vivado v2017.4 (64-bit)
-SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
-Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-    """
+def _parseversion(verstr):
 
     lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
 
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
+
+    m = lVerRe.search(str(verstr))
+
+    if m is None:
+        raise VivadoNotFoundError("Failed to detect Vivado variant")
+
+    return m.groups()
+# ------------------------------------------------
+
+
+# ------------------------------------------------
+def autodetect(executable='vivado'):
+    """
+
+Vivado:
+    Vivado v2017.4 (64-bit)
+    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
+    IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
+    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
+
+Vivado Lab:
+    Vivado Lab Edition v2017.4 (64-bit)
+    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
+    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
+
+    """
+
 
     if not which(executable):
         raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
 
     lExe = sh.Command(executable)
     lVerStr = lExe('-version')
-
-    m = lVerRe.search(str(lVerStr))
-
-    if m is None:
-        raise VivadoNotFoundError("Failed to detect Vivado variant")
-
-    return m.groups()
+    return _parseversion(lVerStr)
 # ------------------------------------------------
 
 

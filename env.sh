@@ -28,7 +28,7 @@ done
 #--------------------------
 
 # Locale settings
-locale -a | grep -e "^\(C\|en_US\)"
+# locale -a | grep -e "^\(C\|en_US\)"
 if [[ "${PYTHON_MAJOR}" == "3" ]]; then
     echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
     # export IPBB_LANG=C.utf8

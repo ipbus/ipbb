@@ -27,6 +27,21 @@ while true; do
 done
 #--------------------------
 
+# Locale settings
+locale -a | grep -e "^\(C\|en_US\)"
+if [[ "${PYTHON_MAJOR}" == "3" ]]; then
+    echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
+    export IPBB_LANG=C.utf8
+elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
+    echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
+    export IPBB_LANG=en_US.utf8
+else
+    echo -e "${COL_RED}Unupported python version ${PYTHON_MAJOR}${COL_NULL}"
+    return
+fi
+export LANG=${IPBB_LANG}
+export LC_ALL=${IPBB_LANG}
+
 
 if [ ${RESET_VENV} = true ]; then
   echo "Resetting VENV"
@@ -42,10 +57,6 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
     echo -e "${COL_GREEN}Activating ipbb environment${COL_NULL}"
     source ${IPBB_VENV}/bin/activate
     
-    # Locale settings
-    export LANG=C.utf-8
-    export LC_ALL=C.utf-8
-
     # Consistency check
     if [[ ! ${IPBB_VENV} -ef ${VIRTUAL_ENV} ]]; then
         deactivate

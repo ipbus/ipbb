@@ -1,39 +1,55 @@
 #!/bin/bash
+
+
+declare -a missing_pypkg
+
+function chkpypkg() {
+  if python -c "import pkgutil; raise SystemExit(1 if pkgutil.find_loader('${1}') is None else 0)" &> /dev/null; then
+    echo "${1} is installed"
+else
+    echo "Error: package '${1}' is not installed"
+    missing_pypkg+=(${1})
+fi
+}
+# -----------------------------------------------------------------------------
+
 # Bash/Zsh independent way of determining the source path
 SH_SOURCE=${BASH_SOURCE[0]:-${(%):-%x}}
 HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
-# Loading common stuff
+
+# Load common stuff
 source ${HERE}/common_ipbb_venv.sh
 
-# pts=$(getopt -o 32 -- "$@")
-# [ $? -eq 0 ] || { 
-#     echo "${SH_SOURCE}: Incorrect options provided"
-#     return
-# }
+# Basic package checks
+if [[ "${PYTHON_MAJOR}" == "3" ]]; then
+    chkpypkg venv
+elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
+    # chkpypkg virtualenv
+    if ! [ -x "$(command -v virtualenv)" ]; then
+        missing_pypkg+=('virtualenv')
+    fi
+fi
 
-# eval set -- "$opts"
-# while true; do
-#     case "$1" in
-#     -2) [[ -n "${FORCE_PYTHON_VER}" ]] && usage || FORCE_PYTHON_VER='-2' ;;
-#     -3) [[ -n "${FORCE_PYTHON_VER}" ]] && usage || FORCE_PYTHON_VER='-3' ;;
-#     --)
-#         shift
-#         break
-#         ;;
-#     esac
-#     shift
-# done
+chkpypkg pip
 
-PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
+if (( ${#missing_pypkg[@]} > 0 )); then
+  echo "Aborting."
+  unset missing_pypkg
+  return 1
+fi
+unset missing_pypkg
+# End package checks
 
+
+# Virtualenv Setup
 VENV2_CMD="virtualenv"
 VENV3_CMD="python3 -m venv"
 
 if [[ "${PYTHON_MAJOR}" == "3" ]]; then
-    echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
+    # echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
     VENV_CMD=${VENV3_CMD}
 elif [[ "${PYTHON_MAJOR}" == "2" ]]; then
-    echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
+    # echo -e "${COL_GREEN}Python 2 detected${COL_NULL}"
     VENV_CMD=${VENV2_CMD}
 else
     echo -e "${COL_RED}Unupported python version ${PYTHON_MAJOR}${COL_NULL}"

@@ -5,11 +5,10 @@
     - docker
 
 
+
 setup_cc7_py2_venv:
   extends: .template_setup
-  image: cern/cc7-base:20191107
-  before_script:
-    - yum install -y python2-pip python-virtualenv gcc
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
   script:
     - source env.sh
     - ipbb --version
@@ -23,21 +22,15 @@ setup_cc7_py2_venv:
 
 setup_cc7_py2_sys:
   extends: .template_setup
-  image: cern/cc7-base:20191107
-  before_script:
-    - yum install -y python2-pip python-virtualenv gcc
-    - pip install -U pip 'setuptools==41.2.0'
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
   script:
-    - pip install .
+    - sudo pip install .
     - ipbb --version
 
 
 setup_cc8_py3_venv:
   extends: .template_setup
-  image: centos:centos8.1.1911
-  before_script:
-    - yum install -y gcc python36-devel python3-pip 
-    - alternatives --set python /usr/bin/python3
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
   script:
     - source env.sh
     - ipbb --version
@@ -45,12 +38,8 @@ setup_cc8_py3_venv:
 
 setup_cc8_py3_sys:
   extends: .template_setup
-  image: centos:centos8.1.1911
-  before_script:
-    - yum install -y gcc python36-devel python3-pip 
-    - alternatives --set python /usr/bin/python3
-    - pip-3 install -U pip setuptools
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
   script:
-    - pip install .
+    - sudo python -m pip install .
     - ipbb --version
 

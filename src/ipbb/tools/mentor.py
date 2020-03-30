@@ -229,6 +229,7 @@ class ModelSimConsole(object):
         'QuestaSim': r'QuestaSim> \rQuestaSim> ',
     }
     __cmdPromptMaxLen = 500
+    __newlines = ['\r\n', '\n\r']
 
     # --------------------------------------------------------------
     @classmethod
@@ -265,6 +266,8 @@ class ModelSimConsole(object):
         else:
             self._prompt = prompt
 
+        
+
         # Modelsim doesn't like to operate without TERM (hangs)
         lEnv = dict(os.environ)
         if 'TERM' not in lEnv:
@@ -286,6 +289,11 @@ class ModelSimConsole(object):
         )
 
         self._process.delaybeforesend = 0.00  # 1
+
+        # Compile the list of patterns to detect the prompt
+        self._rePrompt = self._process.compile_pattern_list(
+            self.__newlines+[self._prompt, pexpect.TIMEOUT]
+        )
 
         # Wait Modelsim to wake up
         self.__expectPrompt()
@@ -311,12 +319,15 @@ class ModelSimConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __send(self, aText):
+    def __send(self, aText, aChkEchoAck=True):
 
         x = self._process.sendline(aText)
         # --------------------------------------------------------------
         # Hard check: First line of output must match the injected command
-        lIndex = self._process.expect(['\r\n', '\n\r'])
+        lIndex = self._process.expect(self.__newlines)
+
+        if not aChkEchoAck:
+            return
 
         lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
         lCmdSent = aText.split('\n')[0]
@@ -355,25 +366,25 @@ class ModelSimConsole(object):
 
     # --------------------------------------------------------------
     def __expectPrompt(self, aMaxLen=100):
-        # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-        lCpl = self._process.compile_pattern_list(
-            ['\r\n', '\n\r', self._prompt, pexpect.TIMEOUT]
-        )
+
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []
 
         # --------------------------------------------------------------
+        lTimeoutCounts = 0
         while True:
             # Search for newlines, prompt, end-of-file
-            lIndex = self._process.expect_list(lCpl)
+            lIndex = self._process.expect_list(self._rePrompt)
 
             # ----------------------------------------------------------
             # Break if prompt
             if lIndex in [1, 2]:
                 break
             elif lIndex == 3:
-                print('-->> timeout caught')
+                lTimeoutCounts += 1
+                print ("ModelsimConsole >> Time since last command: {0}s".format(
+                    lTimeoutCounts * self._process.timeout))
             # ----------------------------------------------------------
 
             # Store the output in the circular buffer
@@ -381,12 +392,9 @@ class ModelSimConsole(object):
 
             if self.__reError.match(self._process.before):
                 lErrors.append(self._process.before)
-            # secho("'"+self._process.before+"'", fg='cyan')
-            # secho(str(lErrors), fg='red')
         # --------------------------------------------------------------
 
         return lBuffer, (lErrors if lErrors else None)
-
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -402,11 +410,14 @@ class ModelSimConsole(object):
             #   pass
             return
 
+        self._log.debug('Shutting Modelsim down')
         try:
             self.execute('quit')
         except pexpect.ExceptionPexpect:
             pass
 
+        # Write one last newline
+        self._out.write('- Terminating Modelsim (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
         # Just in case
         self._process.terminate(True)
 

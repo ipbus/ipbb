@@ -3,7 +3,6 @@ from builtins import range
 import six
 # ------------------------------------------------------------------------------
 
-
 # Modules
 import logging
 import pexpect
@@ -24,80 +23,44 @@ from ..common import which, OutputFormatter
 from ..termui import *
 
 # ------------------------------------------------
-# This is for when python 2.7 will become available
-# pexpect.spawn(...,preexec_fn=on_parent_exit('SIGTERM'))
-import signal
-from ctypes import cdll
-
-
-# Constant taken from http://linux.die.net/include/linux/prctl.h
-PR_SET_PDEATHSIG = 1
-
-
-class PrCtlError(Exception):
-    pass
-
-
-def on_parent_exit(signame):
-    """
-    Return a function to be run in a child process which will trigger
-    SIGNAME to be sent when the parent process dies
-    """
-    signum = getattr(signal, signame)
-
-    def set_parent_exit_signal():
-        # http://linux.die.net/man/2/prctl
-        result = cdll['libc.so.6'].prctl(PR_SET_PDEATHSIG, signum)
-        if result != 0:
-            raise PrCtlError('prctl failed with error code %s' % result)
-    return set_parent_exit_signal
-# ------------------------------------------------
-
-
-# ------------------------------------------------
-class VivadoNotFoundError(Exception):
+class VivadoHLSNotFoundError(Exception):
 
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
-        super(VivadoNotFoundError, self).__init__(message)
+        super(VivadoHLSNotFoundError, self).__init__(message)
 # ------------------------------------------------
 
 
 # ------------------------------------------------
 def _parseversion(verstr):
     """
-Vivado:
-    Vivado v2017.4 (64-bit)
-    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-    IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
-    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-
-Vivado Lab:
-    Vivado Lab Edition v2017.4 (64-bit)
-    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-
+Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2018.3 (64-bit)
+SW Build 2405991 on Thu Dec  6 23:36:41 MST 2018
+IP Build 2404404 on Fri Dec  7 01:43:56 MST 2018
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
     """
-    lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
+    lVerExpr = r'(Vivado\(TM\)[\s\w]*)\s-.*v(\d+\.\d)'
 
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
 
     m = lVerRe.search(str(verstr))
 
     if m is None:
-        raise VivadoNotFoundError("Failed to detect Vivado variant")
+        raise VivadoHLSNotFoundError("Failed to detect VivadoHLS variant")
 
     return m.groups()
 # ------------------------------------------------
 
 
 # ------------------------------------------------
-def autodetect(executable='vivado'):
+def autodetecthls(executable='vivado_hls'):
     """
-    Detects current vivado version
+
     """
+
+
     if not which(executable):
-        raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
+        raise VivadoHLSNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
 
     lExe = sh.Command(executable)
     lVerStr = lExe('-version')
@@ -106,14 +69,14 @@ def autodetect(executable='vivado'):
 
 
 # -------------------------------------------------------------------------
-class VivadoOutputFormatter(OutputFormatter):
+class VivadoHLSOutputFormatter(OutputFormatter):
     """Formatter for Vivado command line output
 
     Arguments:
         prefix (string): String to prepend to each line of output
     """
     def __init__(self, prefix=None, quiet=False):
-        super(VivadoOutputFormatter, self).__init__(prefix, quiet)
+        super(VivadoHLSOutputFormatter, self).__init__(prefix, quiet)
 
         self.pendingchars = ''
 
@@ -155,7 +118,7 @@ class VivadoOutputFormatter(OutputFormatter):
 
 
 # -------------------------------------------------------------------------
-class VivadoConsoleError(Exception):
+class VivadoHLSConsoleError(Exception):
     """Exception raised for errors in the input.
     
     Attributes:
@@ -174,9 +137,8 @@ class VivadoConsoleError(Exception):
         return self.__class__.__name__ + '(\'{}\', errors: {}, critical warnings {})'.format(self.command, len(self.errors), len(self.criticalWarns))
 # -------------------------------------------------------------------------
 
-
 # -------------------------------------------------------------------------
-class VivadoConsole(object):
+class VivadoHLSConsole(object):
     """Class to interface to Vivado TCL console
     
     Attributes:
@@ -191,10 +153,8 @@ class VivadoConsole(object):
     __reCriticalWarning = re.compile(u'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado': u'Vivado%\s',
-        'vivado_lab': u'vivado_lab%\s'
+        'vivado_hls': u'vivado_hls>\s',
     }
-    __newlines = [u'\r\n']
 
     # --------------------------------------------------------------
     @classmethod
@@ -222,27 +182,27 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echobanner=False, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
+    def __init__(self, sessionid=None, echo=True, echobanner=False, echoprefix=None, executable='vivado_hls', prompt=None, stopOnCWarnings=False):
         """
         Args:
-            sessionid (str): Name of the Vivado session
+            sessionid (str): Name of the VivadoHLS session
             echo (bool): Switch to enable echo messages
             echoprefix (str): Prefix to echo message
             executable (str): Executable name
             prompt (str):
             stopOnCWarnings (bool): Stop on Critical Warnings
         """
-        super(VivadoConsole, self).__init__()
+        super(VivadoHLSConsole, self).__init__()
 
         # Set up logger first
-        self._log = logging.getLogger('Vivado')
-        self._log.debug('Starting Vivado')
+        self._log = logging.getLogger('VivadoHLS')
+        self._log.debug('Starting VivadoHLS')
 
         self._stopOnCWarnings = stopOnCWarnings
         # define what executable to run
         self._executable = executable
         if not which(self._executable):
-            raise VivadoNotFoundError(self._executable + " not found in PATH. Have you sourced Vivado\'s setup script?")
+            raise VivadoNotFoundError(self._executable + " not found in PATH. Have you sourced VivadoHLS\'s setup script?")
 
         # Define the prompt to use
         if prompt is None:
@@ -252,17 +212,17 @@ class VivadoConsole(object):
             self._prompt = prompt
 
         # Set up the output formatter
-        self._out = VivadoOutputFormatter(
+        self._out = VivadoHLSOutputFormatter(
             echoprefix if ( echoprefix or (sessionid is None) )
             else (sessionid + ' | '),
             quiet=(not echo)
         )
 
-        self._out.write('\n' + '- Starting Vivado -'+'-' * 40 + '\n')
+        self._out.write('\n' + '- Starting VivadoHLS -'+'-' * 40 + '\n')
         self._out.quiet = (not echobanner)
        
         # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
-        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        self._process = pexpect.spawn('{0} -i -l {1}.log'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
             echo=echo,
@@ -270,17 +230,13 @@ class VivadoConsole(object):
             # preexec_fn=on_parent_exit('SIGTERM')
         )
 
-        # Compile the list of patterns to detect the prompt
-        self._rePrompt = self._process.compile_pattern_list(
-            self.__newlines+[self._prompt, pexpect.TIMEOUT]
-        )
         self._process.delaybeforesend = 0.00  # 1
 
-        # Wait for vivado to wake up
+        # Wait for vivadoHLS to wake up
         startupstr = self.__expectPrompt()
         self._variant, self._version = _parseversion(''.join(startupstr[0]))
         self._out.quiet = (not echo)
-        self._log.debug('Vivado up and running')
+        self._log.debug('VivadoHLS up and running')
         self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
 
         self._processinfo = psutil.Process(self._process.pid)
@@ -307,17 +263,17 @@ class VivadoConsole(object):
         return self.execute(aCmd, aMaxLen)
 
     # --------------------------------------------------------------
-    def __send(self, aText, aChkEchoAck=True):
+    def __send(self, aText, e=True):
         self._process.sendline(aText)
-        # --------------------------------------------------------------
-        # Hard check: First line of output must match the injected command
-        self._process.expect(self.__newlines)
-
         if not aChkEchoAck:
             return
+        # --------------------------------------------------------------
+        # Hard echo check: First line of output must match the injected command
+        self._process.expect([u'\r\n'])
 
         lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
         lCmdSent = aText.split('\n')[0]
+
         if lCmdRcvd != lCmdSent:
             # --------------------------------------------------------------
             print ('-' * 20)
@@ -329,7 +285,7 @@ class VivadoConsole(object):
                 s = lCmdSent[i]
                 # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
                 # ord(s) > 128
-                print (i, '\t', repr(r), repr(s), r == s, ord(r))
+                print (i, '\t', r, s, r == s, ord(r))
 
             print (''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
             print (lCmdRcvd)
@@ -341,7 +297,9 @@ class VivadoConsole(object):
 
     # --------------------------------------------------------------
     def __expectPrompt(self, aMaxLen=100):
-
+        lCpl = self._process.compile_pattern_list(
+            [u'\r\n', self._prompt, pexpect.TIMEOUT]
+        )
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []
@@ -351,7 +309,8 @@ class VivadoConsole(object):
         lTimeoutCounts = 0
         while True:
             # Search for newlines, prompt, end-of-file
-            lIndex = self._process.expect_list(self._rePrompt)
+            lIndex = self._process.expect_list(lCpl)
+            print("zzzz",lIndex, repr(self._process.before))
 
             # ----------------------------------------------------------
             # Break if prompt
@@ -361,7 +320,7 @@ class VivadoConsole(object):
                 break
             elif lIndex == 2:
                 lTimeoutCounts += 1
-                print ("VivadoConsole >> Time since last command: {0}s".format(
+                print ("VivadoHLSConsole >> Time since last command: {0}s".format(
                     lTimeoutCounts * self._process.timeout))
             # ----------------------------------------------------------
 
@@ -377,14 +336,13 @@ class VivadoConsole(object):
         # --------------------------------------------------------------
 
         return lBuffer, lErrors, lCriticalWarnings
-    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def quit(self):
 
         # Return immediately of already dead
         if not hasattr(self, '_process') or not self._process.isalive():
-            self._log.debug('Vivado has already been stopped')
+            self._log.debug('VivadoHLS has already been stopped')
             # try:
             #   # I am being pedantic here, in case, for any reason, it wasn't done yet
             #   self.__instances.remove(self)
@@ -392,14 +350,14 @@ class VivadoConsole(object):
             #   pass
             return
 
-        self._log.debug('Shutting Vivado down')
+        self._log.debug('Shutting VivadoHLS down')
         try:
-            self.execute('quit')
+            self.__send('quit', False)
         except pexpect.ExceptionPexpect:
             pass
 
         # Write one last newline
-        self._out.write('- Terminating Vivado (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
+        self._out.write('- Terminating VivadoHLS (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
         # Just in case
         self._process.terminate(True)
 
@@ -424,7 +382,7 @@ class VivadoConsole(object):
         if aCmd.count('\n') != 0:
             raise ValueError('Format error. Newline not allowed in commands')
 
-        self.__send(aCmd)
+        self.__send(aCmd, False)
         lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
 
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
@@ -454,83 +412,7 @@ class VivadoConsole(object):
         self.executeMany(['set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds])
 
 
-# -------------------------------------------------------------------------
-class VivadoOpen(object):
-    """VivadoConsole wrapper for with statements
-    """
-
-    # --------------------------------------------------------------
-    def __getattr__(self, name):
-        if name.startswith('_'):
-            # bail out early
-            raise AttributeError(name)
-        return getattr(self._console, name)
-
-    # --------------------------------------------------------------
-    def __setattr__(self, name, value):
-        if name.startswith('_'):
-            self.__dict__[name] = value
-            return
-        return setattr(self._console, name, value)
-
-    # --------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        super(VivadoOpen, self).__init__()
-        self._args = args
-        self._kwargs = kwargs
-
-    # --------------------------------------------------------------
-    def __enter__(self):
-        self._console = VivadoConsole(*self._args, **self._kwargs)
-        return self
-
-    # --------------------------------------------------------------
-    def __exit__(self, type, value, traceback):
-        self._console.quit()
-
-    # --------------------------------------------------------------
-    def __call__(self, aCmd=None, aMaxLen=1):
-        # FIXME: only needed because of VivadoProjectMaker
-        # Fix at source and remove
-        if aCmd is None:
-            return
-
-        if aCmd.count('\n') is not 0:
-            aCmd = aCmd.split('\n')
-
-        if isinstance(aCmd, str):
-            return self._console.execute(aCmd, aMaxLen)
-        elif isinstance(aCmd, list):
-            return self._console.executeMany(aCmd, aMaxLen)
-        else:
-            raise TypeError('Unsupported command type ' + type(aCmd).__name__)
-
-
-# -------------------------------------------------------------------------
-class VivadoSnoozer(object):
-    """Snoozes notifications from Vivado """
-    # --------------------------------------------------------------
-    def __init__(self, aConsole):
-        super(VivadoSnoozer, self).__init__()
-        self._console = aConsole
-        self._quiet = None
-    # --------------------------------------------------------------
-
-    # --------------------------------------------------------------
-    def __enter__(self):
-        self._quiet = self._console.quiet
-        self._console.quiet = True
-    # --------------------------------------------------------------
-
-    # --------------------------------------------------------------
-    def __exit__(self, type, value, traceback):
-        self._console.quiet = self._quiet
-    # --------------------------------------------------------------
-
-# -------------------------------------------------------------------------
-
-
 @atexit.register
 def __goodbye():
-    VivadoConsole.killAllInstances()
+    VivadoHLSConsole.killAllInstances()
 # -------------------------------------------------------------------------

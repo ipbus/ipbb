@@ -161,6 +161,7 @@ class ModelSimOutputFormatter(OutputFormatter):
         super(ModelSimOutputFormatter, self).__init__(prefix, quiet)
 
         self.pendingchars = ''
+        self.skiplines = []
 
     def write(self, message):
         """Writes formatted message
@@ -168,18 +169,34 @@ class ModelSimOutputFormatter(OutputFormatter):
         Args:
             message (string): Message to format
         """
+        
         # put any pending character first
         msg = self.pendingchars + message
+        # Flush pending chars
+        self.pendingchars = ''
 
-        lines = msg.splitlines()
+        # Splitting with regex, allows more flexibility
+        lReNewLines = re.compile('(\r?\n)')
 
-        if not message.endswith('\n'):
+        # lines = msg.splitlines(True)
+        lines = lReNewLines.split(msg)
+
+        if not lines[-1]:
+        # Drop the last entry if empty, i.e. the 
+            lines.pop()
+        else:
+        # Otherwise queue it for the next round
             self.pendingchars = lines[-1]
             del lines[-1]
-        else:
-            self.pendingchars = ''
 
-        for lLine in lines:
+
+        assert (len(lines) % 2 == 0)
+
+        # Iterate over pairs, line and newline match
+        for lLine,lRet in izip(lines[::2], lines[1::2]):
+            if lLine in self.skiplines:
+                continue
+
             lColor = None
             if lLine.startswith('** Note:'):
                 lColor = kBlue
@@ -193,7 +210,7 @@ class ModelSimOutputFormatter(OutputFormatter):
             if lColor is not None:
                 lLine = lColor + lLine + kReset
 
-            self._write((self.prefix if self.prefix else '') + lLine + '\n')
+            self._write((self.prefix if self.prefix else '') + lLine + lRet)
 
 
 # -------------------------------------------------------------------------

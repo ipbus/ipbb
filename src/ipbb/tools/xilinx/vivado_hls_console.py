@@ -23,7 +23,7 @@ from itertools import izip
 from ..common import which, OutputFormatter
 from ..termui import *
 
-# kHLSLogDebug = False
+kHLSLogDebug = False
 
 
 # ------------------------------------------------
@@ -83,6 +83,7 @@ class VivadoHLSOutputFormatter(OutputFormatter):
         super(VivadoHLSOutputFormatter, self).__init__(prefix, quiet)
 
         self.pendingchars = ''
+        self.skiplines = ['\r\x1b[12C\r']
 
     def write(self, message):
         """Writes formatted message
@@ -92,10 +93,10 @@ class VivadoHLSOutputFormatter(OutputFormatter):
         """
         
         # TODELETE
-        # if kHLSLogDebug:
-        #     print(kCyan+'raw in  >> '+kReset+repr(message))
-        #     if self.pendingchars:
-        #         print(kCyan+'raw pen >> '+kReset+repr(self.pendingchars))
+        if kHLSLogDebug:
+            print(kCyan+'raw in  >> '+kReset+repr(message))
+            if self.pendingchars:
+                print(kCyan+'raw pen >> '+kReset+repr(self.pendingchars))
 
         # put any pending character first
         msg = self.pendingchars + message
@@ -109,8 +110,8 @@ class VivadoHLSOutputFormatter(OutputFormatter):
         lines = lReNewLines.split(msg)
 
         # TODELETE
-        # if kHLSLogDebug:
-        #     print(kRed+'split   >> '+kReset+repr(lines))
+        if kHLSLogDebug:
+            print(kRed+'split   >> '+kReset+repr(lines))
 
         if not lines[-1]:
         # Drop the last entry if empty, i.e. the 
@@ -123,13 +124,16 @@ class VivadoHLSOutputFormatter(OutputFormatter):
 
         assert (len(lines) % 2 == 0)
         # TODELETE
-        # if kHLSLogDebug:
-        #     print(kRed+'c split >> '+kReset+repr(lines))
+        if kHLSLogDebug:
+            print(kRed+'c split >> '+kReset+repr(lines))
 
         # Iterate over pairs, line and newline match
         for lLine,lRet in izip(lines[::2], lines[1::2]):
             # if kHLSLogDebug:
             #     print("zzzz  >> ", kOrange,repr(lLine), repr(lRet), kReset)
+            if lLine in self.skiplines:
+                continue
+
             lColor = None
             if lLine.startswith('INFO:'):
                 lColor = kBlue
@@ -145,10 +149,9 @@ class VivadoHLSOutputFormatter(OutputFormatter):
             if lColor is not None:
                 lLine = lColor + lLine + kReset
 
-            # if kHLSLogDebug:
-            #     self._write(kBlue+"fmtxout >> "+kReset+repr((self.prefix if self.prefix else '') + lLine + lRet) + '\n')
+            if kHLSLogDebug:
+                self._write(kBlue+"fmtxout >> "+kReset+repr((self.prefix if self.prefix else '') + lLine + lRet) + '\n')
             self._write((self.prefix if self.prefix else '') + lLine + lRet)
-            # self._write((self.prefix if self.prefix else '') + lLine)
 # -------------------------------------------------------------------------
 
 

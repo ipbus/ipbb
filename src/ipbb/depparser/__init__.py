@@ -1,2 +1,2 @@
-from _depparser_core import *
-from _pathmaker import *
+from _depparser_core import DepFileParser, depfiletypes
+from _pathmaker import Pathmaker

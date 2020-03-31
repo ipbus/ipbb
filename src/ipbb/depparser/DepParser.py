@@ -53,7 +53,7 @@ class FileCommand(Command):
 
     """
     # --------------------------------------------------------------
-    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aLib, aInclude, aTopLevel, aVhdl2008, aFinalise):
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aLib, aTopLevel, aVhdl2008, aFinalise):
         super(FileCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent)
 
         self.Lib = aLib

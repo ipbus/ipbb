@@ -23,7 +23,7 @@ from itertools import izip
 from ..common import which, OutputFormatter
 from ..termui import *
 
-kHLSLogDebug = False
+# kHLSLogDebug = False
 
 
 # ------------------------------------------------
@@ -92,24 +92,25 @@ class VivadoHLSOutputFormatter(OutputFormatter):
         """
         
         # TODELETE
-        if kHLSLogDebug:
-            print(kCyan+'raw in  >> '+kReset+repr(message))
-            if self.pendingchars:
-                print(kCyan+'raw pen >> '+kReset+repr(self.pendingchars))
+        # if kHLSLogDebug:
+        #     print(kCyan+'raw in  >> '+kReset+repr(message))
+        #     if self.pendingchars:
+        #         print(kCyan+'raw pen >> '+kReset+repr(self.pendingchars))
 
         # put any pending character first
         msg = self.pendingchars + message
         # Flush pending chars
         self.pendingchars = ''
 
+        # Splitting with regex, allows more flexibility
         lReNewLines = re.compile('(\r?\n)')
 
         # lines = msg.splitlines(True)
         lines = lReNewLines.split(msg)
 
         # TODELETE
-        if kHLSLogDebug:
-            print(kRed+'split   >> '+kReset+repr(lines))
+        # if kHLSLogDebug:
+        #     print(kRed+'split   >> '+kReset+repr(lines))
 
         if not lines[-1]:
         # Drop the last entry if empty, i.e. the 
@@ -122,13 +123,13 @@ class VivadoHLSOutputFormatter(OutputFormatter):
 
         assert (len(lines) % 2 == 0)
         # TODELETE
-        if kHLSLogDebug:
-            print(kRed+'c split >> '+kReset+repr(lines))
+        # if kHLSLogDebug:
+        #     print(kRed+'c split >> '+kReset+repr(lines))
 
         # Iterate over pairs, line and newline match
         for lLine,lRet in izip(lines[::2], lines[1::2]):
-            if kHLSLogDebug:
-                print("zzzz  >> ", kOrange,repr(lLine), repr(lRet), kReset)
+            # if kHLSLogDebug:
+            #     print("zzzz  >> ", kOrange,repr(lLine), repr(lRet), kReset)
             lColor = None
             if lLine.startswith('INFO:'):
                 lColor = kBlue
@@ -144,8 +145,8 @@ class VivadoHLSOutputFormatter(OutputFormatter):
             if lColor is not None:
                 lLine = lColor + lLine + kReset
 
-            if kHLSLogDebug:
-                self._write(kBlue+"fmtxout >> "+kReset+repr((self.prefix if self.prefix else '') + lLine + lRet) + '\n')
+            # if kHLSLogDebug:
+            #     self._write(kBlue+"fmtxout >> "+kReset+repr((self.prefix if self.prefix else '') + lLine + lRet) + '\n')
             self._write((self.prefix if self.prefix else '') + lLine + lRet)
             # self._write((self.prefix if self.prefix else '') + lLine)
 # -------------------------------------------------------------------------
@@ -317,8 +318,8 @@ class VivadoHLSConsole(object):
         """
         lRcvd = aBefore
         lXpctd = self.__cmdSentAck
-        if kHLSLogDebug:
-            print(kYellow+'send ack>> '+kReset+repr(aBefore))
+        # if kHLSLogDebug:
+        #     print(kYellow+'send ack>> '+kReset+repr(aBefore))
         if lRcvd != lXpctd:
             # --------------------------------------------------------------
             print('-' * 20)
@@ -373,8 +374,8 @@ class VivadoHLSConsole(object):
         while True:
             # Search for newlines, prompt, end-of-file
             lIndex = self._process.expect_list(self._rePrompt)
-            if kHLSLogDebug:
-                print(kGreen+"expect  >> "+kReset,lIndex, repr(self._process.before))
+            # if kHLSLogDebug:
+            #     print(kGreen+"expect  >> "+kReset,lIndex, repr(self._process.before))
 
             # ----------------------------------------------------------
             # Break if prompt

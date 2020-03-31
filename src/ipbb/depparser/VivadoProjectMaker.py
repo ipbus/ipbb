@@ -107,20 +107,20 @@ class VivadoProjectMaker(object):
                 lXciBasenames.append(lName)
                 # lXciTargetFiles.append(lTargetFile)
             else:
-                if src.Include:
 
-                    c = 'add_files -norecurse -fileset {0} $files'.format(self.filesets[lExt])
+                c = 'add_files -norecurse -fileset {0} $files'.format(self.filesets[lExt])
+                f = src.FilePath
+                lCommands += [(c, f)]
+
+                if src.Vhdl2008:
+                    c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
                     f = src.FilePath
                     lCommands += [(c, f)]
-
-                    if src.Vhdl2008:
-                        c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
-                        f = src.FilePath
-                        lCommands += [(c, f)]
-                    if lExt == '.tcl':
-                        c = 'set_property USED_IN implementation [get_files {$files}]'
-                        f = src.FilePath
-                        lCommands += [(c, f)]
+                if lExt == '.tcl':
+                    c = 'set_property USED_IN implementation [get_files {$files}]'
+                    f = src.FilePath
+                    lCommands += [(c, f)]
+                    
                 if src.Lib:
                     c = 'set_property library {0} [ get_files {{$files}} ]'.format(src.Lib)
                     f = src.FilePath

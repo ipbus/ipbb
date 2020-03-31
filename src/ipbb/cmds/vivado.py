@@ -25,7 +25,7 @@ from .dep import hash
 from ..tools.common import which, SmartOpen
 from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..depparser.VivadoProjectMaker import VivadoProjectMaker
+from ..makers.vivadoproject import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
 from ..defaults import kTopEntity
 

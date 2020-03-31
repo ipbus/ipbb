@@ -10,8 +10,7 @@ from click import echo, style, secho, confirm
 from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep, isdir, isfile
 from texttable import Texttable
 
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepParser import DepFileParser
+from ..depparser import Pathmaker, DepFileParser
 
 
 # ------------------------------------------------------------------------------

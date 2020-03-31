@@ -12,8 +12,7 @@ from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from . import ProjectInfo
 from ._utils import DirSentry, raiseError, validateComponent, findFirstParentDir
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepParser import depfiletypes
+from ..depparser import depfiletypes, Pathmaker
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho

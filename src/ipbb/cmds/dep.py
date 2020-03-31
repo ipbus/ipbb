@@ -149,8 +149,9 @@ def report(env, filters):
     lString += lDepFmt.drawComponents()
     echo(lString+'\n')
 
-    secho("Dep tree parsing error:", fg='red')
-    echo(lDepFmt.drawParsingErrors())
+    if lParser.errors:
+        secho("Dep tree parsing error:", fg='red')
+        echo(lDepFmt.drawParsingErrors())
 
     if lParser.unresolved:
         lString = ''

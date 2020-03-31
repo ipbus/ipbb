@@ -3,7 +3,6 @@ import time
 import os
 
 from os.path import join, split, exists, splitext, abspath
-from .Pathmaker import Pathmaker
 from ..tools.common import SmartOpen
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -5,7 +5,7 @@ from future.utils import iterkeys, itervalues, iteritems
 import argparse
 import os
 import glob
-from . import Pathmaker
+from ._pathmaker import Pathmaker
 from .definitions import depfiletypes
 from ..tools.common import DictObj
 from collections import OrderedDict
@@ -116,7 +116,7 @@ class DepFile(object):
 
     # -----------------------------------------------------------------------------
     def __str__(self):
-        pathmaker = Pathmaker.Pathmaker('', 1)
+        pathmaker = Pathmaker('', 1)
         return 'depfile {} | {}:{} - entries {}, errors {}, unresolved {}'.format(
             self.path, self.pkg, pathmaker.getPath('', self.cmp, 'include', self.name),
             len(self.entries), len(self.errors), len(self.unresolved)

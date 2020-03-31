@@ -177,7 +177,7 @@ class Environment(object):
     def depParser(self):
         if self._depParser is None:
 
-            from ..depparser.DepParser import DepFileParser
+            from ..depparser import DepFileParser
 
             self._depParser = DepFileParser(
                 self.currentproj.settings['toolset'],

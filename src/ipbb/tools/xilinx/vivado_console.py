@@ -125,8 +125,10 @@ class VivadoOutputFormatter(OutputFormatter):
         """
         # put any pending character first
         msg = self.pendingchars + message
+        # print('raw out >> '+repr(msg))
 
         lines = msg.splitlines()
+        # print('split   >> '+repr(lines))
 
         if not message.endswith('\n'):
             self.pendingchars = lines[-1]
@@ -150,6 +152,7 @@ class VivadoOutputFormatter(OutputFormatter):
             if lColor is not None:
                 lLine = lColor + lLine + kReset
 
+            # self._write("fmtxout >> "+repr((self.prefix if self.prefix else '') + lLine + '\n') + '\n')
             self._write((self.prefix if self.prefix else '') + lLine + '\n')
 # -------------------------------------------------------------------------
 
@@ -261,10 +264,13 @@ class VivadoConsole(object):
         self._out.write('\n' + '- Starting Vivado -'+'-' * 40 + '\n')
         self._out.quiet = (not echobanner)
        
+        lLogName = self._executable + (('_' + sessionid) if sessionid else '')
         # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
-        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
-            self._executable,
-            self._executable + ('_' + sessionid) if sessionid else ''),
+        self._process = pexpect.spawn(self._executable,[
+                    '-mode', 'tcl', 
+                    '-log', lLogName+'.log',
+                    '-journal', lLogName+'.jou'
+                ],
             echo=echo,
             logfile=self._out,
             # preexec_fn=on_parent_exit('SIGTERM')
@@ -274,25 +280,31 @@ class VivadoConsole(object):
         self._rePrompt = self._process.compile_pattern_list(
             self.__newlines+[self._prompt, pexpect.TIMEOUT]
         )
+        # Set send delay
         self._process.delaybeforesend = 0.00  # 1
 
         # Wait for vivado to wake up
         startupstr = self.__expectPrompt()
+        
+        # Extract version infomation
         self._variant, self._version = _parseversion(''.join(startupstr[0]))
         self._out.quiet = (not echo)
         self._log.debug('Vivado up and running')
         self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
 
+        # Create a process descriptor
         self._processinfo = psutil.Process(self._process.pid)
         # Method mapping
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
 
+    # --------------------------------------------------------------
     @property
     def variant(self):
         return self._variant
     
+    # --------------------------------------------------------------
     @property
     def version(self):
         return self._version
@@ -307,37 +319,88 @@ class VivadoConsole(object):
         return self.execute(aCmd, aMaxLen)
 
     # --------------------------------------------------------------
-    def __send(self, aText, aChkEchoAck=True):
-        self._process.sendline(aText)
-        # --------------------------------------------------------------
-        # Hard check: First line of output must match the injected command
-        self._process.expect(self.__newlines)
+    def __checkEcho(self, aText, aBefore):
+        """
+        Hard check: First line of output must match the injected command
+        """
 
-        if not aChkEchoAck:
-            return
-
-        lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
+        lCmdRcvd = self.__reCharBackspace.sub('', aBefore)
         lCmdSent = aText.split('\n')[0]
         if lCmdRcvd != lCmdSent:
             # --------------------------------------------------------------
-            print ('-' * 20)
-            print ('Echo character-by-character diff')
+            print('-' * 20)
+            print('Echo character-by-character diff')
             # Find where the 2 strings don't match
-            print ('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
-            for i in range(min(len(lCmdRcvd), len(lCmdSent))):
-                r = lCmdRcvd[i]
-                s = lCmdSent[i]
+            print('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
+
+            # find the first mismatching character
+            minlen = min(len(lCmdRcvd), len(lCmdSent))
+            maxlen = max(len(lCmdRcvd), len(lCmdSent))
+            x = next((i for i in range(minlen) if lCmdRcvd[i] != lCmdSent[i]), minlen)
+
+            a = x - 10
+            b = x + 10
+            for i in range(max(a, 0), min(b, maxlen)):
+                r = lCmdRcvd[i] if len(lCmdRcvd) > i else ' '
+                s = lCmdSent[i] if len(lCmdSent) > i else ' '
                 # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
                 # ord(s) > 128
-                print (i, '\t', repr(r), repr(s), r == s, ord(r))
+                print(i, '\t', repr(s), repr(r), r == s, ord(r))
 
-            print (''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
-            print (lCmdRcvd)
-            print (''.join([str(i % 10) for i in range(len(lCmdSent))]))
-            print (lCmdSent)
+            print(''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
+            print(lCmdRcvd)
+            print(''.join([str(i % 10) for i in range(len(lCmdSent))]))
+            print(lCmdSent)
             # --------------------------------------------------------------
             raise RuntimeError(
-                "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent, lCmdRcvd))
+                "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(
+                    lCmdSent, lCmdRcvd
+                )
+            )
+
+    # --------------------------------------------------------------
+    def __send(self, aText):
+
+        x = self._process.sendline(aText)
+        lIndex = self._process.expect(self.__newlines)
+
+        # --------------------------------------------------------------
+        # Hard check: First line of output must match the injected command
+        self.__checkEcho(aText, self._process.before)
+
+
+    # # --------------------------------------------------------------
+    # def __send(self, aText, aChkEchoAck=True):
+    #     self._process.sendline(aText)
+    #     # --------------------------------------------------------------
+    #     # Hard check: First line of output must match the injected command
+    #     self._process.expect(self.__newlines)
+
+    #     if not aChkEchoAck:
+    #         return
+
+    #     lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
+    #     lCmdSent = aText.split('\n')[0]
+    #     if lCmdRcvd != lCmdSent:
+    #         # --------------------------------------------------------------
+    #         print ('-' * 20)
+    #         print ('Echo character-by-character diff')
+    #         # Find where the 2 strings don't match
+    #         print ('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
+    #         for i in range(min(len(lCmdRcvd), len(lCmdSent))):
+    #             r = lCmdRcvd[i]
+    #             s = lCmdSent[i]
+    #             # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
+    #             # ord(s) > 128
+    #             print (i, '\t', repr(r), repr(s), r == s, ord(r))
+
+    #         print (''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
+    #         print (lCmdRcvd)
+    #         print (''.join([str(i % 10) for i in range(len(lCmdSent))]))
+    #         print (lCmdSent)
+    #         # --------------------------------------------------------------
+    #         raise RuntimeError(
+    #             "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent, lCmdRcvd))
 
     # --------------------------------------------------------------
     def __expectPrompt(self, aMaxLen=100):

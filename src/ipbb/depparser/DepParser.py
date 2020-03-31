@@ -251,6 +251,7 @@ class DepLineError(Exception):
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
 class State(object):
     """Utility class that holds the current status of the parser
     while iterating through the tree of dependencies"""
@@ -262,6 +263,7 @@ class State(object):
     @property
     def tab(self):
         return ' ' * 4 * self.depth
+# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
@@ -315,9 +317,10 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set the toolset
-        if self._toolset == 'xtclsh':
-            self.vars['toolset'] = 'ISE'
-        elif self._toolset == 'vivado':
+        # if self._toolset == 'xtclsh':
+        #     self.vars['toolset'] = 'ISE'
+        # el
+        if self._toolset == 'vivado':
             self.vars['toolset'] = 'Vivado'
         elif self._toolset == 'sim':
             self.vars['toolset'] = 'Modelsim'

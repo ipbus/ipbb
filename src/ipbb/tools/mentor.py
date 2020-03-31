@@ -309,33 +309,27 @@ class ModelSimConsole(object):
     # --------------------------------------------------------------
     def __del__(self):
         self.quit()
-
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
         return self.execute(aCmd, aMaxLen)
-
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __send(self, aText, aChkEchoAck=True):
+    def __checkEcho(self, aText, aBefore):
+        """
+        Hard check: First line of output must match the injected command
+        """
 
-        x = self._process.sendline(aText)
-        # --------------------------------------------------------------
-        # Hard check: First line of output must match the injected command
-        lIndex = self._process.expect(self.__newlines)
-
-        if not aChkEchoAck:
-            return
-
-        lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
+        lCmdRcvd = self.__reCharBackspace.sub('', aBefore)
         lCmdSent = aText.split('\n')[0]
         if lCmdRcvd != lCmdSent:
             # --------------------------------------------------------------
             print('-' * 20)
+            print('Echo character-by-character diff')
             # Find where the 2 strings don't match
-            print(' sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
+            print('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
 
             # find the first mismatching character
             minlen = min(len(lCmdRcvd), len(lCmdSent))
@@ -361,7 +355,17 @@ class ModelSimConsole(object):
                     lCmdSent, lCmdRcvd
                 )
             )
+    # --------------------------------------------------------------
 
+    # --------------------------------------------------------------
+    def __send(self, aText):
+
+        x = self._process.sendline(aText)
+        lIndex = self._process.expect(self.__newlines)
+
+        # --------------------------------------------------------------
+        # Hard check: First line of output must match the injected command
+        self.__checkEcho(aText, self._process.before)
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------

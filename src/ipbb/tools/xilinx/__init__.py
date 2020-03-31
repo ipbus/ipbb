@@ -4,4 +4,4 @@ from .vivado_batch import *
 from .vivado_project import *
 
 
-from .vivadohls_console import *
+from .vivado_hls_console import *

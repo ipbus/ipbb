@@ -1,11 +1,14 @@
 #!/usr/bin/python
 from __future__ import print_function, absolute_import
 from builtins import range
+from future.utils import iterkeys, itervalues, iteritems
 import six
 
 import pexpect
-from distutils.spawn import find_executable
+import pprint
 import re
+from distutils.spawn import find_executable
+from collections import OrderedDict
 
 def tclputs(word):
     return 'puts "{}"'.format(word)
@@ -25,7 +28,18 @@ def analyze(string, start, end, prompt):
     substr = re.search(pattern, string, re.DOTALL).group(1)
 
     print(repr(substr))
-    print(repr(re.search(r'(.*)'+prompt+r'({})?(.*)'.format(tclputs(end)), substr, re.DOTALL).groups()))
+
+    # m = re.search(r'(?P<prepromt_r>\r\n|\n\r)(?P<prepromt_keys>.*)'+prompt+r'(?P<echo>{})?(?P<postcmd_keys>.*)(?P<cmd_ret>\r\n|\n\r)'.format(tclputs(end)), substr, re.DOTALL)
+    labels = ['prevcmd_end','prepromt_keys','echo','postcmd_keys','cmd_ack']
+    m = re.search(r'(\r\n|\n\r)(.*)'+prompt+r'({})?(.*)(\r\n|\n\r)'.format(tclputs(end)), substr, re.DOTALL)
+    if not m:
+        print('WARNING: No match found')
+        return
+
+    groupdict = OrderedDict(zip(labels, m.groups()))
+    for k,v in iteritems(groupdict):
+        print('-', k+":", repr(v))
+    print()
 
 
 def test_tclconsole(cmd, args, prompt):
@@ -56,11 +70,13 @@ def test_tclconsole(cmd, args, prompt):
 
 
 # Go----
-print('- Vivado HLS -'+'-'*40)
-test_tclconsole('vivado_hls', ['-i'], u'vivado_hls>\s')
 
-print('- Vivado -'+'-'*40)
-test_tclconsole('vivado',['-mode','tcl'], u'Vivado%\s')
+# print('- Vivado -'+'-'*40)
+# test_tclconsole('vivado',['-mode','tcl'], u'Vivado%\s')
 
 print('- Questa -'+'-'*40)
 test_tclconsole('vsim',['-c'], u'QuestaSim>\s\rQuestaSim>\s')
+
+print('- Vivado HLS -'+'-'*40)
+test_tclconsole('vivado_hls', ['-i'], u'vivado_hls>\s')
+

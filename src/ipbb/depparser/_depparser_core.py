@@ -15,7 +15,7 @@ from os.path import exists, splitext
 from string import Template
 
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
-from ._cmdtypes import FileCommand, IncludeCommand
+from ._cmdtypes import SrcCommand, IncludeCommand
 
 
 # -----------------------------------------------------------------------------
@@ -298,7 +298,7 @@ class DepFileParser(object):
 
         return lLine
 
-    # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
     def _resolvePaths(self, aParsedCmd, aDepFilePath, aPackage, aComponent):
 
         # --------------------------------------------------------------
@@ -330,7 +330,7 @@ class DepFileParser(object):
         lUnmatchedExprs = list()
         for lFileExpr in lFileExprList:
             # Expand file expression
-            lPathExpr, lFileList = self._pathMaker.glob(
+            op, lFileList = self._pathMaker.glob(
                 lPackage, lComponent, aParsedCmd.cmd, lFileExpr, cd=aParsedCmd.cd
             )
 
@@ -341,40 +341,19 @@ class DepFileParser(object):
             else:
                 lUnmatchedExprs.append(lPathExpr)
 
-        return lFileLists, lPackage, lComponent, lUnmatchedExprs
-
-    # -------------------------------------------------------------------------
-    def _expand(self, aParsedCmd, aFileLists, aPackage, aComponent):
-        """Converts parsed command components into Command components"""
-
-
         # --------------------------------------------------------------
-        # Set package and module variables, whether specified or not
-        lPackage, lComponent = aParsedCmd.Package, aParsedCmd.Component
-
-        # Set package and component to current ones if not defined
-        if lPackage is None:
-            lPackage = aPackage
-
-        if lComponent is None:
-            lComponent = aComponent
-        # --------------------------------------------------------------
-
-        # --------------------------------------------------------------
-
-        # If an include command, parse the specified dep files
+        # If an include command, parse the sub-dep files
         lEntries = list()
         if aParsedCmd.cmd == "include":
 
-            for lFileList in aFileLists:
+            for lFileList in lFileLists:
                 for lFile, lFilePath in lFileList:
                     cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
                     cmd.depfile = self._parseFile(lPackage, lComponent, lFile)
                     lEntries.append(cmd)
 
         else:
-
-            for lFileList in aFileLists:
+            for lFileList in lFileLists:
                 for lFile, lFilePath in lFileList:
                     # --------------------------------------------------------------
                     # Debugging
@@ -385,7 +364,7 @@ class DepFileParser(object):
                     cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
                     lEntries.append(cmd)
 
-        return lEntries
+        return lEntries, lUnmatchedExprs
         # --------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -462,19 +441,17 @@ class DepFileParser(object):
                     print(self._state.tab, '- Parsed line', vars(lParsedCmd))
 
                 # --------------------------------------------------------------
-                # Resolve files referenced by the command
-                lFileLists, lParsedPackage, lParsedComponent, lUnresolvedExpr = self._resolvePaths(lParsedCmd, lDepFilePath, aPackage, aComponent)
-                lCurrentFile.unresolved += [
-                    (lExpr, lParsedCmd.cmd, lParsedPackage, lParsedComponent, aPackage, aComponent, lDepFilePath)
-                    for lExpr in lUnresolvedExpr
-                ]
-
-                # Convert them to commands
-                lEntries = self._expand(lParsedCmd, lFileLists, aPackage, aComponent)
+                lEntries, lUnresolvedExpr = self._resolvePaths(lParsedCmd, lDepFilePath, aPackage, aComponent)
                 lCurrentFile.entries += lEntries
                 if lParsedCmd.cmd == 'include':
                     for inc in lEntries:
                         lCurrentFile.children.append(inc.depfile)
+
+                # Log unresolved entries
+                lCurrentFile.unresolved += [
+                    (lExpr, lParsedCmd.cmd, lParsedPackage, lParsedComponent, aPackage, aComponent, lDepFilePath)
+                    for lExpr in lUnresolvedExpr
+                ]
 
                 if self._verbosity > 1:
                     print(self._state.tab, '  -- Entries of', aDepFileName, ':', lEntries)
@@ -513,7 +490,7 @@ class DepFileParser(object):
             self.commands[lCmd.cmd].append(lCmd)
             self.packages.setdefault(
                 lCmd.Package, []).append(lCmd.Component)
-            if lCmd.cmd == 'src' and lCmd.Lib is not None:
+            if isinstance(lCmd, SrcCommand) and lCmd.Lib is not None:
                 self.libs.add(lCmd.Lib)
 
         # Gather unresolved files and errors

@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 
 import argparse
-from ._cmdtypes import FileCommand, IncludeCommand, SrcCommand, SetupCommand, AddrtabCommand
+from ._cmdtypes import Command, IncludeCommand, SrcCommand, SetupCommand, AddrtabCommand
 
 # -----------------------------------------------------------------------------
 class ComponentAction(argparse.Action):

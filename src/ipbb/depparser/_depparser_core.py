@@ -330,7 +330,7 @@ class DepFileParser(object):
         lUnmatchedExprs = list()
         for lFileExpr in lFileExprList:
             # Expand file expression
-            op, lFileList = self._pathMaker.glob(
+            lPathExpr, lFileList = self._pathMaker.glob(
                 lPackage, lComponent, aParsedCmd.cmd, lFileExpr, cd=aParsedCmd.cd
             )
 
@@ -364,7 +364,7 @@ class DepFileParser(object):
                     cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
                     lEntries.append(cmd)
 
-        return lEntries, lUnmatchedExprs
+        return lEntries, (lUnmatchedExprs, lPackage, lComponent)
         # --------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -441,7 +441,7 @@ class DepFileParser(object):
                     print(self._state.tab, '- Parsed line', vars(lParsedCmd))
 
                 # --------------------------------------------------------------
-                lEntries, lUnresolvedExpr = self._resolvePaths(lParsedCmd, lDepFilePath, aPackage, aComponent)
+                lEntries, (lUnresolvedExpr, lParsedPackage, lParsedComponent) = self._resolvePaths(lParsedCmd, lDepFilePath, aPackage, aComponent)
                 lCurrentFile.entries += lEntries
                 if lParsedCmd.cmd == 'include':
                     for inc in lEntries:

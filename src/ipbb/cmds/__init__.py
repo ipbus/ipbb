@@ -134,7 +134,7 @@ class Environment(object):
 
     # ----------------------------------------------------------------------------
     def _autodetect(self):
-        from ..depparser.Pathmaker import Pathmaker
+        from ..depparser import Pathmaker
 
         self._clear()
 

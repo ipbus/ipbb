@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 ### Fixes
-- Fixed several `vivado` subcommands still using `top` as Vivado project name.
+- Several `vivado` subcommands still using `top` as Vivado project name.
+- Dep parsing errors not reported. Now exposed by `info` and `dep report` commands.
 
 ### Added
 - Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides ipbb with instructions on how to setup the package once checked out (e.g. setup git submodules).

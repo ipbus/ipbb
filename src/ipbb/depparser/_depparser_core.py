@@ -5,6 +5,8 @@ from future.utils import iterkeys, itervalues, iteritems
 import argparse
 import os
 import glob
+import copy
+
 from ._pathmaker import Pathmaker
 from .definitions import depfiletypes
 from ..tools.common import DictObj
@@ -16,6 +18,16 @@ from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import FileCommand, IncludeCommand
 
 
+# -----------------------------------------------------------------------------
+def _copyUpdateCommand(aCmd, aFilePath, aPkg, aCmp):
+    """
+    Utility function to update parsed commands
+    """
+    cmd = copy.deepcopy(aCmd)
+    cmd.FilePath = aFilePath
+    cmd.Package = aPkg
+    cmd.Component = aCmp
+    return cmd
 
 # -----------------------------------------------------------------------------
 # Experimental
@@ -287,13 +299,12 @@ class DepFileParser(object):
         return lLine
 
     # -------------------------------------------------------------------------
-    def _resolvePaths(self, aParsedLine, aDepFilePath, aPackage, aComponent):
+    def _resolvePaths(self, aParsedCmd, aDepFilePath, aPackage, aComponent):
 
         # --------------------------------------------------------------
         # Set package and module variables, whether specified or not
-        lPackage, lComponent = aParsedLine.component
+        lPackage, lComponent = aParsedCmd.Package, aParsedCmd.Component
 
-        # --------------------------------------------------------------
         # Set package and component to current ones if not defined
         if lPackage is None:
             lPackage = aPackage
@@ -305,12 +316,12 @@ class DepFileParser(object):
         # --------------------------------------------------------------
         # Set the target file expression, whether specified explicitly
         # or not
-        if (not aParsedLine.file):
+        if (not aParsedCmd.FilePath):
             lComponentName = lComponent.split('/')[-1]
             lFileExprList = [self._pathMaker.getDefName(
-                aParsedLine.cmd, lComponentName)]
+                aParsedCmd.cmd, lComponentName)]
         else:
-            lFileExprList = aParsedLine.file
+            lFileExprList = aParsedCmd.FilePath
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -320,7 +331,7 @@ class DepFileParser(object):
         for lFileExpr in lFileExprList:
             # Expand file expression
             lPathExpr, lFileList = self._pathMaker.glob(
-                lPackage, lComponent, aParsedLine.cmd, lFileExpr, cd=aParsedLine.cd
+                lPackage, lComponent, aParsedCmd.cmd, lFileExpr, cd=aParsedCmd.cd
             )
 
             # --------------------------------------------------------------
@@ -333,14 +344,14 @@ class DepFileParser(object):
         return lFileLists, lPackage, lComponent, lUnmatchedExprs
 
     # -------------------------------------------------------------------------
-    def _expand(self, aParsedLine, aFileLists, aPackage, aComponent):
+    def _expand(self, aParsedCmd, aFileLists, aPackage, aComponent):
         """Converts parsed command components into Command components"""
+
 
         # --------------------------------------------------------------
         # Set package and module variables, whether specified or not
-        lPackage, lComponent = aParsedLine.component
+        lPackage, lComponent = aParsedCmd.Package, aParsedCmd.Component
 
-        # --------------------------------------------------------------
         # Set package and component to current ones if not defined
         if lPackage is None:
             lPackage = aPackage
@@ -350,25 +361,18 @@ class DepFileParser(object):
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
+
         # If an include command, parse the specified dep files
         lEntries = list()
-        if aParsedLine.cmd == "include":
+        if aParsedCmd.cmd == "include":
 
             for lFileList in aFileLists:
                 for lFile, lFilePath in lFileList:
-                    lEntries.append(IncludeCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, self._parseFile(lPackage, lComponent, lFile)))
+                    cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
+                    cmd.depfile = self._parseFile(lPackage, lComponent, lFile)
+                    lEntries.append(cmd)
+
         else:
-            # --------------------------------------------------------------
-            lTopLevel = ('toplevel' in aParsedLine and aParsedLine.toplevel)
-            lFinalise = ('finalise' in aParsedLine and aParsedLine.finalise)
-
-            # --------------------------------------------------------------
-            # Set the target library, whether specified explicitly or not
-            lLib = aParsedLine.lib if ('lib' in aParsedLine) and (aParsedLine.lib) else None
-
-            # --------------------------------------------------------------
-            # Specifies the files should be read as VHDL 2008
-            lVhdl2008 = aParsedLine.vhdl2008 if aParsedLine.cmd == 'src' else False
 
             for lFileList in aFileLists:
                 for lFile, lFilePath in lFileList:
@@ -376,10 +380,10 @@ class DepFileParser(object):
                     # Debugging
                     if self._verbosity > 0:
                         print(self._state.tab, ' ',
-                              aParsedLine.cmd, lFile, lFilePath)
+                              aParsedCmd.cmd, lFile, lFilePath)
                     # --------------------------------------------------------------
-
-                    lEntries.append(FileCommand(aParsedLine.cmd, lFilePath, lPackage, lComponent, lLib, lTopLevel, lVhdl2008, lFinalise))
+                    cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
+                    lEntries.append(cmd)
 
         return lEntries
         # --------------------------------------------------------------
@@ -388,7 +392,13 @@ class DepFileParser(object):
     def _parseFile(self, aPackage, aComponent, aDepFileName):
         """
         Private method implementing depfile parsing
-        Used for recurslion
+        Used for recursion
+
+        Parsing includes
+        - Reading the dep file
+        - Pre-process input
+        - Parse commands
+        - Store commands in a depfile object
         """
         lDepFilePath = self._pathMaker.getPath(
             aPackage, aComponent, 'include', aDepFileName)
@@ -443,26 +453,26 @@ class DepFileParser(object):
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
                 try:
-                    lParsedLine = self.parseLine(lLine.split())
+                    lParsedCmd = self.parseLine(lLine.split())
                 except DepCmdParserError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
 
                 if self._verbosity > 1:
-                    print(self._state.tab, '- Parsed line', vars(lParsedLine))
+                    print(self._state.tab, '- Parsed line', vars(lParsedCmd))
 
                 # --------------------------------------------------------------
                 # Resolve files referenced by the command
-                lFileLists, lParsedPackage, lParsedComponent, lUnresolvedExpr = self._resolvePaths(lParsedLine, lDepFilePath, aPackage, aComponent)
+                lFileLists, lParsedPackage, lParsedComponent, lUnresolvedExpr = self._resolvePaths(lParsedCmd, lDepFilePath, aPackage, aComponent)
                 lCurrentFile.unresolved += [
-                    (lExpr, lParsedLine.cmd, lParsedPackage, lParsedComponent, aPackage, aComponent, lDepFilePath)
+                    (lExpr, lParsedCmd.cmd, lParsedPackage, lParsedComponent, aPackage, aComponent, lDepFilePath)
                     for lExpr in lUnresolvedExpr
                 ]
 
                 # Convert them to commands
-                lEntries = self._expand(lParsedLine, lFileLists, aPackage, aComponent)
+                lEntries = self._expand(lParsedCmd, lFileLists, aPackage, aComponent)
                 lCurrentFile.entries += lEntries
-                if lParsedLine.cmd == 'include':
+                if lParsedCmd.cmd == 'include':
                     for inc in lEntries:
                         lCurrentFile.children.append(inc.depfile)
 
@@ -503,7 +513,7 @@ class DepFileParser(object):
             self.commands[lCmd.cmd].append(lCmd)
             self.packages.setdefault(
                 lCmd.Package, []).append(lCmd.Component)
-            if lCmd.Lib is not None:
+            if lCmd.cmd == 'src' and lCmd.Lib is not None:
                 self.libs.add(lCmd.Lib)
 
         # Gather unresolved files and errors

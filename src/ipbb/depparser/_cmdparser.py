@@ -102,11 +102,11 @@ class DepCmdParser(argparse.ArgumentParser):
 
 
         self.callbacks = {
-            'include' : lambda a : IncludeCommand(a.cmd, a.file, None, None),
-            'src'     : lambda a : SrcCommand(a.cmd, a.file, None, None, a.vhdl2008),
-            'setup'   : lambda a : SetupCommand(a.cmd, a.file, None, None, a.finalise),
-            'addrtab'  : lambda a : AddrtabCommand(a.cmd, a.file, None, None, a.toplevel),
-            '*'       : lambda a : FileCommand(a.cmd, a.file, None, None),
+            'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
+            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008),
+            'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
+            'addrtab' : lambda a : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),
+            '*'       : lambda a : Command(a.cmd, a.file, a.component[0], a.component[1], a.cd),
         }
 
 
@@ -114,12 +114,11 @@ class DepCmdParser(argparse.ArgumentParser):
 
     def parseLine(self, *args, **kwargs):
 
-        return self.parse_args(*args, **kwargs)
-        # args = self.parse_args(*args, **kwargs)
+        args = self.parse_args(*args, **kwargs)
 
-        # cmd = args.cmd if args.cmd in self.callbacks else '*'
+        cmd = args.cmd if args.cmd in self.callbacks else '*'
 
-        # return self.callbacks[cmd](args)
+        return self.callbacks[cmd](args)
 
 # -----------------------------------------------------------------------------
 

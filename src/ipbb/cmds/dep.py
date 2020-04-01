@@ -118,15 +118,12 @@ def report(env, filters):
         lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
-            # print(lCmd)
-            # lCmdTable.add_row([str(lCmd)])
             lRow = [
                 relpath(lCmd.FilePath, env.srcdir),
                 ','.join(lCmd.flags()),
                 lCmd.Package,
                 lCmd.Component,
-                # lCmd.Map,
-                lCmd.Lib,
+                lCmd.Lib if lCmd.cmd == 'src' else '',
             ]
 
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):

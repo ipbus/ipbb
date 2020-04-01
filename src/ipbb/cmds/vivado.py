@@ -502,10 +502,6 @@ def status(env):
 
     lSessionId = 'status'
 
-    # if env.currentproj.name is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     ensureVivado(env)
 
     lOpenCmds = ['open_project %s' % env.vivadoProjFile]
@@ -524,8 +520,8 @@ def status(env):
     lRunRegex = re.compile(r'(synth|impl)_\d+')
 
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            echo('Opening project')
+        with VivadoOpen(lSessionId, echo=env.vivadoEcho, echobanner=False) as lConsole:
+            echo('Opening project ' + env.currentproj.name)
 
             with VivadoSnoozer(lConsole):
                 lConsole(lOpenCmds)
@@ -571,8 +567,6 @@ def reset(env):
         "\n{}: synth_1 and impl_1 successfully reset.\n".format(env.currentproj.name),
         fg='green',
     )
-
-
 # ------------------------------------------------------------------------------
 
 

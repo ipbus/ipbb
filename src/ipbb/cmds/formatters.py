@@ -30,9 +30,15 @@ class DepFormatter(object):
         return ' '.join(list(aPkgs))
 
     def drawPackages(self):
+        """
+        Draws the list of packages
+        """
         return self._drawPackages(self.parser.packages)
 
     def drawUnresolvedPackages(self):
+        """
+        Draws the list of unresolved packages
+        """
         return self._drawPackages(self.parser.unresolvedPackages)
 
     def _drawComponents(self, aPkgs):
@@ -50,12 +56,21 @@ class DepFormatter(object):
         return lString[:-1]
 
     def drawComponents(self):
+        """
+        Draws the component tree
+        """
         return self._drawComponents(self.parser.packages)
 
     def drawUnresolvedComponents(self):
+        """
+        Draws the unresolved component tree
+        """
         return self._drawComponents(self.parser.unresolvedComponents)
 
     def drawUnresolvedFiles(self):
+        """
+        Draws the table of unresolved files
+        """
         lFNF = self.parser.unresolvedFiles
         if not lFNF:
             return ""

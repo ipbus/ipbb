@@ -20,8 +20,8 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from .common import which, OutputFormatter
-from .termui import *
+from ..common import which, OutputFormatter
+from ..termui import *
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -64,25 +64,13 @@ class VivadoNotFoundError(Exception):
 
 
 # ------------------------------------------------
-def autodetect(executable='vivado'):
-    """
-Vivado v2017.4 (64-bit)
-SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
-Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-    """
+def _parseversion(verstr):
 
     lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
 
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
 
-    if not which(executable):
-        raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
-
-    lExe = sh.Command(executable)
-    lVerStr = lExe('-version')
-
-    m = lVerRe.search(str(lVerStr))
+    m = lVerRe.search(str(verstr))
 
     if m is None:
         raise VivadoNotFoundError("Failed to detect Vivado variant")
@@ -91,82 +79,31 @@ Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
 # ------------------------------------------------
 
 
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class VivadoBatch(object):
+# ------------------------------------------------
+def autodetect(executable='vivado'):
     """
-    Wrapper class to run Vivado jobs in batch mode
+
+Vivado:
+    Vivado v2017.4 (64-bit)
+    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
+    IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
+    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
+
+Vivado Lab:
+    Vivado Lab Edition v2017.4 (64-bit)
+    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
+    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
+
     """
-    _reInfo = re.compile(u'^INFO:')
-    _reWarn = re.compile(u'^WARNING:')
-    _reCritWarn = re.compile(u'^CRITICAL WARNING:')
-    _reError = re.compile(u'^ERROR:')
 
-    # --------------------------------------------
-    def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
-        super(VivadoBatch, self).__init__()
 
-        if scriptpath:
-            _, lExt = splitext(scriptpath)
-            if lExt not in ['.tcl', '.do']:
-                raise ValueError('Unsupported extension {}. Use \'.tcl\' or \'.do\''.format(lExt))
+    if not which(executable):
+        raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
 
-        self.scriptpath = scriptpath
-        self.log = log
-        self.terminal = sys.stdout if echo else None
-        self.cwd = cwd
-        self.dryrun = dryrun
-
-    # --------------------------------------------
-    def __enter__(self):
-        self.script = (
-            open(self.scriptpath, 'wt') if self.scriptpath
-            else tempfile.NamedTemporaryFile(mode='w+t', suffix='.do')
-        )
-        return self
-
-    # --------------------------------------------
-    def __exit__(self, type, value, traceback):
-        if not self.dryrun:
-            self._run()
-        self.script.close()
-
-    # --------------------------------------------
-    def __call__(self, *strings):
-        for f in [self.script, self.terminal]:
-            if not f:
-                continue
-            f.write(' '.join(strings) + '\n')
-            f.flush()
-
-    # --------------------------------------------
-    def _run(self):
-
-        # Define custom log file
-        lRoot, _ = splitext(basename(self.script.name))
-        lLog = 'vivado_{0}.log'.format(lRoot)
-        lJou = 'vivado_{0}.jou'.format(lRoot)
-
-        # Guard against missing vivado executable
-        if not which('vivado'):
-            raise VivadoNotFoundError(
-                '\'vivado\' not found in PATH. Have you sourced Vivado\'s setup script?'
-            )
-
-        sh.vivado('-mode', 'batch', '-source', self.script.name, '-log', lLog, '-journal', lJou, _out=sys.stdout, _err=sys.stderr)
-        self.errors = []
-        self.info = []
-        self.warnings = []
-
-        with open(lLog) as lLogFile:
-            for i, l in enumerate(lLogFile):
-                if self._reError.match(l):
-                    self.errors.append((i, l))
-                elif self._reWarn.match(l):
-                    self.warnings.append((i, l))
-                elif self._reInfo.match(l):
-                    self.info.append((i, l))
-    # --------------------------------------------
-# -------------------------------------------------------------------------
+    lExe = sh.Command(executable)
+    lVerStr = lExe('-version')
+    return _parseversion(lVerStr)
+# ------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -283,15 +220,15 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
+    def __init__(self, sessionid=None, echo=True, echobanner=False, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
         """
         Args:
             sessionid (str): Name of the Vivado session
-            echo (bool):
-            echoprefix (str):
-            executable (str):
+            echo (bool): Switch to enable echo messages
+            echoprefix (str): Prefix to echo message
+            executable (str): Executable name
             prompt (str):
-            stopOnCWarnings (str):
+            stopOnCWarnings (bool): Stop on Critical Warnings
         """
         super(VivadoConsole, self).__init__()
 
@@ -319,25 +256,43 @@ class VivadoConsole(object):
             quiet=(not echo)
         )
 
-        self._out.write('\n' + '-' * 40 + '\n')
-        self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        self._out.write('\n' + '- Starting Vivado -'+'-' * 40 + '\n')
+        self._out.quiet = (not echobanner)
+       
+        # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
             self._executable,
             self._executable + ('_' + sessionid) if sessionid else ''),
             echo=echo,
-            logfile=self._out
+            logfile=self._out,
+            # preexec_fn=on_parent_exit('SIGTERM')
         )
+
+
 
         self._process.delaybeforesend = 0.00  # 1
 
         # Wait for vivado to wake up
-        self.__expectPrompt()
+        startupstr = self.__expectPrompt()
+        self._variant, self._version = _parseversion(''.join(startupstr[0]))
+        self._out.quiet = (not echo)
         self._log.debug('Vivado up and running')
+        self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
 
         self._processinfo = psutil.Process(self._process.pid)
         # Method mapping
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
+
+    @property
+    def variant(self):
+        return self._variant
+    
+    @property
+    def version(self):
+        return self._version
+    
 
     # --------------------------------------------------------------
     def __del__(self):
@@ -440,7 +395,7 @@ class VivadoConsole(object):
             pass
 
         # Write one last newline
-        self._out.write('-' * 40 + '\n')
+        self._out.write('- Terminating Vivado (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
         # Just in case
         self._process.terminate(True)
 
@@ -493,67 +448,6 @@ class VivadoConsole(object):
         """
         lIds = aIds if isinstance(aIds, list) else [aIds]
         self.executeMany(['set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds])
-
-
-# -------------------------------------------------------------------------
-class VivadoHWServer(VivadoConsole):
-
-    """Vivado Harware server object
-
-    Exposes a standard interface for programming devices.
-    """
-    
-    # --------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        super(VivadoHWServer, self).__init__(*args, **kwargs)
-
-    # --------------------------------------------------------------
-    def openHw(self):
-        return self.execute('open_hw')
-
-    # --------------------------------------------------------------
-    def connect(self, uri=None):
-        lCmd = ['connect_hw_server']
-        if uri is not None:
-            lCmd += ['-url ' + uri]
-        return self.execute(' '.join(lCmd))
-
-    # --------------------------------------------------------------
-    def getHwTargets(self):
-        return self.execute('get_hw_targets')[0].split()
-
-    # --------------------------------------------------------------
-    def openHwTarget(self, target, is_xvc=False):
-        return self.execute('open_hw_target {1} {{{0}}}'.format(target, '-xvc_url' if is_xvc else ''))
-
-    # --------------------------------------------------------------
-    def closeHwTarget(self, target=None):
-        lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
-        return self.execute(lCmd)
-
-    # --------------------------------------------------------------
-    def getHwDevices(self):
-        return self.execute('get_hw_devices')[0].split()
-
-    # --------------------------------------------------------------
-    def programDevice(self, device, bitfile, probe=None):
-        from os.path import abspath, normpath
-
-        bitpath = abspath(normpath(bitfile))
-
-        self._log.debug('Programming %s with %s', device, bitfile)
-
-        self.execute('current_hw_device {0}'.format(device))
-        self.execute(
-            'refresh_hw_device -update_hw_probes {} [current_hw_device]'.format("True" if probe else 'False')
-        )
-        self.execute(
-            'set_property PROBES.FILE {{{0}}} [current_hw_device]'.format(probe if probe else '')
-        )
-        self.execute(
-            'set_property PROGRAM.FILE {{{0}}} [current_hw_device]'.format(bitpath)
-        )
-        self.execute('program_hw_devices [current_hw_device]')
 
 
 # -------------------------------------------------------------------------

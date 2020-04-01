@@ -66,7 +66,6 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     from ..cmds.vivado import makeproject
     makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout)
 
-
 # ------------------------------------------------------------------------------
 @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
 @click.pass_obj

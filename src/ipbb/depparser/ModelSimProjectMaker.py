@@ -40,6 +40,7 @@ class ModelSimProjectMaker(object):
 
         for lib in set(aLibs):
             write('vlib {0}'.format(lib))
+            write('vmap {0} {0}'.format(lib, lib))
 
         lSrcs = aCommandList['src']
 

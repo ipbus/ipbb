@@ -14,5 +14,5 @@ variables:
 include:
   - local: '/ci/github-notifications.yml'
   - local: '/ci/setup.yml'
-  - local: '/ci/deps.yml'
+  - local: '/ci/tests.yml'
 

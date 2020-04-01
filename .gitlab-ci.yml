@@ -3,7 +3,7 @@ stages:
   - initial_report
   - setup
   - midway_report
-  - deps
+  - tests
   - final_report
 
 variables:

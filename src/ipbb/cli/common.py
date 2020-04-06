@@ -54,18 +54,18 @@ def addrtab(env, aDest):
     from ..cmds.common import addrtab
     addrtab(env, aDest)
 
-# ------------------------------------------------------------------------------
-@click.command(
-    'gendecoders',
-    short_help='Generate or update the ipbus address decoders references by dep files.',
-)
-@click.option('-c', '--check-up-to-date', 'aCheckUpToDate', is_flag=True, help='Checks for out-of-date or missing decoders. Returns error if any of the two are found.')
-@click.pass_obj
-def gendecoders(env, aCheckUpToDate):
-    """Generates the ipbus address decoder modules
+# # ------------------------------------------------------------------------------
+# @click.command(
+#     'gendecoders',
+#     short_help='Generate or update the ipbus address decoders references by dep files.',
+# )
+# @click.option('-c', '--check-up-to-date', 'aCheckUpToDate', is_flag=True, help='Checks for out-of-date or missing decoders. Returns error if any of the two are found.')
+# @click.pass_obj
+# def gendecoders(env, aCheckUpToDate):
+#     """Generates the ipbus address decoder modules
     
-    Args:
-        env (`obj`): Click context
-    """
-    from ..cmds.common import gendecoders
-    gendecoders(env, aCheckUpToDate)
+#     Args:
+#         env (`obj`): Click context
+#     """
+#     from ..cmds.common import gendecoders
+#     gendecoders(env, aCheckUpToDate)

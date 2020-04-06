@@ -158,7 +158,6 @@ def _compose_cli():
 
     vivado.vivado.add_command(common.cleanup)
     vivado.vivado.add_command(common.addrtab)
-    vivado.vivado.add_command(common.gendecoders)
     vivado.vivado.add_command(common.user_config)
     climain.add_command(vivado.vivado)
 
@@ -166,9 +165,11 @@ def _compose_cli():
 
     sim.sim.add_command(common.cleanup)
     sim.sim.add_command(common.addrtab)
-    sim.sim.add_command(common.gendecoders)
     sim.sim.add_command(common.user_config)
     climain.add_command(sim.sim)
+
+    from ..cli import ipbus
+    climain.add_command(ipbus.ipbus)
 
     from ..cli import debug
 

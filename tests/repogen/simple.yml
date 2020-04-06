@@ -11,6 +11,7 @@ files:
       ? var_A == True ? src t2.vhd
       src t3.vhd
       src sim_only.vhd -u sim
+      src synth_only.vhd -u synth
     defs.dep: |
       @var_A=False
       src d1.vhd
@@ -22,3 +23,6 @@ files:
     t3.vhd: ""
     d1.vhd: ""
     d2.vhd: ""
+    sim_only.vhd: "# Only used in simulation"
+    synth_only.vhd: "# Only used in synhesis"
+

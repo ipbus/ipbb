@@ -50,7 +50,7 @@ class IPCoresSimMaker(object):
 
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
-            ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
+            ' '.join(map( lambda c: c.filepath, aCommandList['iprepo']))
         )
         )
 
@@ -73,12 +73,12 @@ set_property "target_language" "VHDL" [current_project]
         write()
         lXCIs = []
         for src in reversed(aCommandList['src']):
-            lPath, lBasename = split(src.FilePath)
+            lPath, lBasename = split(src.filepath)
             lName, lExt = splitext(lBasename)
 
             if lExt in ['.xci', '.edn']:
                 write(
-                    'import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
+                    'import_files -norecurse -fileset sources_1 {0}'.format(src.filepath))
                 if lExt == '.xci':
                     lXCIs.append( (lName, lBasename) )
 

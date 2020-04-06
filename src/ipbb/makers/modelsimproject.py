@@ -32,8 +32,8 @@ class ModelSimProjectMaker(object):
         write()
         write('onerror { quit -code 255 }')
 
-        for setup in (c for c in aCommandList['setup'] if not c.Finalise):
-            write('source {0}'.format(setup.FilePath))
+        for setup in (c for c in aCommandList['setup'] if not c.finalize):
+            write('source {0}'.format(setup.filepath))
 
         write('vlib work')
 
@@ -47,7 +47,7 @@ class ModelSimProjectMaker(object):
         # ----------------------------------------------------------
         for src in lSrcs:
 
-            lPath, lBasename = split(src.FilePath)
+            lPath, lBasename = split(src.filepath)
             lName, lExt = splitext(lBasename)
 
             # ----------------------------------------------------------
@@ -84,12 +84,12 @@ class ModelSimProjectMaker(object):
                 # Because it's already been compiled in the ipcores modelsim libraries by vivado.
                 continue
             else:
-                file = src.FilePath
+                file = src.filepath
             # ----------------------------------------------------------
 
             # ----------------------------------------------------------
             if splitext(file)[1] in ['.vhd', '.vhdl']:
-                if src.Vhdl2008:
+                if src.vhdl2008:
                     cmd = 'vcom -2008'
                 else:
                     cmd = 'vcom'
@@ -98,12 +98,12 @@ class ModelSimProjectMaker(object):
 
             else:
                 print('# IGNORING unknown source file type in Modelsim build: {0}'.format(
-                    src.FilePath))
+                    src.filepath))
                 continue
             # ----------------------------------------------------------
 
-            if src.Lib:
-                cmd = '{0} -work {1}'.format(cmd, src.Lib)
+            if src.lib:
+                cmd = '{0} -work {1}'.format(cmd, src.lib)
             # ----------------------------------------------------------
 
             if self.turbo:
@@ -123,8 +123,8 @@ class ModelSimProjectMaker(object):
             for item in lSrcCommandGroups:
                 write('{0} {1}'.format(item['cmd'], ' '.join(item['files'])))
 
-        for setup in (c for c in aCommandList['setup'] if c.Finalise):
-            write('source {0}'.format(setup.FilePath))
+        for setup in (c for c in aCommandList['setup'] if c.finalize):
+            write('source {0}'.format(setup.filepath))
 
 # --------------------------------------------------------------
 

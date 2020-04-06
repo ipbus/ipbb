@@ -48,7 +48,6 @@ def check_depfile(env, verbose, toolset, component, depfile):
     lCmdHeaders = [
         'path',
         'flags',
-        'map',
         'lib',
     ]  # ['path', 'flags', 'package', 'component', 'map', 'lib']
     lFilters = []
@@ -71,10 +70,9 @@ def check_depfile(env, verbose, toolset, component, depfile):
                 # print(lCmd)
                 # lCmdTable.add_row([str(lCmd)])
                 lRow = [
-                    relpath(lCmd.FilePath, env.srcdir),
+                    relpath(lCmd.filepath, env.srcdir),
                     ','.join(lCmd.flags()),
-                    lCmd.Map,
-                    lCmd.Lib,
+                    lCmd.lib,
                 ]
 
                 if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):

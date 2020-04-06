@@ -119,11 +119,11 @@ def report(env, filters):
         lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
             lRow = [
-                relpath(lCmd.FilePath, env.srcdir),
+                relpath(lCmd.filepath, env.srcdir),
                 ','.join(lCmd.flags()),
-                lCmd.Package,
-                lCmd.Component,
-                lCmd.Lib if lCmd.cmd == 'src' else '',
+                lCmd.package,
+                lCmd.component,
+                lCmd.lib if lCmd.cmd == 'src' else '',
             ]
 
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
@@ -188,7 +188,7 @@ def ls(env, group, output):
 
     with SmartOpen(output) as lWriter:
         for addrtab in env.depParser.commands[group]:
-            lWriter(addrtab.FilePath)
+            lWriter(addrtab.filepath)
 
 
 # ------------------------------------------------------------------------------
@@ -313,10 +313,10 @@ def hash(env, output, verbose):
                 lWriter("#" + "-" * 79)
             for lCmd in lCmds:
                 lCmdHash = hashAndUpdate(
-                    lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
+                    lCmd.filepath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
                 ).hexdigest()
                 if verbose:
-                    lWriter(lCmdHash, lCmd.FilePath)
+                    lWriter(lCmdHash, lCmd.filepath)
 
             lGrpHashes[lGrp] = lGrpHash
 

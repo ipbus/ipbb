@@ -6,18 +6,18 @@ class Command(object):
 
     Attributes:
         cmd       (str): command directive
-        FilePath  (str): absolute, normalised path to the command target.
-        Package   (str): package the target belongs to.
-        Component (str): component withon 'Package' the target belongs to
+        filepath  (str): absolute, normalised path to the command target.
+        package   (str): package the target belongs to.
+        component (str): component withon 'Package' the target belongs to
     """
 
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd):
         super(Command, self).__init__()
         self.cmd = aCmd
-        self.FilePath = aFilePath
-        self.Package = aPackage
-        self.Component = aComponent
+        self.filepath = aFilePath
+        self.package = aPackage
+        self.component = aComponent
         self.cd = aCd
 
     # --------------------------------------------------------------
@@ -25,12 +25,12 @@ class Command(object):
 
         lFlags = self.flags()
         return '{ \'%s\', flags: %s, component: \'%s:%s\' }' % (
-            self.FilePath, ''.join(lFlags) if lFlags else 'none', self.Package, self.Component
+            self.filepath, '['+','.join(lFlags)+']' if lFlags else 'none', self.package, self.component
         )
 
     # --------------------------------------------------------------
     def __eq__(self, other):
-        return (self.FilePath == other.FilePath)
+        return (self.filepath == other.filepath)
 
     # --------------------------------------------------------------
     def flags(self):
@@ -44,31 +44,39 @@ class SrcCommand(Command):
     """Container class for dep commands parsed form dep files
 
     Attributes:
-        cmd       (str):  command directive
-        FilePath  (str):  absolute, normalised path to the command target.
-        Package   (str):  package the target belongs to.
-        Component (str):  component withon 'Package' the target belongs to
-        Lib       (str):  library the file will be added to
-        TopLevel  (bool): addrtab-only flag, identifies address table as top-level
-        Vhdl2008  (bool): src-only flag, toggles the vhdl 2008 syntax for .vhd files
+        cmd        (str):  command directive
+        filepath   (str):  absolute, normalised path to the command target.
+        package    (str):  package the target belongs to.
+        component  (str):  component withon 'Package' the target belongs to
+        lib        (str):  library the file will be added to
+        vhdl2008   (bool): toggles the vhdl 2008 syntax for .vhd files
+        useinsynth (bool): use this files in synth
+        useinsim   (bool): use this files in sim
     """
     # --------------------------------------------------------------
-    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008):
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aUseInSynth, aUseInSim):
         super(SrcCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
-        self.Lib = aLib
-        self.Vhdl2008 = aVhdl2008
+        self.lib = aLib
+        self.vhdl2008 = aVhdl2008
+        self.useInSynth = aUseInSynth
+        self.useInSim = aUseInSim
 
     # --------------------------------------------------------------
     def flags(self):
         lFlags = []
-        if self.Vhdl2008:
+        if self.vhdl2008:
             lFlags.append('vhdl2008')
+        if self.useInSynth:
+            lFlags.append('synth')
+        if self.useInSim:
+            lFlags.append('sim')
+
         return lFlags
 
     # --------------------------------------------------------------
     def __eq__(self, other):
-        return (self.FilePath == other.FilePath) and (self.Lib == other.Lib)
+        return (self.filepath == other.filepath) and (self.lib == other.lib)
 
 
 # -----------------------------------------------------------------------------
@@ -77,20 +85,20 @@ class SetupCommand(Command):
 
     Attributes:
         cmd       (str):  command directive
-        FilePath  (str):  absolute, normalised path to the command target.
-        Package   (str):  package the target belongs to.
-        Component (str):  component withon 'Package' the target belongs to
-        Finalise  (bool): setup-only flag, identifies setup scripts to be executed at the end
+        filepath  (str):  absolute, normalised path to the command target.
+        package   (str):  package the target belongs to.
+        component (str):  component withon 'Package' the target belongs to
+        finalise  (bool): setup-only flag, identifies setup scripts to be executed at the end
     """
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aFinalise):
         super(SetupCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
-        self.Finalise = aFinalise
+        self.finalize = aFinalise
 
     # --------------------------------------------------------------
     def flags(self):
-        return ['finalise'] if self.Finalise else []
+        return ['finalise'] if self.finalize else []
 
 
 # -----------------------------------------------------------------------------
@@ -99,24 +107,29 @@ class AddrtabCommand(Command):
 
     Attributes:
         cmd       (str):  command directive
-        FilePath  (str):  absolute, normalised path to the command target.
-        Package   (str):  package the target belongs to.
-        Component (str):  component withon 'Package' the target belongs to
-        TopLevel  (bool): addrtab-only flag, identifies address table as top-level
+        filepath  (str):  absolute, normalised path to the command target.
+        package   (str):  package the target belongs to.
+        component (str):  component withon 'Package' the target belongs to
+        toplevel  (bool): addrtab-only flag, identifies address table as top-level
     """
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aTopLevel):
         super(AddrtabCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
-        self.TopLevel = aTopLevel
+        self.toplevel = aTopLevel
 
     # --------------------------------------------------------------
     def flags(self):
-        return ['toplevel'] if self.TopLevel else []
+        return ['toplevel'] if self.toplevel else []
 
 
 # -----------------------------------------------------------------------------
 class IncludeCommand(Command):
-    """docstring for IncludeCommand"""
+    """    Attributes:
+        cmd       (str):  command directive
+        filepath  (str):  absolute, normalised path to the command target.
+        package   (str):  package the target belongs to.
+        component (str):  component withon 'Package' the target belongs to
+    """
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aDepFileObj=None):
         super(IncludeCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
         self.depfile = aDepFileObj

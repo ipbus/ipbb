@@ -19,22 +19,46 @@ class VivadoProjectMaker(object):
         filesets (obj:`dict`): extension-to-fileset association
     """
 
-    filesets = {
-        '.xdc': 'constrs_1',
-        '.tcl': 'constrs_1',
-        '.mif': 'sources_1',
-        '.vhd': 'sources_1',
-        '.vhdl': 'sources_1',
-        '.v': 'sources_1',
-        '.sv': 'sources_1',
-        '.xci': 'sources_1',
-        '.ngc': 'sources_1',
-        '.edn': 'sources_1',
-        '.edf': 'sources_1'
-        # Legacy ISE files
-        # '.ucf': 'ise_1',
-        # '.xco': 'ise_1',
+    # filesets = {
+    #     '.xdc': 'constrs_1',
+    #     '.tcl': 'constrs_1',
+    #     '.mif': 'sources_1',
+    #     '.vhd': 'sources_1',
+    #     '.vhdl': 'sources_1',
+    #     '.v': 'sources_1',
+    #     '.sv': 'sources_1',
+    #     '.xci': 'sources_1',
+    #     '.ngc': 'sources_1',
+    #     '.edn': 'sources_1',
+    #     '.edf': 'sources_1'
+    #     # Legacy ISE files
+    #     # '.ucf': 'ise_1',
+    #     # '.xco': 'ise_1',
+    # }
+    filetypes = {
+        'ip' : ('.xci',),
+        'constr' : ('.xdc', '.tcl'),
+        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.ngc', '.edn', '.edf'),
     }
+
+    @staticmethod
+    def fileset(aSrcCmd):
+        lName, lExt = splitext(aSrcCmd.filepath)
+
+        lFileSet = None
+        if lExt in  ('.xci'):
+            lFileSet = 'sources_1'
+
+        elif lExt in ('.xdc', '.tcl'):
+            lFileSet = 'constrs_1'
+
+        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.ngc', '.edn', '.edf'):
+            if aSrcCmd.useInSynth:
+                lFileSet = 'sources_1'
+            elif aSrcCmd.useInSim:
+                lFileSet = 'sim_1'
+
+        return lFileSet
 
     # --------------------------------------------------------------
     def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True):
@@ -68,20 +92,19 @@ class VivadoProjectMaker(object):
 
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
-            ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
+            ' '.join(map( lambda c: c.filepath, aCommandList['iprepo']))
         ))
 
         for util in (c for c in aCommandList['util']):
-            write('add_files -norecurse -fileset utils_1 {0}'.format(util.FilePath))
+            write('add_files -norecurse -fileset utils_1 {0}'.format(util.filepath))
 
         write('if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
         write('if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
 
-        for setup in (c for c in aCommandList['setup'] if not c.Finalise):
-            write('source {0}'.format(setup.FilePath))
+        for setup in (c for c in aCommandList['setup'] if not c.finalize):
+            write('source {0}'.format(setup.filepath))
 
         lXciBasenames = []
-        # lXciTargetFiles = []
 
         lSrcs = aCommandList['src']
 
@@ -89,10 +112,15 @@ class VivadoProjectMaker(object):
         lSrcCommandGroups = collections.OrderedDict()
 
         for src in lSrcs:
+            #
+            # TODO: rationalise the file-type base file handling
+            #     Now it's split betweem the following is statement and
+            #     the fileset method
+            #
+
             # Extract path tokens
-            lPath, lBasename = split(src.FilePath)
+            _, lBasename = split(src.filepath)
             lName, lExt = splitext(lBasename)
-            # lTargetFile = join(lWorkingDir, aProjInfo.name + '.srcs', 'sources_1', 'ip', lName, lBasename)
 
             # local list of commands
             lCommands = []
@@ -100,7 +128,7 @@ class VivadoProjectMaker(object):
             if lExt == '.xci':
 
                 c = 'import_files -norecurse -fileset sources_1 $files'
-                f = src.FilePath
+                f = src.filepath
 
                 lCommands += [(c, f)]
 
@@ -108,22 +136,23 @@ class VivadoProjectMaker(object):
                 # lXciTargetFiles.append(lTargetFile)
             else:
 
-                c = 'add_files -norecurse -fileset {0} $files'.format(self.filesets[lExt])
-                f = src.FilePath
+                c = 'add_files -norecurse -fileset {0} $files'.format(self.fileset(src))
+                f = src.filepath
                 lCommands += [(c, f)]
 
-                if src.Vhdl2008:
+                if src.vhdl2008:
                     c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
-                    f = src.FilePath
+                    f = src.filepath
                     lCommands += [(c, f)]
+
                 if lExt == '.tcl':
                     c = 'set_property USED_IN implementation [get_files {$files}]'
-                    f = src.FilePath
+                    f = src.filepath
                     lCommands += [(c, f)]
                     
-                if src.Lib:
-                    c = 'set_property library {0} [ get_files {{$files}} ]'.format(src.Lib)
-                    f = src.FilePath
+                if src.lib:
+                    c = 'set_property library {0} [ get_files {{$files}} ]'.format(src.lib)
+                    f = src.filepath
                     lCommands += [(c, f)]
 
             for c, f in lCommands:
@@ -150,8 +179,8 @@ class VivadoProjectMaker(object):
         for i in lXciBasenames:
             write('create_ip_run [get_ips {0}]'.format(i))
 
-        for setup in (c for c in aCommandList['setup'] if c.Finalise):
-            write('source {0}'.format(setup.FilePath))
+        for setup in (c for c in aCommandList['setup'] if c.finalize):
+            write('source {0}'.format(setup.filepath))
 
         write('close_project')
     # --------------------------------------------------------------

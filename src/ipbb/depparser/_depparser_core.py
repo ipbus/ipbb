@@ -24,9 +24,9 @@ def _copyUpdateCommand(aCmd, aFilePath, aPkg, aCmp):
     Utility function to update parsed commands
     """
     cmd = copy.deepcopy(aCmd)
-    cmd.FilePath = aFilePath
-    cmd.Package = aPkg
-    cmd.Component = aCmp
+    cmd.filepath = aFilePath
+    cmd.package = aPkg
+    cmd.component = aCmp
     return cmd
 
 # -----------------------------------------------------------------------------
@@ -303,7 +303,7 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set package and module variables, whether specified or not
-        lPackage, lComponent = aParsedCmd.Package, aParsedCmd.Component
+        lPackage, lComponent = aParsedCmd.package, aParsedCmd.component
 
         # Set package and component to current ones if not defined
         if lPackage is None:
@@ -316,12 +316,12 @@ class DepFileParser(object):
         # --------------------------------------------------------------
         # Set the target file expression, whether specified explicitly
         # or not
-        if (not aParsedCmd.FilePath):
+        if (not aParsedCmd.filepath):
             lComponentName = lComponent.split('/')[-1]
             lFileExprList = [self._pathMaker.getDefName(
                 aParsedCmd.cmd, lComponentName)]
         else:
-            lFileExprList = aParsedCmd.FilePath
+            lFileExprList = aParsedCmd.filepath
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -489,9 +489,9 @@ class DepFileParser(object):
                 print (lCmd)
             self.commands[lCmd.cmd].append(lCmd)
             self.packages.setdefault(
-                lCmd.Package, []).append(lCmd.Component)
-            if isinstance(lCmd, SrcCommand) and lCmd.Lib is not None:
-                self.libs.add(lCmd.Lib)
+                lCmd.package, []).append(lCmd.component)
+            if isinstance(lCmd, SrcCommand) and lCmd.lib is not None:
+                self.libs.add(lCmd.lib)
 
         # Gather unresolved files and errors
         for dp, f in iteritems(self._depregistry):

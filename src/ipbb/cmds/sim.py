@@ -91,7 +91,7 @@ def findIPSrcs( srcs ):
     return [
         split(name)[1]
         for name, ext in (
-            splitext(src.FilePath) for src in srcs
+            splitext(src.filepath) for src in srcs
         )
         if ext in [".xci"]
     ]
@@ -192,6 +192,12 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
                 fg='red',
             )
             raise click.Abort()
+
+    lModelsimIniPath = join(lSimlibPath, 'modelsim.ini')
+    if not exists(lModelsimIniPath):
+        raise click.ClickException(
+            'Failed to locate modelsim.ini in the simlin target folder. This usually means that Vivado failed to compile the simulation libraries. Please check the logs.'
+        )
 
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), '.')
     echo("\nmodelsim.ini imported from {}".format(lSimlibPath))
@@ -629,9 +635,9 @@ def mifs(env):
     # Seek mif files in sources
     lPaths = []
     for c in srcs:
-        if splitext(c.FilePath)[1] != '.mif':
+        if splitext(c.filepath)[1] != '.mif':
             continue
-        lPaths.append(c.FilePath)
+        lPaths.append(c.filepath)
 
     if lPaths:
         sh.mkdir('-p', 'mif')

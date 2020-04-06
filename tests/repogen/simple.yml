@@ -10,6 +10,7 @@ files:
       include defs.dep
       ? var_A == True ? src t2.vhd
       src t3.vhd
+      src sim_only.vhd -u sim
     defs.dep: |
       @var_A=False
       src d1.vhd

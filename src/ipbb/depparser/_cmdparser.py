@@ -28,9 +28,9 @@ class DepCmdParserError(Exception):
     pass
 
 # -----------------------------------------------------------------------------
-class SrcTypeAction(argparse.Action):
+class UseInAction(argparse.Action):
     def __init__(self, *args, **kwargs):
-        super(SrcTypeAction, self).__init__(*args, **kwargs)
+        super(UseInAction, self).__init__(*args, **kwargs)
         self._choices = ['synth', 'sim']
         self.default = self._choices
 
@@ -85,7 +85,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('--cd')
         subp.add_argument('file', nargs='+')
         subp.add_argument('--vhdl2008', action='store_true')
-        subp.add_argument('-t', '--tyoe', action=SrcTypeAction)
+        subp.add_argument('-u', '--usein', action=UseInAction)
 
         # Address table sub-parser
         subp = parser_add.add_parser('addrtab')
@@ -103,7 +103,7 @@ class DepCmdParser(argparse.ArgumentParser):
 
         self.callbacks = {
             'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
-            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008),
+            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, 'synth' in a.usein, 'sim' in a.usein),
             'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
             'addrtab' : lambda a : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),
             '*'       : lambda a : Command(a.cmd, a.file, a.component[0], a.component[1], a.cd),

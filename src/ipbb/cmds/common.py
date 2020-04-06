@@ -78,7 +78,7 @@ def addrtab(env, aDest):
         return
 
     for addrtab in env.depParser.commands["addrtab"]:
-        print(sh.cp('-av', addrtab.FilePath, join(aDest, basename(addrtab.FilePath))))
+        print(sh.cp('-av', addrtab.filepath, join(aDest, basename(addrtab.filepath))))
     secho(
         "\n{}: Address table files collected in '{}'.\n".format(
             env.currentproj.name, aDest
@@ -126,24 +126,24 @@ def gendecoders(env, aCheckUpToDate):
     lGen = sh.Command(lGenScript)
     with DirSentry(join(env.currentproj.path, lDecodersDir)):
         for lAddr in env.depParser.commands['addrtab']:
-            echo("Processing " + style(basename(lAddr.FilePath), fg='blue'))
+            echo("Processing " + style(basename(lAddr.filepath), fg='blue'))
             # Interested in top-level address tables only
-            if not lAddr.TopLevel:
+            if not lAddr.toplevel:
                 secho(
                     "{} is not a top-level address table. Decoder will not be generated.".format(
-                        lAddr.FilePath
+                        lAddr.filepath
                     ),
                     fg='cyan',
                 )
                 continue
 
             # Generate a new decoder file
-            lGen(basename(lAddr.FilePath), _out=sys.stdout, _err_to_out=True)
+            lGen(basename(lAddr.filepath), _out=sys.stdout, _err_to_out=True)
             lDecoder = 'ipbus_decode_{0}.vhd'.format(
-                splitext(basename(lAddr.FilePath))[0]
+                splitext(basename(lAddr.filepath))[0]
             )
             lTarget = env.pathMaker.getPath(
-                lAddr.Package, lAddr.Component, 'src', lDecoder
+                lAddr.package, lAddr.component, 'src', lDecoder
             )
 
             diff = sh.colordiff if which('colordiff') else sh.diff

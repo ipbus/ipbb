@@ -239,10 +239,15 @@ class DepFileParser(object):
         if aLine[0] != "@":
             return aLine
 
+        if aLine.count(';'):
+            raise DepLineError("Semicolons (;) are not allowed")
+
         # Process the assignment directive
         lTokenized = aLine[1:].split("=")
         if len(lTokenized) != 2:
             raise DepLineError("@ directives must be key=value pairs")
+
+
         if lTokenized[0].strip() in self.vars:
             print("Warning!", lTokenized[0].strip(
             ), "already defined. Not redefining.")

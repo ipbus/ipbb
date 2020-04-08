@@ -9,7 +9,6 @@ import copy
 
 from ._pathmaker import Pathmaker
 from .definitions import depfiletypes
-from ..tools.common import DictObj
 from collections import OrderedDict
 from os.path import exists, splitext
 from string import Template
@@ -45,8 +44,6 @@ class DepFile(object):
         self.unresolved = list()
         self.children = list()
         self.parents = list()
-
-        self.locals = DictObj()
 
     # -----------------------------------------------------------------------------
     def __str__(self):

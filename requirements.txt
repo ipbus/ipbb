@@ -2,7 +2,7 @@ click==7.1.1
 click-didyoumean==0.0.3
 configparser==4.0.2
 future==0.18.2
-ipaddress==1.0.23
+ipaddress
 ipdb==0.13.2
 ipython==5.9.0
 pexpect==4.8.0

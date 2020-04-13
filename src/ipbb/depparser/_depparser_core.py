@@ -7,14 +7,17 @@ import os
 import glob
 import copy
 
-from ._pathmaker import Pathmaker
 from .definitions import depfiletypes
+from ._pathmaker import Pathmaker
+from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
+from ._cmdtypes import SrcCommand, IncludeCommand
+from ..tools.alien import AlienBranch
+
 from collections import OrderedDict
 from os.path import exists, splitext
 from string import Template
 
-from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
-from ._cmdtypes import SrcCommand, IncludeCommand
+
 
 
 # -----------------------------------------------------------------------------
@@ -124,7 +127,7 @@ class DepFileParser(object):
         self._depregistry = OrderedDict()
 
         # Results
-        self.vars = dict()
+        self.vars = AlienBranch()
         self.libs = set()
         self.packages = OrderedDict()
 

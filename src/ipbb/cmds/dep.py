@@ -26,7 +26,7 @@ from os.path import (
 )
 from ..tools.common import which, SmartOpen
 from .formatters import DepFormatter
-from ._utils import DirSentry, printDictTable
+from ._utils import DirSentry, printDictTable, printAlienTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
 
@@ -101,7 +101,8 @@ def report(env, filters):
     lDepFmt = DepFormatter(lParser)
 
     secho('* Variables', fg='blue')
-    printDictTable(lParser.vars, aHeader=False)
+    # printDictTable(lParser.vars, aHeader=False)
+    printAlienTable(lParser.vars, aHeader=False)
 
     echo()
     secho('* Parsed commands', fg='blue')

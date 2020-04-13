@@ -35,6 +35,7 @@ class DictObj(object):
 # ------------------------------------------------------------------------------
 
 
+# ------------------------------------------------------------------------------
 class AlienDict(dict):
     """
     Implementation of perl's autovivification feature.
@@ -56,24 +57,6 @@ class AlienDict(dict):
         for c in itervalues(self._children):
             c.lock = value
 
-    # @property
-    # def locked(self):
-    #     return self._locked
-
-    # def lock(self):
-    #     """Lock the dictionary and its children"""
-    #     self._locked = True
-    #     for o in self.itervalues():
-    #         if type(o) == type(self):
-    #             o.lock()
-
-    # def unlock(self):
-    #     """Unlock the dictionary and its children"""
-    #     self._locked = False
-    #     for o in self.itervalues():
-    #         if type(o) == type(self):
-    #             o.unlock()
-
     def __getitem__(self, name):
         try:
             return dict.__getitem__(self, name)
@@ -85,6 +68,7 @@ class AlienDict(dict):
                 return value
 
 
+# ------------------------------------------------------------------------------
 class AlienNode(object):
     """
     Utility class to build auto-expanding tress of opbjects
@@ -104,19 +88,6 @@ class AlienNode(object):
         self._locked = value
         for c in itervalues(self._children):
             c.lock = value
-
-    # def lock(self):
-    #     self._locked = True
-    #     for c in itervalues(self._children):
-    #         if type(c) == type(self):
-    #             c.lock()
-
-    # def unlock(self):
-    #     self._locked = False
-    #     for c in itervalues(self._children):
-    #         if type(c) == type(self):
-    #             c.unlock()
-    
 
     def __getitem__(self, name):
         # print('get',name)
@@ -164,6 +135,103 @@ class AlienNode(object):
             if value in self.__dict__:
                 del self.__dict__[name]
 
+
+# ------------------------------------------------------------------------------
+class AlienBranch(object):
+    """
+    Utility class to easily build trees of key-values, useful for configuration
+    tress
+    """
+    def __init__(self):
+        super(AlienBranch, self).__init__()
+        self.__dict__['_locked'] = False
+
+    def __repr__(self):
+        return str({ k:v for k, v in self.__dict__.iteritems() if not k.startswith('_')})
+        
+    def __getattr__(self, name):
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            if self._locked or name.startswith('__'):
+                raise
+            else:
+                value = self.__dict__[name] = type(self)()
+                return value
+
+    def __setattr__(self, name, value):
+        if name not in self.__dict__ and name.startswith('_'):
+            raise AttributeError("Attributes starting with '_' are reserved ")
+        super(AlienBranch, self).__setattr__(name, value)
+
+    def __getitem__(self, name):
+        # print('get',name)
+        tokens = name.split('.',1)
+        item = getattr(self,tokens[0])
+        if len(tokens) == 1:
+            return item
+        else:
+            return item[tokens[1]]
+
+    def __setitem__(self, name, value):
+
+        tokens = name.rsplit('.',1)
+        if len(tokens) == 1:
+            setattr(self, name, value)
+        else:
+            setattr(self[tokens[0]],tokens[1], value)
+
+    def __iter__(self):
+        for n,o in self.__dict__.iteritems():
+            if n.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                for cn in o:
+                    yield n+'.'+cn
+                yield n
+            else:
+                yield n
+
+    def _iterleaves(self):
+        for b, o in self.__dict__.iteritems():
+            if n.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                for cb, co in o._iterleaves():
+                    yield n+'.'+cb, co
+            else:
+                yield b, o
+
+    def _iterbranches(self):
+        for b, o in self.__dict__.iteritems():
+            if n.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                for cb, co in o._iterbranches():
+                    yield n+'.'+cb, co
+                yield b, o
+
+    # @lock.setter
+    def _lock(self, value):
+        self._locked = value
+        for b, o in self._iterbranches():
+            if isinstance(o, type(self)):
+                o._lock(value)
+
+# ------------------------------------------------------------------------------
+def iterleaves2g(branch):
+    """
+    Helper function to iterate over a branch tree
+    
+    :param      branch:  A branch tree
+    :type       branch:  AlienBranch
+    
+    :returns:   A branch leaf
+    :rtype:     anything
+    """
+    return branch._iterleaves()
+
+# ------------------------------------------------------------------------------
 class AlienTemplate(Template):
     """
     This class describes an alien template.

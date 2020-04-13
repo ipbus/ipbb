@@ -2,63 +2,33 @@
 from __future__ import print_function, absolute_import
 from future.utils import iterkeys, itervalues, iteritems
 
-from string import Template
 
+class AlienNode2g(object):
+    """
+    Utility class to easily build trees of key-values, useful for configuration
+    tress
+    """
+    def __init__(self):
+        super(AlienNode2g, self).__init__()
+        self.__dict__['_locked'] = False
 
-class AlienDict(dict):
-    """Implementation of perl's autovivification feature."""
-    def __init__(self,*args, **kwargs):
-        # init the dict
-        super(self.__class__,self).__init__(self, *args, **kwargs)
-        self._locked = False
-
-    def lock(self):
-        self._locked = True
-        for o in self.itervalues():
-            if type(o) == type(self):
-                o.lock()
-
-    def unlock(self):
-        self._locked = False
-        for o in self.itervalues():
-            if type(o) == type(self):
-                o.unlock()
-
-    def __getitem__(self, name):
+    def __repr__(self):
+        return str({ k:v for k, v in self.__dict__.iteritems() if not k.startswith('_')})
+        
+    def __getattr__(self, name):
         try:
-            return dict.__getitem__(self, name)
+            return self.__dict__[name]
         except KeyError:
-            if self._locked:
+            if self._locked or name.startswith('__'):
                 raise
             else:
-                value = self[name] = type(self)()
+                value = self.__dict__[name] = type(self)()
                 return value
 
-
-class AlienObj(object):
-    """docstring for AlienObj"""
-    def __init__(self):
-        super(AlienObj, self).__init__()
-        # Create _children first
-        self._children = {}
-        self._locked = False
-        
-    def lock(self):
-        self._locked = True
-        for c in itervalues(self._children):
-            if type(c) == type(self):
-                c.lock()
-
-    def unlock(self):
-        self._locked = False
-        for c in itervalues(self._children):
-            if type(c) == type(self):
-                c.unlock()
-
-    @property
-    def locked(self):
-        return self._locked
-    
+    def __setattr__(self, name, value):
+        if name not in self.__dict__ and name.startswith('_'):
+            raise AttributeError("Attributes starting with '_' are reserved ")
+        super(AlienNode2g, self).__setattr__(name, value)
 
     def __getitem__(self, name):
         # print('get',name)
@@ -70,77 +40,82 @@ class AlienObj(object):
             return child[tokens[1]]
 
     def __setitem__(self, name, value):
-        # print('set', name, value)
+
         tokens = name.rsplit('.',1)
-        child = getattr(self,tokens[0])
         if len(tokens) == 1:
             setattr(self, name, value)
         else:
             setattr(self[tokens[0]],tokens[1], value)
 
-    def __getattr__(self, name):
-        try:
-            return self.__dict__[name]
-        except KeyError:
-            try:
-                return self._children[name]
-            except KeyError:
-                if self._locked:
-                    raise
-                else:
-                    value = self._children[name] = type(self)()
-                    # setattr(self, name, value)
-                    # value = self.name = type(self)()
-                    return value
+    def __iter__(self):
+        for n,o in self.__dict__.iteritems():
+            if n.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                for cn in o:
+                    yield n+'.'+cn
+                yield n
+            else:
+                yield n
 
-    def __setattr__(self, name, value):
-
-        # Add a standard attribute, if it's not another me
-        # Note, the order is important to allow the creation of _children
-        if type(value) != type(self):
-            super(AlienObj, self).__setattr__(name, value)
-            if name in self._children:
-                del self._children[name]
-        else:
-            self._children[name] = value
-            if value in self.__dict__:
-                del self.__dict__[name]
-
-class AlienTemplate(Template):
-    idpattern =  r'[_a-z][\._a-z0-9]*'
- 
+    def _iternodes(self):
+        for n,o in self.__dict__.iteritems():
+            if n.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                for cn, co in o._iternodes():
+                    yield n+'.'+cn, co
+            else:
+                yield n,o
 #-----------------------------------------------------------------------
 
-a = AlienDict()
+def iternodes(node):
+    """
+    Helper function to iterate over a node tree
+    
+    :param      node:  The node
+    :type       node:  { type_description }
+    
+    :returns:   { description_of_the_return_value }
+    :rtype:     { return_type_description }
+    """
+    return node._iternodes()
 
-print(a)
+node = AlienNode2g()
+print(node)
+print(vars(node))
+print(dir(node))
+print(vars(node))
+print(node.a)
+print(node)
 
-a['x'] = 3
-a['y']['z'] = 4
+node.b.c = 5
+print(node)
+print(node['b.c'])
+print(node['b.d'])
+print(node['b']['c'])
+print(node)
+node['l1.l2.l3.l4'] =7
+node.l1.l2.l3.l4=8
+print (node)
+for k in node:
+    print ('-', k)
 
-print (a)
 
-cfg = AlienObj()
-cfg.vivado.synth.jobs = 3
-print(cfg.vivado.synth.jobs)
-cfg.lock()
-cfg.vivado.synth.ciccio = 5
-print(cfg.vivado.synth.ciccio)
+print('locked:', node._locked)
+node._locked = True
 try:
-    print(cfg.minnie)
-except KeyError as exc:
-    print(repr(exc))
+    node.noway.val = 7
+except Exception as e:
+    print (type(e), e)
 
-# Testing templates
-print(AlienTemplate("a = ${vivado.synth.jobs}").substitute(cfg))
+for n in node:
+    print (n)
 
-cfg.unlock()
+print('b' in node)
 
-cfg['d.e'] = 'stoca'
-print(cfg.d.e)
-exec('x=5', None, cfg)
-exec('b.c=10', None, cfg)
+for n in node._iternodes():
+    print (n)
 
-
-
-
+for n in iternodes(node):
+    print (n)

@@ -10,15 +10,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Dep parsing errors not reported. Now exposed by `info` and `dep report` commands.
 - New `ipbus` command group, for ipbus specific commands (i.e. `gendecoders`).
 
-### Added
-- Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides ipbb with instructions on how to setup the package once checked out (e.g. setup git submodules).
-- Parameter substitution added in dep files commands
-- Added `srcs reset` command that applies custom packate reset procedures as specified in `.ipbb.setup`.
-- Python dependencies versions specified in `requirements.txt`.
-
 ### Changed
 - Factorized `tools.xilinx` module and consolidated console class.
 - Factorized `depparser` module.
+
+### Added
+- Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides ipbb with instructions on how to setup the package once checked out (e.g. setup git submodules).
+- Parameter substitution added in dep files commands
+- Added tab-completion for dep files in ipbb commands (e.g. `repo create`)
+- Added `srcs reset` command that applies custom packate reset procedures as specified in `.ipbb.setup`.
+- Python dependencies versions specified in `requirements.txt`.
 
 ## [0.5.2] - 2019-09-13
 ### Fixes
@@ -32,8 +33,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Top-level entity in Vivado project can be now specified via the dep-file variable `top_entity`. 
-
-### Changed
 
 ## [0.5.0] - 2019-04-30
 ### Changed

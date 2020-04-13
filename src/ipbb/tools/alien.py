@@ -182,33 +182,33 @@ class AlienBranch(object):
             setattr(self[tokens[0]],tokens[1], value)
 
     def __iter__(self):
-        for n,o in self.__dict__.iteritems():
-            if n.startswith('_'):
+        for b,o in self.__dict__.iteritems():
+            if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
                 for cn in o:
-                    yield n+'.'+cn
-                yield n
+                    yield b+'.'+cn
+                yield b
             else:
-                yield n
+                yield b
 
     def _iterleaves(self):
         for b, o in self.__dict__.iteritems():
-            if n.startswith('_'):
+            if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
                 for cb, co in o._iterleaves():
-                    yield n+'.'+cb, co
+                    yield b+'.'+cb, co
             else:
                 yield b, o
 
     def _iterbranches(self):
         for b, o in self.__dict__.iteritems():
-            if n.startswith('_'):
+            if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
                 for cb, co in o._iterbranches():
-                    yield n+'.'+cb, co
+                    yield b+'.'+cb, co
                 yield b, o
 
     # @lock.setter

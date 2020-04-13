@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed several `vivado` subcommands still using `top` as Vivado project name.
 
 ### Added
-- Introducing custom repository setup files `.ipbb.setup`. When included in a package repository, they provide instructions on how to correctly setup the package once checked out e.g. setup git submodules in repositories using them.
+- Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides ipbb with instructions on how to setup the package once checked out (e.g. setup git submodules).
 - Parameter substitution added in dep files commands
 - Added `srcs reset` command that applies custom packate reset procedures as specified in `.ipbb.setup`.
-
+- Versioen python requirements: `requirements.txt`.
 
 ## [0.5.2] - 2019-09-13
 ### Fixes

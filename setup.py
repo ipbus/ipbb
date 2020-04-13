@@ -5,7 +5,11 @@ exec(open('src/ipbb/_version.py').read())
 
 # Retrieve the list of requirements
 with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+    # Strip leading and trailing spaces
+    requirements = [f.strip() for f in f.read().splitlines()]
+
+    # Drop empty lines and comments
+    requirements = [f for f in requirements if f and not f.startswith('#')]
 
 
 setup(

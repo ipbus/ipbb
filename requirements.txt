@@ -2,6 +2,8 @@ click==7.1.1
 click-didyoumean==0.0.3
 configparser==4.0.2
 future==0.18.2
+# CC7 comes with ipaddress prm-installed, which doesn't play well with pip>10
+# ipaddress==1.0.23
 ipaddress
 ipdb==0.13.2
 ipython==5.9.0

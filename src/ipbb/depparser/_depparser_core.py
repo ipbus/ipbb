@@ -11,11 +11,11 @@ from .definitions import depfiletypes
 from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import SrcCommand, IncludeCommand
-from ..tools.alien import AlienBranch
+from ..tools.alien import AlienTree, AlienTemplate
 
 from collections import OrderedDict
 from os.path import exists, splitext
-from string import Template
+# from string import Template
 
 
 
@@ -127,7 +127,7 @@ class DepFileParser(object):
         self._depregistry = OrderedDict()
 
         # Results
-        self.vars = AlienBranch()
+        self.vars = AlienTree()
         self.libs = set()
         self.packages = OrderedDict()
 
@@ -146,9 +146,6 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set the toolset
-        # if self._toolset == 'xtclsh':
-        #     self.vars['toolset'] = 'ISE'
-        # el
         if self._toolset == 'vivado':
             self.vars['toolset'] = 'Vivado'
         elif self._toolset == 'sim':
@@ -277,7 +274,8 @@ class DepFileParser(object):
 
         try:
             lExprValue = eval(
-                aLine[lTokens[0] + 1: lTokens[1]], None, self.vars)
+                aLine[lTokens[0] + 1: lTokens[1]], None, self.vars
+            )
         except Exception as lExc:
             raise_from(DepLineError("Parsing directive failed"), lExc)
 
@@ -297,7 +295,7 @@ class DepFileParser(object):
     # -------------------------------------------------------------------------
     def _lineReplaceVars(self, aLine):
         try:
-            lLine = Template(aLine).substitute(self.vars)
+            lLine = AlienTemplate(aLine).substitute(self.vars)
         except RuntimeError as lExc:
             raise_from(DepLineError("Template substitution failed"), lExc)
 
@@ -476,11 +474,15 @@ class DepFileParser(object):
 
     # -------------------------------------------------------------------------
     def parse(self, aPackage, aComponent, aDepFileName):
+
+        # TODO: create a reset method
         self._state = State()
 
         # Do the parsing here
         self.depfile = self._parseFile(aPackage, aComponent, aDepFileName)
 
+        # Lock the config variables tree
+        self.vars.lock(True)
         # --------------------------------------------------------------
         # If we are exiting the top-level, uniquify the commands list, keeping
         # the order as defined in Dave's origianl voodoo

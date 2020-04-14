@@ -2,51 +2,51 @@ from __future__ import print_function, absolute_import
 
 import pytest
 
-from ipbb.tools.alien import AlienNode, AlienDict, AlienTemplate, AlienBranch
+from ipbb.tools.alien import AlienDict, AlienTemplate, AlienBranch, AlienTree
 
 
-# -----------------------------------------------------------------------------
-def test_aliennode_settergetter():
-    """
-    { function_description }
+# # -----------------------------------------------------------------------------
+# def test_aliennode_settergetter():
+#     """
+#     { function_description }
 
-    :raises     AssertionError:  { exception_description }
-    """
-    node = AlienNode()
-    node.vivado.jobs = 3
+#     :raises     AssertionError:  { exception_description }
+#     """
+#     node = AlienNode()
+#     node.vivado.jobs = 3
 
-    assert hasattr(node, 'vivado')
-    assert hasattr(node.vivado, 'jobs')
-    assert node.vivado.jobs == 3
-    assert node['vivado.jobs'] == 3
+#     assert hasattr(node, 'vivado')
+#     assert hasattr(node.vivado, 'jobs')
+#     assert node.vivado.jobs == 3
+#     assert node['vivado.jobs'] == 3
 
-    node['design.top'] = 'top_entity'
-    assert node['design.top'] == 'top_entity'
-    assert node['design']['top'] == 'top_entity'
-    assert node.design.top == 'top_entity'
-
-
-    node.lock = True
-
-    assert node.lock == True
-    assert node.vivado.lock == True
-
-    with pytest.raises(KeyError):
-        node.modelsim.var = 4
-
-# -----------------------------------------------------------------------------
-def test_alien_template():
-
-    template = AlienTemplate("a = ${lvl1.var}")
+#     node['design.top'] = 'top_entity'
+#     assert node['design.top'] == 'top_entity'
+#     assert node['design']['top'] == 'top_entity'
+#     assert node.design.top == 'top_entity'
 
 
-    node = AlienNode()
-    node.lvl1.var = "'Hello World'"
-    node.lock = True
-    print('lvl1.var:', repr(node.lvl1.var))
+#     node.lock = True
 
-    string = template.substitute(node) 
-    assert string == "a = {}".format("'Hello World'")
+#     assert node.lock == True
+#     assert node.vivado.lock == True
+
+#     with pytest.raises(KeyError):
+#         node.modelsim.var = 4
+
+# # -----------------------------------------------------------------------------
+# def test_alien_template():
+
+#     template = AlienTemplate("a = ${lvl1.var}")
+
+
+#     node = AlienNode()
+#     node.lvl1.var = "'Hello World'"
+#     node.lock = True
+#     print('lvl1.var:', repr(node.lvl1.var))
+
+#     string = template.substitute(node) 
+#     assert string == "a = {}".format("'Hello World'")
 
 
 # -----------------------------------------------------------------------------
@@ -138,3 +138,22 @@ def test_alienbranch_exec():
     print()
     assert 'a' in branch
     assert branch.a == 10
+
+
+# -----------------------------------------------------------------------------
+def test_alientree():
+
+    tree = AlienTree()
+    leaves = [
+        ('v1_a','a'),
+        ('l1_a.v2_a','x'),
+        ('l1_a.l2_a.v3_a',3),
+        ]
+
+    for k, v in leaves:
+        tree[k] = v
+
+    assert set(n for n in tree) == set(['l1_a.v2_a', 'l1_a.l2_a.v3_a', 'l1_a.l2_a', 'l1_a', 'v1_a',])
+
+    print()
+    print('\n'.join( n+': '+str(v) for n,v in tree.branches()))

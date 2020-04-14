@@ -9,12 +9,15 @@ files:
       ? var_A == True ? src t0.vhd
       ? lvl1.var_A == True ? src t1.vhd
       ? lvl1.lvl_2.var_A == True ? src t2.vhd
+      src ${myfile}.vhd
     defs.d3: |
       @var_A=True
       @lvl1.var_B=3
       @lvl1.lvl_2.var_C="x"
+      @myfile=t3
     settings.tcl: ""
   firmware/hdl:
     t0.vhd: ""
     t1.vhd: ""
     t2.vhd: ""
+    t3.vhd: ""

@@ -430,7 +430,7 @@ def binfile(env):
     if not exists(lBitPath):
         raise click.ClickException("Bitfile does not exist. Can't create binfile.")
 
-    lBinFileCmdOptions = lDepFileParser.vars['vivado_binfile_options']
+    lBinFileCmdOptions = lDepFileParser.vars['vivado.binfile_options']
 
     ensureVivado(env)
 

@@ -69,71 +69,71 @@ class AlienDict(dict):
 
 
 # ------------------------------------------------------------------------------
-class AlienNode(object):
-    """
-    Utility class to build auto-expanding tress of opbjects
-    """
-    def __init__(self):
-        super(AlienNode, self).__init__()
-        # Create _children first
-        self._children = {}
-        self._locked = False
+# class AlienNode(object):
+#     """
+#     Utility class to build auto-expanding tress of opbjects
+#     """
+#     def __init__(self):
+#         super(AlienNode, self).__init__()
+#         # Create _children first
+#         self._children = {}
+#         self._locked = False
         
-    @property
-    def lock(self):
-        return self._locked
+#     @property
+#     def lock(self):
+#         return self._locked
 
-    @lock.setter
-    def lock(self, value):
-        self._locked = value
-        for c in itervalues(self._children):
-            c.lock = value
+#     @lock.setter
+#     def lock(self, value):
+#         self._locked = value
+#         for c in itervalues(self._children):
+#             c.lock = value
 
-    def __getitem__(self, name):
-        # print('get',name)
-        tokens = name.split('.',1)
-        child = getattr(self,tokens[0])
-        if len(tokens) == 1:
-            return child
-        else:
-            return child[tokens[1]]
+#     def __getitem__(self, name):
+#         # print('get',name)
+#         tokens = name.split('.',1)
+#         child = getattr(self,tokens[0])
+#         if len(tokens) == 1:
+#             return child
+#         else:
+#             return child[tokens[1]]
 
-    def __setitem__(self, name, value):
-        # print('set', name, value)
-        tokens = name.rsplit('.',1)
-        child = getattr(self,tokens[0])
-        if len(tokens) == 1:
-            setattr(self, name, value)
-        else:
-            setattr(self[tokens[0]],tokens[1], value)
+#     def __setitem__(self, name, value):
+#         # print('set', name, value)
+#         tokens = name.rsplit('.',1)
+#         child = getattr(self,tokens[0])
+#         if len(tokens) == 1:
+#             setattr(self, name, value)
+#         else:
+#             setattr(self[tokens[0]],tokens[1], value)
 
-    def __getattr__(self, name):
-        try:
-            return self.__dict__[name]
-        except KeyError:
-            try:
-                return self._children[name]
-            except KeyError:
-                if self._locked:
-                    raise
-                else:
-                    value = self._children[name] = type(self)()
-                    # setattr(self, name, value)
-                    # value = self.name = type(self)()
-                    return value
+#     def __getattr__(self, name):
+#         try:
+#             return self.__dict__[name]
+#         except KeyError:
+#             try:
+#                 return self._children[name]
+#             except KeyError:
+#                 if self._locked:
+#                     raise
+#                 else:
+#                     value = self._children[name] = type(self)()
+#                     # setattr(self, name, value)
+#                     # value = self.name = type(self)()
+#                     return value
 
-    def __setattr__(self, name, value):
+#     def __setattr__(self, name, value):
 
-        # Add a standard attribute, if it's not another me
-        # Note, the order is important to allow the creation of _children
-        if type(value) != type(self):
-            super(AlienNode, self).__setattr__(name, value)
-            if name in self._children:
-                del self._children[name]
-        else:
-            self._children[name] = value
-            if value in self.__dict__:
-                del self.__dict__[name]
+#         # Add a standard attribute, if it's not another me
+#         # Note, the order is important to allow the creation of _children
+#         if type(value) != type(self):
+#             super(AlienNode, self).__setattr__(name, value)
+#             if name in self._children:
+#                 del self._children[name]
+#         else:
+#             self._children[name] = value
+#             if value in self.__dict__:
+#                 del self.__dict__[name]
 
 
 # ------------------------------------------------------------------------------
@@ -172,6 +172,7 @@ class AlienBranch(object):
             return item
         else:
             return item[tokens[1]]
+
 
     def __setitem__(self, name, value):
 
@@ -218,8 +219,56 @@ class AlienBranch(object):
             if isinstance(o, type(self)):
                 o._lock(value)
 
+    def _get(self, name, default=None):
+        try:
+            return self[name]
+        except KeyError:
+            if default:
+                return default
+            else:
+                raise
+
 # ------------------------------------------------------------------------------
-def iterleaves2g(branch):
+class AlienTree(object):
+    """
+    docstring for AlienTree
+    """
+    def __init__(self):
+        super(AlienTree, self).__init__()
+        self._trunk = AlienBranch()
+
+    @property
+    def trunk(self):
+        return self._trunk
+
+    def __call__(self):
+        return self._trunk
+
+    def __iter__(self):
+        return self._trunk.__iter__()
+
+    def __getitem__(self, name):
+        return self._trunk.__getitem__(name)
+
+    def __setitem__(self, name, value):
+        return self._trunk.__setitem__(name, value)
+
+    def lock(self, value):
+        self._trunk._lock(value)
+
+    def get(self, name, default=None):
+        return self._trunk._get(name, default)
+
+    def leaves(self):
+        return self._trunk._iterleaves()
+    
+    def branches(self):
+        return self._trunk._iterbranches()
+
+        
+
+# ------------------------------------------------------------------------------
+def iterleaves(branch):
     """
     Helper function to iterate over a branch tree
     
@@ -231,6 +280,18 @@ def iterleaves2g(branch):
     """
     return branch._iterleaves()
 
+# ------------------------------------------------------------------------------
+def iterbranches(branch):
+    """
+    Helper function to iterate over a branch tree
+    
+    :param      branch:  A branch tree
+    :type       branch:  AlienBranch
+    
+    :returns:   A branch leaf
+    :rtype:     anything
+    """
+    return branch._iterbranches()
 # ------------------------------------------------------------------------------
 class AlienTemplate(Template):
     """

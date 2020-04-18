@@ -193,6 +193,16 @@ class AlienBranch(object):
             else:
                 yield b
 
+    def _iterleafkeys(self):
+        for b, o in self.__dict__.iteritems():
+            if b.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                for cb, co in o._iterleaves():
+                    yield b+'.'+cb
+            else:
+                yield b
+
     def _iterleaves(self):
         for b, o in self.__dict__.iteritems():
             if b.startswith('_'):
@@ -258,6 +268,9 @@ class AlienTree(object):
 
     def get(self, name, default=None):
         return self._trunk._get(name, default)
+
+    def keys(self):
+        return self._trunk._iterleafkeys()
 
     def leaves(self):
         return self._trunk._iterleaves()

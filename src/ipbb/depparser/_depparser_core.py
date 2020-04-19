@@ -240,20 +240,27 @@ class DepFileParser(object):
             raise DepLineError("Semicolons (;) are not allowed")
 
         # Process the assignment directive
-        lTokenized = aLine[1:].split("=")
-        if len(lTokenized) != 2:
+        lTokens = aLine[1:].split("=")
+        if len(lTokens) != 2:
             raise DepLineError("@ directives must be key=value pairs")
 
+        lVar, lExpr= lTokens
 
-        if lTokenized[0].strip() in self.vars:
-            print("Warning!", lTokenized[0].strip(
+        if lVar.strip() in self.vars:
+            print("Warning!", lVar.strip(
             ), "already defined. Not redefining.")
         else:
             try:
-                exec(aLine[1:], None, self.vars)
-            except Exception as lExc:
-                raise_from(DepLineError("Parsing directive failed"), lExc)
+                # exec(aLine[1:], None, self.vars)
+                lOldLock = self.vars.locked
+                self.vars.lock(True)
+                # print('+++', self.vars)
+                x = eval(lExpr, None, self.vars)
+                self.vars.lock(lOldLock)
+                self.vars[lVar] = x
 
+            except Exception as lExc:
+                raise_from(DepLineError("VariableAssignmentError"), lExc)
         if self._verbosity > 1:
             print(self._state.tab, ':', aLine)
 

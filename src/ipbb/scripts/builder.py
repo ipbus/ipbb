@@ -14,6 +14,8 @@ from texttable import Texttable
 from click import echo, style, secho
 
 from ..cmds import Environment, _utils
+from ..cmds.formatters import DepFormatter
+
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -96,35 +98,41 @@ def info(env, verbose):
 
         echo()
 
-    if env.depParser.errors:
+    lParser = env.depParser
+    lDepFmt = DepFormatter(lParser)
+    if lParser.errors:
 
-        secho("Dep tree parsing error(s): "+str(len(env.depParser.errors)), fg='red')
+        # secho("Dep tree parsing error(s): "+str(len(lParser.errors)), fg='red')
+        secho("Dep tree parsing error(s):", fg='red')
+        echo(lDepFmt.drawParsingErrors())
         echo()
 
     secho("Dependecy tree elements", fg='blue')
-    lCommandKinds = ['setup', 'src', 'util', 'addrtab', 'iprepo']
-    lDepTable = Texttable()
-    lDepTable.set_cols_align(['c'] * len(lCommandKinds))
-    lDepTable.add_row(lCommandKinds)
-    lDepTable.add_row([len(env.depParser.commands[k]) for k in lCommandKinds])
-    echo(lDepTable.draw())
+    echo(lDepFmt.drawDeptreeCommandsSumamry())
+    # lCommandKinds = ['setup', 'src', 'util', 'addrtab', 'iprepo']
+    # lDepTable = Texttable()
+    # lDepTable.set_cols_align(['c'] * len(lCommandKinds))
+    # lDepTable.add_row(lCommandKinds)
+    # lDepTable.add_row([len(lParser.commands[k]) for k in lCommandKinds])
+    # echo(lDepTable.draw())
 
     echo()
 
-    if  env.depParser.unresolved:
+    if  lParser.unresolved:
 
         secho("Unresolved item(s)", fg='red')
+        echo(lDepFmt.drawUnresolvedSummary())
 
-        lUnresolved = Texttable()
-        lUnresolved.add_row(["packages", "components", "paths"])
-        lUnresolved.add_row(
-            [
-                len(env.depParser.unresolvedPackages),
-                len(env.depParser.unresolvedComponents),
-                len(env.depParser.unresolvedPaths),
-            ]
-        )
-        echo(lUnresolved.draw())
+        # lUnresolved = Texttable()
+        # lUnresolved.add_row(["packages", "components", "paths"])
+        # lUnresolved.add_row(
+        #     [
+        #         len(lParser.unresolvedPackages),
+        #         len(lParser.unresolvedComponents),
+        #         len(lParser.unresolvedPaths),
+        #     ]
+        # )
+        # echo(lUnresolved.draw())
 
         echo()
 # ------------------------------------------------------------------------------

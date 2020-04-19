@@ -110,8 +110,8 @@ def test_alienbranch_iter():
 
     assert set(n for n in branch._iterleaves()) == set(leaves)
 
-    print()
-    print('\n'.join( n+': '+str(v) for n,v in branch._iterbranches()))
+    # print()
+    # print('\n'.join( n+': '+str(v) for n,v in branch._iterbranches()))
 
 
 # -----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ def test_alienbranch_template():
 
     branch = AlienBranch()
     branch.lvl1.var = "'Hello World'"
-    branch.lock = True
+    branch._lock(True)
     print('lvl1.var:', repr(branch.lvl1.var))
 
     string = template.substitute(branch) 
@@ -130,14 +130,19 @@ def test_alienbranch_template():
 
 
 # -----------------------------------------------------------------------------
-def test_alienbranch_exec():
+def test_alienbranch_eval():
 
     branch = AlienBranch()
-    exec('a = 10', None, branch)
+    branch.a = 10
+    branch._lock(True)
 
-    print()
-    assert 'a' in branch
-    assert branch.a == 10
+    leaf_a = eval('a', None, branch)
+
+    assert leaf_a == 10
+
+    with pytest.raises(KeyError):
+        eval('b', None, branch)
+
 
 
 # -----------------------------------------------------------------------------
@@ -155,5 +160,5 @@ def test_alientree():
 
     assert set(n for n in tree) == set(['l1_a.v2_a', 'l1_a.l2_a.v3_a', 'l1_a.l2_a', 'l1_a', 'v1_a',])
 
-    print()
-    print('\n'.join( n+': '+str(v) for n,v in tree.branches()))
+    # print()
+    # print('\n'.join( n+': '+str(v) for n,v in tree.branches()))

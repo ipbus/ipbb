@@ -105,7 +105,7 @@ def report(env, filters):
     printAlienTable(lParser.vars, aHeader=False)
 
     echo()
-    secho('* Parsed commands', fg='blue')
+    secho('* Dep-tree commands', fg='blue')
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
@@ -148,7 +148,7 @@ def report(env, filters):
     echo(lString+'\n')
 
     if lParser.errors:
-        secho("Dep tree parsing error:", fg='red')
+        secho("Dep tree parsing error(s):", fg='red')
         echo(lDepFmt.drawParsingErrors())
 
     if lParser.unresolved:

@@ -67,75 +67,6 @@ class AlienDict(dict):
                 value = self[name] = type(self)()
                 return value
 
-
-# ------------------------------------------------------------------------------
-# class AlienNode(object):
-#     """
-#     Utility class to build auto-expanding tress of opbjects
-#     """
-#     def __init__(self):
-#         super(AlienNode, self).__init__()
-#         # Create _children first
-#         self._children = {}
-#         self._locked = False
-        
-#     @property
-#     def lock(self):
-#         return self._locked
-
-#     @lock.setter
-#     def lock(self, value):
-#         self._locked = value
-#         for c in itervalues(self._children):
-#             c.lock = value
-
-#     def __getitem__(self, name):
-#         # print('get',name)
-#         tokens = name.split('.',1)
-#         child = getattr(self,tokens[0])
-#         if len(tokens) == 1:
-#             return child
-#         else:
-#             return child[tokens[1]]
-
-#     def __setitem__(self, name, value):
-#         # print('set', name, value)
-#         tokens = name.rsplit('.',1)
-#         child = getattr(self,tokens[0])
-#         if len(tokens) == 1:
-#             setattr(self, name, value)
-#         else:
-#             setattr(self[tokens[0]],tokens[1], value)
-
-#     def __getattr__(self, name):
-#         try:
-#             return self.__dict__[name]
-#         except KeyError:
-#             try:
-#                 return self._children[name]
-#             except KeyError:
-#                 if self._locked:
-#                     raise
-#                 else:
-#                     value = self._children[name] = type(self)()
-#                     # setattr(self, name, value)
-#                     # value = self.name = type(self)()
-#                     return value
-
-#     def __setattr__(self, name, value):
-
-#         # Add a standard attribute, if it's not another me
-#         # Note, the order is important to allow the creation of _children
-#         if type(value) != type(self):
-#             super(AlienNode, self).__setattr__(name, value)
-#             if name in self._children:
-#                 del self._children[name]
-#         else:
-#             self._children[name] = value
-#             if value in self.__dict__:
-#                 del self.__dict__[name]
-
-
 # ------------------------------------------------------------------------------
 class AlienBranch(object):
     """
@@ -164,8 +95,8 @@ class AlienBranch(object):
             raise AttributeError("Attributes starting with '_' are reserved ")
         super(AlienBranch, self).__setattr__(name, value)
 
+
     def __getitem__(self, name):
-        # print('get',name)
         tokens = name.split('.',1)
         item = getattr(self,tokens[0])
         if len(tokens) == 1:
@@ -222,7 +153,7 @@ class AlienBranch(object):
                     yield b+'.'+cb, co
                 yield b, o
 
-    # @lock.setter
+    # @_lock.setter
     def _lock(self, value):
         self._locked = value
         for b, o in self._iterbranches():
@@ -233,10 +164,7 @@ class AlienBranch(object):
         try:
             return self[name]
         except KeyError:
-            if default:
-                return default
-            else:
-                raise
+            return default
 
 # ------------------------------------------------------------------------------
 class AlienTree(object):
@@ -246,6 +174,9 @@ class AlienTree(object):
     def __init__(self):
         super(AlienTree, self).__init__()
         self._trunk = AlienBranch()
+
+    def __repr__(self):
+        return self.__class__.__name__+repr(self._trunk)
 
     @property
     def trunk(self):
@@ -263,8 +194,15 @@ class AlienTree(object):
     def __setitem__(self, name, value):
         return self._trunk.__setitem__(name, value)
 
+    @property
+    def locked(self):
+        return self._trunk._locked
+
+    # @lock.setter
     def lock(self, value):
         self._trunk._lock(value)
+    
+    # def lock(self, value):
 
     def get(self, name, default=None):
         return self._trunk._get(name, default)

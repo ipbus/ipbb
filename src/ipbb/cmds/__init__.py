@@ -1,8 +1,8 @@
 from __future__ import print_function, absolute_import
 
 # Import click for ansi colors
-import click
 import yaml
+from click import echo, secho, style, confirm
 
 from . import _utils
 
@@ -190,6 +190,8 @@ class Environment(object):
             except OSError:
                 pass
 
+            if self._depParser.errors:
+                secho('WARNING: dep parsing errors detected', fg='yellow')
         return self._depParser
 
 

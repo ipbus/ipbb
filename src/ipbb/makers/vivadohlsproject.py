@@ -17,6 +17,7 @@ class VivadoHlsProjectMaker(object):
     def write(self, aTarget, aSettings, aComponentPaths, aCommandList, aLibs):
 
         write = aTarget
+        print(aSettings)
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aSettings.keys()):
@@ -34,7 +35,6 @@ class VivadoHlsProjectMaker(object):
 
         lHlsSrcs = aCommandList['hlssrc'] 
 
-        print(lHlsSrcs)
 
         for src in lHlsSrcs:
 
@@ -52,3 +52,5 @@ class VivadoHlsProjectMaker(object):
 
         write('open_solution solution1')
         write('set_part {{{0}}} -tool vivado'.format(lXilinxPart))
+
+        write('set_top {}'.format(lTopEntity))

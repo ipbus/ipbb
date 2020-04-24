@@ -105,7 +105,7 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
             lVivadoMaker.write(
                 lConsole,
-                lDepFileParser.vars,
+                lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -424,13 +424,13 @@ def binfile(env):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.vars.get('top_entity', kTopEntity)
+    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
     lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
     lBinPath = lBitPath.replace('.bit', '.bin')
     if not exists(lBitPath):
         raise click.ClickException("Bitfile does not exist. Can't create binfile.")
 
-    lBinFileCmdOptions = lDepFileParser.vars['vivado.binfile_options']
+    lBinFileCmdOptions = lDepFileParser.config['vivado.binfile_options']
 
     ensureVivado(env)
 
@@ -584,7 +584,7 @@ def package(env, aTag):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.vars.get('top_entity', kTopEntity)
+    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
 
     lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
     if not exists(lBitPath):

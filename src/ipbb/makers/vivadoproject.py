@@ -15,26 +15,9 @@ from os.path import abspath, join, split, splitext
 class VivadoProjectMaker(object):
     """
     Attributes:
-        reverse        (bool): flag to invert the file import order in Vivado.
         filesets (obj:`dict`): extension-to-fileset association
     """
 
-    # filesets = {
-    #     '.xdc': 'constrs_1',
-    #     '.tcl': 'constrs_1',
-    #     '.mif': 'sources_1',
-    #     '.vhd': 'sources_1',
-    #     '.vhdl': 'sources_1',
-    #     '.v': 'sources_1',
-    #     '.sv': 'sources_1',
-    #     '.xci': 'sources_1',
-    #     '.ngc': 'sources_1',
-    #     '.edn': 'sources_1',
-    #     '.edf': 'sources_1'
-    #     # Legacy ISE files
-    #     # '.ucf': 'ise_1',
-    #     # '.xco': 'ise_1',
-    # }
     filetypes = {
         'ip' : ('.xci',),
         'constr' : ('.xdc', '.tcl'),
@@ -72,6 +55,8 @@ class VivadoProjectMaker(object):
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aSettings):
             raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aSettings)))
+        lXilinxPart = "{device_name}{device_package}{device_speed}".format(**aSettings)
+
 
         # ----------------------------------------------------------
         write = aTarget
@@ -89,8 +74,8 @@ class VivadoProjectMaker(object):
         write()
 
         write(
-            'create_project {0} {1} -part {device_name}{device_package}{device_speed} -force'.format(
-                self.projInfo.name, lWorkingDir, **aSettings
+            'create_project {0} {1} -part {2} -force'.format(
+                self.projInfo.name, lWorkingDir, lXilinxPart
             )
         )
 

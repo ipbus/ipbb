@@ -1,0 +1,14 @@
+name: hls_d3
+top:
+  - cmp: ""
+    file: top_hls.d3
+files:
+  firmware/cfg:
+    top_hls.d3: |
+      hlssrc a.hh a.cc
+      hlssrc --tb b.hh b.cc
+  firmware/hls:
+    a.cc: ""
+    a.hh: ""
+    b.cc: ""
+    b.hh: ""

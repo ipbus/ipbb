@@ -6,21 +6,6 @@ import click
 
 import types
 
-from ..tools.common import which
-
-
-# ------------------------------------------------------------------------------
-def ensureVivado(env):
-    if env.currentproj.settings['toolset'] != 'vivado':
-        raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivado', found '%s'" % env.currentproj.settings['toolset'])
-
-    if not which('vivado'):
-        # if 'XILINX_VIVADO' not in os.environ:
-        raise click.ClickException(
-            "Vivado not found. Please source the Vivado environment before continuing.")
-# ------------------------------------------------------------------------------
-
 
 # ------------------------------------------------------------------------------
 @click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)

@@ -6,6 +6,7 @@ import argparse
 import os
 import glob
 import copy
+import string
 
 from .definitions import depfiletypes
 from ._pathmaker import Pathmaker
@@ -127,11 +128,11 @@ class DepFileParser(object):
         self._depregistry = OrderedDict()
 
         # Results
-        self.vars = AlienTree()
+        self.config = AlienTree()
         self.libs = set()
         self.packages = OrderedDict()
 
-        self.commands = {c: [] for c in ['setup', 'util', 'src', 'addrtab', 'iprepo']}
+        self.commands = {c: [] for c in ['setup', 'util', 'src', 'hlssrc', 'addrtab', 'iprepo']}
 
         self.unresolved = list()
         self.errors = list()
@@ -141,17 +142,19 @@ class DepFileParser(object):
         # Add to or override the Script Variables with user commandline
         for lArgs in aVariables:
             lKey, lVal = lArgs.split('=')
-            self.vars[lKey] = lVal
+            self.config[lKey] = lVal
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
         # Set the toolset
         if self._toolset == 'vivado':
-            self.vars['toolset'] = 'Vivado'
+            self.config['toolset'] = 'Vivado'
+        elif self._toolset == 'vivadohls':
+            self.config['toolset'] = 'VivadoHls'
         elif self._toolset == 'sim':
-            self.vars['toolset'] = 'Modelsim'
+            self.config['toolset'] = 'Modelsim'
         else:
-            self.vars['toolset'] = 'other'
+            self.config['toolset'] = 'other'
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -244,20 +247,20 @@ class DepFileParser(object):
         if len(lTokens) != 2:
             raise DepLineError("@ directives must be key=value pairs")
 
-        lVar, lExpr= lTokens
+        lPar, lExpr = map(string.strip, lTokens)
 
-        if lVar.strip() in self.vars:
-            print("Warning!", lVar.strip(
+        if lPar.strip() in self.config:
+            print("Warning!", lPar.strip(
             ), "already defined. Not redefining.")
         else:
             try:
-                # exec(aLine[1:], None, self.vars)
-                lOldLock = self.vars.locked
-                self.vars.lock(True)
-                # print('+++', self.vars)
-                x = eval(lExpr, None, self.vars)
-                self.vars.lock(lOldLock)
-                self.vars[lVar] = x
+                # exec(aLine[1:], None, self.config)
+                lOldLock = self.config.locked
+                self.config.lock(True)
+                # print('+++', self.config)
+                x = eval(lExpr, None, self.config)
+                self.config.lock(lOldLock)
+                self.config[lPar] = x
 
             except Exception as lExc:
                 raise_from(DepLineError("VariableAssignmentError"), lExc)
@@ -281,7 +284,7 @@ class DepFileParser(object):
 
         try:
             lExprValue = eval(
-                aLine[lTokens[0] + 1: lTokens[1]], None, self.vars
+                aLine[lTokens[0] + 1: lTokens[1]], None, self.config
             )
         except Exception as lExc:
             raise_from(DepLineError("Parsing directive failed"), lExc)
@@ -302,7 +305,7 @@ class DepFileParser(object):
     # -------------------------------------------------------------------------
     def _lineReplaceVars(self, aLine):
         try:
-            lLine = AlienTemplate(aLine).substitute(self.vars)
+            lLine = AlienTemplate(aLine).substitute(self.config)
         except RuntimeError as lExc:
             raise_from(DepLineError("Template substitution failed"), lExc)
 
@@ -489,7 +492,7 @@ class DepFileParser(object):
         self.depfile = self._parseFile(aPackage, aComponent, aDepFileName)
 
         # Lock the config variables tree
-        self.vars.lock(True)
+        self.config.lock(True)
         # --------------------------------------------------------------
         # If we are exiting the top-level, uniquify the commands list, keeping
         # the order as defined in Dave's origianl voodoo

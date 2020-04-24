@@ -8,6 +8,7 @@ class Pathmaker(object):
 
     fpaths = {
         "src": "firmware/hdl",
+        "hlssrc": "firmware/hls",
         "include": "firmware/cfg",
         "addrtab": "addr_table",
         "setup": "firmware/cfg",

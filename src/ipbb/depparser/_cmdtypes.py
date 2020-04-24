@@ -80,6 +80,33 @@ class SrcCommand(Command):
 
 
 # -----------------------------------------------------------------------------
+class HlsSrcCommand(Command):
+    """Container class for dep commands parsed form dep files
+
+    Attributes:
+        cmd        (str):  command directive
+        filepath   (str):  absolute, normalised path to the command target.
+        package    (str):  package the target belongs to.
+        component  (str):  component withon 'Package' the target belongs to
+        cflags     (str):  c compiler flags
+        csimflags  (str):  c compiler flags in simulation
+        testbench  (bool): this file is a testbench
+    """
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aCFlags, aCSimFlags, aTestBench):
+        super(HlsSrcCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
+        self.cflags = aCFlags
+        self.csimflags = aCSimFlags
+        self.testbench = aTestBench
+
+    # --------------------------------------------------------------
+    def flags(self):
+        lFlags = []
+        if self.testbench:
+            lFlags.append('tb')
+
+        return lFlags
+        
+# -----------------------------------------------------------------------------
 class SetupCommand(Command):
     """Container class for dep commands parsed form dep files
 

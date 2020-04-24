@@ -108,7 +108,7 @@ def info(env, verbose):
         echo()
 
     secho("Dependecy tree elements", fg='blue')
-    echo(lDepFmt.drawDeptreeCommandsSumamry())
+    echo(lDepFmt.drawDeptreeCommandsSummary())
     # lCommandKinds = ['setup', 'src', 'util', 'addrtab', 'iprepo']
     # lDepTable = Texttable()
     # lDepTable.set_cols_align(['c'] * len(lCommandKinds))
@@ -175,6 +175,9 @@ def _compose_cli():
     sim.sim.add_command(common.addrtab)
     sim.sim.add_command(common.user_config)
     climain.add_command(sim.sim)
+
+    from ..cli import vivadohls
+    climain.add_command(vivadohls.vivadohls)
 
     from ..cli import ipbus
     climain.add_command(ipbus.ipbus)

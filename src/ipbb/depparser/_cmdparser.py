@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 
 import argparse
-from ._cmdtypes import Command, IncludeCommand, SrcCommand, SetupCommand, AddrtabCommand
+from ._cmdtypes import Command, IncludeCommand, SrcCommand, HlsSrcCommand, SetupCommand, AddrtabCommand
 
 # -----------------------------------------------------------------------------
 class ComponentAction(argparse.Action):
@@ -83,9 +83,18 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('-l', '--lib')
         subp.add_argument('--cd')
-        subp.add_argument('file', nargs='+')
         subp.add_argument('--vhdl2008', action='store_true')
         subp.add_argument('-u', '--usein', action=UseInAction)
+        subp.add_argument('file', nargs='+')
+
+        # Source sub-parser
+        subp = parser_add.add_parser('hlssrc')
+        subp.add_argument('-c', '--component', **lCompArgOpts)
+        subp.add_argument('--cd')
+        subp.add_argument('--tb', action='store_true')
+        subp.add_argument('--cflags')
+        subp.add_argument('--csimflags')
+        subp.add_argument('file', nargs='+')
 
         # Address table sub-parser
         subp = parser_add.add_parser('addrtab')
@@ -104,6 +113,7 @@ class DepCmdParser(argparse.ArgumentParser):
         self.callbacks = {
             'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
             'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, 'synth' in a.usein, 'sim' in a.usein),
+            'hlssrc'  : lambda a : HlsSrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.cflags, a.csimflags, a.tb),
             'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
             'addrtab' : lambda a : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),
             '*'       : lambda a : Command(a.cmd, a.file, a.component[0], a.component[1], a.cd),

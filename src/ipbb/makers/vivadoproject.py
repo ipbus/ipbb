@@ -50,7 +50,7 @@ class VivadoProjectMaker(object):
         self.turbo = aTurbo
 
     # --------------------------------------------------------------
-    def write(self, aTarget, aSettings, aComponentPaths, aCommandList, aLibs):
+    def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aSettings):
@@ -59,12 +59,10 @@ class VivadoProjectMaker(object):
 
 
         # ----------------------------------------------------------
-        write = aTarget
+        write = aOutput
 
         lWorkingDir = abspath(join(self.projInfo.path, self.projInfo.name))
         lTopEntity = aSettings.get('top_entity', kTopEntity)
-        import ipdb
-        ipdb.set_trace()
 
         lSimTopEntity = aSettings.get('vivado.sim_top_entity', None)
         # ----------------------------------------------------------

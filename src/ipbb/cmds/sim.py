@@ -213,6 +213,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     lIPCoresModelsimIni = 'modelsim.ipcores.ini'
 
     lDryRun = aToScript or aToStdout
+    lScriptPath = aToScript if not aToStdout else None
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
@@ -278,15 +279,8 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     try:
         with (
             # Pipe commands to Vivado console
-            xilinx.VivadoOpen(lSessionId)
-            if not lDryRun
-            else SmartOpen(
-                # Dump to script
-                aToScript
-                if not aToStdout
-                # Dump to terminal
-                else None
-            )
+            xilinx.VivadoOpen(lSessionId) if not lDryRun
+            else SmartOpen(lScriptPath)
         ) as lVivadoConsole:
 
             lIPCoreSimMaker.write(

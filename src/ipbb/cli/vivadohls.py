@@ -33,3 +33,29 @@ def makeproject(env, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import makeproject
     makeproject(env, aToScript, aToStdout)
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('synth', short_help='Run C-synthesis.')
+@click.pass_obj
+def synth(env):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.vivadohls import synth
+    synth(env)
+
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('sim', short_help='Run C-synthesis.')
+@click.pass_obj
+def sim(env):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.vivadohls import sim
+    sim(env)
+
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('cosim', short_help='Run C-synthesis.')
+@click.pass_obj
+def cosim(env):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.vivadohls import cosim
+    cosim(env)

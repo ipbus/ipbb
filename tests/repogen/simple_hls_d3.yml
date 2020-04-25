@@ -1,4 +1,4 @@
-name: hls_d3
+name: simple_hls_d3
 top:
   - cmp: ""
     file: top_hls.d3

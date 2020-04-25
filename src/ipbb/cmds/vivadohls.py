@@ -16,7 +16,7 @@ from ..tools.xilinx import VivadoHLSOpen, VivadoHLSConsoleError
 
 
 # ------------------------------------------------------------------------------
-def ensureVivado(env):
+def ensureVivadoHLS(env):
     if env.currentproj.settings['toolset'] != 'vivadohls':
         raise click.ClickException(
             "Work area toolset mismatch. Expected 'vivadohls', found '%s'"
@@ -60,25 +60,19 @@ def makeproject(env, aToScript, aToStdout):
     lSessionId = 'make-project'
 
     # Check if vivado is around
-    ensureVivado(env)
+    ensureVivadoHLS(env)
 
     lDepFileParser = env.depParser
 
     lVivadoMaker = VivadoHlsProjectMaker(env.currentproj)
 
     lDryRun = aToScript or aToStdout
+    lScriptPath = aToScript if not aToStdout else None
 
     try:
         with (
-            VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho)
-            if not lDryRun
-            else SmartOpen(
-                # Dump to script
-                aToScript
-                if not aToStdout
-                # Dump to terminal
-                else None
-            )
+            VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) if not lDryRun
+            else SmartOpen(lScriptPath)
         ) as lConsole:
 
             lVivadoMaker.write(
@@ -100,3 +94,101 @@ def makeproject(env, aToScript, aToStdout):
         raise click.Abort()
     # -------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
+def synth(env):
+
+    lSessionId = 'synth'
+
+    # Check if vivado is around
+    ensureVivadoHLS(env)
+
+    try:
+        with VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) as lConsole:
+
+            # Open the project
+            lConsole('open_project {}'.format(env.currentproj.name))
+            lConsole('open_solution sol1')
+            lConsole('csynth_design')
+
+
+    except VivadoHLSConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho(
+            "ERROR: \n" + "\n".join(lExc),
+            fg='red',
+        )
+        raise click.Abort()
+
+    secho(
+        "\n{}: Synthesis completed successfully.\n".format(env.currentproj.name),
+        fg='green',
+    )
+
+
+# ------------------------------------------------------------------------------
+def sim(env):
+
+    lSessionId = 'sim'
+
+    # Check if vivado is around
+    ensureVivadoHLS(env)
+
+    try:
+        with VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) as lConsole:
+
+            # Open the project
+            lConsole('open_project {}'.format(env.currentproj.name))
+            lConsole('open_solution sol1')
+            lConsole('csim_design')
+
+
+    except VivadoHLSConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho(
+            "ERROR: \n" + "\n".join(lExc),
+            fg='red',
+        )
+        raise click.Abort()
+
+    secho(
+        "\n{}: Synthesis completed successfully.\n".format(env.currentproj.name),
+        fg='green',
+    )
+
+
+# ------------------------------------------------------------------------------
+def cosim(env):
+    lSessionId = 'cosim'
+
+    # Check if vivado is around
+    ensureVivadoHLS(env)
+
+    try:
+        with VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) as lConsole:
+
+            # Open the project
+            lConsole('open_project {}'.format(env.currentproj.name))
+            lConsole('open_solution sol1')
+            lConsole('cosim_design')
+
+
+    except VivadoHLSConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
+    except RuntimeError as lExc:
+        secho(
+            "ERROR: \n" + "\n".join(lExc),
+            fg='red',
+        )
+        raise click.Abort()
+
+    secho(
+        "\n{}: Synthesis completed successfully.\n".format(env.currentproj.name),
+        fg='green',
+    )
+    

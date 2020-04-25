@@ -89,18 +89,12 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     lVivadoMaker = VivadoProjectMaker(env.currentproj, lVivadoIPCache, aOptimise)
 
     lDryRun = aToScript or aToStdout
+    lScriptPath = aToScript if not aToStdout else None
 
     try:
         with (
-            VivadoOpen(lSessionId, echo=env.vivadoEcho)
-            if not lDryRun
-            else SmartOpen(
-                # Dump to script
-                aToScript
-                if not aToStdout
-                # Dump to terminal
-                else None
-            )
+            VivadoOpen(lSessionId, echo=env.vivadoEcho) if not lDryRun
+            else SmartOpen(lScriptPath)
         ) as lConsole:
 
             lVivadoMaker.write(

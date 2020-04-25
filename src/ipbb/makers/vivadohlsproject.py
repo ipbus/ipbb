@@ -2,6 +2,8 @@ from __future__ import print_function, absolute_import
 from future.utils import iterkeys, itervalues, iteritems
 # ------------------------------------------------------------------------------
 
+import time 
+
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext
 
@@ -35,7 +37,7 @@ class VivadoHlsProjectMaker(object):
         write()
 
         write(
-            'open_project {0} -reset'.format(self.projInfo.name)
+            'open_project -reset {0} '.format(self.projInfo.name)
         )
 
         for setup in (c for c in aCommandList['setup'] if not c.finalize):
@@ -54,11 +56,11 @@ class VivadoHlsProjectMaker(object):
             if src.csimflags:
                 opts += ['-csimflags {}'.format(src.csimflags)]
 
-            lCommand = 'add_file {} {}'.format(' '.join(opts), src.filepath)
+            lCommand = 'add_files {} {}'.format(' '.join(opts), src.filepath)
             write(lCommand)
 
 
-        write('open_solution solution1')
+        write('open_solution -reset sol1')
         write('set_part {{{0}}} -tool vivado'.format(lXilinxPart))
 
         write('set_top {}'.format(lTopEntity))
@@ -68,4 +70,3 @@ class VivadoHlsProjectMaker(object):
 
         write('close_project')
     # --------------------------------------------------------------
-            

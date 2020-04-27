@@ -22,11 +22,13 @@ depparser_venv_cc7_py2:
     - setup_cc7_py2_venv
   script:
     - source env.sh
-    - generate-ipbb-repo.py tests/repogen/abcd_d3.yml /tmp/
-    - generate-ipbb-repo.py tests/repogen/broken_d3.yml /tmp/
     - generate-ipbb-repo.py tests/repogen/simple.yml /tmp/
     - generate-ipbb-repo.py tests/repogen/simple_d3.yml /tmp/
-    - generate-ipbb-repo.py tests/repogen/vars_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/settings.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/abcd_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/broken_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/hls_simple_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/hls_test_d3.yml /tmp/
 
 
 # test_venv_centos8_py3:

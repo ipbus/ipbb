@@ -26,7 +26,18 @@ files:
       #endif 
       }
     tb_test.cpp: |
-      #include "hls_test.h"
+      // Relative import
+      #include "../hls/hls_test.h"
+      // From component's firmware folder
+      #include "hls/hls_test.h"
+      // From component's base folder
+      #include "firmware/hls/hls_test.h"
+      // From package base folder
+      #include "components/firmware/hls/hls_test.h"
+      // From `src` folder (reference to a different package)
+      #include "hls_test_d3/components/firmware/hls/hls_test.h"
+
+      
       #include <iostream>
 
       int main(int argc, char const *argv[])

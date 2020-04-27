@@ -26,7 +26,7 @@ from ..tools.common import which, SmartOpen
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..makers.vivadoproject import VivadoProjectMaker
-from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
+from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 
 
@@ -64,8 +64,11 @@ def vivado(env, proj, verbosity):
                 'Project area not defined. Move to a project area and try again'
             )
 
+    ensureVivado(env)
+
     env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
     env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
+    env.vivadoConsole = VivadoOpen(echo=env.vivadoEcho, _lazy=True)
 
 
 # ------------------------------------------------------------------------------
@@ -91,12 +94,22 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     lDryRun = aToScript or aToStdout
     lScriptPath = aToScript if not aToStdout else None
 
-    try:
-        with (
-            VivadoOpen(lSessionId, echo=env.vivadoEcho) if not lDryRun
-            else SmartOpen(lScriptPath)
-        ) as lConsole:
+    if lDryRun:
+        lConsole = SmartOpen(aToScript if not aToStdout else None)
+    else:
+        lConsole = env.vivadoConsole
+        lConsole.echoprefix = lSessionId + ' | '
+        lProject = VivadoProject(lConsole)
+        if lProject.current():
+            lProject.close()
 
+
+    try:
+        # with (
+        #     VivadoOpen(lSessionId, echo=env.vivadoEcho) if not lDryRun
+        #     else SmartOpen(lScriptPath)
+        # ) as lConsole:
+        with lConsole:
             lVivadoMaker.write(
                 lConsole,
                 lDepFileParser.config,
@@ -513,12 +526,27 @@ def status(env):
     lOOCRegex = re.compile(r'.*_synth_\d+')
     lRunRegex = re.compile(r'(synth|impl)_\d+')
 
+    # if lDryRun:
+    #     lConsole = SmartOpen(aToScript if not aToStdout else None)
+    # else:
+    #     lConsole = env.vivadoConsole
+    #     lConsole.echoprefix = lSessionId + ' | '
+    lConsole = env.vivadoConsole
+    lConsole.echoprefix = lSessionId + ' | '
+    lProject = VivadoProject(lConsole)
+    lCurrentProject = lProject.current()
+    if lCurrentProject != env.currentproj.name:
+        if lCurrentProject:
+            lProject.close()
+        lProject.open(env.vivadoProjFile)
+
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho, echobanner=False) as lConsole:
-            echo('Opening project ' + env.currentproj.name)
+        # with VivadoOpen(lSessionId, echo=env.vivadoEcho, echobanner=False) as lConsole:
+        with lConsole:
+            # echo('Opening project ' + env.currentproj.name)
 
             with VivadoSnoozer(lConsole):
-                lConsole(lOpenCmds)
+                # lConsole(lOpenCmds)
                 lInfos = readRunInfo(lConsole, lProps)
 
     except VivadoConsoleError as lExc:

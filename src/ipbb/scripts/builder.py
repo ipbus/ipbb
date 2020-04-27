@@ -177,6 +177,8 @@ def _compose_cli():
     climain.add_command(sim.sim)
 
     from ..cli import vivadohls
+    
+    vivadohls.vivadohls.add_command(common.cleanup)
     climain.add_command(vivadohls.vivadohls)
 
     from ..cli import ipbus

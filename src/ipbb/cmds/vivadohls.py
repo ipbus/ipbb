@@ -10,6 +10,7 @@ from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 
 from ..tools.common import which, SmartOpen
+from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..makers.vivadohlsproject import VivadoHlsProjectMaker
 from ..tools.xilinx import VivadoHLSOpen, VivadoHLSConsoleError
@@ -63,6 +64,12 @@ def makeproject(env, aToScript, aToStdout):
     ensureVivadoHLS(env)
 
     lDepFileParser = env.depParser
+
+    # Ensure that no parsing errors are present
+    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+
+    # Ensure that all dependencies are resolved
+    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lVivadoMaker = VivadoHlsProjectMaker(env.currentproj)
 

@@ -23,7 +23,7 @@ from collections import OrderedDict
 from .dep import hash
 
 from ..tools.common import which, SmartOpen
-from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..makers.vivadoproject import VivadoProjectMaker
 from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer

@@ -95,23 +95,15 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     lScriptPath = aToScript if not aToStdout else None
 
     if lDryRun:
-        lConsole = SmartOpen(aToScript if not aToStdout else None)
+        lConsoleCtx = SmartOpen(aToScript if not aToStdout else None)
     else:
-        lConsole = env.vivadoConsole
-        lConsole.echoprefix = lSessionId + ' | '
-        # lProject = VivadoProject(lConsole)
-        # if lProject.current():
-        #     lProject.close()
-
+        lConsoleCtx = env.vivadoConsole
 
     try:
-        # with (
-        #     VivadoOpen(lSessionId, echo=env.vivadoEcho) if not lDryRun
-        #     else SmartOpen(lScriptPath)
-        # ) as lConsole:
-        with lConsole as c:
+        with lConsoleCtx as lConsole:
+            lConsole.echoprefix = lSessionId + ' | '
             lVivadoMaker.write(
-                c,
+                lConsole,
                 lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
@@ -164,55 +156,6 @@ def checksyntax(env):
         fg='green',
     )
 
-
-# -------------------------------------
-# def getSynthRunProps(aConsole):
-#     '''Retrieve the status of synthesis runs
-    
-#     Helper function
-    
-#     Args:
-#         aConsole (obj:`VivadoConsole`): Vivado Wrapper
-    
-#     Returns:
-#         TYPE: Description
-#     '''
-
-#     '''
-#     To find OOC runs
-#      "BlockSrcs" == [get_property FILESET_TYPE [get_property SRCSET [get_runs <run_name>]]]
-#     '''
-
-#     with VivadoSnoozer(aConsole):
-#         lSynthesisRuns = aConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
-#         lRunProps = {}
-
-#         lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
-
-#         for lRun in lSynthesisRuns:
-#             lValues = aConsole(
-#                 [
-#                     'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-#                     for lProp in lProps
-#                 ]
-#             )
-#             lRunProps[lRun] = dict(zip(lProps, lValues))
-#     return lRunProps
-
-
-# # -------------------------------------
-# def formatRunProps(aProps):
-#     lProps = aProps.itervalues().next().keys()
-
-#     lSummary = Texttable(max_width=0)
-#     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-#     lSummary.add_row(['Run'] + lProps)
-#     for lRun in sorted(aProps):
-#         lInfo = aProps[lRun]
-#         lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
-
-#     return lSummary.draw()
-
 # -------------------------------------
 def synth(env, aJobs, aUpdateInt):
     '''Run synthesis'''
@@ -248,6 +191,7 @@ def synth(env, aJobs, aUpdateInt):
                 if v['STATUS'].startswith('Running')
             ]
 
+            # Reset IP runs, if needed
             for run in lIPRunsToReset:
                 secho(
                     'IP run {} found in running state. Resetting.'.format(run),
@@ -255,10 +199,11 @@ def synth(env, aJobs, aUpdateInt):
                 )
                 lConsole('reset_run {}'.format(run))
 
+            # Reset and launch synth_1
             lConsole('reset_run {}'.format(lSynthRun))
             lConsole('launch_runs {} {}'.format(lSynthRun, ' '.join(lArgs)))
 
-            # 
+            # Monitor OOC and synth run progress
             if not aUpdateInt:
                 secho("Run monitoring disabled", fg='cyan')
                 lConsole('wait_on_run synth_1')

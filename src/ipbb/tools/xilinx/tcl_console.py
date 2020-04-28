@@ -8,20 +8,9 @@ import six
 def lazyctxmanager(aTCLConsoleClass):
     
     class LazyConsoleCtxClass(object):
-        """VivadoConsole wrapper for with statements
         """
-
-        # --------------------------------------------------------------
-        def __getattr__(self, name):
-            return getattr(self._console, name)
-
-        # --------------------------------------------------------------
-        def __setattr__(self, name, value):
-            if name.startswith('_'):
-                self.__dict__[name] = value
-                return
-            return setattr(self._getconsole(), name, value)
-
+        VivadoConsole wrapper for with statements
+        """
         # --------------------------------------------------------------
         def _getconsole(self):
             if self._console is None:
@@ -38,9 +27,6 @@ def lazyctxmanager(aTCLConsoleClass):
 
         # --------------------------------------------------------------
         def __enter__(self):
-            # if not self._lazy:
-                # self._getconsole()
-            # return self
             return self._getconsole()
 
         # --------------------------------------------------------------
@@ -48,10 +34,6 @@ def lazyctxmanager(aTCLConsoleClass):
             if not self._lazy:
                 self._getconsole().close()
                 self._console = None
-
-        # --------------------------------------------------------------
-        # def __call__(self, aCmd='', aMaxLen=1):
-            # return self._getconsole().execute(aCmd, aMaxLen)
 
     return LazyConsoleCtxClass
 

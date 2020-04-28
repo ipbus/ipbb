@@ -38,9 +38,10 @@ def lazyctxmanager(aTCLConsoleClass):
 
         # --------------------------------------------------------------
         def __enter__(self):
-            if not self._lazy:
-                self._getconsole()
-            return self
+            # if not self._lazy:
+                # self._getconsole()
+            # return self
+            return self._getconsole()
 
         # --------------------------------------------------------------
         def __exit__(self, type, value, traceback):
@@ -49,22 +50,8 @@ def lazyctxmanager(aTCLConsoleClass):
                 self._console = None
 
         # --------------------------------------------------------------
-        def __call__(self, aCmd=None, aMaxLen=1):
-            # FIXME: only needed because of VivadoProjectMaker
-            # Fix at source and remove
-            console = self._getconsole()
-            if aCmd is None:
-                return
-
-            if aCmd.count('\n') is not 0:
-                aCmd = aCmd.split('\n')
-
-            if isinstance(aCmd, str):
-                return console.execute(aCmd, aMaxLen)
-            elif isinstance(aCmd, list):
-                return console.executeMany(aCmd, aMaxLen)
-            else:
-                raise TypeError('Unsupported command type ' + type(aCmd).__name__)
+        # def __call__(self, aCmd='', aMaxLen=1):
+            # return self._getconsole().execute(aCmd, aMaxLen)
 
     return LazyConsoleCtxClass
 

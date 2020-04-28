@@ -4,48 +4,69 @@ import six
 # ------------------------------------------------------------------------------
 
 from os.path import join, dirname, splitext, abspath
+from collections import OrderedDict
 from .vivado_console import VivadoConsole
 
 # ------------------------------------------------------------------------------
 class VivadoProject(object):
-    """docstring for VivadoProject"""
+    """
+    Vivado console helper class to expose project specific methonds
+    
+    Attributes:
+        console (VivadoConsole): Console object
+    """
+
+    # ------------------------------------------------------------------------------
     def __init__(self, aConsole, aPath=None):
+        """
+        Constructor
+        
+        Args:
+            aConsole (VivadoConsole): Console object
+            aPath (string, optional): Project file (.xpr) path
+        """
         super(VivadoProject, self).__init__()
         self.console = aConsole
 
         if aPath:
             self.open(aPath)
 
+    # ------------------------------------------------------------------------------
     def current(self):
         """
-        Name of the current prokect, if any
+        Name of the current project, if any
         
-        :returns:   Name of the currently opened projecty
-        :rtype:     string
+
+        Returns:
+            string: Name of current project
+        
         """
         return self.console('current_project -quiet')[0]
 
+    # ------------------------------------------------------------------------------
     def get_property(self, name):
         """
-        Gets the property.
+        Gets the value of a project property.
         
-        :param      name:  The property name
-        :type       name:  string
+        Args:
+            name (str): Name of the property
         
-        :returns:   The property value.
-        :rtype:     string
+        Returns:
+            str: Property value
+        
         """
         return  self.console('get_property {}} [current_project]'.format(name))[0]
     
+    # ------------------------------------------------------------------------------
     def open(self, aPath):
         """
         Open a project
         
-        :param      aPath:  Path of the project file (.xpr)
-        :type       aPath:  string
+        Args:
+            aPath (str): Project file path
         
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
+        Returns:
+            None
         """
 
         cp = self.current()
@@ -64,15 +85,57 @@ class VivadoProject(object):
         # Open the right one
         self.console('open_project {}'.format(aPath))
 
-    def create(self):
-        pass
+    # ------------------------------------------------------------------------------
+    # def create(self):
+    #     pass
 
+    # ------------------------------------------------------------------------------
     def close(self):
         """
         Close current project
         """
         self.console('close_project')
 
+    # ------------------------------------------------------------------------------
+    def reset_runs(self, *args):
+        for r in args:
+            self.console('reset_run {}'.format(r))
+
+    # ------------------------------------------------------------------------------
+    def readRunInfo(self, aProps=None):
+        """Reads 
+        
+        Args:
+            aProps (None, optional): Description
+        
+        Returns:
+            TYPE: Description
+        """
+        lInfos = {}
+        lProps = aProps if aProps is not None else (
+            'STATUS',
+            'NEEDS_REFRESH',
+            'PROGRESS',
+            # 'IS_IMPLEMENTATION',
+            # 'IS_SYNTHESIS',
+            'STATS.ELAPSED',
+            # 'STATS.ELAPSED',
+        )
+
+        # Gather data about existing runs
+        lRuns = self.console('get_runs')[0].split()
+
+        for lRun in sorted(lRuns):
+
+            lValues = (
+                    self.console('get_property {0} [get_runs {1}]'.format(p, lRun))[0]
+                    for p in lProps
+                )
+            lInfos[lRun] = OrderedDict(zip(lProps, lValues))
+
+        return lInfos
+
+    # ------------------------------------------------------------------------------
     def listfiles(self):
         
         lConsole = self.console

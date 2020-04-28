@@ -66,10 +66,10 @@ def vivado(ctx, env, proj, verbosity):
 
     ensureVivado(env)
 
+    # Command-specific env variables
     env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
     env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
-    env.vivadoConsole = VivadoOpen(echo=env.vivadoEcho, _lazy=True)
-
+    env.vivadoConsole = VivadoOpen('vivado', echo=env.vivadoEcho, _lazy=True)
 
 # ------------------------------------------------------------------------------
 def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
@@ -99,9 +99,9 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     else:
         lConsole = env.vivadoConsole
         lConsole.echoprefix = lSessionId + ' | '
-        lProject = VivadoProject(lConsole)
-        if lProject.current():
-            lProject.close()
+        # lProject = VivadoProject(lConsole)
+        # if lProject.current():
+        #     lProject.close()
 
 
     try:
@@ -109,9 +109,9 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
         #     VivadoOpen(lSessionId, echo=env.vivadoEcho) if not lDryRun
         #     else SmartOpen(lScriptPath)
         # ) as lConsole:
-        with lConsole:
+        with lConsole as c:
             lVivadoMaker.write(
-                lConsole,
+                c,
                 lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
@@ -146,12 +146,10 @@ def checksyntax(env):
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-
             # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             # Change message severity to ERROR for the isses we're interested in
-            # lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
             lConsole.changeMsgSeverity(lStopOn, 'ERROR')
 
             # Execute the syntax check
@@ -238,9 +236,8 @@ def synth(env, aJobs, aUpdateInt):
 
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-
             # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             with VivadoSnoozer(lConsole):
                 lRunProps = { k: v for k, v in iteritems(readRunInfo(lConsole)) if lOOCRegex.match(k) }
@@ -258,14 +255,13 @@ def synth(env, aJobs, aUpdateInt):
                 )
                 lConsole('reset_run {}'.format(run))
 
-            lConsole([
-                ' '.join(['reset_run', lSynthRun]),
-                ' '.join(['launch_runs', lSynthRun] + lArgs)])
+            lConsole('reset_run {}'.format(lSynthRun))
+            lConsole('launch_runs {} {}'.format(lSynthRun, ' '.join(lArgs)))
 
             # 
             if not aUpdateInt:
                 secho("Run monitoring disabled", fg='cyan')
-                lConsole(['wait_on_run synth_1'])
+                lConsole('wait_on_run synth_1')
             else:
                 secho("Starting run monitoring loop, update interval: {} min(s)".format(aUpdateInt), fg='cyan')
                 while True:
@@ -289,7 +285,7 @@ def synth(env, aJobs, aUpdateInt):
                     if lRunProps['synth_1']['PROGRESS'] == '100%':
                         break
 
-                    lConsole(['wait_on_run synth_1 -timeout {}'.format(aUpdateInt)])
+                    lConsole('wait_on_run synth_1 -timeout {}'.format(aUpdateInt))
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -312,8 +308,11 @@ def synth(env, aJobs, aUpdateInt):
 
 # ------------------------------------------------------------------------------
 def impl(env, jobs, aStopOnTimingErr):
-    '''Launch an implementation run'''
+    '''
+    Launch an implementation run
+    '''
 
+ 
     lSessionId = 'impl'
 
     # Check
@@ -334,19 +333,19 @@ def impl(env, jobs, aStopOnTimingErr):
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
 
             # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             # Change message severity to ERROR for the isses we're interested in
             lConsole.changeMsgSeverity(lStopOn, "ERROR")
 
-            lConsole(
-                [
+            for c in (
                     'reset_run impl_1',
                     'launch_runs impl_1'
                     + (' -jobs {}'.format(jobs) if jobs is not None else ''),
                     'wait_on_run impl_1',
-                ]
-            )
+                ):
+                lConsole(c)
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -372,15 +371,14 @@ def resource_usage(env):
 
     ensureVivado(env)
 
-    lCmds = [
-        'open_project %s' % lVivProjPath, 'open_run impl_1',
-        'report_utilization -hierarchical -hierarchical_depth 1 -hierarchical_percentages'
-    ]
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lCmds)
-            # lConsole(lImplCmds)
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            for c in (
+                    'open_run impl_1',
+                    'report_utilization -hierarchical -hierarchical_depth 1 -hierarchical_percentages'
+                ):
+                lConsole(c)
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -392,24 +390,21 @@ def bitfile(env):
 
     lSessionId = 'bitfile'
 
-    # if env.currentproj.name is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     # Check
     if not exists(env.vivadoProjFile):
         raise click.ClickException("Vivado project %s does not exist" % env.vivadoProjFile)
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-
-    lBitFileCmds = ['launch_runs impl_1 -to_step write_bitstream', 'wait_on_run impl_1']
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lBitFileCmds)
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            for c in (
+                    'launch_runs impl_1 -to_step write_bitstream', 
+                    'wait_on_run impl_1'
+                ):
+                lConsole(c)
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -441,15 +436,15 @@ def binfile(env):
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-
-    lBinFileCmd  = 'write_cfgmem -format bin %s -loadbit {up 0x00000000 "%s" } -file "%s"' % (lBinFileCmdOptions, lBitPath, lBinPath)
-    lBinFileCmds = [lBinFileCmd]
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lBinFileCmds)
+
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            lConsole(
+                'write_cfgmem -format bin {} -loadbit {up 0x00000000 "{}" } -file "{}"'.format(
+                    lBinFileCmdOptions, lBitPath, lBinPath
+                )
+            )
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -477,11 +472,10 @@ def readRunInfo(aConsole, aProps=None):
 
     for lRun in sorted(lRuns):
 
-        lCmds = [
-            'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-            for lProp in lProps
-        ]
-        lValues = aConsole(lCmds)
+        lValues = (
+                aConsole('get_property {0} [get_runs {1}]'.format(p, lRun))[0]
+                for p in lProps
+            )
         lInfos[lRun] = OrderedDict(zip(lProps, lValues))
 
     return lInfos
@@ -530,7 +524,7 @@ def status(env):
 
             with VivadoSnoozer(lConsole):
                 lProject = VivadoProject(lConsole, env.vivadoProjFile)
-                lInfos = readRunInfo(lConsole, lProps)
+                lInfos = lProject.readRunInfo(lProps)
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -556,14 +550,15 @@ def reset(env):
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-
-    lResetCmds = ['reset_run synth_1', 'reset_run impl_1']
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lResetCmds)
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            for c in (
+                    'reset_run synth_1',
+                    'reset_run impl_1'
+                ):
+                lConsole(c)
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -597,7 +592,7 @@ def package(env, aTag):
         bitfile(env)
 
     wantBinFile = False
-    if env.depParser.vars.has_key('vivado_binfile_options'):
+    if 'vivado_binfile_options' in env.depParser.config:
         wantBinFile = True
     if wantBinFile:
         lBinPath = lBitPath.replace('.bit', '.bin')
@@ -699,18 +694,13 @@ def archive(ctx):
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-    lArchiveCmds = [
-        'archive_project %s -force'
-        % join(
-            env.currentproj.path, '{}.xpr.zip'.format(env.currentproj.settings['name'])
-        )
-    ]
-
     try:
         with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lArchiveCmds)
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            lConsole('archive_project {} -force'.format(
+                    join(env.currentproj.path, env.currentproj.settings['name']+'.xpr.zip')
+                )
+            )
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()

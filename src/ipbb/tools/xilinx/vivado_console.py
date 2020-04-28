@@ -281,7 +281,6 @@ class VivadoConsole(object):
         self._out.quiet = (not echobanner)
        
         lLogName = self._executable + (('_' + sessionid) if sessionid else '')
-        # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
         self._process = pexpect.spawn(self._executable,[
                     '-mode', 'tcl', 
                     '-log', lLogName+'.log',
@@ -325,6 +324,15 @@ class VivadoConsole(object):
     def version(self):
         return self._version
     
+    # --------------------------------------------------------------
+    @property
+    def echoprefix(self):
+        return self._out.prefix
+
+    # --------------------------------------------------------------
+    @echoprefix.setter
+    def echoprefix(self, prefix):
+        self._out.prefix = prefix
 
     # --------------------------------------------------------------
     def __del__(self):
@@ -332,6 +340,7 @@ class VivadoConsole(object):
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
+        # return self.execute(aCmd, aMaxLen)
         return self.execute(aCmd, aMaxLen)
 
     # --------------------------------------------------------------
@@ -485,17 +494,33 @@ class VivadoConsole(object):
         # Remove self from the list of instances
         self.__instances.remove(self)
 
-    # --------------------------------------------------------------
-    @property
-    def echoprefix(self):
-        return self._out.prefix
+    # # --------------------------------------------------------------
+    # def execute(self, aCmd, aMaxLen=1):
+    #     if not isinstance(aCmd, six.string_types):
+    #         raise TypeError('expected string, found '+str(type(aCmd)))
 
-    # --------------------------------------------------------------
-    @echoprefix.setter
-    def echoprefix(self, prefix):
-        self._out.prefix = prefix
+    #     if aCmd.count('\n') != 0:
+    #         raise ValueError('Format error. Newline not allowed in commands')
 
-    # --------------------------------------------------------------
+    #     self.__send(aCmd)
+    #     lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
+
+    #     if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
+    #         raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
+
+    #     return list(lBuffer)
+
+    # # --------------------------------------------------------------
+    # def executeMany(self, aCmds, aMaxLen=1):
+    #     if not isinstance(aCmds, list):
+    #         raise TypeError('expected list')
+
+    #     lOutput = []
+    #     for lCmd in aCmds:
+    #         lOutput.extend(self.execute(lCmd, aMaxLen))
+    #     return lOutput
+    
+        # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
         if not isinstance(aCmd, six.string_types):
             raise TypeError('expected string, found '+str(type(aCmd)))
@@ -509,17 +534,17 @@ class VivadoConsole(object):
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
             raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
 
-        return list(lBuffer)
+        return tuple(lBuffer)
 
-    # --------------------------------------------------------------
-    def executeMany(self, aCmds, aMaxLen=1):
-        if not isinstance(aCmds, list):
-            raise TypeError('expected list')
+    # # --------------------------------------------------------------
+    # def executeMany(self, aCmds, aMaxLen=1):
+    #     if not isinstance(aCmds, list):
+    #         raise TypeError('expected list')
 
-        lOutput = []
-        for lCmd in aCmds:
-            lOutput.extend(self.execute(lCmd, aMaxLen))
-        return lOutput
+    #     lOutput = []
+    #     for lCmd in aCmds:
+    #         lOutput.extend(self.execute(lCmd, aMaxLen))
+    #     return lOutput
 
     # --------------------------------------------------------------
     def changeMsgSeverity(self, aIds, aSeverity):
@@ -530,13 +555,17 @@ class VivadoConsole(object):
             aSeverity (str): Target severity
         """
         lIds = aIds if isinstance(aIds, list) else [aIds]
-        self.executeMany(['set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds])
+        for c in ('set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds):
+            self.execute(c)
 
 
 #-------------------------------------------------------------------------------
 @lazyctxmanager
 class VivadoOpen(VivadoConsole):
-    """docstring for VivadoOpen"""
+
+    """Summary
+    """
+    
     pass
 
 VivadoSnoozer = TCLConsoleSnoozer

@@ -152,9 +152,9 @@ class VivadoProjectMaker(object):
             for c, f in iteritems(lSrcCommandGroups):
                 write(tmpl(c).substitute(files=' '.join(f)))
 
-        write('set_property top {0} [sources_1]'.format(lTopEntity))
+        write('set_property top {0} [get_filesets sources_1]'.format(lTopEntity))
         if lSimTopEntity:
-            write('set_property top {0} [sim_1]'.format(lSimTopEntity))
+            write('set_property top {0} [get_filesets sim_1]'.format(lSimTopEntity))
 
         if self.ipCachePath:
             write('config_ip_cache -import_from_project -use_cache_location {0}'.format(abspath(self.ipCachePath)))

@@ -220,7 +220,7 @@ class VivadoConsole(object):
     def killAllInstances(cls):
         lInstances = set(cls.__instances)
         for lInstance in lInstances:
-            lInstance.quit()
+            lInstance.close()
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -328,7 +328,7 @@ class VivadoConsole(object):
 
     # --------------------------------------------------------------
     def __del__(self):
-        self.quit()
+        self.close()
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
@@ -459,7 +459,7 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def quit(self):
+    def close(self):
 
         # Return immediately of already dead
         if not hasattr(self, '_process') or not self._process.isalive():

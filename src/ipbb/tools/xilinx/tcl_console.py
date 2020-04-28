@@ -45,7 +45,7 @@ def lazyctxmanager(aTCLConsoleClass):
         # --------------------------------------------------------------
         def __exit__(self, type, value, traceback):
             if not self._lazy:
-                self._getconsole().quit()
+                self._getconsole().close()
                 self._console = None
 
         # --------------------------------------------------------------
@@ -93,23 +93,3 @@ class TCLConsoleSnoozer(object):
         self._console.quiet = self._quiet
     # --------------------------------------------------------------
 
-
-# -------------------------------------------------------------------------
-# def generate_lazy_console(aTCLConsoleClass):
-
-#     class TCLLazyConsole(object):
-#         """
-#         docstring for TCLLazyConsole
-#         """
-#         def __init__(self, *args, **kwargs):
-#             super(TCLLazyConsole, self).__init__()
-#             self._args = args
-#             self._kwargs = kwargs
-#             self._console = None
-
-#         def get(self):
-#             if not self._console:
-#                 self._console = aTCLConsoleClass(*self._args, **self._kwargs)
-#             return self
-
-            

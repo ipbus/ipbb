@@ -46,7 +46,7 @@ def ensureVivado(env):
 
 
 # ------------------------------------------------------------------------------
-def vivado(env, proj, verbosity):
+def vivado(ctx, env, proj, verbosity):
     '''Vivado command group'''
 
     env.vivadoEcho = (verbosity == 'all')
@@ -511,8 +511,6 @@ def status(env):
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-
     lInfos = {}
     lProps = [
         'STATUS',
@@ -526,27 +524,12 @@ def status(env):
     lOOCRegex = re.compile(r'.*_synth_\d+')
     lRunRegex = re.compile(r'(synth|impl)_\d+')
 
-    # if lDryRun:
-    #     lConsole = SmartOpen(aToScript if not aToStdout else None)
-    # else:
-    #     lConsole = env.vivadoConsole
-    #     lConsole.echoprefix = lSessionId + ' | '
-    lConsole = env.vivadoConsole
-    lConsole.echoprefix = lSessionId + ' | '
-    lProject = VivadoProject(lConsole)
-    lCurrentProject = lProject.current()
-    if lCurrentProject != env.currentproj.name:
-        if lCurrentProject:
-            lProject.close()
-        lProject.open(env.vivadoProjFile)
-
     try:
-        # with VivadoOpen(lSessionId, echo=env.vivadoEcho, echobanner=False) as lConsole:
-        with lConsole:
-            # echo('Opening project ' + env.currentproj.name)
+        with env.vivadoConsole as lConsole:
+            lConsole.echoprefix = lSessionId + ' | '
 
             with VivadoSnoozer(lConsole):
-                # lConsole(lOpenCmds)
+                lProject = VivadoProject(lConsole, env.vivadoProjFile)
                 lInfos = readRunInfo(lConsole, lProps)
 
     except VivadoConsoleError as lExc:

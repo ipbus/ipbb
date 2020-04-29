@@ -20,10 +20,10 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from itertools import izip
-from ..common import which, OutputFormatter
-from ..termui import *
-from .tcl_console import consolectxmanager, TCLConsoleSnoozer
+from ..common import which
+# from ..termui import *
+from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
+from .vivado_common import VivadoNotFoundError, autodetect, VivadoOutputFormatter, _parseversion
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -56,121 +56,6 @@ def on_parent_exit(signame):
 # ------------------------------------------------
 
 
-# ------------------------------------------------
-class VivadoNotFoundError(Exception):
-
-    def __init__(self, message):
-        # Call the base class constructor with the parameters it needs
-        super(VivadoNotFoundError, self).__init__(message)
-# ------------------------------------------------
-
-
-# ------------------------------------------------
-def _parseversion(verstr):
-    """
-Vivado:
-    Vivado v2017.4 (64-bit)
-    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-    IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
-    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-
-Vivado Lab:
-    Vivado Lab Edition v2017.4 (64-bit)
-    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-
-    """
-    lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
-
-    lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
-
-    m = lVerRe.search(str(verstr))
-
-    if m is None:
-        raise VivadoNotFoundError("Failed to detect Vivado variant")
-
-    return m.groups()
-# ------------------------------------------------
-
-
-# ------------------------------------------------
-def autodetect(executable='vivado'):
-    """
-    Detects current vivado version
-    """
-    if not which(executable):
-        raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
-
-    lExe = sh.Command(executable)
-    lVerStr = lExe('-version')
-    return _parseversion(lVerStr)
-# ------------------------------------------------
-
-
-# -------------------------------------------------------------------------
-class VivadoOutputFormatter(OutputFormatter):
-    """Formatter for Vivado command line output
-
-    Arguments:
-        prefix (string): String to prepend to each line of output
-    """
-    def __init__(self, prefix=None, sep=' | ', quiet=False):
-        super(VivadoOutputFormatter, self).__init__(prefix, sep, quiet)
-
-        self.pendingchars = ''
-        self.skiplines = ['\r\x1b[12C\r']
-
-    def write(self, message):
-        """Writes formatted message
-        
-        Args:
-            message (string): Message to format
-        """
-        
-        # put any pending character first
-        msg = self.pendingchars + message
-        # Flush pending chars
-        self.pendingchars = ''
-
-        # Splitting with regex, allows more flexibility
-        lReNewLines = re.compile('(\r?\n)')
-
-        # lines = msg.splitlines(True)
-        lines = lReNewLines.split(msg)
-
-        if not lines[-1]:
-        # Drop the last entry if empty, i.e. the 
-            lines.pop()
-        else:
-        # Otherwise queue it for the next round
-            self.pendingchars = lines[-1]
-            del lines[-1]
-
-
-        assert (len(lines) % 2 == 0)
-
-        # Iterate over pairs, line and newline match
-        for lLine,lRet in izip(lines[::2], lines[1::2]):
-            if lLine in self.skiplines:
-                continue
-
-            lColor = None
-            if lLine.startswith('INFO:'):
-                lColor = kBlue
-            elif lLine.startswith('WARNING:'):
-                lColor = kYellow
-            elif lLine.startswith('CRITICAL WARNING:'):
-                lColor = kOrange
-            elif lLine.startswith('ERROR:'):
-                lColor = kRed
-            elif self.quiet:
-                continue
-
-            if lColor is not None:
-                lLine = lColor + lLine + kReset
-
-            self._write(self._prefixstr + lLine + lRet)
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -191,7 +76,6 @@ class VivadoConsoleError(Exception):
 
     def __str__(self):
         return self.__class__.__name__ + '(\'{}\', errors: {}, critical warnings {})'.format(self.command, len(self.errors), len(self.criticalWarns))
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -356,7 +240,6 @@ class VivadoConsole(object):
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
-        # return self.execute(aCmd, aMaxLen)
         return self.execute(aCmd, aMaxLen)
 
     # --------------------------------------------------------------
@@ -476,33 +359,9 @@ class VivadoConsole(object):
         # Remove self from the list of instances
         self.__instances.remove(self)
 
-    # # --------------------------------------------------------------
-    # def execute(self, aCmd, aMaxLen=1):
-    #     if not isinstance(aCmd, six.string_types):
-    #         raise TypeError('expected string, found '+str(type(aCmd)))
 
-    #     if aCmd.count('\n') != 0:
-    #         raise ValueError('Format error. Newline not allowed in commands')
-
-    #     self.__send(aCmd)
-    #     lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
-
-    #     if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
-    #         raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
-
-    #     return list(lBuffer)
-
-    # # --------------------------------------------------------------
-    # def executeMany(self, aCmds, aMaxLen=1):
-    #     if not isinstance(aCmds, list):
-    #         raise TypeError('expected list')
-
-    #     lOutput = []
-    #     for lCmd in aCmds:
-    #         lOutput.extend(self.execute(lCmd, aMaxLen))
-    #     return lOutput
     
-        # --------------------------------------------------------------
+    # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
         if not isinstance(aCmd, six.string_types):
             raise TypeError('expected string, found '+str(type(aCmd)))
@@ -540,7 +399,7 @@ class VivadoSession(VivadoConsole):
     
     pass
 
-#
+
 #-------------------------------------------------------------------------------
 VivadoSnoozer = TCLConsoleSnoozer
 
@@ -621,9 +480,6 @@ class VivadoSessionManager(object):
             VivadoSessionContextAdapter: Context adapter holding the session details
         """
         return VivadoSessionContextAdapter(self, not self._keep, sid)
-
-# ------------------------------------------------------------------------------
-
 
 
 @atexit.register

@@ -22,7 +22,7 @@ from click import style
 from itertools import izip
 from ..common import which, OutputFormatter
 from ..termui import *
-from .tcl_console import consolectxmanager, TCLConsoleSnoozer
+from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
 
 kHLSLogDebug = False
 
@@ -80,8 +80,8 @@ class VivadoHLSOutputFormatter(OutputFormatter):
     Arguments:
         prefix (string): String to prepend to each line of output
     """
-    def __init__(self, prefix=None, quiet=False):
-        super(VivadoHLSOutputFormatter, self).__init__(prefix, quiet)
+    def __init__(self, prefix=None, sep=' | ', quiet=False):
+        super(VivadoHLSOutputFormatter, self).__init__(prefix, sep, quiet)
 
         self.pendingchars = ''
         self.skiplines = ['\r\x1b[12C\r']
@@ -151,8 +151,8 @@ class VivadoHLSOutputFormatter(OutputFormatter):
                 lLine = lColor + lLine + kReset
 
             if kHLSLogDebug:
-                self._write(kBlue+"fmtxout >> "+kReset+repr((self.prefix if self.prefix else '') + lLine + lRet) + '\n')
-            self._write((self.prefix if self.prefix else '') + lLine + lRet)
+                self._write(kBlue+"fmtxout >> "+kReset+repr(self._prefixstr + lLine + lRet) + '\n')
+            self._write(self._prefixstr + lLine + lRet)
 # -------------------------------------------------------------------------
 
 
@@ -223,7 +223,7 @@ class VivadoHLSConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echobanner=False, echoprefix=None, executable='vivado_hls', prompt=None, stopOnCWarnings=False):
+    def __init__(self, executable='vivado_hls', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None ):
         """
         Args:
             sessionid (str): Name of the VivadoHLS session
@@ -254,16 +254,14 @@ class VivadoHLSConsole(object):
 
         # Set up the output formatter
         self._out = VivadoHLSOutputFormatter(
-            echoprefix if ( echoprefix or (sessionid is None) )
-            else (sessionid + ' | '),
-            quiet=(not echo)
+            sid, quiet=(not echo)
         )
 
         self._out.write('\n' + '- Starting VivadoHLS -'+'-' * 40 + '\n')
-        self._out.quiet = (not echobanner)
+        self._out.quiet = (not showbanner)
        
-        lLogName = self._executable + (('_' + sessionid) if sessionid else '')
-        # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
+        loglabel = loglabel if loglabel else sid
+        lLogName = self._executable + (('_' + loglabel) if loglabel else '')
         self._process = pexpect.spawn(self._executable, [
                 '-i', 
                 '-l', lLogName+'.log',
@@ -455,9 +453,9 @@ class VivadoHLSConsole(object):
         lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
 
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
-            raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
+            raise VivadoHLSConsoleError(aCmd, lErrors, lCriticalWarnings)
 
-        return list(lBuffer)
+        return tuple(lBuffer)
 
     # --------------------------------------------------------------
     def executeMany(self, aCmds, aMaxLen=1):
@@ -483,7 +481,7 @@ class VivadoHLSConsole(object):
 
 # -------------------------------------------------------------------------
 @consolectxmanager
-class VivadoHLSOpen(VivadoHLSConsole):
+class VivadoHLSSession(VivadoHLSConsole):
     pass
 
 VivadoHLSSnoozer = TCLConsoleSnoozer

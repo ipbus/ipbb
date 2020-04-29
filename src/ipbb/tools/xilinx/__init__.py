@@ -6,4 +6,4 @@ from .vivado_batch import *
 from .vivado_project import *
 
 
-from .vivado_hls_console import *
+from .vivadohls_console import *

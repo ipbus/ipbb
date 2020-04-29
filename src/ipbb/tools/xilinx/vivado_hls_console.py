@@ -22,7 +22,7 @@ from click import style
 from itertools import izip
 from ..common import which, OutputFormatter
 from ..termui import *
-from .tcl_console import lazyctxmanager, TCLConsoleSnoozer
+from .tcl_console import consolectxmanager, TCLConsoleSnoozer
 
 kHLSLogDebug = False
 
@@ -482,7 +482,7 @@ class VivadoHLSConsole(object):
 
 
 # -------------------------------------------------------------------------
-@lazyctxmanager
+@consolectxmanager
 class VivadoHLSOpen(VivadoHLSConsole):
     pass
 

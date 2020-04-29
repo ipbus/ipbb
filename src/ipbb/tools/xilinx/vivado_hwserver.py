@@ -4,7 +4,7 @@ import six
 # ------------------------------------------------------------------------------
 
 from .vivado_console import VivadoConsole
-from .tcl_console import lazyctxmanager, TCLConsoleSnoozer
+from .tcl_console import consolectxmanager, TCLConsoleSnoozer
 
 # -------------------------------------------------------------------------
 class VivadoHWServer(VivadoConsole):
@@ -68,9 +68,9 @@ class VivadoHWServer(VivadoConsole):
 
 
 # -------------------------------------------------------------------------
-@lazyctxmanager
-class VivadoHWOpen(VivadoHWServer):
+@consolectxmanager
+class VivadoHWSession(VivadoHWServer):
     """
-    docstring for VivadoHWOpen
+    docstring for VivadoHWSession
     """
     pass

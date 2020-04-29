@@ -5,37 +5,44 @@ import six
 
 
 # -------------------------------------------------------------------------
-def lazyctxmanager(aTCLConsoleClass):
+def consolectxmanager(aTCLConsoleClass):
     
-    class LazyConsoleCtxClass(object):
+    class TCLConsoleSessionAdapter(object):
         """
         VivadoConsole wrapper for with statements
+
+
+        with XXX(_sid='pippo', ) as console:
+
         """
-        # --------------------------------------------------------------
-        def _getconsole(self):
-            if self._console is None:
-                self._console = aTCLConsoleClass(*self._args, **self._kwargs)
-            return self._console
 
         # --------------------------------------------------------------
         def __init__(self, *args, **kwargs):
-            super(LazyConsoleCtxClass, self).__init__()
-            self._lazy = kwargs.pop('_lazy', False)
+            """Constructor
+            
+            Args:
+                *args: console arguments
+                **kwargs: List of console key'd arguments
+            
+            """
+            super(TCLConsoleSessionAdapter, self).__init__()
             self._console = None
             self._args = args
             self._kwargs = kwargs
 
         # --------------------------------------------------------------
         def __enter__(self):
-            return self._getconsole()
+            self._console = aTCLConsoleClass(*self._args, **self._kwargs)
+            return self._console
 
         # --------------------------------------------------------------
         def __exit__(self, type, value, traceback):
-            if not self._lazy:
-                self._getconsole().close()
+
+            if self._console:
+                self._console.close()
                 self._console = None
 
-    return LazyConsoleCtxClass
+    return TCLConsoleSessionAdapter
 
 
 

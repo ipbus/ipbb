@@ -28,10 +28,14 @@ def vivado(env, proj, verbosity):
 # ------------------------------------------------------------------------------
 @vivado.resultcallback()
 @click.pass_obj
-def process_vivado(env, results, proj, verbosity):
+def process_vivado(env, subcommands, proj, verbosity):
 
-    from ..cmds import vivado
-    vivado.vivado(env, proj, verbosity, results)
+    from ..cmds.vivado import vivado
+    vivado(env, proj, verbosity, (name for name,_,_,_ in subcommands))
+
+    # Executed the chained commands
+    for name, cmd, args, kwargs in subcommands:
+        cmd(*args, **kwargs)
 
 # ------------------------------------------------------------------------------
 def vivado_get_command_aliases(self, ctx, cmd_name):

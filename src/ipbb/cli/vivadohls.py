@@ -20,42 +20,60 @@ def vivadohls(env, proj, verbosity):
     - warnings-only:
     - none:
     '''
+    pass
+
+# ------------------------------------------------------------------------------
+@vivadohls.resultcallback()
+@click.pass_obj
+def process_vivadohls(env, subcommands, proj, verbosity):
     from ..cmds.vivadohls import vivadohls
     vivadohls(env, proj, verbosity)
 
+    # Executed the chained commands
+    for name, cmd, args, kwargs in subcommands:
+        cmd(*args, **kwargs)
 
 # ------------------------------------------------------------------------------
 @vivadohls.command('make-project', short_help='Assemble the project from sources.')
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def makeproject(env, aToScript, aToStdout):
+@click.pass_context
+def makeproject(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import makeproject
-    makeproject(env, aToScript, aToStdout)
+    # makeproject(env, aToScript, aToStdout)
+    return (ctx.command.name, makeproject, args, kwargs)
+
 
 # ------------------------------------------------------------------------------
 @vivadohls.command('synth', short_help='Run C-synthesis.')
 @click.pass_obj
-def synth(env):
+@click.pass_context
+def synth(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import synth
-    synth(env)
+    # synth(env)
+    return (ctx.command.name, synth, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
 @vivadohls.command('sim', short_help='Run C-synthesis.')
 @click.pass_obj
-def sim(env):
+@click.pass_context
+def sim(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import sim
-    sim(env)
+    # sim(env)
+    return (ctx.command.name, sim, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
 @vivadohls.command('cosim', short_help='Run C-synthesis.')
 @click.pass_obj
-def cosim(env):
+@click.pass_context
+def cosim(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import cosim
-    cosim(env)
+    # cosim(env)
+    return (ctx.command.name, cosim, args, kwargs)

@@ -13,7 +13,7 @@ from ..tools.common import which, SmartOpen
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..makers.vivadohlsproject import VivadoHlsProjectMaker
-from ..tools.xilinx import VivadoHLSOpen, VivadoHLSConsoleError
+from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError
 
 
 # ------------------------------------------------------------------------------
@@ -37,7 +37,6 @@ def vivadohls(env, proj, verbosity):
 
     env.vivadoHlsEcho = (verbosity == 'all')
 
-    # lProj = proj if proj is not None else env.currentproj.name
     if proj is not None:
         # Change directory before executing subcommand
         from .proj import cd
@@ -51,8 +50,7 @@ def vivadohls(env, proj, verbosity):
             )
 
     env.vivadoHlsProjPath = join(env.currentproj.path, env.currentproj.name)
-    # env.vivadoHlsProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
-
+    
 
 # ------------------------------------------------------------------------------
 def makeproject(env, aToScript, aToStdout):
@@ -78,7 +76,7 @@ def makeproject(env, aToScript, aToStdout):
 
     try:
         with (
-            VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) if not lDryRun
+            VivadoHLSSession(sid=lSessionId, echo=env.vivadoHlsEcho) if not lDryRun
             else SmartOpen(lScriptPath)
         ) as lConsole:
 
@@ -111,7 +109,7 @@ def synth(env):
     ensureVivadoHLS(env)
 
     try:
-        with VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) as lConsole:
+        with VivadoHLSSession(sid=lSessionId, echo=env.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole('open_project {}'.format(env.currentproj.name))
@@ -144,7 +142,7 @@ def sim(env):
     ensureVivadoHLS(env)
 
     try:
-        with VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) as lConsole:
+        with VivadoHLSSession(sid=lSessionId, echo=env.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole('open_project {}'.format(env.currentproj.name))
@@ -176,7 +174,7 @@ def cosim(env):
     ensureVivadoHLS(env)
 
     try:
-        with VivadoHLSOpen(lSessionId, echo=env.vivadoHlsEcho) as lConsole:
+        with VivadoHLSSession(sid=lSessionId, echo=env.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole('open_project {}'.format(env.currentproj.name))

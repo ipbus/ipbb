@@ -25,10 +25,15 @@ def sim(env, proj):
 # ------------------------------------------------------------------------------
 @sim.resultcallback()
 @click.pass_obj
-def process_sim(env, results, proj):
+def process_sim(env, subcommands, proj):
 
-    from ..cmds import sim
-    sim.sim(env, proj, results)
+    from ..cmds.sim import sim
+    sim(env, proj)
+
+    # Executed the chained commands
+    for name, cmd, args, kwargs in subcommands:
+        cmd(*args, **kwargs)
+
 
 # ------------------------------------------------------------------------------
 def sim_get_command_aliases(self, ctx, cmd_name):
@@ -51,8 +56,6 @@ sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 @sim.command('setup-simlib', short_help="Compile xilinx simulation libraries")
 @click.option('-x', '--xilinx-simlib', 'aXilSimLibsPath', default=join('${HOME}', '.xilinx_sim_libs'), envvar='IPBB_SIMLIB_BASE', metavar='<path>', help='Xilinx simulation library target directory. The default value is overridden by IPBB_SIMLIB_BASE environment variable when defined', show_default=True)
 @click.option('-f', '--force', 'aForce', is_flag=True, help="Force simlib compilation/check.")
-@click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
-@click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen (dry run).")
 @click.pass_obj
 @click.pass_context
 def setupsimlib(ctx, *args, **kwargs):

@@ -45,7 +45,6 @@ from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
 from ..makers.ipcoressim import IPCoresSimMaker
-from ..makers.simlib import SimlibMaker
 from ..makers.modelsimproject import ModelSimProjectMaker
 
 
@@ -98,7 +97,7 @@ def findIPSrcs( srcs ):
 
 
 # ------------------------------------------------------------------------------
-def sim(env, proj, subcommands):
+def sim(env, proj):
     '''Simulation commands group'''
 
     if proj is not None:
@@ -114,11 +113,9 @@ def sim(env, proj, subcommands):
 
     ensureModelsim(env)
 
-    for name, cmd, args, kwargs in subcommands:
-        cmd(*args, **kwargs)
 
 # ------------------------------------------------------------------------------
-def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
+def setupsimlib(env, aXilSimLibsPath, aForce):
     lSessionId = 'setup-simlib'
 
     # -------------------------------------------------------------------------
@@ -127,8 +124,6 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             'Vivado is not available. Have you sourced the environment script?'
         )
     # -------------------------------------------------------------------------
-
-    lDryRun = aToScript or aToStdout
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
@@ -168,22 +163,11 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             )
         )
 
-        lSimlibMaker = SimlibMaker(lSimulator, lSimlibPath)
         try:
-            with (
-                # Pipe commands to Vivado console
-                xilinx.VivadoSession(sid=lSessionId)
-                if not lDryRun
-                else SmartOpen(
-                    # Dump to script
-                    aToScript
-                    if not aToStdout
-                    # Dump to terminal
-                    else None
+            with xilinx.VivadoSession(sid=lSessionId) as lVivadoConsole:
+                lVivadoConsole(
+                    'compile_simlib -verbose -simulator {} -family all -language all -library all -dir {{{}}}'.format(lSimulator, lSimlibPath)
                 )
-            ) as lVivadoConsole:
-
-                lSimlibMaker.write(lVivadoConsole)
 
         except xilinx.VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)

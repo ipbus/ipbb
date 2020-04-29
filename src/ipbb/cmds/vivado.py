@@ -65,7 +65,7 @@ def ensureVivadoProjPath(aProjPath):
         raise click.ClickException("Vivado project %s does not exist" % aProjPath)
 
 # ------------------------------------------------------------------------------
-def vivado(env, proj, verbosity, subcommands):
+def vivado(env, proj, verbosity, cmdlist):
     '''Vivado command group
     
     Args:
@@ -96,15 +96,12 @@ def vivado(env, proj, verbosity, subcommands):
     ensureVivado(env)
 
     lKeep = True
-    lLogLabel = None if not lKeep else '_'.join( name for name,_,_,_ in subcommands)
+    lLogLabel = None if not lKeep else '_'.join( cmdlist )
 
     # Command-specific env variables
     env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
     env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
     env.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
-
-    for name, cmd, args, kwargs in subcommands:
-        cmd(*args, **kwargs)
 
 
 # ------------------------------------------------------------------------------

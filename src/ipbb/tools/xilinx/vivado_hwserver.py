@@ -4,7 +4,7 @@ import six
 # ------------------------------------------------------------------------------
 
 from .vivado_console import VivadoConsole
-from .tcl_console import consolectxmanager, TCLConsoleSnoozer
+from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
 
 # -------------------------------------------------------------------------
 class VivadoHWServer(VivadoConsole):

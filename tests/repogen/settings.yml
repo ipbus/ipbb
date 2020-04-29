@@ -14,7 +14,7 @@ files:
       @var_A=True
       @lvl1.var_B=3
       @lvl1.lvl_2.var_C="x"
-      @myfile=t3
+      @myfile='t3'
     settings.tcl: ""
   firmware/hdl:
     t0.vhd: ""

@@ -98,7 +98,7 @@ def findIPSrcs( srcs ):
 
 
 # ------------------------------------------------------------------------------
-def sim(env, proj):
+def sim(env, proj, subcommands):
     '''Simulation commands group'''
 
     if proj is not None:
@@ -114,6 +114,8 @@ def sim(env, proj):
 
     ensureModelsim(env)
 
+    for name, cmd, args, kwargs in subcommands:
+        cmd(*args, **kwargs)
 
 # ------------------------------------------------------------------------------
 def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
@@ -170,7 +172,7 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
         try:
             with (
                 # Pipe commands to Vivado console
-                xilinx.VivadoOpen(lSessionId)
+                xilinx.VivadoSession(sid=lSessionId)
                 if not lDryRun
                 else SmartOpen(
                     # Dump to script
@@ -279,7 +281,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     try:
         with (
             # Pipe commands to Vivado console
-            xilinx.VivadoOpen(lSessionId) if not lDryRun
+            xilinx.VivadoSession(sid=lSessionId) if not lDryRun
             else SmartOpen(lScriptPath)
         ) as lVivadoConsole:
 

@@ -28,24 +28,10 @@ def vivado(env, proj, verbosity):
 # ------------------------------------------------------------------------------
 @vivado.resultcallback()
 @click.pass_obj
-@click.pass_context
-def process_vivado(ctx, env, results, proj, verbosity):
+def process_vivado(env, results, proj, verbosity):
 
-    logslug = '_'.join( name for name,_,_,_ in results )
-    # print(logslug)
-    # return
     from ..cmds import vivado
     vivado.vivado(env, proj, verbosity, results)
-
-    # for name, cmdname, args, kwargs in results:
-    #     # print(name, cmd)
-    #     try:
-    #         cmd = getattr(vivado, cmdname)
-    #     except AttributeError as lExc:
-    #         print(dir(vivado))
-    #         raise click.ClickException('Function {} not found in module {}'.format(cmdname, vivado.__file__))
-    #     cmd(*args, **kwargs)
-
 
 # ------------------------------------------------------------------------------
 def vivado_get_command_aliases(self, ctx, cmd_name):
@@ -83,7 +69,8 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 @click.pass_context
 def makeproject(ctx, *args, **kwargs):
     '''Creates the Vivado project from sources.'''
-    return (ctx.command.name, 'makeproject', args, kwargs)
+    from ..cmds.vivado import makeproject
+    return (ctx.command.name, makeproject, args, kwargs)
 
 
 # # ------------------------------------------------------------------------------
@@ -99,7 +86,8 @@ def makeproject(ctx, *args, **kwargs):
 def checksyntax(ctx, *args, **kwargs):
     """Run Vivado syntax check on current project
     """
-    return (ctx.command.name, 'checksyntax', args, kwargs)
+    from ..cmds.vivado import checksyntax
+    return (ctx.command.name, checksyntax, args, kwargs)
 
 # # -------------------------------------
 # @vivado.command('synth', short_help='Run the synthesis step on the current project.')
@@ -119,7 +107,8 @@ def checksyntax(ctx, *args, **kwargs):
 @click.pass_context
 def synth(ctx, *args, **kwargs):
     '''Run synthesis'''
-    return (ctx.command.name, 'synth', args, kwargs)
+    from ..cmds.vivado import synth
+    return (ctx.command.name, synth, args, kwargs)
 
 # ------------------------------------------------------------------------------
 # @vivado.command('impl', short_help='Run the implementation step on the current project.')
@@ -140,7 +129,8 @@ def synth(ctx, *args, **kwargs):
 @click.pass_context
 def impl(ctx, *args, **kwargs):
     '''Launch an implementation run'''
-    return (ctx.command.name, 'impl', args, kwargs)
+    from ..cmds.vivado import impl
+    return (ctx.command.name, impl, args, kwargs)
 
 # # ------------------------------------------------------------------------------
 # @vivado.command('resource-usage', short_help="Resource usage")
@@ -156,7 +146,8 @@ def impl(ctx, *args, **kwargs):
 @click.pass_context
 def resource_usage(ctx, *args, **kwargs):
     '''Create a resource_usage'''
-    return (ctx.command.name, 'resource_usage', args, kwargs)
+    from ..cmds.vivado import resource_usage
+    return (ctx.command.name, resource_usage, args, kwargs)
 
 # # ------------------------------------------------------------------------------
 # @vivado.command('bitfile', short_help="Generate the bitfile.")
@@ -172,7 +163,8 @@ def resource_usage(ctx, *args, **kwargs):
 @click.pass_context
 def bitfile(ctx, *args, **kwargs):
     '''Create a bitfile'''
-    return (ctx.command.name, 'bitfile', args, kwargs)
+    from ..cmds.vivado import bitfile
+    return (ctx.command.name, bitfile, args, kwargs)
 
 
 # # ------------------------------------------------------------------------------
@@ -189,7 +181,8 @@ def bitfile(ctx, *args, **kwargs):
 @click.pass_context
 def status(ctx, *args, **kwargs):
     '''Show the status of all runs in the current project.'''
-    return (ctx.command.name, 'status', args, kwargs)
+    from ..cmds.vivado import status
+    return (ctx.command.name, status, args, kwargs)
 
 
 # # ------------------------------------------------------------------------------
@@ -208,7 +201,8 @@ def status(ctx, *args, **kwargs):
 def reset(ctx, *args, **kwargs):
     '''Reset synth and impl runs'''
 
-    return (ctx.command.name, 'reset', args, kwargs)
+    from ..cmds.vivado import reset
+    return (ctx.command.name, reset, args, kwargs)
 
 
 # # ------------------------------------------------------------------------------
@@ -231,7 +225,8 @@ def package(ctx, *args, **kwargs):
     '''Package bitfile with address table and file list
 
     '''
-    return (ctx.command.name, 'package', args, kwargs)
+    from ..cmds.vivado import package
+    return (ctx.command.name, package, args, kwargs)
 
 # # ------------------------------------------------------------------------------
 # @vivado.command()
@@ -245,4 +240,5 @@ def package(ctx, *args, **kwargs):
 @click.pass_obj
 @click.pass_context
 def archive(ctx, *args, **kwargs):
-    return (ctx.command.name, 'archive', args, kwargs)
+    from ..cmds.vivado import archive
+    return (ctx.command.name, archive, args, kwargs)

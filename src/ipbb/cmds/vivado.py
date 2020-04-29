@@ -94,7 +94,7 @@ def vivado(env, proj, verbosity, subcommands):
             )
 
     ensureVivado(env)
-    
+
     lKeep = True
     lLogLabel = None if not lKeep else '_'.join( name for name,_,_,_ in subcommands)
 
@@ -102,13 +102,8 @@ def vivado(env, proj, verbosity, subcommands):
     env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
     env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
     env.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
-    # env.vivadoSessions = VivadoSessionManager(keep=True, loglabel=loglabel)
 
-    for name, cmdname, args, kwargs in subcommands:
-        try:
-            cmd = globals()[cmdname]
-        except KeyError as lExc:
-            raise click.ClickException("Function '{}' not found in module {}".format(cmdname, __file__))
+    for name, cmd, args, kwargs in subcommands:
         cmd(*args, **kwargs)
 
 

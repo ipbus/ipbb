@@ -597,7 +597,7 @@ class VivadoSessionManager(object):
             self._console = None
 
     def __del__(self):
-        if self._console:
+        if self._keep and self._console:
             self._console.close()
 
     def _getconsole(self, sid):

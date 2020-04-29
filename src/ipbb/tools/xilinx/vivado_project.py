@@ -55,7 +55,7 @@ class VivadoProject(object):
             str: Property value
         
         """
-        return  self.console('get_property {}} [current_project]'.format(name))[0]
+        return  self.console('get_property {{{}}} [current_project]'.format(name))[0]
     
     # ------------------------------------------------------------------------------
     def open(self, aPath):

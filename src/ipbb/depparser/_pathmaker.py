@@ -7,6 +7,7 @@ import os
 class Pathmaker(object):
 
     fpaths = {
+        "fw": "firmware",
         "src": "firmware/hdl",
         "hlssrc": "firmware/hls",
         "include": "firmware/cfg",

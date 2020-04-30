@@ -10,7 +10,7 @@ files:
       @device_speed = "-2-e"
       @top_entity = "hls_main"
       hlssrc hls_test.h hls_test.cpp
-      hlssrc --tb tb_test.cpp
+      hlssrc --tb tb_test.cpp -i aa:bb
   firmware/hls:
     hls_test.h : |
       char hls_main(char, char, char);
@@ -27,15 +27,15 @@ files:
       }
     tb_test.cpp: |
       // Relative import
-      #include "../hls/hls_test.h"
+      // #include "../hls/hls_test.h"
       // From component's firmware folder
       #include "hls/hls_test.h"
       // From component's base folder
-      #include "firmware/hls/hls_test.h"
+      //#include "firmware/hls/hls_test.h"
       // From package base folder
-      #include "components/firmware/hls/hls_test.h"
+      //#include "components/firmware/hls/hls_test.h"
       // From `src` folder (reference to a different package)
-      #include "hls_test_d3/components/firmware/hls/hls_test.h"
+      //#include "hls_test_d3/components/firmware/hls/hls_test.h"
 
       
       #include <iostream>

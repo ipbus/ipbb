@@ -105,7 +105,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('--tb', action='store_true')
         subp.add_argument('--cflags')
         subp.add_argument('--csimflags')
-        subp.add_argument('-i', '--include-comp', append=True, action=ComponentAction)
+        subp.add_argument('-i', '--include-comp', append=True, action=ComponentAction, default=[])
         subp.add_argument('file', nargs='+')
 
         # Address table sub-parser

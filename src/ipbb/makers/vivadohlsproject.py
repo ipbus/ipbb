@@ -6,7 +6,7 @@ from future.utils import iterkeys, itervalues, iteritems
 import time 
 
 # Specific module elements
-from ..depparser import PathMaker
+from ..depparser import Pathmaker
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext, dirname
 
@@ -22,6 +22,7 @@ class VivadoHlsProjectMaker(object):
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aRootDir):
 
         write = aOutput
+        pathFinder = Pathmaker(aRootDir)
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aSettings.keys()):
@@ -53,15 +54,20 @@ class VivadoHlsProjectMaker(object):
         for src in lHlsSrcs:
 
 
-            # lLocalIncludes = 
+            inc = [pathFinder.getPath(src.package, src.component, 'fw')]
+            for p,c in src.includeComponents:
+                inc.append(pathFinder.getPath(p, c, 'fw'))
+            lIncludes = ' '.join(['-I'+i for i in inc])
 
             opts = []
             if src.testbench:
                 opts += ['-tb']
-            if lCFlags or src.cflags:
-                opts += ['-cflags {{{}}}'.format(' '.join( (f for f in (lCFlags, src.cflags) if f)))]
-            if lCSimFlags or src.csimflags:
-                opts += ['-csimflags {{{}}}'.format(' '.join( (f for f in (lCSimFlags, src.csimflags) if f)))]
+
+            if lIncludes or src.cflags:
+                opts += ['-cflags {{{}}}'.format(' '.join( (f for f in (lIncludes, src.cflags) if f)))]
+
+            if src.csimflags:
+                opts += ['-csimflags {{{}}}'.format(src.csimflags)]
 
             lCommand = 'add_files {} {}'.format(' '.join(opts), src.filepath)
             write(lCommand)

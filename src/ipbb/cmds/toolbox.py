@@ -80,7 +80,7 @@ def check_depfile(env, verbose, toolset, component, depfile):
 
                 lCmdTable.add_row(lRow)
 
-            echo(lPrepend.sub('\g<1>    ', lCmdTable.draw()))
+            echo(lPrepend.sub(r'\g<1>    ', lCmdTable.draw()))
             echo()
 
         secho('Resolved packages & components', fg='blue')

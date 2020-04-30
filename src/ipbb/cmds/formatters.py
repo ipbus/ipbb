@@ -73,7 +73,7 @@ class DepFormatter(object):
         Draws a deptree commands summary table.
         
         """
-        lCommandKinds = ['setup', 'src', 'util', 'addrtab', 'iprepo']
+        lCommandKinds = ['setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo']
         lDepTable = Texttable()
         lDepTable.set_cols_align(['c'] * len(lCommandKinds))
         lDepTable.add_row(lCommandKinds)

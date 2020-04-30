@@ -8,8 +8,12 @@ class ComponentAction(argparse.Action):
     '''
     Parses <module>:<component>
     '''
+    def __init__(self, *args, **kwargs):
+        self.append = kwargs.pop('append', False)
+        super(ComponentAction, self).__init__(*args, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
+
         lSeparators = values.count(':')
         # Validate the format
         if lSeparators > 1:
@@ -19,8 +23,15 @@ class ComponentAction(argparse.Action):
         lTokenized = values.split(':')
         if len(lTokenized) == 1:
             lTokenized.insert(0, None)
+        result = tuple(lTokenized)
 
-        setattr(namespace, self.dest, tuple(lTokenized))
+        if not self.append:
+            setattr(namespace, 'dest', result)
+        else:
+            if not getattr(namespace, self.dest):
+                setattr(namespace, self.dest, [])
+
+            getattr(namespace, self.dest).append(result)
 
 
 # -----------------------------------------------------------------------------
@@ -94,6 +105,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('--tb', action='store_true')
         subp.add_argument('--cflags')
         subp.add_argument('--csimflags')
+        subp.add_argument('-i', '--include-comp', append=True, action=ComponentAction)
         subp.add_argument('file', nargs='+')
 
         # Address table sub-parser
@@ -113,7 +125,7 @@ class DepCmdParser(argparse.ArgumentParser):
         self.callbacks = {
             'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
             'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, 'synth' in a.usein, 'sim' in a.usein),
-            'hlssrc'  : lambda a : HlsSrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.cflags, a.csimflags, a.tb),
+            'hlssrc'  : lambda a : HlsSrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.cflags, a.csimflags, a.tb, a.include_comp),
             'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
             'addrtab' : lambda a : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),
             '*'       : lambda a : Command(a.cmd, a.file, a.component[0], a.component[1], a.cd),
@@ -127,7 +139,6 @@ class DepCmdParser(argparse.ArgumentParser):
         args = self.parse_args(*args, **kwargs)
 
         cmd = args.cmd if args.cmd in self.callbacks else '*'
-
         return self.callbacks[cmd](args)
 
 # -----------------------------------------------------------------------------

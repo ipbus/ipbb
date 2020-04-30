@@ -6,8 +6,7 @@ from future.utils import iterkeys, itervalues, iteritems
 import time 
 
 # Specific module elements
-from future.utils import iterkeys, itervalues, iteritems
-
+from ..depparser import PathMaker
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext, dirname
 
@@ -20,7 +19,7 @@ class VivadoHlsProjectMaker(object):
         self.projInfo = aProjInfo
 
     # --------------------------------------------------------------
-    def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
+    def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aRootDir):
 
         write = aOutput
 
@@ -50,13 +49,6 @@ class VivadoHlsProjectMaker(object):
             write('source {0}'.format(setup.filepath))
 
         lHlsSrcs = aCommandList['hlssrc'] 
-
-        lIncludePaths = set()
-        for src in lHlsSrcs:
-            lIncludePaths.add(dirname(src.filepath))
-        # print(lIncludePaths)
-
-        lCFlags = lCSimFlags = ' '.join( ( '-I'+ipath for ipath in lIncludePaths) )
 
         for src in lHlsSrcs:
 

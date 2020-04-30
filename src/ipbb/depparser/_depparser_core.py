@@ -257,7 +257,6 @@ class DepFileParser(object):
                 # exec(aLine[1:], None, self.config)
                 lOldLock = self.config.locked
                 self.config.lock(True)
-                # print('+++', self.config)
                 x = eval(lExpr, None, self.config)
                 self.config.lock(lOldLock)
                 self.config[lPar] = x

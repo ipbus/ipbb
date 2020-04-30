@@ -47,25 +47,25 @@ def makeproject(ctx, *args, **kwargs):
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('synth', short_help='Run C-synthesis.')
+@vivadohls.command('csynth', short_help='Run C-synthesis.')
 @click.pass_obj
 @click.pass_context
 def synth(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
-    from ..cmds.vivadohls import synth
+    from ..cmds.vivadohls import csynth
     # synth(env)
-    return (ctx.command.name, synth, args, kwargs)
+    return (ctx.command.name, csynth, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('sim', short_help='Run C-synthesis.')
+@vivadohls.command('csim', short_help='Run C-synthesis.')
 @click.pass_obj
 @click.pass_context
 def sim(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
-    from ..cmds.vivadohls import sim
+    from ..cmds.vivadohls import csim
     # sim(env)
-    return (ctx.command.name, sim, args, kwargs)
+    return (ctx.command.name, csim, args, kwargs)
 
 
 # ------------------------------------------------------------------------------

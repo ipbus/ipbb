@@ -85,7 +85,7 @@ def makeproject(env, aToScript, aToStdout):
                 lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
-                lDepFileParser.libs,
+                lDepFileParser.rootdir,
             )
 
     except VivadoHLSConsoleError as lExc:
@@ -101,9 +101,9 @@ def makeproject(env, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
-def synth(env):
+def csynth(env):
 
-    lSessionId = 'synth'
+    lSessionId = 'csynth'
 
     # Check if vivado is around
     ensureVivadoHLS(env)
@@ -134,7 +134,7 @@ def synth(env):
 
 
 # ------------------------------------------------------------------------------
-def sim(env):
+def csim(env):
 
     lSessionId = 'sim'
 

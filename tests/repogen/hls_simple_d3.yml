@@ -6,7 +6,7 @@ files:
   firmware/cfg:
     top_hls.d3: |
       hlssrc a.hh a.cc
-      hlssrc --tb b.hh b.cc
+      hlssrc --tb b.hh b.cc --include-comp aa:bb -i cc:dd
   firmware/hls:
     a.cc: ""
     a.hh: ""

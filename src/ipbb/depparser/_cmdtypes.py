@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+from future.utils import iteritems
 
 # -----------------------------------------------------------------------------
 class Command(object):
@@ -24,9 +25,17 @@ class Command(object):
     def __str__(self):
 
         lFlags = self.flags()
-        return '{ \'%s\', flags: %s, component: \'%s:%s\' }' % (
-            self.filepath, '['+','.join(lFlags)+']' if lFlags else 'none', self.package, self.component
-        )
+        lExtra = self.extra()
+        # return '{ \'{}\', flags: {}, component: \'{}:{}\' }'.format(
+            # self.filepath, '['+','.join(lFlags)+']' if lFlags else 'none', self.package, self.component
+        # )
+        x = [
+            '\'{}\''.format(self.filepath),
+            'flags: '+(str(lFlags) if lFlags else 'none'),
+            'component: \'{}:{}\''.format(self.package, self.component),
+            ('extra: { '+str(lExtra)+' }') if lExtra else None
+            ]
+        return '{{ {0} }}'.format(', '.join(y for y in x if y is not None))
 
     # --------------------------------------------------------------
     def __eq__(self, other):
@@ -34,6 +43,10 @@ class Command(object):
 
     # --------------------------------------------------------------
     def flags(self):
+        return None
+
+    # --------------------------------------------------------------
+    def extra(self):
         return None
 
     __repr__ = __str__
@@ -92,11 +105,12 @@ class HlsSrcCommand(Command):
         csimflags  (str):  c compiler flags in simulation
         testbench  (bool): this file is a testbench
     """
-    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aCFlags, aCSimFlags, aTestBench):
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aCFlags, aCSimFlags, aTestBench, aIncludeComps):
         super(HlsSrcCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
         self.cflags = aCFlags
         self.csimflags = aCSimFlags
         self.testbench = aTestBench
+        self.includeComponents = aIncludeComps
 
     # --------------------------------------------------------------
     def flags(self):
@@ -106,6 +120,11 @@ class HlsSrcCommand(Command):
 
         return lFlags
         
+    def extra(self):
+        if not self.includeComponents:
+            return None
+        return 'includes: '+str(['{}:{}'.format(p, c) for p,c in self.includeComponents])
+
 # -----------------------------------------------------------------------------
 class SetupCommand(Command):
     """Container class for dep commands parsed form dep files

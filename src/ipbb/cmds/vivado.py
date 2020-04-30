@@ -281,7 +281,7 @@ def synth(env, aJobs, aUpdateInt):
 
 
 # ------------------------------------------------------------------------------
-def impl(env, jobs, aStopOnTimingErr):
+def impl(env, aNumJobs, aStopOnTimingErr):
     '''
     Launch an implementation run
     '''
@@ -312,7 +312,7 @@ def impl(env, jobs, aStopOnTimingErr):
             for c in (
                     'reset_run impl_1',
                     'launch_runs impl_1'
-                    + (' -jobs {}'.format(jobs) if jobs is not None else ''),
+                    + (' -jobs {}'.format(aNumJobs) if aNumJobs is not None else ''),
                     'wait_on_run impl_1',
                 ):
                 lConsole(c)

@@ -52,7 +52,8 @@ def gendecoders(env, aCheckUpToDate):
     # ------------------------------------------------------------------------------
 
     lUpdatedDecoders = []
-    lGen = sh.Command(lGenScript)
+    lGen = sh.Command('/usr/bin/python').bake(which(lGenScript))
+    lErrors = {}
     with DirSentry(join(env.currentproj.path, lDecodersDir)):
         for lAddr in env.depParser.commands['addrtab']:
             echo("Processing " + style(basename(lAddr.filepath), fg='blue'))
@@ -67,7 +68,13 @@ def gendecoders(env, aCheckUpToDate):
                 continue
 
             # Generate a new decoder file
-            lGen(basename(lAddr.filepath), _out=sys.stdout, _err_to_out=True)
+            try:
+                lGen(basename(lAddr.filepath), _out=sys.stdout, _err=sys.stderr, _tee=True)
+            except Exception as lExc:
+                secho('Failed to generate decoder for '+basename(lAddr.filepath), fg='red')
+                lErrors[lAddr] = lExc
+                continue
+
             lDecoder = 'ipbus_decode_{0}.vhd'.format(
                 splitext(basename(lAddr.filepath))[0]
             )
@@ -81,9 +88,19 @@ def gendecoders(env, aCheckUpToDate):
             try:
                 diff('-u', '-I', '^-- START automatically', lTarget, lDecoder)
             except sh.ErrorReturnCode as e:
-                print(e.stdout.decode())
-
                 lUpdatedDecoders.append((lDecoder, lTarget))
+
+        if lErrors:
+            secho(
+                "\nERROR: decoder generation failed",
+                fg='red',
+            )
+            for a in sorted(lErrors):
+                echo(' - ' + basename(a.filepath))
+                echo('   ' + lErrors[a].stdout)
+            return
+
+
 
         # ------------------------------------------------------------------------------
         # If no difference between old and newly generated decoders, quit here.

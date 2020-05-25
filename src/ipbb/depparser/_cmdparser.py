@@ -26,7 +26,7 @@ class ComponentAction(argparse.Action):
         result = tuple(lTokenized)
 
         if not self.append:
-            setattr(namespace, 'dest', result)
+            setattr(namespace, self.dest, result)
         else:
             if not getattr(namespace, self.dest):
                 setattr(namespace, self.dest, [])

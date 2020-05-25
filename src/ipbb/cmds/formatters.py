@@ -148,7 +148,7 @@ class DepFormatter(object):
                 [
                     relpath(lDepPath, self.parser.rootdir)+':'+str(lLineNo),
                     "'"+lLine+"'",
-                    str(lErr)+(': {}'.format(lErr.__cause__) if lErr.__cause__ else ''),
+                    str(lErr)+(': {}'.format(lErr.__cause__) if hasattr(lErr,'__cause__') else ''),
                 ]
             )
 

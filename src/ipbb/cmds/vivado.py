@@ -187,7 +187,7 @@ def checksyntax(env):
     )
 
 # -------------------------------------
-def synth(env, aJobs, aUpdateInt):
+def synth(env, aNumJobs, aUpdateInt):
     '''Run synthesis'''
 
     lSessionId = 'synth'
@@ -200,8 +200,8 @@ def synth(env, aJobs, aUpdateInt):
 
     lArgs = []
 
-    if aJobs is not None:
-        lArgs += ['-jobs {}'.format(aJobs)]
+    if aNumJobs is not None:
+        lArgs += ['-jobs {}'.format(aNumJobs)]
 
     lOOCRegex = re.compile(r'.*_synth_\d+')
     lSynthRun = 'synth_1'

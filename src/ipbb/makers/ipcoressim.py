@@ -29,7 +29,7 @@ class IPCoresSimMaker(object):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
-            raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aScriptVariables)))
+            raise RuntimeError("Missing required variables: {}".format(', '.join(lReqVariables.difference(aScriptVariables))))
 
         write = aTarget
 

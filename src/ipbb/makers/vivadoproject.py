@@ -54,7 +54,7 @@ class VivadoProjectMaker(object):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aSettings):
-            raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aSettings)))
+            raise RuntimeError("Missing required variables: {}".format(', '.join(lReqVariables.difference(aScriptVariables))))
         lXilinxPart = "{device_name}{device_package}{device_speed}".format(**aSettings)
 
 

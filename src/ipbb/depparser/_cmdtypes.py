@@ -26,16 +26,13 @@ class Command(object):
 
         lFlags = self.flags()
         lExtra = self.extra()
-        # return '{ \'{}\', flags: {}, component: \'{}:{}\' }'.format(
-            # self.filepath, '['+','.join(lFlags)+']' if lFlags else 'none', self.package, self.component
-        # )
-        x = [
+        lFields = [
             '\'{}\''.format(self.filepath),
             'flags: '+(str(lFlags) if lFlags else 'none'),
             'component: \'{}:{}\''.format(self.package, self.component),
             ('extra: { '+str(lExtra)+' }') if lExtra else None
             ]
-        return '{{ {0} }}'.format(', '.join(y for y in x if y is not None))
+        return '{{ {0} }}'.format(', '.join(f for f in lFields if f is not None))
 
     # --------------------------------------------------------------
     def __eq__(self, other):
@@ -43,7 +40,7 @@ class Command(object):
 
     # --------------------------------------------------------------
     def flags(self):
-        return None
+        return []
 
     # --------------------------------------------------------------
     def extra(self):

@@ -17,7 +17,7 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
 from ._utils import DirSentry, findFileInParents, raiseError
-from ..depparser.Pathmaker import Pathmaker
+from ..depparser import Pathmaker
 from ..tools.common import mkdir
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath

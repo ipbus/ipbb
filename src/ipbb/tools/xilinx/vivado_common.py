@@ -1,10 +1,10 @@
 from __future__ import print_function, absolute_import
+from builtins import zip
 # ------------------------------------------------------------------------------
 
 import re
 import sh
 
-from itertools import izip
 
 from ..common import which, OutputFormatter
 from ..termui import *
@@ -103,7 +103,7 @@ class VivadoOutputFormatter(OutputFormatter):
         assert (len(lines) % 2 == 0)
 
         # Iterate over pairs, line and newline match
-        for lLine,lRet in izip(lines[::2], lines[1::2]):
+        for lLine,lRet in zip(lines[::2], lines[1::2]):
             if lLine in self.skiplines:
                 continue
 

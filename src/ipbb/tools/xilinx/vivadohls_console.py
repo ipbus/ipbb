@@ -1,5 +1,5 @@
 from __future__ import print_function, absolute_import
-from builtins import range
+from builtins import range, zip
 import six
 # ------------------------------------------------------------------------------
 
@@ -19,7 +19,6 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from itertools import izip
 from ..common import which, OutputFormatter
 from ..termui import *
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
@@ -129,7 +128,7 @@ class VivadoHLSOutputFormatter(OutputFormatter):
             print(kRed+'c split >> '+kReset+repr(lines))
 
         # Iterate over pairs, line and newline match
-        for lLine,lRet in izip(lines[::2], lines[1::2]):
+        for lLine,lRet in zip(lines[::2], lines[1::2]):
             # if kHLSLogDebug:
             #     print("zzzz  >> ", kOrange,repr(lLine), repr(lRet), kReset)
             if lLine in self.skiplines:

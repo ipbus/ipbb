@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added `srcs reset` command that applies custom packate reset procedures as specified in `.ipbb.setup`.
 - Python dependencies versions specified in `requirements.txt`.
 - New `--usein`/`-u` dep `src` command flag, to specify if a soruce file is used in synthesis, simulation or both.
-- Hierarchical dep setting names (e.g. `vivado.sim_top_entity`)
+- Dep setting can now be hierarchical (e.g. `vivado.sim_top_entity`)
+- Depth, cells and file options for the `vivado report-usage` command
 
 ## [0.5.2] - 2019-09-13
 ### Fixes

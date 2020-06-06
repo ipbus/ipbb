@@ -331,7 +331,7 @@ def impl(env, aNumJobs, aStopOnTimingErr):
 
 
 # ------------------------------------------------------------------------------
-def resource_usage(env):
+def resource_usage(env, aCell, aDepth, aFile):
 
     lSessionId = 'usage'
 
@@ -341,12 +341,18 @@ def resource_usage(env):
     # And that the Vivado env is up
     ensureVivado(env)
 
+    lCmd = 'report_utilization -hierarchical -hierarchical_depth {} -hierarchical_percentages'.format(aDepth)
+    if aCell:
+        lCmd += ' -cells ' + aCell
+
+    if aFile:
+        lCmd += ' -file ' + aFile
     try:
         with env.vivadoSessions.get(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
             for c in (
                     'open_run impl_1',
-                    'report_utilization -hierarchical -hierarchical_depth 1 -hierarchical_percentages'
+                    lCmd
                 ):
                 lConsole(c)
     except VivadoConsoleError as lExc:

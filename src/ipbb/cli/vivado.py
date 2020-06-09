@@ -173,6 +173,25 @@ def bitfile(ctx, *args, **kwargs):
     from ..cmds.vivado import bitfile
     return (ctx.command.name, bitfile, args, kwargs)
 
+# ------------------------------------------------------------------------------
+@vivado.command('memcfg', short_help="Generate the memcfg.")
+@click.pass_obj
+@click.pass_context
+def memcfg(ctx, *args, **kwargs):
+    '''Create a memcfg file for PROM programming
+    
+    Supports bin and mcs file types
+    Requires the corresponding options to be defined in the dep files:
+ 
+    * bin: 'binfile_options'  
+    
+    * mcs: 'mcsfile_options'
+    '''
+    from ..cmds.vivado import memcfg
+    return (ctx.command.name, memcfg, args, kwargs)
+
+
+
 
 # # ------------------------------------------------------------------------------
 # @vivado.command('status', short_help="Show the status of all runs in the current project.")

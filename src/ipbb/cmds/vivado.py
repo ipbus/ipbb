@@ -29,6 +29,10 @@ from ..makers.vivadoproject import VivadoProjectMaker
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 
+_memCfgKinds = {
+    'bin': 'binfile_options',
+    'mcs': 'mcsfile_options'
+}
 
 # ------------------------------------------------------------------------------
 def ensureVivado(env):
@@ -390,11 +394,19 @@ def bitfile(env):
     )
 
 
-# ------------------------------------------------------------------------------
-def binfile(env):
-    '''Create a binfile for PROM programming'''
 
-    lSessionId = 'binfile'
+# ------------------------------------------------------------------------------
+def memcfg(env):
+    '''Create a memcfg file for PROM programming
+    
+    Supports bin and mcs file types
+    Requires the corresponding options to be defined in the dep files:
+ 
+    * bin: 'binfile_options',
+    * mcs: 'mcsfile_options'
+    '''
+
+    lSessionId = 'memcfg'
 
     # Check that the project exists 
     ensureVivadoProjPath(env.vivadoProjFile)
@@ -405,30 +417,39 @@ def binfile(env):
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
     lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
-    lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
-    lBinPath = lBitPath.replace('.bit', '.bin')
+    lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
+
+    lBitPath = lBasePath + '.bit'
     if not exists(lBitPath):
         raise click.ClickException("Bitfile does not exist. Can't create binfile.")
 
-    lBinFileCmdOptions = lDepFileParser.config['vivado.binfile_options']
-
     ensureVivado(env)
 
-    try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+    for k,o in iteritems(_memCfgKinds):
+        lVivadoCfg = lDepFileParser.config['vivado']
 
-            lProject = VivadoProject(lConsole, env.vivadoProjFile)
-            lConsole(
-                'write_cfgmem -format bin {} -loadbit {up 0x00000000 "{}" } -file "{}"'.format(
-                    lBinFileCmdOptions, lBitPath, lBinPath
+        if o not in lVivadoCfg:
+            echo("No configuration found for '{}' files. Skipping.".format(k))
+            continue
+
+        lMemCmdOptions = lVivadoCfg[o]
+        lMemPath = lBasePath+'.'+k
+
+        try:
+            with env.vivadoSessions.get(lSessionId) as lConsole:
+
+                lProject = VivadoProject(lConsole, env.vivadoProjFile)
+                lConsole(
+                    'write_cfgmem -force -format {} {} -loadbit {{up 0x00000000 "{}" }} -file "{}"'.format(
+                        k, lMemCmdOptions, lBitPath, lMemPath
+                    )
                 )
-            )
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
+        except VivadoConsoleError as lExc:
+            echoVivadoConsoleError(lExc)
+            raise click.Abort()
 
-    secho(
-        "\n{}: Binfile successfully written.\n".format(env.currentproj.name), fg='green'
+        secho(
+            "\n{}: {}file successfully written.\n".format(k.capitalize(), env.currentproj.name), fg='green'
     )
 
 
@@ -570,29 +591,28 @@ def package(env, aTag):
     lDepFileParser = env.depParser
     lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
 
-    lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
+    lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
+    lBitPath  = lBasePath + '.bit'
     if not exists(lBitPath):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         bitfile(env)
 
-    wantBinFile = False
-    if 'vivado_binfile_options' in env.depParser.config:
-        wantBinFile = True
-    if wantBinFile:
-        lBinPath = lBitPath.replace('.bit', '.bin')
-        if not exists(lBinPath):
-            secho('Binfile does not exist. Attempting to create it ...', fg='yellow')
-            binfile(env)
+    lVivadoCfg = lDepFileParser.config['vivado']
+    lActiveMemCfgs = [k for k,o in iteritems(_memCfgKinds) if o in lVivadoCfg]
+    lMemCfgFiles = [lBasePath + '.' + k for k in lActiveMemCfgs]
+
+    if any([not exists(f) for f in lMemCfgFiles]):
+        memcfg(env)
 
     lPkgPath = 'package'
-    lSrcPath = join(lPkgPath, 'src')
+    lPkgSrcPath = join(lPkgPath, 'src')
 
     # Cleanup first
     sh.rm('-rf', lPkgPath, _out=sys.stdout)
 
     # Create the folders
     try:
-        os.makedirs(join(lSrcPath, 'addrtab'))
+        os.makedirs(join(lPkgSrcPath, 'addrtab'))
     except OSError:
         pass
 
@@ -603,7 +623,7 @@ def package(env, aTag):
 
     # -------------------------------------------------------------------------
 
-    lHash = hash(env, output=join(lSrcPath, 'hashes.txt'), verbose=True)
+    lHash = hash(env, output=join(lPkgSrcPath, 'hashes.txt'), verbose=True)
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -616,25 +636,25 @@ def package(env, aTag):
         }
     )
 
-    with open(join(lSrcPath, 'summary.txt'), 'w') as lSummaryFile:
+    with open(join(lPkgSrcPath, 'summary.txt'), 'w') as lSummaryFile:
         yaml.safe_dump(lSummary, lSummaryFile, indent=2, default_flow_style=False)
     echo()
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    # Copy bitfile, binfile, and address table into the packaging area
+    # Copy bitfile, memcfg, and address table into the packaging area
     secho("Collecting bitfile", fg='blue')
-    sh.cp('-av', lBitPath, lSrcPath, _out=sys.stdout)
+    sh.cp('-av', lBitPath, lPkgSrcPath, _out=sys.stdout)
     echo()
 
-    if wantBinFile:
-        secho("Collecting binfile", fg='blue')
-        sh.cp('-av', lBinPath, lSrcPath, _out=sys.stdout)
+    for f in lMemCfgFiles:
+        secho("Collecting memcfg {}".format(f), fg='blue')
+        sh.cp('-av', f, lPkgSrcPath, _out=sys.stdout)
         echo()
 
     secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:
-        sh.cp('-av', addrtab.filepath, join(lSrcPath, 'addrtab'), _out=sys.stdout)
+        sh.cp('-av', addrtab.filepath, join(lPkgSrcPath, 'addrtab'), _out=sys.stdout)
     echo()
     # -------------------------------------------------------------------------
 

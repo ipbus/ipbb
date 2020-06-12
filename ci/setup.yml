@@ -5,10 +5,9 @@
     - docker
 
 
-
 setup_cc7_py2_venv:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:2020-06-12__uhal2.7.5
   script:
     - source env.sh
     - ipbb --version
@@ -22,7 +21,7 @@ setup_cc7_py2_venv:
 
 setup_cc7_py2_sys:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:2020-06-12__uhal2.7.5
   script:
     - sudo pip install .
     - ipbb --version
@@ -30,7 +29,7 @@ setup_cc7_py2_sys:
 
 setup_centos8_py3_venv:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.5
   script:
     - source env.sh
     - ipbb --version
@@ -38,7 +37,7 @@ setup_centos8_py3_venv:
 
 setup_centos8_py3_sys:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.5
   script:
     - sudo python -m pip install .
     - ipbb --version

@@ -115,10 +115,12 @@ class Environment(object):
     printExceptionStack = False
 
     # ----------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, wd=getcwd()):
         super(Environment, self).__init__()
 
+        self._wd = wd
         self._autodetect()
+
 
     # ------------------------------------------------------------------------------
     def _clear(self):
@@ -139,7 +141,7 @@ class Environment(object):
         self._clear()
 
         # -----------------------------
-        lWorkAreaPath = _utils.findFileDirInParents(kWorkAreaFile, getcwd())
+        lWorkAreaPath = _utils.findFileDirInParents(kWorkAreaFile, self._wd)
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
@@ -150,7 +152,7 @@ class Environment(object):
         # -----------------------------
 
         # -----------------------------
-        lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, getcwd())
+        lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, self._wd)
         if not lProjAreaPath:
             return
 

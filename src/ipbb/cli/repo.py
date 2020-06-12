@@ -16,6 +16,15 @@ def init(env, workarea):
     init(env, workarea)
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+@click.command()
+@click.option('-v', '--verbose', count=True, help="Verbosity")
+@click.pass_obj
+def info(env, verbose):
+    '''Print a brief report about the current working area'''
+    from ..cmds.repo import info
+    info(env, verbose)
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 @click.group('add', short_help="Add source packages.")
@@ -84,16 +93,16 @@ def srcs(env):
 # ------------------------------------------------------------------------------
 @srcs.command('info', short_help="Information of the status of source packages.")
 @click.pass_obj
-def info(env):
-    from ..cmds.repo import info
-    info(env)
+def srcs_info(env):
+    from ..cmds.repo import srcs_info
+    srcs_info(env)
 
 
 # ------------------------------------------------------------------------------
 @srcs.command('reset', short_help="Add new source package from a git repository")
 @click.argument('pkg', default=None, autocompletion=completeSrcPackage)
 @click.pass_obj
-def reset(env, pkg):
+def srcs_reset(env, pkg):
     '''Run setup sequence on a source package
     
     PKG : Name of the package to run the sequence of.
@@ -106,9 +115,9 @@ def reset(env, pkg):
 @srcs.command('create-component', short_help="Create the skeleton of a new component.")
 @click.argument('component', callback=validateComponent)
 @click.pass_obj
-def create_component(env, component):
+def srcs_create_component(env, component):
     from ..cmds.repo import create_component
-    create_component(env, component)
+    srcs_create_component(env, component)
 
 
 # ------------------------------------------------------------------------------
@@ -117,14 +126,14 @@ def create_component(env, component):
 @click.argument('cmd', nargs=1)
 @click.argument('args', nargs=-1)
 @click.pass_obj
-def run(env, pkg, cmd, args):
+def srcs_run(env, pkg, cmd, args):
     from ..cmds.repo import run
-    run(env, pkg, cmd, args)
+    srcs_run(env, pkg, cmd, args)
 
 
 # ------------------------------------------------------------------------------
 @srcs.command('find', short_help="Find src files.")
 @click.pass_obj
-def find(env):
+def srcs_find(env):
     from ..cmds.repo import find
-    find(env)
+    srcs_find(env)

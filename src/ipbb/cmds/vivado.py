@@ -402,8 +402,8 @@ def memcfg(env):
     Supports bin and mcs file types
     Requires the corresponding options to be defined in the dep files:
  
-    * bin: 'binfile_options',
-    * mcs: 'mcsfile_options'
+    * bin: 'vivado.binfile_options',
+    * mcs: 'vivado.mcsfile_options'
     '''
 
     lSessionId = 'memcfg'
@@ -411,22 +411,26 @@ def memcfg(env):
     # Check that the project exists 
     ensureVivadoProjPath(env.vivadoProjFile)
 
-    # And that the Vivado env is up
-    ensureVivado(env)
+
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
     lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
     lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
 
+    if 'vivado' not in lDepFileParser.config:
+        secho('No memcfg settings found in this project. Exiting.', fg='yellow')
+        return
+
     lBitPath = lBasePath + '.bit'
     if not exists(lBitPath):
-        raise click.ClickException("Bitfile does not exist. Can't create binfile.")
+        raise click.ClickException("Bitfile does not exist. Can't create memcfg files.")
 
+    # And that the Vivado env is up
     ensureVivado(env)
-
+    
+    lVivadoCfg = lDepFileParser.config['vivado']
     for k,o in iteritems(_memCfgKinds):
-        lVivadoCfg = lDepFileParser.config['vivado']
 
         if o not in lVivadoCfg:
             echo("No configuration found for '{}' files. Skipping.".format(k))
@@ -597,12 +601,15 @@ def package(env, aTag):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         bitfile(env)
 
-    lVivadoCfg = lDepFileParser.config['vivado']
-    lActiveMemCfgs = [k for k,o in iteritems(_memCfgKinds) if o in lVivadoCfg]
-    lMemCfgFiles = [lBasePath + '.' + k for k in lActiveMemCfgs]
+    try:
+        lVivadoCfg = lDepFileParser.config['vivado']
+        lActiveMemCfgs = [k for k,o in iteritems(_memCfgKinds) if o in lVivadoCfg]
+        lMemCfgFiles = [lBasePath + '.' + k for k in lActiveMemCfgs]
 
-    if any([not exists(f) for f in lMemCfgFiles]):
-        memcfg(env)
+        if any([not exists(f) for f in lMemCfgFiles]):
+            memcfg(env)
+    except KeyError as e:
+        lMemCfgFiles = []
 
     lPkgPath = 'package'
     lPkgSrcPath = join(lPkgPath, 'src')

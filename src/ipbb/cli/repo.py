@@ -99,7 +99,7 @@ def srcs_info(env):
 
 
 # ------------------------------------------------------------------------------
-@srcs.command('reset', short_help="Add new source package from a git repository")
+@srcs.command('reset', short_help="Run setup sequence on a source package")
 @click.argument('pkg', default=None, autocompletion=completeSrcPackage)
 @click.pass_obj
 def srcs_reset(env, pkg):
@@ -116,7 +116,7 @@ def srcs_reset(env, pkg):
 @click.argument('component', callback=validateComponent)
 @click.pass_obj
 def srcs_create_component(env, component):
-    from ..cmds.repo import create_component
+    from ..cmds.repo import srcs_create_component
     srcs_create_component(env, component)
 
 
@@ -127,7 +127,10 @@ def srcs_create_component(env, component):
 @click.argument('args', nargs=-1)
 @click.pass_obj
 def srcs_run(env, pkg, cmd, args):
-    from ..cmds.repo import run
+    """
+    Execute a shell command in the package folder.
+    """
+    from ..cmds.repo import srcs_run
     srcs_run(env, pkg, cmd, args)
 
 
@@ -135,5 +138,5 @@ def srcs_run(env, pkg, cmd, args):
 @srcs.command('find', short_help="Find src files.")
 @click.pass_obj
 def srcs_find(env):
-    from ..cmds.repo import find
+    from ..cmds.repo import srcs_find
     srcs_find(env)

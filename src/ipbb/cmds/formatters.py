@@ -67,6 +67,38 @@ class DepFormatter(object):
         """
         return self._drawComponents(self.parser.unresolvedComponents)
 
+
+    def drawDeptreeCommandsSummary(self):
+        """
+        Draws a deptree commands summary table.
+        
+        """
+        lCommandKinds = ['setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo']
+        lDepTable = Texttable()
+        lDepTable.set_cols_align(['c'] * len(lCommandKinds))
+        lDepTable.add_row(lCommandKinds)
+        lDepTable.add_row([len(self.parser.commands[k]) for k in lCommandKinds])
+        return lDepTable.draw()
+
+    def drawUnresolvedSummary(self):
+        """
+        Draws a summary table of the unresolved files by category
+        """
+        lParser = self.parser
+        if not lParser.unresolved:
+            return ''
+
+        lUnresolved = Texttable()
+        lUnresolved.add_row(["packages", "components", "paths"])
+        lUnresolved.add_row(
+            [
+                len(lParser.unresolvedPackages),
+                len(lParser.unresolvedComponents),
+                len(lParser.unresolvedPaths),
+            ]
+        )
+        return lUnresolved.draw()
+
     def drawUnresolvedFiles(self):
         """
         Draws the table of unresolved files
@@ -116,7 +148,7 @@ class DepFormatter(object):
                 [
                     relpath(lDepPath, self.parser.rootdir)+':'+str(lLineNo),
                     "'"+lLine+"'",
-                    str(lErr),
+                    str(lErr)+(': {}'.format(lErr.__cause__) if hasattr(lErr,'__cause__') else ''),
                 ]
             )
 

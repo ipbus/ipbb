@@ -12,12 +12,26 @@ from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from . import ProjectInfo
 from ._utils import DirSentry, raiseError, validateComponent, findFirstParentDir
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepParser import depfiletypes
+from ..depparser import depfiletypes, Pathmaker
 
 from os.path import join, split, exists, splitext, relpath, isdir
 from click import echo, style, secho
+from texttable import Texttable
 
+# ------------------------------------------------------------------------------
+def info(env):
+    secho("Projects", fg='blue')
+
+    lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
+    lProjTable = Texttable(120)
+    lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+    lProjTable.set_chars(['-', '|', '+', '-'])
+    lProjTable.header(lHeader)
+
+    for p in sorted(env.projects):
+        lProjInfo = ProjectInfo(join(env.projdir, p))
+        lProjTable.add_row([p] + [lProjInfo.settings[k] for k in lHeader[1:]] )
+    echo(lProjTable.draw())
 
 # ------------------------------------------------------------------------------
 def create(env, toolset, projname, component, topdep):

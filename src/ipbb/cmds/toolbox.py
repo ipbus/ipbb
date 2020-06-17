@@ -10,8 +10,7 @@ from click import echo, style, secho, confirm
 from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep, isdir, isfile
 from texttable import Texttable
 
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepParser import DepFileParser
+from ..depparser import Pathmaker, DepFileParser
 
 
 # ------------------------------------------------------------------------------
@@ -49,7 +48,6 @@ def check_depfile(env, verbose, toolset, component, depfile):
     lCmdHeaders = [
         'path',
         'flags',
-        'map',
         'lib',
     ]  # ['path', 'flags', 'package', 'component', 'map', 'lib']
     lFilters = []
@@ -72,10 +70,9 @@ def check_depfile(env, verbose, toolset, component, depfile):
                 # print(lCmd)
                 # lCmdTable.add_row([str(lCmd)])
                 lRow = [
-                    relpath(lCmd.FilePath, env.srcdir),
+                    relpath(lCmd.filepath, env.srcdir),
                     ','.join(lCmd.flags()),
-                    lCmd.Map,
-                    lCmd.Lib,
+                    lCmd.lib,
                 ]
 
                 if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
@@ -83,7 +80,7 @@ def check_depfile(env, verbose, toolset, component, depfile):
 
                 lCmdTable.add_row(lRow)
 
-            echo(lPrepend.sub('\g<1>    ', lCmdTable.draw()))
+            echo(lPrepend.sub(r'\g<1>    ', lCmdTable.draw()))
             echo()
 
         secho('Resolved packages & components', fg='blue')
@@ -219,7 +216,7 @@ def vhdl_beautify(env, component, path):
         shutil.copy(f, dirname(lTmpVHDLPath))
 
         echo('Processing vhdl file ' + style(f, fg="cyan"))
-        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '--eval', '(setq vhdl-basic-offset 4)', '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
+        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '--eval', '(setq vhdl-basic-offset 2)', '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
 
         diff = sh.colordiff if which('colordiff') else sh.diff
         try:

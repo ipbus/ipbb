@@ -29,14 +29,15 @@ def dump(env):
 # ------------------------------------------------------------------------------
 @debug.command('ipy')
 @click.pass_obj
-def ipy(env):
+@click.pass_context
+def ipy(ctx, env):
     """Loads the ipbb environment and opens a python shell
     
     Args:
         env (`obj:Context`): Environment object.
     """
     from ..cmds.debug import ipy
-    ipy(env)
+    ipy(ctx, env)
 
 
 # ------------------------------------------------------------------------------

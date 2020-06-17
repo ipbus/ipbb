@@ -20,8 +20,10 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from ..common import which, OutputFormatter
-from ..termui import *
+from ..common import which
+# from ..termui import *
+from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
+from .vivado_common import VivadoNotFoundError, autodetect, VivadoOutputFormatter, _parseversion
 
 # ------------------------------------------------
 # This is for when python 2.7 will become available
@@ -54,105 +56,6 @@ def on_parent_exit(signame):
 # ------------------------------------------------
 
 
-# ------------------------------------------------
-class VivadoNotFoundError(Exception):
-
-    def __init__(self, message):
-        # Call the base class constructor with the parameters it needs
-        super(VivadoNotFoundError, self).__init__(message)
-# ------------------------------------------------
-
-
-# ------------------------------------------------
-def _parseversion(verstr):
-
-    lVerExpr = r'(Vivado[\s\w]*)\sv(\d+\.\d)'
-
-    lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
-
-    m = lVerRe.search(str(verstr))
-
-    if m is None:
-        raise VivadoNotFoundError("Failed to detect Vivado variant")
-
-    return m.groups()
-# ------------------------------------------------
-
-
-# ------------------------------------------------
-def autodetect(executable='vivado'):
-    """
-
-Vivado:
-    Vivado v2017.4 (64-bit)
-    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-    IP Build 2085800 on Fri Dec 15 22:25:07 MST 2017
-    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-
-Vivado Lab:
-    Vivado Lab Edition v2017.4 (64-bit)
-    SW Build 2086221 on Fri Dec 15 20:54:30 MST 2017
-    Copyright 1986-2017 Xilinx, Inc. All Rights Reserved.
-
-    """
-
-
-    if not which(executable):
-        raise VivadoNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
-
-    lExe = sh.Command(executable)
-    lVerStr = lExe('-version')
-    return _parseversion(lVerStr)
-# ------------------------------------------------
-
-
-# -------------------------------------------------------------------------
-class VivadoOutputFormatter(OutputFormatter):
-    """Formatter for Vivado command line output
-
-    Arguments:
-        prefix (string): String to prepend to each line of output
-    """
-    def __init__(self, prefix=None, quiet=False):
-        super(VivadoOutputFormatter, self).__init__(prefix, quiet)
-
-        self.pendingchars = ''
-
-    def write(self, message):
-        """Writes formatted message
-        
-        Args:
-            message (string): Message to format
-        """
-        # put any pending character first
-        msg = self.pendingchars + message
-
-        lines = msg.splitlines()
-
-        if not message.endswith('\n'):
-            self.pendingchars = lines[-1]
-            del lines[-1]
-        else:
-            self.pendingchars = ''
-
-        for lLine in lines:
-            lColor = None
-            if lLine.startswith('INFO:'):
-                lColor = kBlue
-            elif lLine.startswith('WARNING:'):
-                lColor = kYellow
-            elif lLine.startswith('CRITICAL WARNING:'):
-                lColor = kOrange
-            elif lLine.startswith('ERROR:'):
-                lColor = kRed
-            elif self.quiet:
-                continue
-
-            if lColor is not None:
-                lLine = lColor + lLine + kReset
-
-            self._write((self.prefix if self.prefix else '') + lLine + '\n')
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -173,7 +76,6 @@ class VivadoConsoleError(Exception):
 
     def __str__(self):
         return self.__class__.__name__ + '(\'{}\', errors: {}, critical warnings {})'.format(self.command, len(self.errors), len(self.criticalWarns))
-# -------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------
@@ -181,6 +83,8 @@ class VivadoConsole(object):
     """Class to interface to Vivado TCL console
     
     Attributes:
+        variant (str): Vivado variant
+        version (str): Vivado version
         isAlive (bool): Status of the vivado process
     
     """
@@ -193,13 +97,14 @@ class VivadoConsole(object):
         'vivado': u'Vivado%\s',
         'vivado_lab': u'vivado_lab%\s'
     }
+    __newlines = [u'\r\n']
 
     # --------------------------------------------------------------
     @classmethod
     def killAllInstances(cls):
         lInstances = set(cls.__instances)
         for lInstance in lInstances:
-            lInstance.quit()
+            lInstance.close()
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -220,15 +125,20 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, sessionid=None, echo=True, echobanner=False, echoprefix=None, executable='vivado', prompt=None, stopOnCWarnings=False):
+    def __init__(self, executable='vivado', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None):
         """
         Args:
-            sessionid (str): Name of the Vivado session
-            echo (bool): Switch to enable echo messages
-            echoprefix (str): Prefix to echo message
             executable (str): Executable name
-            prompt (str):
+            prompt (std, optional): Prompt string
             stopOnCWarnings (bool): Stop on Critical Warnings
+            echo (bool): Switch to enable echo messages
+            showbanner (bool, optional): Show Vivado startup banner
+            echoprefix (str): Prefix to echo message
+            loglabel (None, optional): Description
+        
+        Raises:
+            VivadoNotFoundError: Description
+        
         """
         super(VivadoConsole, self).__init__()
 
@@ -251,93 +161,140 @@ class VivadoConsole(object):
 
         # Set up the output formatter
         self._out = VivadoOutputFormatter(
-            echoprefix if ( echoprefix or (sessionid is None) )
-            else (sessionid + ' | '),
-            quiet=(not echo)
+            sid, quiet=(not echo)
         )
 
         self._out.write('\n' + '- Starting Vivado -'+'-' * 40 + '\n')
-        self._out.quiet = (not echobanner)
+        self._out.quiet = (not showbanner)
        
-        # self._process = pexpect.spawnu('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
-        self._process = pexpect.spawn('{0} -mode tcl -log {1}.log -journal {1}.jou'.format(
-            self._executable,
-            self._executable + ('_' + sessionid) if sessionid else ''),
+        # If loglabel is not specified, use sid
+        loglabel = loglabel if loglabel else sid
+        lLogName = self._executable + (('_' + loglabel) if loglabel else '')
+        self._process = pexpect.spawn(self._executable,[
+                    '-mode', 'tcl', 
+                    '-log', lLogName+'.log',
+                    '-journal', lLogName+'.jou'
+                ],
             echo=echo,
             logfile=self._out,
             # preexec_fn=on_parent_exit('SIGTERM')
         )
 
-
-
+        # Compile the list of patterns to detect the prompt
+        self._rePrompt = self._process.compile_pattern_list(
+            self.__newlines+[self._prompt, pexpect.TIMEOUT]
+        )
+        # Set send delay
         self._process.delaybeforesend = 0.00  # 1
 
         # Wait for vivado to wake up
         startupstr = self.__expectPrompt()
+        
+        # Extract version infomation
         self._variant, self._version = _parseversion(''.join(startupstr[0]))
         self._out.quiet = (not echo)
         self._log.debug('Vivado up and running')
         self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
 
+        # Create a process descriptor
         self._processinfo = psutil.Process(self._process.pid)
         # Method mapping
         self.isAlive = self._process.isalive
         # Add self to the list of instances
         self.__instances.add(self)
 
+    # --------------------------------------------------------------
     @property
     def variant(self):
         return self._variant
     
+    # --------------------------------------------------------------
     @property
     def version(self):
         return self._version
     
+    # --------------------------------------------------------------
+    @property
+    def stopOnCWarnings(self):
+        return self._stopOnCWarnings
+    
+    # --------------------------------------------------------------
+    @stopOnCWarnings.setter
+    def stopOnCWarnings(self, stop):
+        self._stopOnCWarnings = stop
+
+    # --------------------------------------------------------------
+    @property
+    def sessionid(self):
+        return self._out.prefix
+
+    # --------------------------------------------------------------
+    @sessionid.setter
+    def sessionid(self, prefix):
+        self._out.prefix = prefix
+
 
     # --------------------------------------------------------------
     def __del__(self):
-        self.quit()
+        self.close()
 
     # --------------------------------------------------------------
     def __call__(self, aCmd='', aMaxLen=1):
         return self.execute(aCmd, aMaxLen)
 
     # --------------------------------------------------------------
-    def __send(self, aText):
-        self._process.sendline(aText)
-        # --------------------------------------------------------------
-        # Hard check: First line of output must match the injected command
-        self._process.expect([u'\r\n'])
+    def __checkEcho(self, aText, aBefore):
+        """
+        Hard check: First line of output must match the injected command
+        """
 
-        lCmdRcvd = self.__reCharBackspace.sub('', self._process.before)
+        lCmdRcvd = self.__reCharBackspace.sub('', aBefore)
         lCmdSent = aText.split('\n')[0]
         if lCmdRcvd != lCmdSent:
             # --------------------------------------------------------------
-            print ('-' * 20)
-            print ('Echo character-by-character diff')
+            print('-' * 20)
+            print('Echo character-by-character diff')
             # Find where the 2 strings don't match
-            print ('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
-            for i in range(min(len(lCmdRcvd), len(lCmdSent))):
-                r = lCmdRcvd[i]
-                s = lCmdSent[i]
+            print('sent:', len(lCmdSent), 'rcvd', len(lCmdRcvd))
+
+            # find the first mismatching character
+            minlen = min(len(lCmdRcvd), len(lCmdSent))
+            maxlen = max(len(lCmdRcvd), len(lCmdSent))
+            x = next((i for i in range(minlen) if lCmdRcvd[i] != lCmdSent[i]), minlen)
+
+            a = x - 10
+            b = x + 10
+            for i in range(max(a, 0), min(b, maxlen)):
+                r = lCmdRcvd[i] if len(lCmdRcvd) > i else ' '
+                s = lCmdSent[i] if len(lCmdSent) > i else ' '
                 # print i, '\t', r, ord(r), ord(r) > 128, '\t', s, ord(s),
                 # ord(s) > 128
-                print (i, '\t', r, s, r == s, ord(r))
+                print(i, '\t', repr(s), repr(r), r == s, ord(r))
 
-            print (''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
-            print (lCmdRcvd)
-            print (''.join([str(i % 10) for i in range(len(lCmdSent))]))
-            print (lCmdSent)
+            print(''.join([str(i % 10) for i in range(len(lCmdRcvd))]))
+            print(lCmdRcvd)
+            print(''.join([str(i % 10) for i in range(len(lCmdSent))]))
+            print(lCmdSent)
             # --------------------------------------------------------------
             raise RuntimeError(
-                "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(lCmdSent, lCmdRcvd))
+                "Command and first output lines don't match Sent='{0}', Rcvd='{1}".format(
+                    lCmdSent, lCmdRcvd
+                )
+            )
+
+    # --------------------------------------------------------------
+    def __send(self, aText):
+
+        x = self._process.sendline(aText)
+        lIndex = self._process.expect(self.__newlines)
+
+        # --------------------------------------------------------------
+        # Hard check: First line of output must match the injected command
+        self.__checkEcho(aText, self._process.before)
 
     # --------------------------------------------------------------
     def __expectPrompt(self, aMaxLen=100):
-        # lExpectList = ['\r\n','Vivado%\t', 'ERROR:']
-        lCpl = self._process.compile_pattern_list(
-            [u'\r\n', self._prompt, pexpect.TIMEOUT]
-        )
+
         lIndex = None
         lBuffer = collections.deque([], aMaxLen)
         lErrors = []
@@ -347,7 +304,7 @@ class VivadoConsole(object):
         lTimeoutCounts = 0
         while True:
             # Search for newlines, prompt, end-of-file
-            lIndex = self._process.expect_list(lCpl)
+            lIndex = self._process.expect_list(self._rePrompt)
 
             # ----------------------------------------------------------
             # Break if prompt
@@ -367,16 +324,16 @@ class VivadoConsole(object):
 
             if self.__reError.match(lBefore):
                 lErrors.append(lBefore)
-
-            if self.__reCriticalWarning.match(lBefore):
+            elif self.__reCriticalWarning.match(lBefore):
                 lCriticalWarnings.append(lBefore)
 
         # --------------------------------------------------------------
 
         return lBuffer, lErrors, lCriticalWarnings
+    # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def quit(self):
+    def close(self):
 
         # Return immediately of already dead
         if not hasattr(self, '_process') or not self._process.isalive():
@@ -402,16 +359,8 @@ class VivadoConsole(object):
         # Remove self from the list of instances
         self.__instances.remove(self)
 
-    # --------------------------------------------------------------
-    @property
-    def echoprefix(self):
-        return self._out.prefix
 
-    # --------------------------------------------------------------
-    @echoprefix.setter
-    def echoprefix(self, prefix):
-        self._out.prefix = prefix
-
+    
     # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
         if not isinstance(aCmd, six.string_types):
@@ -426,17 +375,7 @@ class VivadoConsole(object):
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
             raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
 
-        return list(lBuffer)
-
-    # --------------------------------------------------------------
-    def executeMany(self, aCmds, aMaxLen=1):
-        if not isinstance(aCmds, list):
-            raise TypeError('expected list')
-
-        lOutput = []
-        for lCmd in aCmds:
-            lOutput.extend(self.execute(lCmd, aMaxLen))
-        return lOutput
+        return tuple(lBuffer)
 
     # --------------------------------------------------------------
     def changeMsgSeverity(self, aIds, aSeverity):
@@ -447,83 +386,100 @@ class VivadoConsole(object):
             aSeverity (str): Target severity
         """
         lIds = aIds if isinstance(aIds, list) else [aIds]
-        self.executeMany(['set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds])
+        for c in ('set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds):
+            self.execute(c)
 
 
-# -------------------------------------------------------------------------
-class VivadoOpen(object):
-    """VivadoConsole wrapper for with statements
+#-------------------------------------------------------------------------------
+@consolectxmanager
+class VivadoSession(VivadoConsole):
+
+    """Summary
+    """
+    
+    pass
+
+
+#-------------------------------------------------------------------------------
+VivadoSnoozer = TCLConsoleSnoozer
+
+
+# ------------------------------------------------------------------------------
+class VivadoSessionContextAdapter(object):
+
+    """Summary
     """
 
-    # --------------------------------------------------------------
-    def __getattr__(self, name):
-        if name.startswith('_'):
-            # bail out early
-            raise AttributeError(name)
-        return getattr(self._console, name)
+    def __init__(self, aManager, aCloseOnExit, aSId):
+        """
+        Constructor
+        
+        Args:
+            aManager (VivadoSessionManager): Manager object
+            aSId (str): SessionID
+        
+        """
+        super(VivadoSessionContextAdapter, self).__init__()
+        self._console = None
+        self._mgr = aManager
+        self._sid = aSId
+        self._closeonexit = aCloseOnExit
 
-    # --------------------------------------------------------------
-    def __setattr__(self, name, value):
-        if name.startswith('_'):
-            self.__dict__[name] = value
-            return
-        return setattr(self._console, name, value)
-
-    # --------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        super(VivadoOpen, self).__init__()
-        self._args = args
-        self._kwargs = kwargs
-
-    # --------------------------------------------------------------
     def __enter__(self):
-        self._console = VivadoConsole(*self._args, **self._kwargs)
-        return self
+        self._console = self._mgr._getconsole(sid=self._sid)
+        return self._console
 
-    # --------------------------------------------------------------
     def __exit__(self, type, value, traceback):
-        self._console.quit()
+        if self._closeonexit:
+            self._console.close()
+            self._console = None
+    
 
-    # --------------------------------------------------------------
-    def __call__(self, aCmd=None, aMaxLen=1):
-        # FIXME: only needed because of VivadoProjectMaker
-        # Fix at source and remove
-        if aCmd is None:
-            return
+# ------------------------------------------------------------------------------
+class VivadoSessionManager(object):
+    """docstring for VivadoSessionManager
+    
+    Attributes:
+        persistent (TYPE): Description
+    """
+    def __init__(self, keep=False, echo=True, loglabel=None):
+        """Constructor
+        
+        Args:
+            keep (TYPE): Description
+        """
+        super(VivadoSessionManager, self).__init__()
+        self._keep = keep
+        self._echo = echo
+        self._loglabel = loglabel
+        if self._keep:
+            self._console = None
 
-        if aCmd.count('\n') is not 0:
-            aCmd = aCmd.split('\n')
+    def __del__(self):
+        if self._keep and self._console:
+            self._console.close()
 
-        if isinstance(aCmd, str):
-            return self._console.execute(aCmd, aMaxLen)
-        elif isinstance(aCmd, list):
-            return self._console.executeMany(aCmd, aMaxLen)
+    def _getconsole(self, sid):
+
+        if self._keep:
+            if not self._console:
+                self._console = VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo)
+            self._console.sessionid = sid
+            return self._console
         else:
-            raise TypeError('Unsupported command type ' + type(aCmd).__name__)
+            return VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo)
 
 
-# -------------------------------------------------------------------------
-class VivadoSnoozer(object):
-    """Snoozes notifications from Vivado """
-    # --------------------------------------------------------------
-    def __init__(self, aConsole):
-        super(VivadoSnoozer, self).__init__()
-        self._console = aConsole
-        self._quiet = None
-    # --------------------------------------------------------------
-
-    # --------------------------------------------------------------
-    def __enter__(self):
-        self._quiet = self._console.quiet
-        self._console.quiet = True
-    # --------------------------------------------------------------
-
-    # --------------------------------------------------------------
-    def __exit__(self, type, value, traceback):
-        self._console.quiet = self._quiet
-    # --------------------------------------------------------------
-
-# -------------------------------------------------------------------------
+    def get(self, sid):
+        """Session getter.
+        
+        Args:
+            sid (str): Session identifier
+        
+        Returns:
+            VivadoSessionContextAdapter: Context adapter holding the session details
+        """
+        return VivadoSessionContextAdapter(self, not self._keep, sid)
 
 
 @atexit.register

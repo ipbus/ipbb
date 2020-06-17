@@ -16,6 +16,7 @@ import collections
 import ipbb
 import ipbb.tools.xilinx as xilinx
 import ipbb.tools.mentor as mentor
+from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 # Elements
 from os.path import (
@@ -43,9 +44,8 @@ from ._utils import (
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
-from ..depparser.IPCoresSimMaker import IPCoresSimMaker
-from ..depparser.SimlibMaker import SimlibMaker
-from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
+from ..makers.ipcoressim import IPCoresSimMaker
+from ..makers.modelsimproject import ModelSimProjectMaker
 
 
 kIPExportDir = 'ipcores_sim'
@@ -90,7 +90,7 @@ def findIPSrcs( srcs ):
     return [
         split(name)[1]
         for name, ext in (
-            splitext(src.FilePath) for src in srcs
+            splitext(src.filepath) for src in srcs
         )
         if ext in [".xci"]
     ]
@@ -115,7 +115,7 @@ def sim(env, proj):
 
 
 # ------------------------------------------------------------------------------
-def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
+def setupsimlib(env, aXilSimLibsPath, aForce):
     lSessionId = 'setup-simlib'
 
     # -------------------------------------------------------------------------
@@ -124,8 +124,6 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             'Vivado is not available. Have you sourced the environment script?'
         )
     # -------------------------------------------------------------------------
-
-    lDryRun = aToScript or aToStdout
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
@@ -165,22 +163,11 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             )
         )
 
-        lSimlibMaker = SimlibMaker(lSimulator, lSimlibPath)
         try:
-            with (
-                # Pipe commands to Vivado console
-                xilinx.VivadoOpen(lSessionId)
-                if not lDryRun
-                else SmartOpen(
-                    # Dump to script
-                    aToScript
-                    if not aToStdout
-                    # Dump to terminal
-                    else None
+            with xilinx.VivadoSession(sid=lSessionId) as lVivadoConsole:
+                lVivadoConsole(
+                    'compile_simlib -verbose -simulator {} -family all -language all -library all -dir {{{}}}'.format(lSimulator, lSimlibPath)
                 )
-            ) as lVivadoConsole:
-
-                lSimlibMaker.write(lVivadoConsole)
 
         except xilinx.VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)
@@ -191,6 +178,12 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
                 fg='red',
             )
             raise click.Abort()
+
+    lModelsimIniPath = join(lSimlibPath, 'modelsim.ini')
+    if not exists(lModelsimIniPath):
+        raise click.ClickException(
+            'Failed to locate modelsim.ini in the simlin target folder. This usually means that Vivado failed to compile the simulation libraries. Please check the logs.'
+        )
 
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), '.')
     echo("\nmodelsim.ini imported from {}".format(lSimlibPath))
@@ -206,6 +199,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     lIPCoresModelsimIni = 'modelsim.ipcores.ini'
 
     lDryRun = aToScript or aToStdout
+    lScriptPath = aToScript if not aToStdout else None
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
@@ -271,20 +265,13 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     try:
         with (
             # Pipe commands to Vivado console
-            xilinx.VivadoOpen(lSessionId)
-            if not lDryRun
-            else SmartOpen(
-                # Dump to script
-                aToScript
-                if not aToStdout
-                # Dump to terminal
-                else None
-            )
+            xilinx.VivadoSession(sid=lSessionId) if not lDryRun
+            else SmartOpen(lScriptPath)
         ) as lVivadoConsole:
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
-                lDepFileParser.vars,
+                lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -514,7 +501,7 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                lDepFileParser.vars,
+                lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -628,9 +615,9 @@ def mifs(env):
     # Seek mif files in sources
     lPaths = []
     for c in srcs:
-        if splitext(c.FilePath)[1] != '.mif':
+        if splitext(c.filepath)[1] != '.mif':
             continue
-        lPaths.append(c.FilePath)
+        lPaths.append(c.filepath)
 
     if lPaths:
         sh.mkdir('-p', 'mif')

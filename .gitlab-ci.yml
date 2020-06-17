@@ -3,7 +3,7 @@ stages:
   - initial_report
   - setup
   - midway_report
-  - deps
+  - tests
   - final_report
 
 variables:
@@ -14,5 +14,5 @@ variables:
 include:
   - local: '/ci/github-notifications.yml'
   - local: '/ci/setup.yml'
-  - local: '/ci/deps.yml'
+  - local: '/ci/tests.yml'
 

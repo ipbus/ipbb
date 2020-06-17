@@ -4,15 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.0.0 alpha1] Unreleased
 ### Fixes
-- Fixed several `vivado` subcommands still using `top` as Vivado project name.
+- Several `vivado` subcommands still using `top` as Vivado project name.
+- Dep parsing errors not reported. Now exposed by `info` and `dep report` commands.
+- New `ipbus` command group, for ipbus specific commands (i.e. `gendecoders`).
+
+### Changed
+- Factorized `tools.xilinx` module and consolidated console class.
+- Factorized `depparser` module.
 
 ### Added
-- Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides ipbb with instructions on how to setup the package once checked out (e.g. setup git submodules).
+- Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides `ipbb` with instructions on how to setup the package once checked out (e.g. `setup git submodules` to automatically checkout git submodules).
 - Parameter substitution added in dep files commands
+- Added tab-completion for dep files in ipbb commands (e.g. `repo create`)
 - Added `srcs reset` command that applies custom packate reset procedures as specified in `.ipbb.setup`.
-- Versioen python requirements: `requirements.txt`.
+- Python dependencies versions specified in `requirements.txt`.
+- New `--usein`/`-u` dep `src` command flag, to specify if a soruce file is used in synthesis, simulation or both.
+- Dep setting can now be hierarchical (e.g. `vivado.sim_top_entity`)
+- Depth, cells and file options for the `vivado report-usage` command
 
 ## [0.5.2] - 2019-09-13
 ### Fixes
@@ -26,8 +36,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Top-level entity in Vivado project can be now specified via the dep-file variable `top_entity`. 
-
-### Changed
 
 ## [0.5.0] - 2019-04-30
 ### Changed

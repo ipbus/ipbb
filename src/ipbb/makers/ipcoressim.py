@@ -29,7 +29,7 @@ class IPCoresSimMaker(object):
 
         lReqVariables = {'device_name', 'device_package', 'device_speed'}
         if not lReqVariables.issubset(aScriptVariables):
-            raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aScriptVariables)))
+            raise RuntimeError("Missing required variables: {}".format(', '.join(lReqVariables.difference(aScriptVariables))))
 
         write = aTarget
 
@@ -50,16 +50,14 @@ class IPCoresSimMaker(object):
 
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
-            ' '.join(map( lambda c: c.FilePath, aCommandList['iprepo']))
-        )
+                ' '.join(map( lambda c: c.filepath, aCommandList['iprepo']))
+            )
         )
 
-        write('''
-set_property "default_lib" "xil_defaultlib" [current_project]
-set_property "simulator_language" "Mixed" [current_project]
-set_property "source_mgmt_mode" "DisplayOnly" [current_project]
-set_property "target_language" "VHDL" [current_project]
-''')
+        write('set_property "default_lib" "xil_defaultlib" [current_project]')
+        write('set_property "simulator_language" "Mixed" [current_project]')
+        write('set_property "source_mgmt_mode" "DisplayOnly" [current_project]')
+        write('set_property "target_language" "VHDL" [current_project]')
 
         write('set_property target_simulator ' + self.targetSimulator + ' [current_project]')
 
@@ -73,12 +71,12 @@ set_property "target_language" "VHDL" [current_project]
         write()
         lXCIs = []
         for src in reversed(aCommandList['src']):
-            lPath, lBasename = split(src.FilePath)
+            lPath, lBasename = split(src.filepath)
             lName, lExt = splitext(lBasename)
 
             if lExt in ['.xci', '.edn']:
                 write(
-                    'import_files -norecurse -fileset sources_1 {0}'.format(src.FilePath))
+                    'import_files -norecurse -fileset sources_1 {0}'.format(src.filepath))
                 if lExt == '.xci':
                     lXCIs.append( (lName, lBasename) )
 

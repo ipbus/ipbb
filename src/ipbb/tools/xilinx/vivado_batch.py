@@ -6,6 +6,8 @@ import six
 import re
 import sh
 
+from .vivado_common import VivadoNotFoundError, autodetect, VivadoOutputFormatter
+
 # ------------------------------------------------------------------------------
 class VivadoBatch(object):
     """
@@ -80,5 +82,4 @@ class VivadoBatch(object):
                     self.warnings.append((i, l))
                 elif self._reInfo.match(l):
                     self.info.append((i, l))
-    # --------------------------------------------
 # -------------------------------------------------------------------------

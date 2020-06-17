@@ -57,12 +57,15 @@ class OutputFormatter(object):
         quiet (bool): Suppress output.
     """
 
-    def __init__(self, prefix=None, quiet=False):
+    def __init__(self, prefix=None, sep='', quiet=False):
         self._write = sys.stdout.write
         self._flush = sys.stdout.flush
         self.quiet = quiet
-        self.prefix = prefix
-        self.pending = False
+        self._prefix = prefix
+        self._sep = sep
+        self._pending = False
+        # update prefixstr
+        self._update()
 
     def __del__(self):
         pass
@@ -72,6 +75,28 @@ class OutputFormatter(object):
 
     def __exit__(self, *args):
         pass
+
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = value
+        self._update()
+
+    @property
+    def sep(self):
+        return self._sep
+
+    @sep.setter
+    def sep(self, value):
+        self._sep = value
+        self._update()
+
+    def _update(self):
+        self._prefixstr =  (self._prefix + self._sep) if self._prefix is not None else ''
 
     def write(self, message):
         """
@@ -85,15 +110,15 @@ class OutputFormatter(object):
         if self.quiet:
             return
 
-        msg = self.prefix if (self.pending and self.prefix) else ''
+        msg = (self.prefix + self.sep) if (self._pending and self.prefix) else ''
 
-        # update pending status
-        self.pending = message.endswith('\n')
+        # update _pending status
+        self._pending = message.endswith('\n')
 
         # furthemore, postfix the prefix to the newlines in message, execpt for the last one if pending is pn
         msg += (
             message.replace(
-                '\n', '\n' + self.prefix, message.count('\n') - self.pending
+                '\n', '\n' + (self.prefix + self.sep), message.count('\n') - self._pending
             )
             if self.prefix
             else message
@@ -108,37 +133,6 @@ class OutputFormatter(object):
         if self.quiet:
             return
         self._flush()
-
-
-# ------------------------------------------------------------------------------
-class DictObj(object):
-    """
-    Convenience class to wrap a python dictionary in an opbject
-    """
-
-    def __init__(self, aDict={} ):
-        super(DictObj, self).__setattr__('data', aDict)
-        # for name, value in aDict.iteritems():
-        #   setattr(self, name, value)
-
-    def __setattr__(self, key, value):
-        self.data[key] = value
-
-    def __getattr__(self, key):
-        # we don't need a special call to super here because getattr is only
-        # called when an attribute is NOT found in the instance's dictionary
-        try:
-            return self.data[key]
-        except KeyError:
-            raise AttributeError
-
-    def __repr__(self):
-        type_name = type(self).__name__
-
-        arg_strings = [ '%s=%s' % (key, repr(value)) for key, value in sorted(self.data.iteritems())]
-
-        return '%s(%s)' % (type_name, ', '.join(arg_strings))
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------

@@ -10,6 +10,7 @@ import re
 from click import echo, secho, style, confirm, get_current_context, ClickException, Abort, BadParameter
 from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
+from ..tools.alien import AlienBranch
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -254,6 +255,30 @@ def formatDictTable(aDict, aHeader=True, aSort=True, aFmtr=str):
 
     return lDictTable.draw()
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+def printAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=None):
+    echo ( formatAlienTable(aBranch, aHeader, aSort, aFmtr) )
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def formatAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=str):
+    lAlienTable = Texttable(max_width=0)
+    lAlienTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
+    lAlienTable.set_chars(['-', '|', '+', '-'])
+    if aHeader:
+        lAlienTable.header( ['name', 'value'] )
+
+    for k in (sorted(aBranch) if aSort else aBranch):
+        v = aBranch[k]
+        if isinstance(v, AlienBranch):
+            continue
+        lAlienTable.add_row( [str(k), aFmtr(v) if aFmtr else v])
+
+    return lAlienTable.draw()
+# ------------------------------------------------------------------------------
+
 
 
 # ------------------------------------------------------------------------------

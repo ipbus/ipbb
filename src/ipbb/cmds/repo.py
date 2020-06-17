@@ -16,9 +16,11 @@ from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
-from ._utils import DirSentry, findFileInParents, raiseError
-from ..depparser.Pathmaker import Pathmaker
+from ..depparser import Pathmaker
 from ..tools.common import mkdir
+from ._utils import DirSentry, findFileInParents, raiseError, formatDictTable
+from .formatters import DepFormatter
+from .proj import info as proj_info
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable
@@ -44,6 +46,69 @@ def init(env, workarea):
 
     with open(join(workarea, kWorkAreaFile), 'w') as lSignature:
         lSignature.write('\n')
+
+
+# ------------------------------------------------------------------------------
+def info(env, verbose):
+    '''Print a brief report about the current working area'''
+
+    if not env.work.path:
+        secho('ERROR: No ipbb work area detected', fg='red')
+        return
+
+    echo()
+    secho("ipbb environment", fg='blue')
+    # echo  ( "----------------")
+    lEnvTable = Texttable(max_width=0)
+    lEnvTable.add_row(["Work path", env.work.path])
+    if env.currentproj.path:
+        lEnvTable.add_row(["Project path", env.currentproj.path])
+    echo(lEnvTable.draw())
+
+    if not env.currentproj.path:
+        echo()
+        srcs_info(env)
+
+        echo()
+        proj_info(env)
+        return
+
+    echo()
+
+    if not env.currentproj.settings:
+        return
+
+    secho("Project '%s'" % env.currentproj.name, fg='blue')
+
+    echo(formatDictTable(env.currentproj.settings, aHeader=False))
+
+    echo()
+
+    if env.currentproj.usersettings:
+        secho("User settings", fg='blue')
+        echo(formatDictTable(env.currentproj.usersettings, aHeader=False))
+
+        echo()
+
+    lParser = env.depParser
+    lDepFmt = DepFormatter(lParser)
+    
+    if lParser.errors:
+        secho("Dep tree parsing error(s):", fg='red')
+        echo(lDepFmt.drawParsingErrors())
+        echo()
+
+    secho("Dependecy tree elements", fg='blue')
+    echo(lDepFmt.drawDeptreeCommandsSummary())
+
+    echo()
+
+    if  lParser.unresolved:
+        secho("Unresolved item(s)", fg='red')
+        echo(lDepFmt.drawUnresolvedSummary())
+
+        echo()
+# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -400,14 +465,14 @@ def srcs(env):
 
 
 # ------------------------------------------------------------------------------
-def info(env):
+def srcs_info(env):
 
     if not env.work.path:
         secho('ERROR: No ipbb work area detected', fg='red')
         return
 
     echo()
-    secho("Packages", fg='blue')
+    secho("Firmware Packages", fg='blue')
     lSrcs = env.sources
     if not lSrcs:
         return
@@ -493,7 +558,7 @@ def info(env):
 
 
 # ------------------------------------------------------------------------------
-def create_component(env, component):
+def srcs_create_component(env, component):
     lPathMaker = Pathmaker(env.srcdir, env._verbosity)
 
     lCmpPath = lPathMaker.getPath(*component)
@@ -508,7 +573,7 @@ def create_component(env, component):
 
 
 # ------------------------------------------------------------------------------
-def run(env, pkg, cmd, args):
+def srcs_run(env, pkg, cmd, args):
 
     if pkg:
         if pkg not in env.sources:
@@ -540,5 +605,5 @@ def run(env, pkg, cmd, args):
 
 
 # ------------------------------------------------------------------------------
-def find(env):
+def srcs_find(env):
     sh.find(env.srcdir, '-name', '*.vhd', _out=sys.stdout)

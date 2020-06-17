@@ -26,7 +26,7 @@ from os.path import (
 )
 from ..tools.common import which, SmartOpen
 from .formatters import DepFormatter
-from ._utils import DirSentry, printDictTable
+from ._utils import DirSentry, printDictTable, printAlienTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
 
@@ -101,10 +101,11 @@ def report(env, filters):
     lDepFmt = DepFormatter(lParser)
 
     secho('* Variables', fg='blue')
-    printDictTable(lParser.vars, aHeader=False)
+    # printDictTable(lParser.vars, aHeader=False)
+    printAlienTable(lParser.config, aHeader=False)
 
     echo()
-    secho('* Parsed commands', fg='blue')
+    secho('* Dep-tree commands', fg='blue')
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
@@ -118,15 +119,12 @@ def report(env, filters):
         lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
-            # print(lCmd)
-            # lCmdTable.add_row([str(lCmd)])
             lRow = [
-                relpath(lCmd.FilePath, env.srcdir),
+                relpath(lCmd.filepath, env.srcdir),
                 ','.join(lCmd.flags()),
-                lCmd.Package,
-                lCmd.Component,
-                # lCmd.Map,
-                lCmd.Lib,
+                lCmd.package,
+                lCmd.component,
+                lCmd.lib if lCmd.cmd == 'src' else '',
             ]
 
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
@@ -149,8 +147,9 @@ def report(env, filters):
     lString += lDepFmt.drawComponents()
     echo(lString+'\n')
 
-    secho("Dep tree parsing error:", fg='red')
-    echo(lDepFmt.drawParsingErrors())
+    if lParser.errors:
+        secho("Dep tree parsing error(s):", fg='red')
+        echo(lDepFmt.drawParsingErrors())
 
     if lParser.unresolved:
         lString = ''
@@ -190,7 +189,7 @@ def ls(env, group, output):
 
     with SmartOpen(output) as lWriter:
         for addrtab in env.depParser.commands[group]:
-            lWriter(addrtab.FilePath)
+            lWriter(addrtab.filepath)
 
 
 # ------------------------------------------------------------------------------
@@ -315,10 +314,10 @@ def hash(env, output, verbose):
                 lWriter("#" + "-" * 79)
             for lCmd in lCmds:
                 lCmdHash = hashAndUpdate(
-                    lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
+                    lCmd.filepath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
                 ).hexdigest()
                 if verbose:
-                    lWriter(lCmdHash, lCmd.FilePath)
+                    lWriter(lCmdHash, lCmd.filepath)
 
             lGrpHashes[lGrp] = lGrpHash
 

@@ -10,8 +10,8 @@ from click import echo, secho
 from os.path import exists, dirname, join, basename, splitext
 from os import mkdir, makedirs
 from shutil import rmtree
-from ipbb.depparser.DepParser import DepFileParser, DepFormatter
-from ipbb.depparser.Pathmaker import Pathmaker
+from ipbb.depparser import DepFileParser, DepFormatter
+from ipbb.depparser import Pathmaker
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 

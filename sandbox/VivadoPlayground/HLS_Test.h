@@ -1,0 +1,1 @@
+char hls_main(char, char, char);

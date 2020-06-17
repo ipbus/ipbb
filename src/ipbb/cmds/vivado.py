@@ -23,15 +23,27 @@ from collections import OrderedDict
 from .dep import hash
 
 from ..tools.common import which, SmartOpen
-from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..depparser.VivadoProjectMaker import VivadoProjectMaker
-from ..tools.xilinx import VivadoOpen, VivadoConsoleError, VivadoSnoozer
+from ..makers.vivadoproject import VivadoProjectMaker
+from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 
+_memCfgKinds = {
+    'bin': 'binfile_options',
+    'mcs': 'mcsfile_options'
+}
 
 # ------------------------------------------------------------------------------
 def ensureVivado(env):
+    """Utility function guaranteeing the correct Vivado environment.
+    
+    Args:
+        env (ipbb.Environment): Environment object
+    
+    Raises:
+        click.ClickException: Toolset mismatch or Vivado not available
+    """
     if env.currentproj.settings['toolset'] != 'vivado':
         raise click.ClickException(
             "Work area toolset mismatch. Expected 'vivado', found '%s'"
@@ -39,15 +51,36 @@ def ensureVivado(env):
         )
 
     if not which('vivado'):
-        # if 'XILINX_VIVADO' not in os.environ:
         raise click.ClickException(
             "Vivado not found. Please source the Vivado environment before continuing."
         )
 
+# ------------------------------------------------------------------------------
+def ensureVivadoProjPath(aProjPath):
+    """Utility function to ensure that the project path exists
+    
+    Args:
+        aProjPath (TYPE): Description
+    
+    Raises:
+        click.ClickException: Description
+    """
+    if not exists(aProjPath):
+        raise click.ClickException("Vivado project %s does not exist" % aProjPath)
 
 # ------------------------------------------------------------------------------
-def vivado(env, proj, verbosity):
-    '''Vivado command group'''
+def vivado(env, proj, verbosity, cmdlist):
+    '''Vivado command group
+    
+    Args:
+        ctx (click.Context): Command context
+        env (ipbb.Environment): Environment object
+        proj (str): Project name
+        verbosity (str): Verbosity level
+    
+    Raises:
+        click.ClickException: Undefined project area
+    '''
 
     env.vivadoEcho = (verbosity == 'all')
 
@@ -64,8 +97,15 @@ def vivado(env, proj, verbosity):
                 'Project area not defined. Move to a project area and try again'
             )
 
+    ensureVivado(env)
+
+    lKeep = True
+    lLogLabel = None if not lKeep else '_'.join( cmdlist )
+
+    # Command-specific env variables
     env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
     env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
+    env.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
 
 
 # ------------------------------------------------------------------------------
@@ -88,24 +128,18 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     lVivadoIPCache = join(env.work.path, 'var', 'vivado-ip-cache') if aEnableIPCache else None
     lVivadoMaker = VivadoProjectMaker(env.currentproj, lVivadoIPCache, aOptimise)
 
-    lDryRun = aToScript or aToStdout
+    if aToScript or aToStdout:
+        # Dry run
+        lConsoleCtx = SmartOpen(aToScript if not aToStdout else None)
+    else:
+        lConsoleCtx = env.vivadoSessions.get(lSessionId)
 
     try:
-        with (
-            VivadoOpen(lSessionId, echo=env.vivadoEcho)
-            if not lDryRun
-            else SmartOpen(
-                # Dump to script
-                aToScript
-                if not aToStdout
-                # Dump to terminal
-                else None
-            )
-        ) as lConsole:
-
+        with lConsoleCtx as lConsole:
+            # lConsole.echoprefix = lSessionId + ' | '
             lVivadoMaker.write(
                 lConsole,
-                lDepFileParser.vars,
+                lDepFileParser.config,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -130,21 +164,18 @@ def checksyntax(env):
 
     lStopOn = ['HDL 9-806', 'HDL 9-69']  # Syntax errors  # Type not declared
 
-    # Check
-    lVivProjPath = env.vivadoProjFile
-    if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
 
+    # And that the Vivado env is up
     ensureVivado(env)
 
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-
+        with env.vivadoSessions.get(lSessionId) as lConsole:
             # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             # Change message severity to ERROR for the isses we're interested in
-            # lConsole(['set_msg_config -id "{}" -new_severity "ERROR"'.format(e) for e in lStopOn])
             lConsole.changeMsgSeverity(lStopOn, 'ERROR')
 
             # Execute the syntax check
@@ -159,81 +190,30 @@ def checksyntax(env):
         fg='green',
     )
 
-
 # -------------------------------------
-# def getSynthRunProps(aConsole):
-#     '''Retrieve the status of synthesis runs
-    
-#     Helper function
-    
-#     Args:
-#         aConsole (obj:`VivadoConsole`): Vivado Wrapper
-    
-#     Returns:
-#         TYPE: Description
-#     '''
-
-#     '''
-#     To find OOC runs
-#      "BlockSrcs" == [get_property FILESET_TYPE [get_property SRCSET [get_runs <run_name>]]]
-#     '''
-
-#     with VivadoSnoozer(aConsole):
-#         lSynthesisRuns = aConsole('get_runs -filter {IS_SYNTHESIS}')[0].split()
-#         lRunProps = {}
-
-#         lProps = ['STATUS', 'PROGRESS', 'STATS.ELAPSED']
-
-#         for lRun in lSynthesisRuns:
-#             lValues = aConsole(
-#                 [
-#                     'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-#                     for lProp in lProps
-#                 ]
-#             )
-#             lRunProps[lRun] = dict(zip(lProps, lValues))
-#     return lRunProps
-
-
-# # -------------------------------------
-# def formatRunProps(aProps):
-#     lProps = aProps.itervalues().next().keys()
-
-#     lSummary = Texttable(max_width=0)
-#     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-#     lSummary.add_row(['Run'] + lProps)
-#     for lRun in sorted(aProps):
-#         lInfo = aProps[lRun]
-#         lSummary.add_row([lRun] + [lInfo[lProp] for lProp in lProps])
-
-#     return lSummary.draw()
-
-# -------------------------------------
-def synth(env, aJobs, aUpdateInt):
+def synth(env, aNumJobs, aUpdateInt):
     '''Run synthesis'''
 
     lSessionId = 'synth'
 
-    # Check
-    lVivProjPath = env.vivadoProjFile
-    if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
 
+    # And that the Vivado env is up
     ensureVivado(env)
 
     lArgs = []
 
-    if aJobs is not None:
-        lArgs += ['-jobs {}'.format(aJobs)]
+    if aNumJobs is not None:
+        lArgs += ['-jobs {}'.format(aNumJobs)]
 
     lOOCRegex = re.compile(r'.*_synth_\d+')
     lSynthRun = 'synth_1'
 
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-
+        with env.vivadoSessions.get(lSessionId) as lConsole:
             # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             with VivadoSnoozer(lConsole):
                 lRunProps = { k: v for k, v in iteritems(readRunInfo(lConsole)) if lOOCRegex.match(k) }
@@ -244,6 +224,7 @@ def synth(env, aJobs, aUpdateInt):
                 if v['STATUS'].startswith('Running')
             ]
 
+            # Reset IP runs, if needed
             for run in lIPRunsToReset:
                 secho(
                     'IP run {} found in running state. Resetting.'.format(run),
@@ -251,14 +232,14 @@ def synth(env, aJobs, aUpdateInt):
                 )
                 lConsole('reset_run {}'.format(run))
 
-            lConsole([
-                ' '.join(['reset_run', lSynthRun]),
-                ' '.join(['launch_runs', lSynthRun] + lArgs)])
+            # Reset and launch synth_1
+            lConsole('reset_run {}'.format(lSynthRun))
+            lConsole('launch_runs {} {}'.format(lSynthRun, ' '.join(lArgs)))
 
-            # 
+            # Monitor OOC and synth run progress
             if not aUpdateInt:
                 secho("Run monitoring disabled", fg='cyan')
-                lConsole(['wait_on_run synth_1'])
+                lConsole('wait_on_run synth_1')
             else:
                 secho("Starting run monitoring loop, update interval: {} min(s)".format(aUpdateInt), fg='cyan')
                 while True:
@@ -282,7 +263,7 @@ def synth(env, aJobs, aUpdateInt):
                     if lRunProps['synth_1']['PROGRESS'] == '100%':
                         break
 
-                    lConsole(['wait_on_run synth_1 -timeout {}'.format(aUpdateInt)])
+                    lConsole('wait_on_run synth_1 -timeout {}'.format(aUpdateInt))
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -304,18 +285,18 @@ def synth(env, aJobs, aUpdateInt):
 
 
 # ------------------------------------------------------------------------------
-def impl(env, jobs, aStopOnTimingErr):
-    '''Launch an implementation run'''
+def impl(env, aNumJobs, aStopOnTimingErr):
+    '''
+    Launch an implementation run
+    '''
 
+ 
     lSessionId = 'impl'
 
-    # Check
-    lVivProjPath = env.vivadoProjFile
-    if not exists(lVivProjPath):
-        raise click.ClickException(
-            "Vivado project %s does not exist" % lVivProjPath
-        )
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
 
+    # And that the Vivado env is up
     ensureVivado(env)
 
     lStopOn = []
@@ -324,22 +305,22 @@ def impl(env, jobs, aStopOnTimingErr):
         lStopOn = ['Timing 38-282']  # Force error when timing is not met
 
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
+        with env.vivadoSessions.get(lSessionId) as lConsole:
 
             # Open the project
-            lConsole('open_project {}'.format(lVivProjPath))
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             # Change message severity to ERROR for the isses we're interested in
             lConsole.changeMsgSeverity(lStopOn, "ERROR")
 
-            lConsole(
-                [
+            for c in (
                     'reset_run impl_1',
                     'launch_runs impl_1'
-                    + (' -jobs {}'.format(jobs) if jobs is not None else ''),
+                    + (' -jobs {}'.format(aNumJobs) if aNumJobs is not None else ''),
                     'wait_on_run impl_1',
-                ]
-            )
+                ):
+                lConsole(c)
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -354,26 +335,30 @@ def impl(env, jobs, aStopOnTimingErr):
 
 
 # ------------------------------------------------------------------------------
-def resource_usage(env):
+def resource_usage(env, aCell, aDepth, aFile):
 
     lSessionId = 'usage'
 
-    # Check
-    lVivProjPath = env.vivadoProjFile
-    if not exists(lVivProjPath):
-        raise click.ClickException("Vivado project %s does not exist" % lVivProjPath)
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
 
+    # And that the Vivado env is up
     ensureVivado(env)
 
-    lCmds = [
-        'open_project %s' % lVivProjPath, 'open_run impl_1',
-        'report_utilization -hierarchical -hierarchical_depth 1 -hierarchical_percentages'
-    ]
+    lCmd = 'report_utilization -hierarchical -hierarchical_depth {} -hierarchical_percentages'.format(aDepth)
+    if aCell:
+        lCmd += ' -cells ' + aCell
 
+    if aFile:
+        lCmd += ' -file ' + aFile
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lCmds)
-            # lConsole(lImplCmds)
+        with env.vivadoSessions.get(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            for c in (
+                    'open_run impl_1',
+                    lCmd
+                ):
+                lConsole(c)
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -385,24 +370,21 @@ def bitfile(env):
 
     lSessionId = 'bitfile'
 
-    # if env.currentproj.name is None:
-    #     raise click.ClickException(
-    #         'Project area not defined. Move into a project area and try again')
-
     # Check
     if not exists(env.vivadoProjFile):
         raise click.ClickException("Vivado project %s does not exist" % env.vivadoProjFile)
 
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-
-    lBitFileCmds = ['launch_runs impl_1 -to_step write_bitstream', 'wait_on_run impl_1']
-
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lBitFileCmds)
+        with env.vivadoSessions.get(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            for c in (
+                    'launch_runs impl_1 -to_step write_bitstream', 
+                    'wait_on_run impl_1'
+                ):
+                lConsole(c)
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -412,43 +394,66 @@ def bitfile(env):
     )
 
 
+
 # ------------------------------------------------------------------------------
-def binfile(env):
-    '''Create a binfile for PROM programming'''
+def memcfg(env):
+    '''Create a memcfg file for PROM programming
+    
+    Supports bin and mcs file types
+    Requires the corresponding options to be defined in the dep files:
+ 
+    * bin: 'vivado.binfile_options',
+    * mcs: 'vivado.mcsfile_options'
+    '''
 
-    lSessionId = 'binfile'
+    lSessionId = 'memcfg'
 
-    # Check
-    if not exists(env.vivadoProjFile):
-        raise click.ClickException("Vivado project %s does not exist" % env.vivadoProjFile)
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
+
+
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.vars.get('top_entity', kTopEntity)
-    lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
-    lBinPath = lBitPath.replace('.bit', '.bin')
+    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
+    lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
+
+    if 'vivado' not in lDepFileParser.config:
+        secho('No memcfg settings found in this project. Exiting.', fg='yellow')
+        return
+
+    lBitPath = lBasePath + '.bit'
     if not exists(lBitPath):
-        raise click.ClickException("Bitfile does not exist. Can't create binfile.")
+        raise click.ClickException("Bitfile does not exist. Can't create memcfg files.")
 
-    lBinFileCmdOptions = lDepFileParser.vars['vivado_binfile_options']
-
+    # And that the Vivado env is up
     ensureVivado(env)
+    
+    lVivadoCfg = lDepFileParser.config['vivado']
+    for k,o in iteritems(_memCfgKinds):
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
+        if o not in lVivadoCfg:
+            echo("No configuration found for '{}' files. Skipping.".format(k))
+            continue
 
-    lBinFileCmd  = 'write_cfgmem -format bin %s -loadbit {up 0x00000000 "%s" } -file "%s"' % (lBinFileCmdOptions, lBitPath, lBinPath)
-    lBinFileCmds = [lBinFileCmd]
+        lMemCmdOptions = lVivadoCfg[o]
+        lMemPath = lBasePath+'.'+k
 
-    try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lBinFileCmds)
-    except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
-        raise click.Abort()
+        try:
+            with env.vivadoSessions.get(lSessionId) as lConsole:
 
-    secho(
-        "\n{}: Binfile successfully written.\n".format(env.currentproj.name), fg='green'
+                lProject = VivadoProject(lConsole, env.vivadoProjFile)
+                lConsole(
+                    'write_cfgmem -force -format {} {} -loadbit {{up 0x00000000 "{}" }} -file "{}"'.format(
+                        k, lMemCmdOptions, lBitPath, lMemPath
+                    )
+                )
+        except VivadoConsoleError as lExc:
+            echoVivadoConsoleError(lExc)
+            raise click.Abort()
+
+        secho(
+            "\n{}: {}file successfully written.\n".format(k.capitalize(), env.currentproj.name), fg='green'
     )
 
 
@@ -470,11 +475,10 @@ def readRunInfo(aConsole, aProps=None):
 
     for lRun in sorted(lRuns):
 
-        lCmds = [
-            'get_property {0} [get_runs {1}]'.format(lProp, lRun)
-            for lProp in lProps
-        ]
-        lValues = aConsole(lCmds)
+        lValues = (
+                aConsole('get_property {0} [get_runs {1}]'.format(p, lRun))[0]
+                for p in lProps
+            )
         lInfos[lRun] = OrderedDict(zip(lProps, lValues))
 
     return lInfos
@@ -502,9 +506,11 @@ def status(env):
 
     lSessionId = 'status'
 
-    ensureVivado(env)
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
+    # And that the Vivado env is up
+    ensureVivado(env)
 
     lInfos = {}
     lProps = [
@@ -520,12 +526,10 @@ def status(env):
     lRunRegex = re.compile(r'(synth|impl)_\d+')
 
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho, echobanner=False) as lConsole:
-            echo('Opening project ' + env.currentproj.name)
-
+        with env.vivadoSessions.get(lSessionId) as lConsole:
             with VivadoSnoozer(lConsole):
-                lConsole(lOpenCmds)
-                lInfos = readRunInfo(lConsole, lProps)
+                lProject = VivadoProject(lConsole, env.vivadoProjFile)
+                lInfos = lProject.readRunInfo(lProps)
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -549,16 +553,21 @@ def reset(env):
 
     lSessionId = 'reset'
 
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
+
+    # And that the Vivado env is up
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-
-    lResetCmds = ['reset_run synth_1', 'reset_run impl_1']
-
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lResetCmds)
+        with env.vivadoSessions.get(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            for c in (
+                    'reset_run synth_1',
+                    'reset_run impl_1'
+                ):
+                lConsole(c)
+
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()
@@ -584,31 +593,33 @@ def package(env, aTag):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.vars.get('top_entity', kTopEntity)
+    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
 
-    lBitPath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity + '.bit')
+    lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
+    lBitPath  = lBasePath + '.bit'
     if not exists(lBitPath):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         bitfile(env)
 
-    wantBinFile = False
-    if env.depParser.vars.has_key('vivado_binfile_options'):
-        wantBinFile = True
-    if wantBinFile:
-        lBinPath = lBitPath.replace('.bit', '.bin')
-        if not exists(lBinPath):
-            secho('Binfile does not exist. Attempting to create it ...', fg='yellow')
-            binfile(env)
+    try:
+        lVivadoCfg = lDepFileParser.config['vivado']
+        lActiveMemCfgs = [k for k,o in iteritems(_memCfgKinds) if o in lVivadoCfg]
+        lMemCfgFiles = [lBasePath + '.' + k for k in lActiveMemCfgs]
+
+        if any([not exists(f) for f in lMemCfgFiles]):
+            memcfg(env)
+    except KeyError as e:
+        lMemCfgFiles = []
 
     lPkgPath = 'package'
-    lSrcPath = join(lPkgPath, 'src')
+    lPkgSrcPath = join(lPkgPath, 'src')
 
     # Cleanup first
     sh.rm('-rf', lPkgPath, _out=sys.stdout)
 
     # Create the folders
     try:
-        os.makedirs(join(lSrcPath, 'addrtab'))
+        os.makedirs(join(lPkgSrcPath, 'addrtab'))
     except OSError:
         pass
 
@@ -619,7 +630,7 @@ def package(env, aTag):
 
     # -------------------------------------------------------------------------
 
-    lHash = hash(env, output=join(lSrcPath, 'hashes.txt'), verbose=True)
+    lHash = hash(env, output=join(lPkgSrcPath, 'hashes.txt'), verbose=True)
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -632,25 +643,25 @@ def package(env, aTag):
         }
     )
 
-    with open(join(lSrcPath, 'summary.txt'), 'w') as lSummaryFile:
+    with open(join(lPkgSrcPath, 'summary.txt'), 'w') as lSummaryFile:
         yaml.safe_dump(lSummary, lSummaryFile, indent=2, default_flow_style=False)
     echo()
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    # Copy bitfile, binfile, and address table into the packaging area
+    # Copy bitfile, memcfg, and address table into the packaging area
     secho("Collecting bitfile", fg='blue')
-    sh.cp('-av', lBitPath, lSrcPath, _out=sys.stdout)
+    sh.cp('-av', lBitPath, lPkgSrcPath, _out=sys.stdout)
     echo()
 
-    if wantBinFile:
-        secho("Collecting binfile", fg='blue')
-        sh.cp('-av', lBinPath, lSrcPath, _out=sys.stdout)
+    for f in lMemCfgFiles:
+        secho("Collecting memcfg {}".format(f), fg='blue')
+        sh.cp('-av', f, lPkgSrcPath, _out=sys.stdout)
         echo()
 
     secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:
-        sh.cp('-av', addrtab.FilePath, join(lSrcPath, 'addrtab'), _out=sys.stdout)
+        sh.cp('-av', addrtab.filepath, join(lPkgSrcPath, 'addrtab'), _out=sys.stdout)
     echo()
     # -------------------------------------------------------------------------
 
@@ -692,20 +703,19 @@ def archive(ctx):
 
     env = ctx.obj
 
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
+
+    # And that the Vivado env is up
     ensureVivado(env)
 
-    lOpenCmds = ['open_project %s' % env.vivadoProjFile]
-    lArchiveCmds = [
-        'archive_project %s -force'
-        % join(
-            env.currentproj.path, '{}.xpr.zip'.format(env.currentproj.settings['name'])
-        )
-    ]
-
     try:
-        with VivadoOpen(lSessionId, echo=env.vivadoEcho) as lConsole:
-            lConsole(lOpenCmds)
-            lConsole(lArchiveCmds)
+        with env.vivadoSessions.get(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            lConsole('archive_project {} -force'.format(
+                    join(env.currentproj.path, env.currentproj.settings['name']+'.xpr.zip')
+                )
+            )
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
         raise click.Abort()

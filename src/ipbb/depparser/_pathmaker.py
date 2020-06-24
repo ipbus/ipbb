@@ -3,6 +3,8 @@ import os
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+class NoDefaultExtension(Exception):
+    """Raised when no default extension exists for the current command"""
 
 class Pathmaker(object):
 
@@ -17,9 +19,9 @@ class Pathmaker(object):
         "iprepo": "firmware/cgn",
     }
     fexts = {
-        "src": "vhd",
+        # "src": "vhd",
         "include": "dep",
-        "addrtab": "xml"
+        # "addrtab": "xml"
         # , "setup": "tcl"}
     }
 
@@ -69,6 +71,8 @@ class Pathmaker(object):
 
     # --------------------------------------------------------------
     def getDefName(self, command, name):
+        if command not in self.fexts:
+            raise NoDefaultExtension(command)
         return "{0}.{1}".format(name, self.fexts[command])
     # --------------------------------------------------------------
 

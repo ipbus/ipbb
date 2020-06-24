@@ -92,7 +92,7 @@ def findIPSrcs( srcs ):
         for name, ext in (
             splitext(src.filepath) for src in srcs
         )
-        if ext in [".xci"]
+        if ext in ('.xci', '.xcix')
     ]
 
 

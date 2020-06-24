@@ -53,7 +53,7 @@ class ModelSimProjectMaker(object):
             # ----------------------------------------------------------
             if lExt == '.xco':
                 file = abspath(join(lPath, lName + '.vhd'))
-            elif lExt == '.xci':
+            elif lExt in  ('.xci', '.xcix'):
                 # Hack required. The Vivado generated hdl files sometimes
                 # have 'sim' in their path, sometimes don't
                 file = None

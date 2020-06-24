@@ -148,14 +148,10 @@ class VivadoProject(object):
         for s in lFileSets:
             x = lConsole('get_files -quiet -of [get_fileset {}]'.format(s))[0]
             lFiles[s] = x.split() if x else None
-        # lSources = lConsole('get_files -of [get_fileset sources_1]')[0].split()
-        # lConstrs = lConsole('get_files -of [get_fileset constrs_1]')[0].split()
-        # lUtils = lConsole('get_files -of [get_fileset utils_1]')[0].split()
         lIPs = lConsole('get_ips -quiet')[0]
-        # print(lIPs)
         lXcis = []
         for ip in lIPs.split():
-            lXcis += lConsole('get_property IMPORTED_FROM [get_files -of [get_filesets {0}] {0}.xci]'.format(ip))
+            lXcis += lConsole('get_property IMPORTED_FROM [get_files -quiet -of [get_filesets {0}] {{{1}}}]'.format(ip, ' '.join([ip+ext for ext in ['.xci', '.xcix']]) ))
         
         lFiles['ips'] = lXcis
         return lFiles

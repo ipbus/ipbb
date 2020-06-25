@@ -22,7 +22,7 @@ from collections import OrderedDict
 
 from .dep import hash
 
-from ..tools.common import which, SmartOpen
+from ..tools.common import which, SmartOpen, mkdir
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..makers.vivadoproject import VivadoProjectMaker
@@ -105,6 +105,9 @@ def vivado(env, proj, verbosity, cmdlist):
     # Command-specific env variables
     env.vivadoProjPath = join(env.currentproj.path, env.currentproj.name)
     env.vivadoProjFile = join(env.vivadoProjPath, env.currentproj.name +'.xpr')
+    env.vivadoProdPath = join(env.currentproj.path, 'products')
+    env.vivadoProdFileBase = join(env.vivadoProdPath, env.currentproj.name)
+
     env.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
 
 
@@ -136,7 +139,6 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
     try:
         with lConsoleCtx as lConsole:
-            # lConsole.echoprefix = lSessionId + ' | '
             lVivadoMaker.write(
                 lConsole,
                 lDepFileParser.config,
@@ -376,14 +378,15 @@ def bitfile(env):
 
     ensureVivado(env)
 
+    mkdir(env.vivadoProdPath)
+    lWriteBitStreamCmd = 'write_bitstream -force {}'.format(env.vivadoProdFileBase+'.bit')
+
+
     try:
         with env.vivadoSessions.get(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
-            for c in (
-                    'launch_runs impl_1 -to_step write_bitstream', 
-                    'wait_on_run impl_1'
-                ):
-                lConsole(c)
+            lProject.open_run('impl_1')
+            lConsole(lWriteBitStreamCmd)
 
     except VivadoConsoleError as lExc:
         echoVivadoConsoleError(lExc)
@@ -415,14 +418,15 @@ def memcfg(env):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
-    lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
+    # lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
+    # lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
+    lBaseName = env.vivadoProdFileBase
 
     if 'vivado' not in lDepFileParser.config:
         secho('No memcfg settings found in this project. Exiting.', fg='yellow')
         return
 
-    lBitPath = lBasePath + '.bit'
+    lBitPath = lBaseName + '.bit'
     if not exists(lBitPath):
         raise click.ClickException("Bitfile does not exist. Can't create memcfg files.")
 
@@ -437,7 +441,7 @@ def memcfg(env):
             continue
 
         lMemCmdOptions = lVivadoCfg[o]
-        lMemPath = lBasePath+'.'+k
+        lMemPath = lBaseName+'.'+k
 
         try:
             with env.vivadoSessions.get(lSessionId) as lConsole:
@@ -595,8 +599,8 @@ def package(env, aTag):
     lDepFileParser = env.depParser
     lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
 
-    lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
-    lBitPath  = lBasePath + '.bit'
+    lBaseName = env.vivadoProdFileBase
+    lBitPath  = lBaseName + '.bit'
     if not exists(lBitPath):
         secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
         bitfile(env)
@@ -604,7 +608,7 @@ def package(env, aTag):
     try:
         lVivadoCfg = lDepFileParser.config['vivado']
         lActiveMemCfgs = [k for k,o in iteritems(_memCfgKinds) if o in lVivadoCfg]
-        lMemCfgFiles = [lBasePath + '.' + k for k in lActiveMemCfgs]
+        lMemCfgFiles = [lBaseName + '.' + k for k in lActiveMemCfgs]
 
         if any([not exists(f) for f in lMemCfgFiles]):
             memcfg(env)

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Factorized `tools.xilinx` module and consolidated console class.
 - Factorized `depparser` module.
+- vivado bitfiles and memcfg files now named after the project and saved in the `product` folder.
 
 ### Added
 - Introducing firmware repository setup file `.ipbb.setup`. When included in a package repository, it provides `ipbb` with instructions on how to setup the package once checked out (e.g. `setup git submodules` to automatically checkout git submodules).

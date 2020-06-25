@@ -97,6 +97,10 @@ class VivadoProject(object):
         self.console('close_project')
 
     # ------------------------------------------------------------------------------
+    def open_run(self, run_name):
+        self.console('open_run {}'.format(run_name))
+
+    # ------------------------------------------------------------------------------
     def reset_runs(self, *args):
         for r in args:
             self.console('reset_run {}'.format(r))

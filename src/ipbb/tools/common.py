@@ -157,5 +157,5 @@ def mkdir(path, mode=0o777):
         os.makedirs(path, mode)
     except OSError:
         if os.path.exists(path) and os.path.isdir(path):
-            pass
-        return
+            return
+        raise

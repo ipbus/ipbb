@@ -15,7 +15,7 @@ from ._cmdtypes import SrcCommand, IncludeCommand
 from ..tools.alien import AlienTree, AlienTemplate
 
 from collections import OrderedDict
-from os.path import exists, splitext
+from os.path import exists, splitext, sep
 # from string import Template
 
 
@@ -329,7 +329,9 @@ class DepFileParser(object):
         # Set the target file expression, whether specified explicitly
         # or not
         if (not aParsedCmd.filepath):
-            lComponentName = lComponent.split('/')[-1]
+            # Note: This doesn't play well with d3 vs deps
+            # Probably need to combine this with the next block
+            lComponentName = lComponent.split(sep)[-1]
             lFileExprList = [self._pathMaker.getDefName(
                 aParsedCmd.cmd, lComponentName)]
         else:

@@ -22,22 +22,6 @@ setup(
     package_dir={'': 'src'},
     include_package_data=True,
     install_requires=requirements,
-    # install_requires=[
-    #     'Click',
-    #     'Click-didyoumean',
-    #     'TextTable',
-    #     'Sh',
-    #     'Pexpect',
-    #     'PsUtil',
-    #     'ipaddress',
-    #     'IPython',
-    #     'IPdb',
-    #     'PyTest',
-    #     'PyYAML',
-    #     'configparser',
-    #     'Future',
-    #     'Six',
-    # ],
     entry_points='''
         [console_scripts]
         ipbb=ipbb.scripts.builder:main

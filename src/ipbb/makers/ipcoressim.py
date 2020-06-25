@@ -74,10 +74,10 @@ class IPCoresSimMaker(object):
             lPath, lBasename = split(src.filepath)
             lName, lExt = splitext(lBasename)
 
-            if lExt in ['.xci', '.edn']:
+            if lExt in ('.xci', '.xcix', '.edn'):
                 write(
                     'import_files -norecurse -fileset sources_1 {0}'.format(src.filepath))
-                if lExt == '.xci':
+                if lExt in ('.xci', '.xcix'):
                     lXCIs.append( (lName, lBasename) )
 
         if lXCIs:

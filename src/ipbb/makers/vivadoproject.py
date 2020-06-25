@@ -19,7 +19,7 @@ class VivadoProjectMaker(object):
     """
 
     filetypes = {
-        'ip' : ('.xci',),
+        'ip' : ('.xci', '.xcix'),
         'constr' : ('.xdc', '.tcl'),
         'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.ngc', '.edn', '.edf'),
     }
@@ -29,13 +29,13 @@ class VivadoProjectMaker(object):
         lName, lExt = splitext(aSrcCmd.filepath)
 
         lFileSet = None
-        if lExt in  ('.xci'):
+        if lExt in  ('.xci', '.xcix'):
             lFileSet = 'sources_1'
 
         elif lExt in ('.xdc', '.tcl'):
             lFileSet = 'constrs_1'
 
-        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.ngc', '.edn', '.edf'):
+        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf'):
             if aSrcCmd.useInSynth:
                 lFileSet = 'sources_1'
             elif aSrcCmd.useInSim:

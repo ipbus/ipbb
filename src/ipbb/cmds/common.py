@@ -78,7 +78,7 @@ def addrtab(env, aDest):
         return
 
     for addrtab in env.depParser.commands["addrtab"]:
-        print(sh.cp('-av', addrtab.filepath, join(aDest, basename(addrtab.filepath))))
+        print(sh.cp('-avL', addrtab.filepath, join(aDest, basename(addrtab.filepath))))
     secho(
         "\n{}: Address table files collected in '{}'.\n".format(
             env.currentproj.name, aDest

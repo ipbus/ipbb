@@ -665,7 +665,7 @@ def package(env, aTag):
 
     secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:
-        sh.cp('-av', addrtab.filepath, join(lPkgSrcPath, 'addrtab'), _out=sys.stdout)
+        sh.cp('-avL', addrtab.filepath, join(lPkgSrcPath, 'addrtab'), _out=sys.stdout)
     echo()
     # -------------------------------------------------------------------------
 

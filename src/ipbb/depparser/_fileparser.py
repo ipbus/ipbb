@@ -337,7 +337,7 @@ class DepFileParser(object):
                 # FIXME! This is confusing!
                 # It mixes the not match and multiple matches case!
                 lFileLists = []
-                lUnmatchedExprs = [self._pathMaker.getDefNames(aParsedCmd.cmd, lComponentName, 'compact')]
+                lUnmatchedExprs = [self._pathMaker.getDefNames(aParsedCmd.cmd, lComponentName, 'braces')]
         else:
             lFileLists, lUnmatchedExprs = self._pathMaker.globall(
                 lPackage, lComponent, aParsedCmd.cmd, 

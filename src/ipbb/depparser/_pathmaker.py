@@ -73,7 +73,7 @@ class Pathmaker(object):
     def getDefNames(self, command, name, mode=None):
         if command not in self.fexts:
             raise NoDefaultExtension(command)
-        if mode=='compact':
+        if mode=='braces':
             return name+os.extsep+'{'+','.join(self.fexts[command])+'}'
         else:
             return [name+os.extsep+ext for ext in self.fexts[command]]

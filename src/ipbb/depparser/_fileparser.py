@@ -311,72 +311,58 @@ class DepFileParser(object):
         return lLine
 
 # -------------------------------------------------------------------------
-    def _resolvePaths(self, aParsedCmd, aDepFilePath, aPackage, aComponent):
+    def _resolvePaths(self, aParsedCmd, aDepFilePath, aCurPackage, aCurComponent):
 
         # --------------------------------------------------------------
-        # Set package and module variables, whether specified or not
-        lPackage, lComponent = aParsedCmd.package, aParsedCmd.component
-
         # Set package and component to current ones if not defined
-        if lPackage is None:
-            lPackage = aPackage
-
-        if lComponent is None:
-            lComponent = aComponent
+        lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
+        lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
         # Set the target file expression, whether specified explicitly
         # or not
         if (not aParsedCmd.filepath):
-            # Note: This doesn't play well with d3 vs deps
-            # Probably need to combine this with the next block
             lComponentName = lComponent.split(sep)[-1]
-            lFileExprList = [self._pathMaker.getDefName(
-                aParsedCmd.cmd, lComponentName)]
-        else:
-            lFileExprList = aParsedCmd.filepath
-        # --------------------------------------------------------------
 
-        # --------------------------------------------------------------
-        # Expand file espression into a list of files
-        lFileLists = list()
-        lUnmatchedExprs = list()
-        for lFileExpr in lFileExprList:
-            # Expand file expression
-            lPathExpr, lFileList = self._pathMaker.glob(
-                lPackage, lComponent, aParsedCmd.cmd, lFileExpr, cd=aParsedCmd.cd
+            f, u = self._pathMaker.globall(
+                lPackage, lComponent, aParsedCmd.cmd, 
+                self._pathMaker.getDefNames(aParsedCmd.cmd, lComponentName),
+                cd=aParsedCmd.cd
             )
 
-            # --------------------------------------------------------------
-            # Store the result and move on
-            if lFileList:
-                lFileLists.append(lFileList)
+            if len(f) == 1:
+                lFileLists, lUnmatchedExprs = f, []
             else:
-                lUnmatchedExprs.append(lPathExpr)
+                # FIXME! This is confusing!
+                # It mixes the not match and multiple matches case!
+                lFileLists = []
+                lUnmatchedExprs = [self._pathMaker.getDefNames(aParsedCmd.cmd, lComponentName, 'compact')]
+        else:
+            lFileLists, lUnmatchedExprs = self._pathMaker.globall(
+                lPackage, lComponent, aParsedCmd.cmd, 
+                aParsedCmd.filepath,
+                cd=aParsedCmd.cd
+            )
+
+        lEntries = list()
 
         # --------------------------------------------------------------
-        # If an include command, parse the sub-dep files
-        lEntries = list()
-        if aParsedCmd.cmd == "include":
-
-            for lFileList in lFileLists:
-                for lFile, lFilePath in lFileList:
-                    cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
+        # Create the entries
+        for lFileList in lFileLists:
+            for lFile, lFilePath in lFileList:
+                # --------------------------------------------------------------
+                # Debugging
+                if self._verbosity > 0:
+                    print(self._state.tab, ' ',
+                          aParsedCmd.cmd, lFile, lFilePath)
+                # --------------------------------------------------------------
+                cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
+                # If an include command, parse the sub-dep files
+                if aParsedCmd.cmd == "include":
                     cmd.depfile = self._parseFile(lPackage, lComponent, lFile)
-                    lEntries.append(cmd)
+                lEntries.append(cmd)
 
-        else:
-            for lFileList in lFileLists:
-                for lFile, lFilePath in lFileList:
-                    # --------------------------------------------------------------
-                    # Debugging
-                    if self._verbosity > 0:
-                        print(self._state.tab, ' ',
-                              aParsedCmd.cmd, lFile, lFilePath)
-                    # --------------------------------------------------------------
-                    cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
-                    lEntries.append(cmd)
 
         return lEntries, (lUnmatchedExprs, lPackage, lComponent)
         # --------------------------------------------------------------

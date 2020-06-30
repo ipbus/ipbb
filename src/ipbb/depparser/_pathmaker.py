@@ -9,20 +9,20 @@ class NoDefaultExtension(Exception):
 class Pathmaker(object):
 
     fpaths = {
-        "fw": "firmware",
-        "src": "firmware/hdl",
-        "hlssrc": "firmware/hls",
-        "include": "firmware/cfg",
-        "addrtab": "addr_table",
-        "setup": "firmware/cfg",
-        "util": "firmware/cfg",
-        "iprepo": "firmware/cgn",
+        'fw': 'firmware',
+        'src': 'firmware/hdl',
+        'hlssrc': 'firmware/hls',
+        'include': 'firmware/cfg',
+        'addrtab': 'addr_table',
+        'setup': 'firmware/cfg',
+        'util': 'firmware/cfg',
+        'iprepo': 'firmware/cgn',
     }
     fexts = {
-        # "src": "vhd",
-        "include": "dep",
-        # "addrtab": "xml"
-        # , "setup": "tcl"}
+        # 'src': 'vhd',
+        'include': ['d3', 'dep'],
+        # 'addrtab': 'xml'
+        # , 'setup': 'tcl'}
     }
 
     # --------------------------------------------------------------
@@ -70,10 +70,13 @@ class Pathmaker(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def getDefName(self, command, name):
+    def getDefNames(self, command, name, mode=None):
         if command not in self.fexts:
             raise NoDefaultExtension(command)
-        return "{0}.{1}".format(name, self.fexts[command])
+        if mode=='compact':
+            return name+os.extsep+'{'+','.join(self.fexts[command])+'}'
+        else:
+            return [name+os.extsep+ext for ext in self.fexts[command]]
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
@@ -94,4 +97,38 @@ class Pathmaker(object):
                      for lPath2 in lFilePaths]
 
         return lPathExpr, lFileList
+    # --------------------------------------------------------------
+
+    # --------------------------------------------------------------
+    def globall(self, package, component, command, fileexprlist, cd=None):
+        """Expands a list of file expressions 
+        
+        Args:
+            package (TYPE): Description
+            component (TYPE): Description
+            command (TYPE): Description
+            fileexprlist (TYPE): Description
+            cd (None, optional): Description
+        
+        Returns:
+            TYPE: Description
+        """
+        lFiles = []
+        lUnmatched = []
+        for fexpr in fileexprlist:
+            # Expand file expression
+            lPathExpr, lFileList = self.glob(
+                package, component, command, fexpr, cd=cd
+            )
+    
+            if lFileList:
+                lFiles.append(lFileList)
+            else:
+                lUnmatched.append(lPathExpr)
+
+        return lFiles, lUnmatched
+
+
+
+
     # --------------------------------------------------------------

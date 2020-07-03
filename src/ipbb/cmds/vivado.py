@@ -746,11 +746,9 @@ def package(env, aTag):
 
 
 # ------------------------------------------------------------------------------
-def archive(ctx):
+def archive(env):
 
     lSessionId = 'archive'
-
-    env = ctx.obj
 
     # Check that the project exists 
     ensureVivadoProjPath(env.vivadoProjFile)

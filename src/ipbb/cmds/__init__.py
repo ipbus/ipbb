@@ -8,18 +8,49 @@ from . import _utils
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
-from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoSetupFile
 
-
+# TODO:
+# Look into schema yaml schema validation: i.e.
+# https://github.com/Grokzen/pykwalify
+# or
+# https://docs.python-cerberus.org/en/stable/install.html
 # ------------------------------------------------------------------------------
 class FolderInfo(object):
     '''Utility class, attributes holder'''
-
     pass
 
 
 # ------------------------------------------------------------------------------
+class SourceInfo(FolderInfo):
+    """Helper Class to contain source repository settings"""
+    def __init__(self, aPath):
+        super(SourceInfo, self).__init__()
 
+        self.setupsettings = {}
+
+        self.load(aPath)
+
+    # ------------------------------------------------------------------------------
+    @property
+    def setuppath(self):
+        if self.path is None:
+            return ""
+        return join(self.path, kRepoSetupFile)
+
+    # ------------------------------------------------------------------------------
+    def load(self, aPath):
+        self.path = aPath
+
+        self.loadsetup()     
+
+    # ------------------------------------------------------------------------------
+    def loadsetup(self):
+        if not exists(self.setuppath):
+            return
+
+        with open(self.setuppath, 'r') as f:
+            self.setupsettings = yaml.safe_load(f)
 
 # ------------------------------------------------------------------------------
 class ProjectInfo(FolderInfo):
@@ -129,6 +160,7 @@ class Environment(object):
         self.work.path = None
         self.work.cfgFile = None
 
+        self.srcinfo = {}
         self.currentproj = ProjectInfo()
 
         self.pathMaker = None
@@ -147,8 +179,12 @@ class Environment(object):
             return
 
         self.work.path, self.work.cfgFile = lWorkAreaPath, kWorkAreaFile
-        self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
+
+        for src in self.sources:
+            self.srcinfo[src] = SourceInfo(join(self.srcdir,src))
+
         # -----------------------------
+        self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
 
         # -----------------------------
         lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, self._wd)

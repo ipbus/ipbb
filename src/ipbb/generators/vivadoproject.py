@@ -71,6 +71,12 @@ class VivadoProjectMaker(object):
             f'create_project {self.projInfo.name} {lWorkingDir} -part {lXilinxPart} -force'
         )
 
+        # if 'board_part' in aSettings:
+        #     write('set_property -name "board_part" -value "{board_part}" -objects [current_project]'.format(**aSettings))
+        # if 'dsa_board_id' in aSettings:
+        #     write('set_property -name "dsa.board_id" -value "{dsa_board_id}" -objects [current_project]'.format(**aSettings))
+
+
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(
             ' '.join(map( lambda c: c.filepath, aCommandList['iprepo']))

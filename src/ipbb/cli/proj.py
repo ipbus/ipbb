@@ -30,7 +30,7 @@ def proj():
 @click.argument('toolset', type=click.Choice(['vivado', 'sim', 'vivadohls']))
 @click.argument('projname')
 @click.argument('component', callback=validateComponent, autocompletion=completeComponent)
-@click.argument('topdep', default='top.dep', autocompletion=completeDepFile('component'))
+@click.argument('topdep', default='__auto__', autocompletion=completeDepFile('component'))
 @click.pass_obj
 def create(env, toolset, projname, component, topdep ):
     '''Creates a new area of name PROJNAME

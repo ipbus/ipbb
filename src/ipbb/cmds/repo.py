@@ -61,12 +61,13 @@ def info(env, verbose):
         lEnvTable.add_row(["Project path", env.currentproj.path])
     echo(lEnvTable.draw())
 
-    if not env.currentproj.path:
-        echo()
-        srcs_info(env)
+    echo()
+    srcs_info(env)
 
-        echo()
-        proj_info(env)
+    echo()
+    proj_info(env)
+
+    if not env.currentproj.path:
         return
 
     echo()

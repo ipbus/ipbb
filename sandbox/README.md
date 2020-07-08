@@ -1,33 +1,11 @@
-# Repository generators
+# Ideas sandbox
 
-The files in this folder are input files for the `generate-ipbb-repo` tool, each one containing the description (in `yaml`) of an ipbb repo.
-The primary purpose for the generated repositories is testing `dep` and `d3` parsing.
-Each file specifies one or more top dependency file.
+This folder is a stash where examples and ideas for future ipbb features are collected, waiting for the time to implement them to be found
 
-
-* `simple`: Simple repository example.  
-  Coverage:
-  *  Basic `dep` format parsing over multiple files;
-  *  `src` and `include` commands;
-  *  Assignment (`@x = "value"`) and conditional (`? x == y`) statements;
-  *  Comments (`#`).
-    
-* `simple_d3`: Identical to `simple`, for `d3` format.
-
-* `simple_hls`: Simple example with HLS specific commands.
-   Coverage:
-   * `hlssrc` commands.
-
-* `abcd_d3`: Nested includes.  
-  Coverage:
-  * Nested `include` statements.
-
-* `broken`: Example with unresolved files and syntax errors.  
-  Coverage:
-  * Unresolved file (`top_unres.d3`);
-  * Syntax errors (`top_syntax.d3`) misspelt `srca` command.
-
-* `settings`: Advanced example with hierarchical settings.  
-  Coverage:
-  * Assignment statement with multi-level parameters (`x.y.z = 3`);
-  * Corresponding conditional statements.
+* `emp_hls_example_build.tcl`: TCL build script for the emp hls example.
+* `hdl_make_xci.tcl`: TCL script to generate an xci ip-core file from an ip repo created with hls.
+* `hls_ebSpikeTagger.tcl`: TCL example for building and synthesizing HLS projects.
+* `pytree.py`: Example for displaying object trees in ascii
+* `report_timing.tcl`: TCL example on how to retrieve the worst N timing paths
+* `test_cerberus.py`: Using Cerberus to validate ipbb yaml config
+* `test_psiter.py`: Incomplete proof of principle for iterating on a hierarchy of processes. Ideally meant to measure Vivado resource occupancy.

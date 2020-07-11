@@ -14,7 +14,7 @@ from . import ProjectInfo
 from ._utils import DirSentry, raiseError, validateComponent, findFirstParentDir
 from ..depparser import depfiletypes, Pathmaker
 
-from os.path import join, split, exists, splitext, relpath, isdir
+from os.path import join, split, exists, splitext, relpath, isdir, basename
 from click import echo, style, secho
 from texttable import Texttable
 
@@ -92,6 +92,7 @@ def create(env, toolset, projname, component, topdep):
         raise click.Abort()
 
 
+    # ------------------------------------------------------------------------------
     # FIXME: This is just an initial implementation to prove it works.
     # To be improved later.
     if topdep == '__auto__':
@@ -100,14 +101,15 @@ def create(env, toolset, projname, component, topdep):
             lTopPackage, lTopComponent, 'include', 
             lPathmaker.getDefNames('include', lTopDefault)
         )
-
         lTopExists = (len(lFilePaths) == 1)
-        lTopDepPath = lFilePaths[0] if lTopExists else lPathmaker.getDefNames('include', lTopDefault, 'braces')
+        lTopDep = lFilePaths[0][0][0] if lTopExists else lPathmaker.getDefNames('include', lTopDefault, 'braces')
+        lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', lTopDep)
     else:
         lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
         lTopExists = exists(lTopDepPath)
+        lTopDep = basename(lTopDepPath)
 
-    # lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
+    # ------------------------------------------------------------------------------
     if not lTopExists:
         import glob
         secho('Top-level dep file {} not found or not uniquely resolved'.format(lTopDepPath), fg='red')
@@ -124,7 +126,6 @@ def create(env, toolset, projname, component, topdep):
                 echo(' - ' + lC)
 
         raiseError("Top-level dependency file {} not found".format(lTopDepPath))
-    # ------------------------------------------------------------------------------
 
     # Build source code directory
     os.makedirs(lProjAreaPath)
@@ -135,7 +136,7 @@ def create(env, toolset, projname, component, topdep):
         'toolset': toolset,
         'topPkg': lTopPackage,
         'topCmp': lTopComponent,
-        'topDep': topdep,
+        'topDep': lTopDep,
         'name': projname,
     }
     pi.saveSettings()

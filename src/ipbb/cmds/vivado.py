@@ -250,8 +250,16 @@ def synth(env, aNumJobs, aUpdateInt):
                         lRunProps = readRunInfo(lConsole)
 
                     lOOCRunProps = { k: v for k, v in iteritems(lRunProps) if lOOCRegex.match(k) }
-
-                    secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+                    # Reset all OOC synthesis which might are stuck in a running state
+                    lPendingOOCRuns = [
+                        k for k, v in iteritems(lOOCRunProps)
+                        if not v['STATUS'].startswith('synth_design Complete!')
+                    ]
+                    print("aaaaa", lPendingOOCRuns)
+                    if lPendingOOCRuns:
+                        secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+                    else:
+                        secho('\n OOC runs: {} completed.'.format(len(lOOCRunProps)), fg='cyan')
 
                     lSynthProps = { k: v for k, v in iteritems(lRunProps) if k == lSynthRun }
 

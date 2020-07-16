@@ -475,6 +475,69 @@ def symlink(env, path):
 def srcs(env):
     pass
 
+# ------------------------------------------------------------------------------
+def _git_info():
+    lHEADId, lHash = None, None
+
+    try:
+        lBranch = '/'.join(
+            sh.git('symbolic-ref', 'HEAD').split('/')[2:]
+        ).strip()
+    except sh.ErrorReturnCode_128:
+        lBranch = None
+
+    try:
+        lTag = sh.git(
+            'describe', '--tags', '--exact-match', 'HEAD'
+        ).strip()   
+    except sh.ErrorReturnCode_128:
+        lTag = None
+
+    lHash = sh.git('rev-parse', '--short=8', 'HEAD').strip() + '...'
+
+    if lTag is not None:
+        lHEADId = lTag
+    elif lBranch is not None:
+        lHEADId = lBranch
+    else:
+        lHEADId = lHash
+
+    try:
+        sh.git('diff', '--no-ext-diff', '--quiet').strip()
+    except sh.ErrorReturnCode_1:
+        lHEADId += '*'
+
+    try:
+        sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
+    except sh.ErrorReturnCode_1:
+        lHEADId += '+'
+
+    return lHEADId, lHash
+
+# ------------------------------------------------------------------------------
+def _svn_info():
+    lHEADId, lHash = None, None
+
+    lSVNInfoRaw = sh.svn('info')
+
+    lSVNInfo = {
+        lEntry[0]: lEntry[1].strip()
+        for lEntry in (
+            lLine.split(':', 1)
+            for lLine in lSVNInfoRaw.split('\n')
+            if lLine
+        )
+    }
+
+    lHEADId = lSVNInfo['URL'].replace(lSVNInfo['Repository Root'] + '/', '')
+
+    lSVNStatus = sh.svn('status', '-q')
+    if len(lSVNStatus):
+        lHEADId += '*'
+
+    lHash = lSVNInfo['Revision']
+
+    return lHEADId, lHash
 
 # ------------------------------------------------------------------------------
 def srcs_info(env):
@@ -506,66 +569,32 @@ def srcs_info(env):
                 try:
                     sh.git('rev-parse', '--git-dir')
                 except sh.ErrorReturnCode_128:
-                    lKind += ' (broken)'
-                    lHEADId = '(unknown)'
+                    lSrcTable.add_row([lSrc, lKind+' (broken)', '(unknown)', None])
+                    continue
 
-                if lKind == 'git':
-                    try:
-                        lBranch = '/'.join(
-                            sh.git('symbolic-ref', 'HEAD').split('/')[2:]
-                        ).strip()
-                    except sh.ErrorReturnCode_128:
-                        lBranch = None
+                lHEADId, lHash = _git_info()
+                lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
 
-                    try:
-                        lTag = sh.git(
-                            'describe', '--tags', '--exact-match', 'HEAD'
-                        ).strip()
-                    except sh.ErrorReturnCode_128:
-                        lTag = None
+                lSubmods = sh.git('submodule').strip()
+                if not lSubmods:
+                    continue
 
-                    lHash = sh.git('rev-parse', '--short=8', 'HEAD').strip() + '...'
+                for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
+                    print(lSubModDir)
+                    with DirSentry(join(lSrcDir,lSubModDir)) as _:
+                        lHEADId, lHash = _git_info()
+                        lSrcTable.add_row([u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash])
 
-                    if lTag is not None:
-                        lHEADId = lTag
-                    elif lBranch is not None:
-                        lHEADId = lBranch
-                    else:
-                        lHEADId = lHash
-
-                    try:
-                        sh.git('diff', '--no-ext-diff', '--quiet').strip()
-                    except sh.ErrorReturnCode_1:
-                        lHEADId += '*'
-
-                    try:
-                        sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
-                    except sh.ErrorReturnCode_1:
-                        lHEADId += '+'
         elif exists(join(lSrcDir, '.svn')):
             with DirSentry(lSrcDir) as _:
                 lKind = 'svn'
 
-                lSVNInfoRaw = sh.svn('info')
+                lHEADId, lHash = _svn_info()
+                lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
+        else:
+            lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
 
-                lSVNInfo = {
-                    lEntry[0]: lEntry[1].strip()
-                    for lEntry in (
-                        lLine.split(':', 1)
-                        for lLine in lSVNInfoRaw.split('\n')
-                        if lLine
-                    )
-                }
 
-                lHEADId = lSVNInfo['URL'].replace(lSVNInfo['Repository Root'] + '/', '')
-
-                lSVNStatus = sh.svn('status', '-q')
-                if len(lSVNStatus):
-                    lHEADId += '*'
-
-                lHash = lSVNInfo['Revision']
-
-        lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
     echo(lSrcTable.draw())
 
 

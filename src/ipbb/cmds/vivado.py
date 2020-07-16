@@ -255,7 +255,6 @@ def synth(env, aNumJobs, aUpdateInt):
                         k for k, v in iteritems(lOOCRunProps)
                         if not v['STATUS'].startswith('synth_design Complete!')
                     ]
-                    print("aaaaa", lPendingOOCRuns)
                     if lPendingOOCRuns:
                         secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
                     else:

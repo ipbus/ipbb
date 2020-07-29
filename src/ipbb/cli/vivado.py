@@ -174,6 +174,15 @@ def bitfile(ctx, *args, **kwargs):
     return (ctx.command.name, bitfile, args, kwargs)
 
 # ------------------------------------------------------------------------------
+@vivado.command('debug-probes', short_help="Generate (optional) debug-probes files (used for ILAs and VIO controls).")
+@click.pass_obj
+@click.pass_context
+def bitfile(ctx, *args, **kwargs):
+    '''Generate (optional) debug-probes files'''
+    from ..cmds.vivado import debugprobes
+    return (ctx.command.name, debugprobes, args, kwargs)
+
+# ------------------------------------------------------------------------------
 @vivado.command('memcfg', short_help="Generate the memcfg.")
 @click.pass_obj
 @click.pass_context

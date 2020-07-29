@@ -397,6 +397,42 @@ def bitfile(env):
     )
 
 
+# ------------------------------------------------------------------------------
+def debugprobes(env):
+    '''Generate (optional) debug-probes files (used for ILAs and VIO controls).'''
+
+    lSessionId = 'dbg-prb'
+
+    # Check that the project exists.
+    ensureVivadoProjPath(env.vivadoProjFile)
+
+    lProjName = env.currentproj.name
+    lDepFileParser = env.depParser
+    lBaseName = env.vivadoProdFileBase
+
+    lBitPath = lBaseName + '.bit'
+    if not exists(lBitPath):
+        raise click.ClickException("Bitfile does not exist. Can't create debug-probes files.")
+
+    # And that the Vivado env is up.
+    ensureVivado(env)
+
+    lWriteDebugProbesCmd = 'write_debug_probes -force {}'.format(env.vivadoProdFileBase+'.ltx')
+
+    try:
+        with env.vivadoSessions.get(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, env.vivadoProjFile)
+            lProject.open_run('impl_1')
+            lConsole(lWriteDebugProbesCmd)
+
+    except VivadoConsoleError as lExc:
+        echoVivadoConsoleError(lExc)
+        raise click.Abort()
+
+    secho(
+        "\n{}: Debug probes file successfully written.\n".format(env.currentproj.name), fg='green'
+    )
+
 
 # ------------------------------------------------------------------------------
 def memcfg(env):
@@ -615,6 +651,8 @@ def package(env, aTag):
     except KeyError as e:
         lMemCfgFiles = []
 
+    lDebugProbesPath = lBaseName + '.ltx'
+
     lPkgPath = 'package'
     lPkgSrcPath = join(lPkgPath, 'src')
 
@@ -662,6 +700,10 @@ def package(env, aTag):
         secho("Collecting memcfg {}".format(f), fg='blue')
         sh.cp('-av', f, lPkgSrcPath, _out=sys.stdout)
         echo()
+
+    secho("Collecting debug-probes file", fg='blue')
+    sh.cp('-av', lDebugProbesPath, lPkgSrcPath, _out=sys.stdout)
+    echo()
 
     secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:

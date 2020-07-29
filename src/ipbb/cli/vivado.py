@@ -78,13 +78,13 @@ def makeproject(ctx, *args, **kwargs):
 
 
 # # ------------------------------------------------------------------------------
-# @vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
+# @vivado.command('check-syntax', short_help='Run the elaboration step on the current project.')
 # @click.pass_obj
 # def checksyntax(env):
 #     from ..cmds.vivado import checksyntax
 #     checksyntax(env)
 # ------------------------------------------------------------------------------
-@vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
+@vivado.command('check-syntax', short_help='Run the elaboration step on the current project.')
 @click.pass_obj
 @click.pass_context
 def checksyntax(ctx, *args, **kwargs):

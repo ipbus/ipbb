@@ -652,6 +652,8 @@ def package(env, aTag):
         lMemCfgFiles = []
 
     lDebugProbesPath = lBaseName + '.ltx'
+    if not os.path.exists(lDebugProbesPath):
+        lDebugProbesPath = None
 
     lPkgPath = 'package'
     lPkgSrcPath = join(lPkgPath, 'src')
@@ -701,9 +703,10 @@ def package(env, aTag):
         sh.cp('-av', f, lPkgSrcPath, _out=sys.stdout)
         echo()
 
-    secho("Collecting debug-probes file", fg='blue')
-    sh.cp('-av', lDebugProbesPath, lPkgSrcPath, _out=sys.stdout)
-    echo()
+    if lDebugProbesPath:
+        secho("Collecting debug-probes file", fg='blue')
+        sh.cp('-av', lDebugProbesPath, lPkgSrcPath, _out=sys.stdout)
+        echo()
 
     secho("Collecting address tables", fg='blue')
     for addrtab in env.depParser.commands['addrtab']:

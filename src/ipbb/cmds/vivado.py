@@ -655,6 +655,13 @@ def package(env, aTag):
     if not os.path.exists(lDebugProbesPath):
         lDebugProbesPath = None
 
+    # At this point all Vivado manipulations are done. So let's close
+    # the Vivado session. Otherwise it will be closed automatically at
+    # the end, but in that case it may look confusing because it
+    # identifies with the session id from the last Vivado action
+    # (which is likely to be 'bitfile' or 'memcfg').
+    del env.vivadoSessions
+
     lPkgPath = 'package'
     lPkgSrcPath = join(lPkgPath, 'src')
 

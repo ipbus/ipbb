@@ -21,7 +21,7 @@ class VivadoProjectMaker(object):
     filetypes = {
         'ip' : ('.xci', '.xcix'),
         'constr' : ('.xdc', '.tcl'),
-        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.ngc', '.edn', '.edf'),
+        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf'),
     }
 
     @staticmethod
@@ -112,7 +112,7 @@ class VivadoProjectMaker(object):
             # local list of commands
             lCommands = []
 
-            if lExt == '.xci':
+            if lExt in ('.xci', '.xcix'):
 
                 c = 'import_files -norecurse -fileset {0} $files'.format(self.fileset(src))
                 f = src.filepath

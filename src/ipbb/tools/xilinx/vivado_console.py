@@ -177,6 +177,7 @@ class VivadoConsole(object):
                 ],
             echo=echo,
             logfile=self._out,
+            encoding='utf-8'
             # preexec_fn=on_parent_exit('SIGTERM')
         )
 

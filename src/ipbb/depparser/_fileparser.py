@@ -247,7 +247,7 @@ class DepFileParser(object):
         if len(lTokens) != 2:
             raise DepLineError("@ directives must be key=value pairs")
 
-        lPar, lExpr = map(string.strip, lTokens)
+        lPar, lExpr = [i.strip() for i in lTokens]
 
         if lPar.strip() in self.config:
             print("Warning!", lPar.strip(

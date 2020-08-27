@@ -52,7 +52,7 @@ def gendecoders(env, aCheckUpToDate):
     # ------------------------------------------------------------------------------
 
     lUpdatedDecoders = []
-    lGen = sh.Command('/usr/bin/python').bake(which(lGenScript))
+    lGen = sh.Command('python').bake(which(lGenScript))
     lErrors = {}
     with DirSentry(join(env.currentproj.path, lDecodersDir)):
         for lAddr in env.depParser.commands['addrtab']:

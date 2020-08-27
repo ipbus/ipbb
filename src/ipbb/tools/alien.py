@@ -29,7 +29,7 @@ class DictObj(object):
     def __repr__(self):
         type_name = type(self).__name__
 
-        arg_strings = [ '%s=%s' % (key, repr(value)) for key, value in sorted(self.data.iteritems())]
+        arg_strings = [ '%s=%s' % (key, repr(value)) for key, value in sorted(iteritems(self.data))]
 
         return '%s(%s)' % (type_name, ', '.join(arg_strings))
 # ------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class AlienBranch(object):
         self.__dict__['_locked'] = False
 
     def __repr__(self):
-        return str({ k:v for k, v in self.__dict__.iteritems() if not k.startswith('_')})
+        return str({ k:v for k, v in iteritems(self.__dict__) if not k.startswith('_')})
         
     def __getattr__(self, name):
         try:
@@ -114,7 +114,7 @@ class AlienBranch(object):
             setattr(self[tokens[0]],tokens[1], value)
 
     def __iter__(self):
-        for b,o in self.__dict__.iteritems():
+        for b,o in iteritems(self.__dict__):
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -125,7 +125,7 @@ class AlienBranch(object):
                 yield b
 
     def _iterleafkeys(self):
-        for b, o in self.__dict__.iteritems():
+        for b, o in iteritems(self.__dict__):
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -135,7 +135,7 @@ class AlienBranch(object):
                 yield b
 
     def _iterleaves(self):
-        for b, o in self.__dict__.iteritems():
+        for b, o in iteritems(self.__dict__):
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -145,7 +145,7 @@ class AlienBranch(object):
                 yield b, o
 
     def _iterbranches(self):
-        for b, o in self.__dict__.iteritems():
+        for b, o in iteritems(self.__dict__):
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):

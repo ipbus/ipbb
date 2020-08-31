@@ -83,7 +83,7 @@ class VivadoHLSOutputFormatter(OutputFormatter):
         super(VivadoHLSOutputFormatter, self).__init__(prefix, sep, quiet)
 
         self.pendingchars = ''
-        self.skiplines = ['\r\x1b[12C\r']
+        self.skiplines = [r'\r\x1b[12C\r']
 
     def write(self, message):
         """Writes formatted message
@@ -191,7 +191,7 @@ class VivadoHLSConsole(object):
     __reCriticalWarning = re.compile(u'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado_hls': u'\x1b\[2K\r\rvivado_hls>\s',
+        'vivado_hls': r'\x1b\[2K\r\rvivado_hls>\s',
     }
     __newlines = [u'\r\n']
     __cmdSentAck = '\r\x1b[12C\r'

@@ -41,11 +41,12 @@ def add(env):
 @click.argument('repo')
 @click.option('-b', '--branch', default=None, help='Git branch or tag to clone')
 @click.option('-d', '--dest', default=None, help="Destination directory")
+@click.option('-r', '--revision', default=None, help='Git revision ID to clone')
 @click.pass_obj
-def git(env, repo, branch, dest):
+def git(env, repo, branch, dest, revision):
     '''Add a git repository to the source area'''
     from ..cmds.repo import git
-    git(env, repo, branch, dest)
+    git(env, repo, branch, dest, revision)
 
 
 # ------------------------------------------------------------------------------

@@ -94,8 +94,8 @@ class VivadoConsole(object):
     __reCriticalWarning = re.compile(u'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado': u'Vivado%\s',
-        'vivado_lab': u'vivado_lab%\s'
+        'vivado': r'Vivado%\s',
+        'vivado_lab': r'vivado_lab%\s'
     }
     __newlines = [u'\r\n']
 

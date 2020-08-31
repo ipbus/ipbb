@@ -190,3 +190,12 @@ def package(ctx, *args, **kwargs):
 def archive(ctx, *args, **kwargs):
     from ..cmds.vivado import archive
     return (ctx.command.name, archive, args, kwargs)
+
+
+@vivado.command()
+@click.pass_obj
+@click.pass_context
+def ipy(ctx, *args, **kwargs):
+    from ..cmds.vivado import ipy
+    return (ctx.command.name, ipy, args, kwargs)
+

@@ -135,7 +135,7 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
         # Dry run
         lConsoleCtx = SmartOpen(aToScript if not aToStdout else None)
     else:
-        lConsoleCtx = env.vivadoSessions.get(lSessionId)
+        lConsoleCtx = env.vivadoSessions.getctx(lSessionId)
 
     try:
         with lConsoleCtx as lConsole:
@@ -173,7 +173,7 @@ def checksyntax(env):
     ensureVivado(env)
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             # Open the project
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
@@ -213,7 +213,7 @@ def synth(env, aNumJobs, aUpdateInt):
     lSynthRun = 'synth_1'
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             # Open the project
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
@@ -314,7 +314,7 @@ def impl(env, aNumJobs, aStopOnTimingErr):
         lStopOn = ['Timing 38-282']  # Force error when timing is not met
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
 
             # Open the project
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
@@ -361,7 +361,7 @@ def resource_usage(env, aCell, aDepth, aFile):
     if aFile:
         lCmd += ' -file ' + aFile
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
             for c in (
                     'open_run impl_1',
@@ -390,7 +390,7 @@ def bitfile(env):
 
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
             lProject.open_run('impl_1')
             lConsole(lWriteBitStreamCmd)
@@ -487,7 +487,7 @@ def memcfg(env):
         lMemPath = lBaseName+'.'+k
 
         try:
-            with env.vivadoSessions.get(lSessionId) as lConsole:
+            with env.vivadoSessions.getctx(lSessionId) as lConsole:
 
                 lProject = VivadoProject(lConsole, env.vivadoProjFile)
                 lConsole(
@@ -573,7 +573,7 @@ def status(env):
     lRunRegex = re.compile(r'(synth|impl)_\d+')
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             with VivadoSnoozer(lConsole):
                 lProject = VivadoProject(lConsole, env.vivadoProjFile)
                 lInfos = lProject.readRunInfo(lProps)
@@ -607,7 +607,7 @@ def reset(env):
     ensureVivado(env)
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
             for c in (
                     'reset_run synth_1',
@@ -764,7 +764,7 @@ def archive(env):
     ensureVivado(env)
 
     try:
-        with env.vivadoSessions.get(lSessionId) as lConsole:
+        with env.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
             lConsole('archive_project {} -force'.format(
                     join(env.currentproj.path, env.currentproj.settings['name']+'.xpr.zip')
@@ -776,3 +776,20 @@ def archive(env):
 
 
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+def ipy(env):
+
+    lSessionId = 'ipy'
+
+    # Check that the project exists 
+    ensureVivadoProjPath(env.vivadoProjFile)
+
+    # And that the Vivado env is up
+    ensureVivado(env)
+
+    lConsole = env.vivadoSessions._getconsole(lSessionId)
+    lProject = VivadoProject(lConsole, env.vivadoProjFile)
+    import IPython
+
+    IPython.embed()

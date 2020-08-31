@@ -470,7 +470,7 @@ class VivadoSessionManager(object):
             return VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo)
 
 
-    def get(self, sid):
+    def getctx(self, sid):
         """Session getter.
         
         Args:

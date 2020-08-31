@@ -216,7 +216,7 @@ def _repoReset(env, dest):
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
-def git(env, repo, branch, dest):
+def git(env, repo, branch, dest, revision):
     '''Add a git repository to the source area'''
 
     echo('Adding git repository ' + style(repo, fg='blue'))
@@ -284,6 +284,14 @@ def git(env, repo, branch, dest):
 
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+
+    elif revision is not None:
+        echo('Checking out revision ' + style(revision, fg='blue'))
+        try:
+            sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+        except Exception as err:
+            secho("Failed to check out requested revision. Staying on master.", fg='red')
+            sh.git('checkout', 'master', '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 
     secho(
         'Repository \'{}\' successfully cloned to:\n  {}'.format(

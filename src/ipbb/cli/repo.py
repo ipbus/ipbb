@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 
 from ..cmds._utils import validateComponent
-from ._utils import completeSrcPackage
+from ._utils import completeSrcPackage, MutuallyExclusiveOption
 
 # Modules
 import click
@@ -39,14 +39,25 @@ def add(env):
 # ------------------------------------------------------------------------------
 @add.command('git', short_help="Add new source package from a git repository")
 @click.argument('repo')
-@click.option('-b', '--branch', default=None, help='Git branch or tag to clone')
+
+@click.option('-b',
+              '--branch',
+              default=None,
+              help='Git branch or tag to clone',
+              cls=MutuallyExclusiveOption,
+              mutually_exclusive=["revision"])
+@click.option('-r',
+              '--revision',
+              default=None,
+              help='Git revision ID to clone',
+              cls=MutuallyExclusiveOption,
+              mutually_exclusive=["branch"])
 @click.option('-d', '--dest', default=None, help="Destination directory")
-@click.option('-r', '--revision', default=None, help='Git revision ID to clone')
 @click.pass_obj
-def git(env, repo, branch, dest, revision):
+def git(env, repo, branch, revision, dest):
     '''Add a git repository to the source area'''
     from ..cmds.repo import git
-    git(env, repo, branch, dest, revision)
+    git(env, repo, branch, revision, dest)
 
 
 # ------------------------------------------------------------------------------

@@ -216,7 +216,7 @@ def _repoReset(env, dest):
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
-def git(env, repo, branch, dest, revision):
+def git(env, repo, branch, revision, dest):
     '''Add a git repository to the source area'''
 
     echo('Adding git repository ' + style(repo, fg='blue'))
@@ -280,6 +280,9 @@ def git(env, repo, branch, dest, revision):
 
     sh.git(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
 
+    # NOTE: The mutual exclusivity of checking out a branch and
+    # checkout out a revision should have been handled at the CLI
+    # option handling stage.
     if branch is not None:
 
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
@@ -290,8 +293,12 @@ def git(env, repo, branch, dest, revision):
         try:
             sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
         except Exception as err:
-            secho("Failed to check out requested revision. Staying on master.", fg='red')
-            sh.git('checkout', 'master', '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+            # NOTE: The assumption here is that the failed checkout
+            # did not alter the state of the cloned repo in any
+            # way. (This appears to be the case from experience but no
+            # hard reference could be found.)
+            secho("Failed to check out requested revision." \
+                  " Staying on default branch.", fg='red')
 
     secho(
         'Repository \'{}\' successfully cloned to:\n  {}'.format(

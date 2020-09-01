@@ -164,6 +164,8 @@ class VivadoProjectMaker(object):
         # for i in lXciTargetFiles:
             # write('create_ip_run [get_files {0}]'.format(i))
         for i in lXciBasenames:
+            write('delete_ip_run [get_ips {0}]'.format(i))
+            write('generate_target all [get_ips {0}]'.format(i))
             write('create_ip_run [get_ips {0}]'.format(i))
 
         for setup in (c for c in aCommandList['setup'] if c.finalize):

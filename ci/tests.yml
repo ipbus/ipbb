@@ -31,7 +31,7 @@ depparser_venv_cc7_py2:
     - generate-ipbb-repo.py tests/repogen/hls_test_d3.yml /tmp/
 
 
-test_venv_centos8_py3:
+pytest_venv_centos8_py3:
   stage: tests
   image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
   tags:
@@ -44,3 +44,22 @@ test_venv_centos8_py3:
     - ipbb --version
     - source /software/Xilinx/Vivado/2018.3/settings64.sh
     - run-ipbb-pytests.sh
+
+
+depparser_venv_centos8_py3:
+  stage: tests
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  tags:
+    - docker
+    - xilinx-tools
+  dependencies:
+    - setup_centos8_py3_venv
+  script:
+    - source env.sh
+    - generate-ipbb-repo.py tests/repogen/simple.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/simple_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/settings.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/abcd_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/broken_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/hls_simple_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/hls_test_d3.yml /tmp/

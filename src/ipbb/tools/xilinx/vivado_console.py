@@ -89,13 +89,13 @@ class VivadoConsole(object):
     
     """
 
-    __reCharBackspace = re.compile(u'.\x08')
-    __reError = re.compile(u'^ERROR:')
-    __reCriticalWarning = re.compile(u'^CRITICAL WARNING:')
+    __reCharBackspace = re.compile(r'.\x08')
+    __reError = re.compile(r'^ERROR:')
+    __reCriticalWarning = re.compile(r'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado': r'Vivado%\s',
-        'vivado_lab': r'vivado_lab%\s'
+        'vivado': re.compile(r'Vivado%\s'),
+        'vivado_lab': re.compile(r'vivado_lab%\s')
     }
     __newlines = [u'\r\n']
 

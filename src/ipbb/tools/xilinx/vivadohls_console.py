@@ -186,12 +186,12 @@ class VivadoHLSConsole(object):
     
     """
 
-    __reCharBackspace = re.compile(u'.\x08')
-    __reError = re.compile(u'^ERROR:')
-    __reCriticalWarning = re.compile(u'^CRITICAL WARNING:')
+    __reCharBackspace = re.compile(r'.\x08')
+    __reError = re.compile(r'^ERROR:')
+    __reCriticalWarning = re.compile(r'^CRITICAL WARNING:')
     __instances = set()
     __promptMap = {
-        'vivado_hls': r'\x1b\[2K\r\rvivado_hls>\s',
+        'vivado_hls': re.compile(r'\x1b\[2K\r\rvivado_hls>\s'),
     }
     __newlines = [u'\r\n']
     __cmdSentAck = '\r\x1b[12C\r'

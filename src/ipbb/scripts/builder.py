@@ -47,6 +47,10 @@ def climain(ctx, aExcStack):
 # ------------------------------------------------------------------------------
 def _compose_cli():
     # Add custom cli to shell
+    from ..cli import cook
+
+    climain.add_command(cook.cook)
+
     from ..cli import repo
 
     climain.add_command(repo.init)

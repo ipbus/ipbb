@@ -17,7 +17,7 @@ def ipbus(env):
     pass
 
 # ------------------------------------------------------------------------------
-def gendecoders(env, aCheckUpToDate, aAssumeYes):
+def gendecoders(env, aCheckUpToDate, aForce):
 
     lDecodersDir = 'decoders'
 
@@ -122,7 +122,7 @@ def gendecoders(env, aCheckUpToDate, aAssumeYes):
         if aCheckUpToDate:
             raise SystemExit(-1)
 
-        if not aAssumeYes:
+        if not aForce:
             confirm('Do you want to continue?', abort=True)
         for lDecoder, lTarget in lUpdatedDecoders:
             print(sh.cp('-av', lDecoder, lTarget))

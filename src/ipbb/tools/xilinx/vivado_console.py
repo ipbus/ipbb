@@ -23,7 +23,7 @@ from click import style
 from ..common import which
 # from ..termui import *
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
-from ..tools.common import DEFAULT_ENCODING
+from ..common import DEFAULT_ENCODING
 from .vivado_common import VivadoNotFoundError, autodetect, VivadoOutputFormatter, _parseversion
 
 # ------------------------------------------------

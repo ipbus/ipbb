@@ -8,6 +8,9 @@ import pexpect
 import subprocess
 import time
 
+from locale import getpreferredencoding
+
+DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
 
 # ------------------------------------------------------------------------------
 class SmartOpen(object):

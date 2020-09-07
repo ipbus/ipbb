@@ -17,6 +17,7 @@ import ipbb
 import ipbb.tools.xilinx as xilinx
 import ipbb.tools.mentor as mentor
 from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ..tools.common import DEFAULT_ENCODING
 
 # Elements
 from os.path import (
@@ -333,7 +334,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     from configparser import RawConfigParser
 
     lIniParser = RawConfigParser()
-    lIniParser.read(lIPCoresModelsimIni, 'utf-8')
+    lIniParser.read(lIPCoresModelsimIni, DEFAULT_ENCODING)
     for lSimLib in lSimLibs:
         echo(' - ' + lSimLib)
         lIniParser.set('Library', lSimLib, join(lCoreSimDir, lSimLib))

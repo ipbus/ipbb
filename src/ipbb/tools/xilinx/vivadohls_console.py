@@ -22,6 +22,7 @@ from click import style
 from ..common import which, OutputFormatter
 from ..termui import *
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
+from ..common import DEFAULT_ENCODING
 
 kHLSLogDebug = False
 
@@ -267,6 +268,7 @@ class VivadoHLSConsole(object):
             ],
             echo=echo,
             logfile=self._out,
+            encoding=DEFAULT_ENCODING,
             # preexec_fn=on_parent_exit('SIGTERM')
         )
         

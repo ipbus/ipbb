@@ -8,7 +8,7 @@ import click
 from click import echo, secho, style, confirm
 from os.path import join, split, exists, abspath, splitext, relpath, basename
 from ..defaults import kProjAreaFile, kProjUserFile
-from ..tools.common import which
+from ..tools.common import which, DEFAULT_ENCODING
 from ._utils import DirSentry, formatDictTable
 from .common import addrtab
 
@@ -97,7 +97,7 @@ def gendecoders(env, aCheckUpToDate, aForce):
             )
             for a in sorted(lErrors):
                 echo(' - ' + basename(a.filepath))
-                echo('   ' + lErrors[a].stdout)
+                echo('   ' + lErrors[a].stdout.decode(DEFAULT_ENCODING, "replace"))
             return
 
 

@@ -11,6 +11,7 @@ import logging
 
 from ..common import which
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
+from ..common import DEFAULT_ENCODING
 from .sim_common import autodetect, ModelSimNotFoundError, ModelSimOutputFormatter, _vsim, _vcom
 
 # ------------------------------------------------------------------
@@ -98,6 +99,7 @@ class ModelSimConsole(object):
             env=lEnv,
             echo=echo,
             logfile=self._out,
+            encoding=DEFAULT_ENCODING,
         )
 
         self._process.delaybeforesend = 0.00  # 1

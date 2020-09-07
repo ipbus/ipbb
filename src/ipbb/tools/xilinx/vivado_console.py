@@ -23,6 +23,7 @@ from click import style
 from ..common import which
 # from ..termui import *
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
+from ..tools.common import DEFAULT_ENCODING
 from .vivado_common import VivadoNotFoundError, autodetect, VivadoOutputFormatter, _parseversion
 
 # ------------------------------------------------
@@ -177,7 +178,7 @@ class VivadoConsole(object):
                 ],
             echo=echo,
             logfile=self._out,
-            encoding='utf-8'
+            encoding=DEFAULT_ENCODING,
             # preexec_fn=on_parent_exit('SIGTERM')
         )
 

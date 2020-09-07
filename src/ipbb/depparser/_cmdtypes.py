@@ -39,6 +39,10 @@ class Command(object):
         return (self.filepath == other.filepath)
 
     # --------------------------------------------------------------
+    def __lt__(self, other):
+        return (self.filepath < other.filepath)
+
+    # --------------------------------------------------------------
     def flags(self):
         return []
 
@@ -47,6 +51,7 @@ class Command(object):
         return None
 
     __repr__ = __str__
+    __hash__ = object.__hash__
 
 
 # -----------------------------------------------------------------------------
@@ -88,6 +93,7 @@ class SrcCommand(Command):
     def __eq__(self, other):
         return (self.filepath == other.filepath) and (self.lib == other.lib)
 
+    __hash__ = object.__hash__
 
 # -----------------------------------------------------------------------------
 class HlsSrcCommand(Command):

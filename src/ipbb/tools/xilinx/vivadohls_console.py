@@ -190,8 +190,8 @@ class VivadoHLSConsole(object):
     __promptMap = {
         'vivado_hls': re.compile(r'\x1b\[2K\r\rvivado_hls>\s'),
     }
-    __newlines = [u'\r\n']
-    __cmdSentAck = '\r\x1b[12C\r'
+    __newlines = [r'\r\n']
+    __cmdSentAck = r'\r\x1b[12C\r'
 
     # --------------------------------------------------------------
     @classmethod

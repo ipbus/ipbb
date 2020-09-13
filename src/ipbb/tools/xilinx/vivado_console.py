@@ -179,7 +179,7 @@ class VivadoConsole(object):
 
         # Compile the list of patterns to detect the prompt
         self._rePrompt = self._process.compile_pattern_list(
-            self.__newlines+[self._prompt, pexpect.TIMEOUT]
+            self.__newlines+[self._prompt, pexpect.EOF, pexpect.TIMEOUT]
         )
         # Set send delay
         self._process.delaybeforesend = 0.00  # 1
@@ -310,6 +310,11 @@ class VivadoConsole(object):
                     lBuffer.append(None)
                 break
             elif lIndex == 2:
+                if not lBuffer:
+                    lBuffer.append(None)
+                print ("VivadoConsole >> EOF - VivadoConsole has quit" )
+                break
+            elif lIndex == 3:
                 lTimeoutCounts += 1
                 print ("VivadoConsole >> Time since last command: {0}s".format(
                     lTimeoutCounts * self._process.timeout))

@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 import time
 import os
 
@@ -119,7 +118,7 @@ class ModelSimProjectMaker(object):
             # ----------------------------------------------------------
 
         if self.turbo:
-            # for cmd, files in lSrcCommandGroups.iteritems():
+            # for cmd, files in lSrcCommandGroups.items():
             for item in lSrcCommandGroups:
                 write('{0} {1}'.format(item['cmd'], ' '.join(item['files'])))
 

@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 
 # Import click for ansi colors
 import yaml

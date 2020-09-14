@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback
-# ------------------------------------------------------------------------------
 
 import os
 import ipaddress
@@ -190,7 +187,9 @@ def validateIpAddress(value):
     try:
         lIp = ipaddress.ip_address(value)
     except ValueError as lExc:
-        raise_with_traceback(BadParameter(str(lExc)), sys.exc_info()[2])
+        # raise_with_traceback(BadParameter(str(lExc)), sys.exc_info()[2])
+        tb = sys.exc_info()[2]
+        raise BadParameter(str(lExc)).with_traceback(tb)
 
     lHexIp = ''.join([ '%02x' % ord(c) for c in lIp.packed])
 

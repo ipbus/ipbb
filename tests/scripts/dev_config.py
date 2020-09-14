@@ -13,7 +13,7 @@ class AlienNode2g(object):
         self.__dict__['_locked'] = False
 
     def __repr__(self):
-        return str({ k:v for k, v in self.__dict__.iteritems() if not k.startswith('_')})
+        return str({ k:v for k, v in self.__dict__.items() if not k.startswith('_')})
         
     def __getattr__(self, name):
         try:
@@ -48,7 +48,7 @@ class AlienNode2g(object):
             setattr(self[tokens[0]],tokens[1], value)
 
     def __iter__(self):
-        for n,o in self.__dict__.iteritems():
+        for n,o in self.__dict__.items():
             if n.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -59,7 +59,7 @@ class AlienNode2g(object):
                 yield n
 
     def _iternodes(self):
-        for n,o in self.__dict__.iteritems():
+        for n,o in self.__dict__.items():
             if n.startswith('_'):
                 continue
             elif isinstance(o, type(self)):

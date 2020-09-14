@@ -1,8 +1,7 @@
-#!/usr/bin/python
-from __future__ import print_function, absolute_import
+#!/usr/bin/env python3
+
 from builtins import range
 from future.utils import iterkeys, itervalues, iteritems
-import six
 
 import pexpect
 import pprint
@@ -37,7 +36,7 @@ def analyze(string, start, end, prompt):
         return
 
     groupdict = OrderedDict(zip(labels, m.groups()))
-    for k,v in iteritems(groupdict):
+    for k,v in groupdict.items():
         print('-', k+":", repr(v))
     print()
 

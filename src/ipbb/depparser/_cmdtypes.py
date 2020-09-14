@@ -1,7 +1,4 @@
-from __future__ import print_function, absolute_import
-from future.utils import iteritems
 
-# -----------------------------------------------------------------------------
 class Command(object):
     """Container class for dep commands parsed form dep files
 

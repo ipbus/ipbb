@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from past.builtins import basestring
-# -------------------------------------------------------------------------
 
 import os
 import sys
@@ -17,7 +14,7 @@ class SmartOpen(object):
 
     # -------------------------------------------
     def __init__(self, aTarget):
-        if isinstance(aTarget, basestring):
+        if isinstance(aTarget, str):
             self.target = open(aTarget, 'w')
         elif aTarget is None:
             self.target = sys.stdout

@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_from
-from future.utils import iterkeys, itervalues, iteritems
 
 import argparse
 import os
@@ -498,7 +495,7 @@ class DepFileParser(object):
                 self.libs.add(lCmd.lib)
 
         # Gather unresolved files and errors
-        for dp, f in iteritems(self._depregistry):
+        for dp, f in self._depregistry.items():
             self.errors.extend(f.errors)
             self.unresolved.extend(f.unresolved)
 

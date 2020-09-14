@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback, raise_from
-from future.utils import iterkeys, itervalues, iteritems
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -66,7 +62,8 @@ def ensureModelsim(env):
     try:
         env.siminfo = mentor.autodetect()
     except mentor.ModelSimNotFoundError as lExc:
-        raise raise_with_traceback(click.ClickException(str(lExc)))
+        tb = sys.exc_info()[2]
+        raise click.ClickException(str(lExc)).with_traceback(tb)
 
     try:
         env.vivadoinfo = xilinx.autodetect()
@@ -540,7 +537,7 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
     )
 
     lVsimExtraArgs = ' '.join(
-        ['-G{}=\'{}\''.format(k, v) for k, v in iteritems(lVsimArgs) if v is not None]
+        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimArgs.items() if v is not None]
     )
     lVsimBody = '''#!/bin/sh
 
@@ -632,11 +629,11 @@ def mifs(env):
 
     lIPSrcs = detectIPSimSrcs(env.currentproj.path, lIPCores)
 
-    lMissingIPSimSrcs = [ k for k, v in iteritems(lIPSrcs) if v is None]
+    lMissingIPSimSrcs = [ k for k, v in lIPSrcs.items() if v is None]
     if lMissingIPSimSrcs:
         raise click.ClickException('Failed to collect mifs. Simulation sources not found for cores: {}'.format(', '.join(lMissingIPSimSrcs)))
 
-    for c, d in iteritems(lIPSrcs):
+    for c, d in lIPSrcs.items():
         for file in os.listdir(d):
             if file.endswith(".mif"):
                 p = os.path.join(d, file)

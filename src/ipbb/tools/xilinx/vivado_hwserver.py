@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import range
-import six
-# ------------------------------------------------------------------------------
 
 from .vivado_console import VivadoConsole
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer

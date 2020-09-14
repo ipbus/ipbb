@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -196,7 +193,7 @@ def ls(env, group, output):
 def components(env, output):
 
     with SmartOpen(output) as lWriter:
-        for lPkt, lCmps in iteritems(env.depParser.packages):
+        for lPkt, lCmps in env.depParser.packages.items():
             lWriter('[' + lPkt + ']')
             for lCmp in lCmps:
                 lWriter(lCmp)
@@ -306,7 +303,7 @@ def hash(env, output, verbose):
 
         lProjHash = lAlgo()
         lGrpHashes = collections.OrderedDict()
-        for lGrp, lCmds in iteritems(env.depParser.commands):
+        for lGrp, lCmds in env.depParser.commands.items():
             lGrpHash = lAlgo()
             if verbose:
                 lWriter("#" + "-" * 79)
@@ -328,7 +325,7 @@ def hash(env, output, verbose):
             lWriter("#" + "-" * 79)
             lWriter("# Per cmd-group hashes")
             lWriter("#" + "-" * 79)
-            for lGrp, lHash in iteritems(lGrpHashes):
+            for lGrp, lHash in lGrpHashes.items():
                 lWriter(lHash.hexdigest(), lGrp)
             lWriter()
 

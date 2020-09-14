@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback
-# ------------------------------------------------------------------------------
 
 from ..cmds import Environment
 from os import walk

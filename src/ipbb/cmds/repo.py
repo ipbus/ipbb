@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.standard_library import install_aliases
-install_aliases()
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -24,7 +20,6 @@ from .proj import info as proj_info
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable
-
 
 # ------------------------------------------------------------------------------
 def init(env, workarea):
@@ -59,6 +54,7 @@ def info(env, verbose):
     echo()
     secho("ipbb environment", fg='blue')
     # echo  ( "----------------")
+
     lEnvTable = Texttable(max_width=0)
     lEnvTable.add_row(["Work path", env.work.path])
     if env.currentproj.path:

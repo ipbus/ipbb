@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback
-# ------------------------------------------------------------------------------
 
 from texttable import Texttable
 from os.path import (

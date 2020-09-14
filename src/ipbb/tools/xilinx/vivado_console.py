@@ -136,7 +136,7 @@ class VivadoConsole(object):
             VivadoNotFoundError: Description
         
         """
-        super(VivadoConsole, self).__init__()
+        super().__init__()
 
         # Set up logger first
         self._log = logging.getLogger('Vivado')
@@ -416,7 +416,7 @@ class VivadoSessionContextAdapter(object):
             aSId (str): SessionID
         
         """
-        super(VivadoSessionContextAdapter, self).__init__()
+        super().__init__()
         self._console = None
         self._mgr = aManager
         self._sid = aSId
@@ -445,7 +445,7 @@ class VivadoSessionManager(object):
         Args:
             keep (TYPE): Description
         """
-        super(VivadoSessionManager, self).__init__()
+        super().__init__()
         self._keep = keep
         self._echo = echo
         self._loglabel = loglabel

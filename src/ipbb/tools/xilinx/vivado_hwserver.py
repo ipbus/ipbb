@@ -12,7 +12,7 @@ class VivadoHWServer(VivadoConsole):
     
     # --------------------------------------------------------------
     def __init__(self, *args, **kwargs):
-        super(VivadoHWServer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     # --------------------------------------------------------------
     def openHw(self):

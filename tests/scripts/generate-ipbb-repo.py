@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
 
 import click
 import traceback

@@ -11,7 +11,7 @@ class VivadoNotFoundError(Exception):
 
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
-        super(VivadoNotFoundError, self).__init__(message)
+        super().__init__(message)
 # ------------------------------------------------
 
 
@@ -65,7 +65,7 @@ class VivadoOutputFormatter(OutputFormatter):
         prefix (string): String to prepend to each line of output
     """
     def __init__(self, prefix=None, sep=' | ', quiet=False):
-        super(VivadoOutputFormatter, self).__init__(prefix, sep, quiet)
+        super().__init__(prefix, sep, quiet)
 
         self.pendingchars = ''
         self.skiplines = ['\r\x1b[12C\r']

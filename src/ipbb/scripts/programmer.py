@@ -17,7 +17,7 @@ class ProgEnvironment(object):
     """docstring for ProgEnvironment"""
 
     def __init__(self):
-        super(ProgEnvironment, self).__init__()
+        super().__init__()
         self.options = {}
 
 

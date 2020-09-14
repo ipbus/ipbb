@@ -215,7 +215,7 @@ def synth(env, aNumJobs, aUpdateInt):
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             with VivadoSnoozer(lConsole):
-                lRunProps = { k: v for k, v in readRunInfo(lConsole.items()) if lOOCRegex.match(k) }
+                lRunProps = { k: v for k, v in readRunInfo(lConsole).items() if lOOCRegex.match(k) }
 
             # Reset all OOC synthesis which might are stuck in a running state
             lIPRunsToReset = [
@@ -529,10 +529,10 @@ def makeRunsTable(lInfos):
     # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.set_chars( ['-', '|', '+', '-'] )
-    lSummary.header(['Run'] + list(next(iter(itervalues(lInfos)))))
+    lSummary.header(['Run'] + list(next(iter(lInfos.values()))))
     for lRun in sorted(lInfos):
         lInfo = lInfos[lRun]
-        lSummary.add_row([lRun] + list(itervalues(lInfo)))
+        lSummary.add_row([lRun] + list(lInfo.values()))
 
     return lSummary
 

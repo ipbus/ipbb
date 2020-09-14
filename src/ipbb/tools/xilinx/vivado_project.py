@@ -21,7 +21,7 @@ class VivadoProject(object):
             aConsole (VivadoConsole): Console object
             aPath (string, optional): Project file (.xpr) path
         """
-        super(VivadoProject, self).__init__()
+        super().__init__()
         self.console = aConsole
 
         if aPath:

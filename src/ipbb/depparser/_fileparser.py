@@ -34,7 +34,7 @@ def _copyUpdateCommand(aCmd, aFilePath, aPkg, aCmp):
 class DepFile(object):
     """docstring for DepFile"""
     def __init__(self, aPackage, aComponent, aName, aPath):
-        super(DepFile, self).__init__()
+        super().__init__()
         self.pkg = aPackage
         self.cmp = aComponent
         self.name = aName
@@ -83,7 +83,7 @@ class State(object):
     """Utility class that holds the current status of the parser
     while iterating through the tree of dependencies"""
     def __init__(self):
-        super(State, self).__init__()
+        super().__init__()
         self.depth = 0
         self.currentfile = None
 
@@ -523,7 +523,7 @@ class DepFileParser(object):
 class DepFormatter(object):
     """docstring for DepFormatter"""
     def __init__(self, aParser):
-        super(DepFormatter, self).__init__()
+        super().__init__()
         self.parser = aParser
 
     # -----------------------------------------------------------------------------

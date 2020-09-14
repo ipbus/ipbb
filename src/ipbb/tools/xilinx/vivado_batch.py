@@ -16,7 +16,7 @@ class VivadoBatch(object):
 
     # --------------------------------------------
     def __init__(self, scriptpath=None, echo=False, log=None, cwd=None, dryrun=False):
-        super(VivadoBatch, self).__init__()
+        super().__init__()
 
         if scriptpath:
             _, lExt = splitext(scriptpath)

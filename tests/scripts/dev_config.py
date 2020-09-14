@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
+#!/usr/bin/env python3
 
 
 class AlienNode2g(object):
@@ -9,7 +7,7 @@ class AlienNode2g(object):
     tress
     """
     def __init__(self):
-        super(AlienNode2g, self).__init__()
+        super().__init__()
         self.__dict__['_locked'] = False
 
     def __repr__(self):
@@ -28,7 +26,7 @@ class AlienNode2g(object):
     def __setattr__(self, name, value):
         if name not in self.__dict__ and name.startswith('_'):
             raise AttributeError("Attributes starting with '_' are reserved ")
-        super(AlienNode2g, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __getitem__(self, name):
         # print('get',name)

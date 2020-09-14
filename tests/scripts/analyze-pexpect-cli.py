@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-from builtins import range
-from future.utils import iterkeys, itervalues, iteritems
-
 import pexpect
 import pprint
 import re

@@ -115,7 +115,7 @@ class Environment(object):
 
     # ----------------------------------------------------------------------------
     def __init__(self, wd=getcwd()):
-        super(Environment, self).__init__()
+        super().__init__()
 
         self._wd = wd
         self._autodetect()

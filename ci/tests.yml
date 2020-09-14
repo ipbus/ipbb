@@ -1,7 +1,7 @@
 ---
 pytest_venv_cc7_py2:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools
@@ -14,7 +14,7 @@ pytest_venv_cc7_py2:
 
 depparser_venv_cc7_py2:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools
@@ -33,7 +33,7 @@ depparser_venv_cc7_py2:
 
 pytest_venv_centos8_py3:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools
@@ -48,7 +48,7 @@ pytest_venv_centos8_py3:
 
 depparser_venv_centos8_py3:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools

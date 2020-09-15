@@ -544,7 +544,7 @@ class DepFormatter(object):
         lOutTxt = ''
         lOutTxt += 'Resolved packages & components\n'
         lOutTxt += '------------------------------\n'
-        lOutTxt += 'packages: ' + ', '.join(iterkeys(lPrsr.packages)) + '\n'
+        lOutTxt += 'packages: ' + ', '.join(lPrsr.packages.keys()) + '\n'
         lOutTxt += 'components:\n'
         for pkg in sorted(lPrsr.packages):
             lOutTxt += '+ %s (%d)\n' % (pkg, len(lPrsr.packages[pkg]))

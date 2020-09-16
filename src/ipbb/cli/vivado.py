@@ -49,22 +49,11 @@ def vivado_get_command_aliases(self, ctx, cmd_name):
 vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 
-# ------------------------------------------------------------------------------
-# @vivado.command('make-project', short_help='Assemble the project from sources.')
-# @click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
-# @click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle project script optimisation.")
-# @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
-# @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
-# @click.pass_obj
-# def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
-#     '''Make the Vivado project from sources described by dependency files.'''
-#     from ..cmds.vivado import makeproject
-#     makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout)
 
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
 @click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
-@click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle project script optimisation.")
+@click.option('-1', '--single', 'aOptimise', default=True, help="Disable project creation optimization. If present sources are added one at a time.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
@@ -75,12 +64,6 @@ def makeproject(ctx, *args, **kwargs):
     return (ctx.command.name, makeproject, args, kwargs)
 
 
-# # ------------------------------------------------------------------------------
-# @vivado.command('check-syntax', short_help='Run the elaboration step on the current project.')
-# @click.pass_obj
-# def checksyntax(env):
-#     from ..cmds.vivado import checksyntax
-#     checksyntax(env)
 # ------------------------------------------------------------------------------
 @vivado.command('check-syntax', short_help='Run the elaboration step on the current project.')
 @click.pass_obj
@@ -91,15 +74,6 @@ def checksyntax(ctx, *args, **kwargs):
     from ..cmds.vivado import checksyntax
     return (ctx.command.name, checksyntax, args, kwargs)
 
-# # -------------------------------------
-# @vivado.command('synth', short_help='Run the synthesis step on the current project.')
-# @click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
-# @click.option('-i', '--status-update-interval', 'aUpdateInt', type=int, default=1, help="Interal between status updates in minutes")
-# @click.pass_obj
-# def synth(env, aNumJobs, aUpdateInt):
-#     '''Run synthesis'''
-#     from ..cmds.vivado import synth
-#     synth(env, aNumJobs, aUpdateInt)
 
 # -------------------------------------
 @vivado.command('synth', short_help='Run the synthesis step on the current project.')
@@ -112,16 +86,6 @@ def synth(ctx, *args, **kwargs):
     from ..cmds.vivado import synth
     return (ctx.command.name, synth, args, kwargs)
 
-# ------------------------------------------------------------------------------
-# @vivado.command('impl', short_help='Run the implementation step on the current project.')
-# @click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
-# @click.option('-s/-c', '--stop-on-timing-failure/--continue-on-timing-failure', 'aStopOnTimingErr', default=True)
-# @click.pass_obj
-# def impl(env, aNumJobs, aStopOnTimingErr):
-#     '''Launch an implementation run'''
-#     '''Run synthesis'''
-#     from ..cmds.vivado import impl
-#     impl(env, aNumJobs, aStopOnTimingErr)
 
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
@@ -134,13 +98,6 @@ def impl(ctx, *args, **kwargs):
     from ..cmds.vivado import impl
     return (ctx.command.name, impl, args, kwargs)
 
-# # ------------------------------------------------------------------------------
-# @vivado.command('resource-usage', short_help="Resource usage")
-# @click.pass_obj
-# def resource_usage(env):
-#     '''Create a resource_usage'''
-#     from ..cmds.vivado import resource_usage
-#     resource_usage(env)
 
 # ------------------------------------------------------------------------------
 @vivado.command('resource-usage', short_help="Resource usage")
@@ -154,13 +111,6 @@ def resource_usage(ctx, *args, **kwargs):
     from ..cmds.vivado import resource_usage
     return (ctx.command.name, resource_usage, args, kwargs)
 
-# # ------------------------------------------------------------------------------
-# @vivado.command('bitfile', short_help="Generate the bitfile.")
-# @click.pass_obj
-# def bitfile(env):
-#     '''Create a bitfile'''
-#     from ..cmds.vivado import bitfile
-#     bitfile(env)
 
 # ------------------------------------------------------------------------------
 @vivado.command('bitfile', short_help="Generate the bitfile.")
@@ -171,6 +121,7 @@ def bitfile(ctx, *args, **kwargs):
     from ..cmds.vivado import bitfile
     return (ctx.command.name, bitfile, args, kwargs)
 
+
 # ------------------------------------------------------------------------------
 @vivado.command('debug-probes', short_help="Generate (optional) debug-probes files (used for ILAs and VIO controls).")
 @click.pass_obj
@@ -179,6 +130,7 @@ def bitfile(ctx, *args, **kwargs):
     '''Generate (optional) debug-probes files'''
     from ..cmds.vivado import debugprobes
     return (ctx.command.name, debugprobes, args, kwargs)
+
 
 # ------------------------------------------------------------------------------
 @vivado.command('memcfg', short_help="Generate the memcfg.")
@@ -198,16 +150,6 @@ def memcfg(ctx, *args, **kwargs):
     return (ctx.command.name, memcfg, args, kwargs)
 
 
-
-
-# # ------------------------------------------------------------------------------
-# @vivado.command('status', short_help="Show the status of all runs in the current project.")
-# @click.pass_obj
-# def status(env):
-#     '''Show the status of all runs in the current project.'''
-#     from ..cmds.vivado import status
-#     status(env)
-
 # ------------------------------------------------------------------------------
 @vivado.command('status', short_help="Show the status of all runs in the current project.")
 @click.pass_obj
@@ -217,15 +159,6 @@ def status(ctx, *args, **kwargs):
     from ..cmds.vivado import status
     return (ctx.command.name, status, args, kwargs)
 
-
-# # ------------------------------------------------------------------------------
-# @vivado.command('reset', short_help="Reset synthesis and implementation runs.")
-# @click.pass_obj
-# def reset(env):
-#     '''Reset synth and impl runs'''
-
-#     from ..cmds.vivado import reset
-#     reset(env)
 
 # ------------------------------------------------------------------------------
 @vivado.command('reset-runs', short_help="Reset synthesis and implementation runs.")
@@ -238,17 +171,6 @@ def reset(ctx, *args, **kwargs):
     return (ctx.command.name, reset, args, kwargs)
 
 
-# # ------------------------------------------------------------------------------
-# @vivado.command('package', short_help="Package the firmware image and metadata into a standalone archive")
-# @click.pass_obj
-# @click.option('--tag', '-t', 'aTag', default=None, help="Optional tag to add to the archive name.")
-# def package(env, aTag):
-#     '''Package bitfile with address table and file list
-
-#     '''
-#     from ..cmds.vivado import package
-#     package(env, aTag)
-
 # ------------------------------------------------------------------------------
 @vivado.command('package', short_help="Package the firmware image and metadata into a standalone archive")
 @click.option('--tag', '-t', 'aTag', default=None, help="Optional tag to add to the archive name.")
@@ -260,13 +182,6 @@ def package(ctx, *args, **kwargs):
     '''
     from ..cmds.vivado import package
     return (ctx.command.name, package, args, kwargs)
-
-# # ------------------------------------------------------------------------------
-# @vivado.command()
-# @click.pass_obj
-# def archive(env):
-#     from ..cmds.vivado import archive
-#     archive(env)
 
 # ------------------------------------------------------------------------------
 @vivado.command()

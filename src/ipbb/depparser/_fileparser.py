@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_from
-from future.utils import iterkeys, itervalues, iteritems
 
 import argparse
 import os
@@ -37,7 +34,7 @@ def _copyUpdateCommand(aCmd, aFilePath, aPkg, aCmp):
 class DepFile(object):
     """docstring for DepFile"""
     def __init__(self, aPackage, aComponent, aName, aPath):
-        super(DepFile, self).__init__()
+        super().__init__()
         self.pkg = aPackage
         self.cmp = aComponent
         self.name = aName
@@ -86,7 +83,7 @@ class State(object):
     """Utility class that holds the current status of the parser
     while iterating through the tree of dependencies"""
     def __init__(self):
-        super(State, self).__init__()
+        super().__init__()
         self.depth = 0
         self.currentfile = None
 
@@ -498,7 +495,7 @@ class DepFileParser(object):
                 self.libs.add(lCmd.lib)
 
         # Gather unresolved files and errors
-        for dp, f in iteritems(self._depregistry):
+        for dp, f in self._depregistry.items():
             self.errors.extend(f.errors)
             self.unresolved.extend(f.unresolved)
 
@@ -526,7 +523,7 @@ class DepFileParser(object):
 class DepFormatter(object):
     """docstring for DepFormatter"""
     def __init__(self, aParser):
-        super(DepFormatter, self).__init__()
+        super().__init__()
         self.parser = aParser
 
     # -----------------------------------------------------------------------------
@@ -547,7 +544,7 @@ class DepFormatter(object):
         lOutTxt = ''
         lOutTxt += 'Resolved packages & components\n'
         lOutTxt += '------------------------------\n'
-        lOutTxt += 'packages: ' + ', '.join(iterkeys(lPrsr.packages)) + '\n'
+        lOutTxt += 'packages: ' + ', '.join(lPrsr.packages.keys()) + '\n'
         lOutTxt += 'components:\n'
         for pkg in sorted(lPrsr.packages):
             lOutTxt += '+ %s (%d)\n' % (pkg, len(lPrsr.packages[pkg]))

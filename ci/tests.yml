@@ -1,25 +1,25 @@
 ---
-pytest_venv_cc7_py2:
+pytest_venv_centos7_py3:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools
   dependencies:
-    - setup_cc7_py2_venv
+    - setup_centos7_py3_venv
   script:
     - source env.sh
     - source /software/Xilinx/Vivado/2018.3/settings64.sh
     - run-ipbb-pytests.sh
 
-depparser_venv_cc7_py2:
+depparser_venv_centos7_py3:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-cc7:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools
   dependencies:
-    - setup_cc7_py2_venv
+    - setup_centos7_py3_venv
   script:
     - source env.sh
     - generate-ipbb-repo.py tests/repogen/simple.yml /tmp/
@@ -33,7 +33,7 @@ depparser_venv_cc7_py2:
 
 pytest_venv_centos8_py3:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools
@@ -48,7 +48,7 @@ pytest_venv_centos8_py3:
 
 depparser_venv_centos8_py3:
   stage: tests
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-imgs__uhal2.7.2
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
   tags:
     - docker
     - xilinx-tools

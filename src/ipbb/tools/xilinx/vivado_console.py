@@ -1,8 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import range
-import six
-# ------------------------------------------------------------------------------
-
 
 # Modules
 import logging
@@ -141,7 +136,7 @@ class VivadoConsole(object):
             VivadoNotFoundError: Description
         
         """
-        super(VivadoConsole, self).__init__()
+        super().__init__()
 
         # Set up logger first
         self._log = logging.getLogger('Vivado')
@@ -365,7 +360,7 @@ class VivadoConsole(object):
     
     # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
-        if not isinstance(aCmd, six.string_types):
+        if not isinstance(aCmd, str):
             raise TypeError('expected string, found '+str(type(aCmd)))
 
         if aCmd.count('\n') != 0:
@@ -421,7 +416,7 @@ class VivadoSessionContextAdapter(object):
             aSId (str): SessionID
         
         """
-        super(VivadoSessionContextAdapter, self).__init__()
+        super().__init__()
         self._console = None
         self._mgr = aManager
         self._sid = aSId
@@ -450,7 +445,7 @@ class VivadoSessionManager(object):
         Args:
             keep (TYPE): Description
         """
-        super(VivadoSessionManager, self).__init__()
+        super().__init__()
         self._keep = keep
         self._echo = echo
         self._loglabel = loglabel

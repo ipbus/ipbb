@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import range
-import six
-# ------------------------------------------------------------------------------
 
 from os.path import join, dirname, splitext, abspath
 from collections import OrderedDict
@@ -25,7 +21,7 @@ class VivadoProject(object):
             aConsole (VivadoConsole): Console object
             aPath (string, optional): Project file (.xpr) path
         """
-        super(VivadoProject, self).__init__()
+        super().__init__()
         self.console = aConsole
 
         if aPath:

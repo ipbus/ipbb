@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
 
 from string import Template
 
@@ -13,7 +10,7 @@ class DictObj(object):
     """
 
     def __init__(self, aDict={} ):
-        super(DictObj, self).__setattr__('data', aDict)
+        super().__setattr__('data', aDict)
 
     def __setattr__(self, key, value):
         self.data[key] = value
@@ -29,7 +26,7 @@ class DictObj(object):
     def __repr__(self):
         type_name = type(self).__name__
 
-        arg_strings = [ '%s=%s' % (key, repr(value)) for key, value in sorted(iteritems(self.data))]
+        arg_strings = [ '%s=%s' % (key, repr(value)) for key, value in sorted(self.data.items())]
 
         return '%s(%s)' % (type_name, ', '.join(arg_strings))
 # ------------------------------------------------------------------------------
@@ -54,7 +51,7 @@ class AlienDict(dict):
     @lock.setter
     def lock(self, value):
         self._locked = value
-        for c in itervalues(self._children):
+        for c in self._children.values():
             c.lock = value
 
     def __getitem__(self, name):
@@ -74,11 +71,11 @@ class AlienBranch(object):
     tress
     """
     def __init__(self):
-        super(AlienBranch, self).__init__()
+        super().__init__()
         self.__dict__['_locked'] = False
 
     def __repr__(self):
-        return str({ k:v for k, v in iteritems(self.__dict__) if not k.startswith('_')})
+        return str({ k:v for k, v in self.__dict__.items() if not k.startswith('_')})
         
     def __getattr__(self, name):
         try:
@@ -93,7 +90,7 @@ class AlienBranch(object):
     def __setattr__(self, name, value):
         if name not in self.__dict__ and name.startswith('_'):
             raise AttributeError("Attributes starting with '_' are reserved ")
-        super(AlienBranch, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
 
     def __getitem__(self, name):
@@ -114,7 +111,7 @@ class AlienBranch(object):
             setattr(self[tokens[0]],tokens[1], value)
 
     def __iter__(self):
-        for b,o in iteritems(self.__dict__):
+        for b,o in self.__dict__.items():
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -125,7 +122,7 @@ class AlienBranch(object):
                 yield b
 
     def _iterleafkeys(self):
-        for b, o in iteritems(self.__dict__):
+        for b, o in self.__dict__.items():
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -135,7 +132,7 @@ class AlienBranch(object):
                 yield b
 
     def _iterleaves(self):
-        for b, o in iteritems(self.__dict__):
+        for b, o in self.__dict__.items():
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -145,7 +142,7 @@ class AlienBranch(object):
                 yield b, o
 
     def _iterbranches(self):
-        for b, o in iteritems(self.__dict__):
+        for b, o in self.__dict__.items():
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):
@@ -172,7 +169,7 @@ class AlienTree(object):
     docstring for AlienTree
     """
     def __init__(self):
-        super(AlienTree, self).__init__()
+        super().__init__()
         self._trunk = AlienBranch()
 
     def __repr__(self):

@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
-# ------------------------------------------------------------------------------
 
 import time
 import os
@@ -149,7 +146,7 @@ class VivadoProjectMaker(object):
                     write(tmpl(c).substitute(files=f))
 
         if self.turbo:
-            for c, f in iteritems(lSrcCommandGroups):
+            for c, f in lSrcCommandGroups.items():
                 write(tmpl(c).substitute(files=' '.join(f)))
 
         write('set_property top {0} [get_filesets sources_1]'.format(lTopEntity))

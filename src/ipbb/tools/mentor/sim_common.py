@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import zip
-# ------------------------------------------------------------------------------
 
 import re
 import sh
@@ -16,7 +13,7 @@ _vcom = 'vcom'
 class ModelSimNotFoundError(Exception):
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
-        super(ModelSimNotFoundError, self).__init__(message)
+        super().__init__(message)
 
 
 # --------------------------------------------------------------
@@ -56,7 +53,7 @@ class ModelSimOutputFormatter(OutputFormatter):
     """
 
     def __init__(self, prefix=None, sep=' | ', quiet=False):
-        super(ModelSimOutputFormatter, self).__init__(prefix, sep, quiet)
+        super().__init__(prefix, sep, quiet)
 
         self.pendingchars = ''
         self.skiplines = []

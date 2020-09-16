@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
 import click
 import click_didyoumean
@@ -20,7 +17,7 @@ class ProgEnvironment(object):
     """docstring for ProgEnvironment"""
 
     def __init__(self):
-        super(ProgEnvironment, self).__init__()
+        super().__init__()
         self.options = {}
 
 

@@ -1,8 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import range
-import six
-# ------------------------------------------------------------------------------
-
 
 # -------------------------------------------------------------------------
 def consolectxmanager(aTCLConsoleClass):
@@ -25,7 +20,7 @@ def consolectxmanager(aTCLConsoleClass):
                 **kwargs: List of console key'd arguments
             
             """
-            super(TCLConsoleSessionAdapter, self).__init__()
+            super().__init__()
             self._console = None
             self._args = args
             self._kwargs = kwargs
@@ -53,7 +48,7 @@ class TCLConsoleSnoozer(object):
     """
     # --------------------------------------------------------------
     def __init__(self, aConsole):
-        super(TCLConsoleSnoozer, self).__init__()
+        super().__init__()
         self._console = aConsole
         self._quiet = None
     # --------------------------------------------------------------

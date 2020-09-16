@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback
-# ------------------------------------------------------------------------------
 
 from ..cmds import Environment
 from os import walk
@@ -152,7 +149,7 @@ class MutuallyExclusiveOption(Option):
                 ' NOTE: This argument is mutually exclusive with'
                 ' argument(s): [' + ex_str + '].'
             )
-        super(MutuallyExclusiveOption, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def handle_parse_result(self, ctx, opts, args):
         if self.mutually_exclusive.intersection(opts) and self.name in opts:
@@ -164,7 +161,7 @@ class MutuallyExclusiveOption(Option):
                 )
             )
 
-        return super(MutuallyExclusiveOption, self).handle_parse_result(
+        return super().handle_parse_result(
             ctx,
             opts,
             args

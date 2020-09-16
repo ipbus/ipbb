@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import range, zip
-import six
-# ------------------------------------------------------------------------------
 
 # Modules
 import logging
@@ -32,7 +28,7 @@ class VivadoHLSNotFoundError(Exception):
 
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
-        super(VivadoHLSNotFoundError, self).__init__(message)
+        super().__init__(message)
 # ------------------------------------------------
 
 
@@ -81,7 +77,7 @@ class VivadoHLSOutputFormatter(OutputFormatter):
         prefix (string): String to prepend to each line of output
     """
     def __init__(self, prefix=None, sep=' | ', quiet=False):
-        super(VivadoHLSOutputFormatter, self).__init__(prefix, sep, quiet)
+        super().__init__(prefix, sep, quiet)
 
         self.pendingchars = ''
         self.skiplines = [r'\r\x1b[12C\r']
@@ -233,7 +229,7 @@ class VivadoHLSConsole(object):
             prompt (str):
             stopOnCWarnings (bool): Stop on Critical Warnings
         """
-        super(VivadoHLSConsole, self).__init__()
+        super().__init__()
 
         # Set up logger first
         self._log = logging.getLogger('VivadoHLS')
@@ -444,7 +440,7 @@ class VivadoHLSConsole(object):
 
     # --------------------------------------------------------------
     def execute(self, aCmd, aMaxLen=1):
-        if not isinstance(aCmd, six.string_types):
+        if not isinstance(aCmd, str):
             raise TypeError('expected string, found '+str(type(aCmd)))
 
         if aCmd.count('\n') != 0:

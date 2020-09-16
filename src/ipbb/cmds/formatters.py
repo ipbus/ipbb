@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback
-# ------------------------------------------------------------------------------
 
 from texttable import Texttable
 from os.path import (
@@ -20,7 +17,7 @@ from os.path import (
 class DepFormatter(object):
     """docstring for DepFormatter"""
     def __init__(self, parser):
-        super(DepFormatter, self).__init__()
+        super().__init__()
         self.parser = parser
 
     def _drawPackages(self, aPkgs):

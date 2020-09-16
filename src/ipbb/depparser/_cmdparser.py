@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 
 import argparse
 from ._cmdtypes import Command, IncludeCommand, SrcCommand, HlsSrcCommand, SetupCommand, AddrtabCommand
@@ -10,7 +9,7 @@ class ComponentAction(argparse.Action):
     '''
     def __init__(self, *args, **kwargs):
         self.append = kwargs.pop('append', False)
-        super(ComponentAction, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
 
@@ -41,7 +40,7 @@ class DepCmdParserError(Exception):
 # -----------------------------------------------------------------------------
 class UseInAction(argparse.Action):
     def __init__(self, *args, **kwargs):
-        super(UseInAction, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._choices = ['synth', 'sim']
         self.default = self._choices
 
@@ -63,7 +62,7 @@ class DepCmdParser(argparse.ArgumentParser):
 
     # ---------------------------------
     def __init__(self, *args, **kwargs):
-        super(DepCmdParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Common options
         lCompArgOpts = dict(action=ComponentAction, default=(None, None))

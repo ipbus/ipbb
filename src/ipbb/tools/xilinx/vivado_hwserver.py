@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from builtins import range
-import six
-# ------------------------------------------------------------------------------
 
 from .vivado_console import VivadoConsole
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
@@ -16,7 +12,7 @@ class VivadoHWServer(VivadoConsole):
     
     # --------------------------------------------------------------
     def __init__(self, *args, **kwargs):
-        super(VivadoHWServer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     # --------------------------------------------------------------
     def openHw(self):

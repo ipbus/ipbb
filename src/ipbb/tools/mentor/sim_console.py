@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import
-# ------------------------------------------------------------------------------
 
 import re
 import os
@@ -52,7 +50,7 @@ class ModelSimConsole(object):
 
     # --------------------------------------------------------------
     def __init__(self, executable=_vsim, prompt=None,  echo=True, sid=None, loglabel=None):
-        super(ModelSimConsole, self).__init__()
+        super().__init__()
 
         # Set up logger first
         self._log = logging.getLogger('Modelsim')

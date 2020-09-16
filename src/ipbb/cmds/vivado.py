@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -218,11 +215,11 @@ def synth(env, aNumJobs, aUpdateInt):
             lProject = VivadoProject(lConsole, env.vivadoProjFile)
 
             with VivadoSnoozer(lConsole):
-                lRunProps = { k: v for k, v in iteritems(readRunInfo(lConsole)) if lOOCRegex.match(k) }
+                lRunProps = { k: v for k, v in readRunInfo(lConsole).items() if lOOCRegex.match(k) }
 
             # Reset all OOC synthesis which might are stuck in a running state
             lIPRunsToReset = [
-                k for k, v in iteritems(lRunProps)
+                k for k, v in lRunProps.items()
                 if v['STATUS'].startswith('Running')
             ]
 
@@ -249,15 +246,15 @@ def synth(env, aNumJobs, aUpdateInt):
                     with VivadoSnoozer(lConsole):
                         lRunProps = readRunInfo(lConsole)
 
-                    lOOCRunProps = { k: v for k, v in iteritems(lRunProps) if lOOCRegex.match(k) }
+                    lOOCRunProps = { k: v for k, v in lRunProps.items() if lOOCRegex.match(k) }
 
                     secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
 
-                    lSynthProps = { k: v for k, v in iteritems(lRunProps) if k == lSynthRun }
+                    lSynthProps = { k: v for k, v in lRunProps.items() if k == lSynthRun }
 
                     secho('\n' + makeRunsTable(lSynthProps).draw(), fg='cyan')
 
-                    lRunsInError = [ k for k, v in iteritems(lRunProps) if v['STATUS'] == 'synth_design ERROR']
+                    lRunsInError = [ k for k, v in lRunProps.items() if v['STATUS'] == 'synth_design ERROR']
                     if lRunsInError:
                         raise RuntimeError("Detected runs in ERROR {}. Exiting".format(', '.join(lRunsInError)))
 
@@ -470,7 +467,7 @@ def memcfg(env):
     ensureVivado(env)
     
     lVivadoCfg = lDepFileParser.config['vivado']
-    for k,o in iteritems(_memCfgKinds):
+    for k,o in _memCfgKinds.items():
 
         if o not in lVivadoCfg:
             echo("No configuration found for '{}' files. Skipping.".format(k))
@@ -532,10 +529,10 @@ def makeRunsTable(lInfos):
     # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
     lSummary.set_chars( ['-', '|', '+', '-'] )
-    lSummary.header(['Run'] + list(next(iter(itervalues(lInfos)))))
+    lSummary.header(['Run'] + list(next(iter(lInfos.values()))))
     for lRun in sorted(lInfos):
         lInfo = lInfos[lRun]
-        lSummary.add_row([lRun] + list(itervalues(lInfo)))
+        lSummary.add_row([lRun] + list(lInfo.values()))
 
     return lSummary
 
@@ -577,12 +574,12 @@ def status(env):
 
     echo()
 
-    lOocTable = makeRunsTable({ k: v for k, v in iteritems(lInfos) if lOOCRegex.match(k)})
+    lOocTable = makeRunsTable({ k: v for k, v in lInfos.items() if lOOCRegex.match(k)})
     secho("Out of context runs", fg='blue')
     echo(lOocTable.draw())
     echo()
     secho("Design runs", fg='blue')
-    aaa = makeRunsTable({ k: v for k, v in iteritems(lInfos) if lRunRegex.match(k)})
+    aaa = makeRunsTable({ k: v for k, v in lInfos.items() if lRunRegex.match(k)})
     echo(aaa.draw())
 # ------------------------------------------------------------------------------
 
@@ -643,7 +640,7 @@ def package(env, aTag):
 
     try:
         lVivadoCfg = lDepFileParser.config['vivado']
-        lActiveMemCfgs = [k for k,o in iteritems(_memCfgKinds) if o in lVivadoCfg]
+        lActiveMemCfgs = [k for k,o in _memCfgKinds.items() if o in lVivadoCfg]
         lMemCfgFiles = [lBaseName + '.' + k for k in lActiveMemCfgs]
 
         if any([not exists(f) for f in lMemCfgFiles]):

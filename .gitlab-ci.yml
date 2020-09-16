@@ -9,7 +9,7 @@ stages:
 variables:
   IPBUS_DOCKER_REGISTRY: "gitlab-registry.cern.ch/ipbus/ipbus-docker"
   GITHUB_REPO_API_URL: "https://api.github.com/repos/ipbus/ipbb"
-  LANG: "C.UTF-8"
+  LANG: "en_US.UTF-8"
 
 include:
   - local: '/ci/github-notifications.yml'

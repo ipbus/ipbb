@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import
-
 import pytest
 
 from ipbb.tools.alien import AlienDict, AlienTemplate, AlienBranch, AlienTree

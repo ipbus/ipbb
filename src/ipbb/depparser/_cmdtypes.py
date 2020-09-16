@@ -1,7 +1,4 @@
-from __future__ import print_function, absolute_import
-from future.utils import iteritems
 
-# -----------------------------------------------------------------------------
 class Command(object):
     """Container class for dep commands parsed form dep files
 
@@ -14,7 +11,7 @@ class Command(object):
 
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd):
-        super(Command, self).__init__()
+        super().__init__()
         self.cmd = aCmd
         self.filepath = aFilePath
         self.package = aPackage
@@ -70,7 +67,7 @@ class SrcCommand(Command):
     """
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aUseInSynth, aUseInSim):
-        super(SrcCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
+        super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
         self.lib = aLib
         self.vhdl2008 = aVhdl2008
@@ -109,7 +106,7 @@ class HlsSrcCommand(Command):
         testbench  (bool): this file is a testbench
     """
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aCFlags, aCSimFlags, aTestBench, aIncludeComps):
-        super(HlsSrcCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
+        super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
         self.cflags = aCFlags
         self.csimflags = aCSimFlags
         self.testbench = aTestBench
@@ -141,7 +138,7 @@ class SetupCommand(Command):
     """
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aFinalise):
-        super(SetupCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
+        super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
         self.finalize = aFinalise
 
@@ -163,7 +160,7 @@ class AddrtabCommand(Command):
     """
     # --------------------------------------------------------------
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aTopLevel):
-        super(AddrtabCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
+        super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
         self.toplevel = aTopLevel
 
     # --------------------------------------------------------------
@@ -180,5 +177,5 @@ class IncludeCommand(Command):
         component (str):  component withon 'Package' the target belongs to
     """
     def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aDepFileObj=None):
-        super(IncludeCommand, self).__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
+        super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
         self.depfile = aDepFileObj

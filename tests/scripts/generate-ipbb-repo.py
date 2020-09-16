@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
+#!/usr/bin/env python3
 
 import click
 import traceback
@@ -31,12 +29,12 @@ def cli(repofile, dest):
 
     makedirs(repopath)
 
-    for d, fs in iteritems(repocfg['files']):
+    for d, fs in repocfg['files'].items():
         ad = join(repopath, d)
         if not exists(ad):
             makedirs(ad)
 
-        for f, t in iteritems(fs):
+        for f, t in fs.items():
             with open(join(ad, f), 'w') as f:
                 f.write(t)
 

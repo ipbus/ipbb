@@ -26,25 +26,9 @@ def gendecoders(env, aCheckUpToDate, aForce):
         addrtab(env, aDest=lDecodersDir)
 
     lGenScript = 'gen_ipbus_addr_decode'
-    lGenToolPath = '/opt/cactus/bin/uhal/tools'
-    lGenToolLibPath = '/opt/cactus/lib'
 
     if not which(lGenScript):
-
-        lPaths = os.environ['PATH'].split() if os.environ['PATH'] else []
-        if lGenToolPath not in lPaths:
-            lPaths[0:0] = [lGenToolPath]
-            os.environ['PATH'] = ':'.join(lPaths)
-
-        if not which(lGenScript):
-            raise click.ClickException("'{0}' script not found.".format(lGenScript))
-
-    lLibPaths = (
-        os.environ['LD_LIBRARY_PATH'].split() if 'LD_LIBRARY_PATH' in os.environ else []
-    )
-    if lGenToolLibPath not in lLibPaths:
-        lLibPaths[0:0] = [lGenToolLibPath]
-        os.environ['LD_LIBRARY_PATH'] = ':'.join(lLibPaths)
+        raise click.ClickException("'{0}' script not found.".format(lGenScript))
 
     secho("Using " + which(lGenScript), fg='green')
 

@@ -81,7 +81,7 @@ def gendecoders(env, aCheckUpToDate, aForce):
             for a in sorted(lErrors):
                 echo(' - ' + basename(a.filepath))
                 echo('   ' + lErrors[a].stdout.decode(DEFAULT_ENCODING, "replace"))
-            return
+            raise SystemExit(-1)
 
 
 

@@ -104,9 +104,9 @@ def create(env, toolset, projname, component, topdep):
         lTopDep = lFilePaths[0][0][0] if lTopExists else lPathmaker.getDefNames('include', lTopDefault, 'braces')
         lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', lTopDep)
     else:
-        lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
+        lTopDep = topdep
+        lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', lTopDep)
         lTopExists = exists(lTopDepPath)
-        lTopDep = basename(lTopDepPath)
 
     # ------------------------------------------------------------------------------
     if not lTopExists:

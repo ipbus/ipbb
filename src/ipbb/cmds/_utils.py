@@ -4,11 +4,10 @@ import ipaddress
 import sys
 import re
 
-# from click import echo, secho, style, confirm
 from click import get_current_context, ClickException, Abort, BadParameter
-# from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
 from rich.prompt import Confirm
+from rich.table import Table
 
 from ..tools.alien import AlienBranch
 from ..console import cprint
@@ -199,7 +198,6 @@ def validateIpAddress(value):
     lHexIp = ''.join([ '%02x' % ord(c) for c in lIp.packed])
 
     return 'X"{}"'.format(lHexIp)
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -214,80 +212,58 @@ def validateMacAddress(value):
 
     lHexMac = ''.join([ '%02x' % int(c, 16) for c in value.split(':')])
     return 'X"{}"'.format(lHexMac)
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 def printRegTable(aRegs, aHeader=True, aSort=True):
     cprint ( formatRegTable(aRegs, aHeader, aSort) )
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 def formatRegTable(aRegs, aHeader=True, aSort=True):
-    lRegTable = Texttable(max_width=0)
-    lRegTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
-    lRegTable.set_chars(['-', '|', '+', '-'])
-    if aHeader:
-        lRegTable.header( ['name', 'value'] )
 
-    lRegs = sorted(aRegs) if aSort else aRegs
-    for k in lRegs:
-        lRegTable.add_row( [str(k), hex(aRegs[k])] )
-
-    return lRegTable.draw()
-# ------------------------------------------------------------------------------
+    lRegTable = Table('name', 'value', show_header=aHeader)
+    for k in (sorted(aRegs) if aSort else aRegs):
+        lRegTable.add_row( str(k), hex(aRegs[k]) )
+    return lRegTable
 
 
 # ------------------------------------------------------------------------------
 def printDictTable(aDict, aHeader=True, aSort=True, aFmtr=None):
-    echo ( formatDictTable(aDict, aHeader, aSort, aFmtr) )
-# ------------------------------------------------------------------------------
+    cprint ( formatDictTable(aDict, aHeader, aSort, aFmtr) )
 
 
 # ------------------------------------------------------------------------------
 def formatDictTable(aDict, aHeader=True, aSort=True, aFmtr=str):
-    lDictTable = Texttable(max_width=0)
-    lDictTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
-    lDictTable.set_chars(['-', '|', '+', '-'])
-    if aHeader:
-        lDictTable.header( ['name', 'value'] )
 
+    lDictTable = Table('name', 'value', show_header=aHeader)
     for k in (sorted(aDict) if aSort else aDict):
         v = aDict[k]
-        lDictTable.add_row( [str(k), aFmtr(v) if aFmtr else v])
+        lDictTable.add_row(str(k), aFmtr(v) if aFmtr else v)
+    return lDictTable
 
-    return lDictTable.draw()
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 def printAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=None):
-    echo ( formatAlienTable(aBranch, aHeader, aSort, aFmtr) )
-# ------------------------------------------------------------------------------
+    cprint ( formatAlienTable(aBranch, aHeader, aSort, aFmtr) )
 
 
 # ------------------------------------------------------------------------------
 def formatAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=str):
-    lAlienTable = Texttable(max_width=0)
-    lAlienTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
-    lAlienTable.set_chars(['-', '|', '+', '-'])
-    if aHeader:
-        lAlienTable.header( ['name', 'value'] )
+    lAlienTable = Table('name', 'value', show_header=aHeader)
 
     for k in (sorted(aBranch) if aSort else aBranch):
         v = aBranch[k]
         if isinstance(v, AlienBranch):
             continue
-        lAlienTable.add_row( [str(k), aFmtr(v) if aFmtr else v])
+        lAlienTable.add_row( str(k), aFmtr(v) if aFmtr else v)
 
-    return lAlienTable.draw()
-# ------------------------------------------------------------------------------
+    return lAlienTable
 
 
 
 # ------------------------------------------------------------------------------
 def getClickRootName():
     return get_current_context().find_root().info_name
-# ------------------------------------------------------------------------------
 
 

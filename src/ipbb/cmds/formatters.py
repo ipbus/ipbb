@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from texttable import Texttable
+from rich.table import Table, Column
 from os.path import (
     join,
     split,
@@ -70,12 +70,18 @@ class DepFormatter(object):
         Draws a deptree commands summary table.
         
         """
-        lCommandKinds = ['setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo']
-        lDepTable = Texttable()
-        lDepTable.set_cols_align(['c'] * len(lCommandKinds))
-        lDepTable.add_row(lCommandKinds)
-        lDepTable.add_row([len(self.parser.commands[k]) for k in lCommandKinds])
-        return lDepTable.draw()
+        # lCommandKinds = ['setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo']
+        # lDepTable = Texttable()
+        # lDepTable.set_cols_align(['c'] * len(lCommandKinds))
+        # lDepTable.add_row(lCommandKinds)
+        # lDepTable.add_row([len(self.parser.commands[k]) for k in lCommandKinds])
+        # return lDepTable.draw()
+
+        lCommandKinds = ('setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo')
+        lDepTable = Table( *(Column(c, justify='center') for c in lCommandKinds) )
+        lDepTable.add_row( *(str(len(self.parser.commands[k])) for k in lCommandKinds) )
+        return lDepTable
+
 
     def drawUnresolvedSummary(self):
         """

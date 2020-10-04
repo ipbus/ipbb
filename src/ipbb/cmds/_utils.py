@@ -4,10 +4,15 @@ import ipaddress
 import sys
 import re
 
-from click import echo, secho, style, confirm, get_current_context, ClickException, Abort, BadParameter
-from texttable import Texttable
+# from click import echo, secho, style, confirm
+from click import get_current_context, ClickException, Abort, BadParameter
+# from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
+from rich.prompt import Confirm
+
 from ..tools.alien import AlienBranch
+from ..console import cprint
+
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -39,7 +44,7 @@ def raiseError(aMessage):
     Print the error message to screen in bright red and a ClickException error
     """
 
-    secho("\nERROR: " + aMessage + "\n", fg='red')
+    cprint("\nERROR: " + aMessage + "\n", style='red')
     raise ClickException("Command aborted.")
 
 # ------------------------------------------------------------------------------
@@ -106,12 +111,12 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
 
     from .formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
-    secho("ERROR: Project '{}' contains {} parsing error{}.".format(
+    cprint("ERROR: Project '{}' contains {} parsing error{}.".format(
         aCurrentProj,
         len(aDepFileParser.errors),
         ("" if len(aDepFileParser.errors) == 1 else "s"),
-    ), fg='red')
-    secho(fmt.drawParsingErrors(), fg='red')
+    ), style='red')
+    cprint(fmt.drawParsingErrors(), style='red')
 
     raise Abort()
 
@@ -129,25 +134,25 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 
     from .formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
-    secho("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
+    cprint("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
         aCurrentProj,
         len(aDepFileParser.unresolved),
         ("" if len(aDepFileParser.unresolved) == 1 else "s"),
-    ), fg='red')
-    secho(fmt.drawUnresolvedFiles(), fg='red')
+    ), style='red')
+    cprint(fmt.drawUnresolvedFiles(), style='red')
 
-    secho("")
-    confirm("Do you want to continue anyway?", abort=True)
+    cprint("")
+    if not Confirm.ask("Do you want to continue anyway?"):
+        raise click.Abort()
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 def echoVivadoConsoleError( aExc ):
-    echo(
-        style("Vivado error/critical warnings detected\n", fg='red') +
-        style("\n".join(aExc.errors), fg='red') + '\n' +
-        style("\n".join(aExc.criticalWarns), fg='yellow')
-    )
+    cprint("Vivado error/critical warnings detected", style='red')
+    cprint("\n".join(aExc.errors), style='red')
+    cprint("\n".join(aExc.criticalWarns), style='yellow')    
+
 
 # ------------------------------------------------------------------------------
 
@@ -214,7 +219,7 @@ def validateMacAddress(value):
 
 # ------------------------------------------------------------------------------
 def printRegTable(aRegs, aHeader=True, aSort=True):
-    echo ( formatRegTable(aRegs, aHeader, aSort) )
+    cprint ( formatRegTable(aRegs, aHeader, aSort) )
 # ------------------------------------------------------------------------------
 
 

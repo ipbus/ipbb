@@ -7,12 +7,9 @@ import sys
 import traceback
 from io import StringIO, BytesIO
 
-from texttable import Texttable
-from click import echo, style, secho
-
 from ..cmds import Environment
 from ..cmds.formatters import DepFormatter
-
+from ..console import cprint
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -90,61 +87,65 @@ def _compose_cli():
     from ..cli import debug
 
     climain.add_command(debug.debug)
+
+
 # ------------------------------------------------------------------------------
+def validate_completion():
+    """
+    This function should be moved to an unit test
+    """
 
+    _compose_cli()
 
+    from click._bashcomplete import get_choices
+
+    def choices_without_help(cli, args, incomplete):
+        completions = get_choices(cli, 'dummy', args, incomplete)
+        return [c[0] for c in completions]
+
+    for inc in [
+            '',
+            'f',
+            'felix-pie',
+            'felix-pie:',
+            'felix-pie:p',
+            'felix-pie:projects/',
+            'felix-pie:projects/hi',
+            'felix-pie:projects/hitfinder/'
+    ]:
+        print("-" * 80)
+        print("Completing component'" + inc + "'")
+        print("-" * 80)
+        print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG'], inc))
+        print()
+
+    for inc in [
+            '',
+    ]:
+        print("-" * 80)
+        print("Completing dep file'" + inc + "'")
+        print("-" * 80)
+        print(choices_without_help(climain, ['ipbb', 'toolbox', 'check-dep', 'felix-pie:projects/hitfinder'], inc))
+        print()
+
+    for inc in [
+            '',
+    ]:
+        print("-" * 80)
+        print("Completing dep file'" + inc + "'")
+        print("-" * 80)
+        print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG', 'felix-pie:projects/hitfinder', '-t'], inc))
+        print()
+    raise SystemExit(0)
 # ------------------------------------------------------------------------------
 def main():
     '''Discovers the env at startup'''
 
-    if sys.version_info[0:2] < (2, 7):
-        click.secho("Error: Python 2.7 is required to run IPBB", fg='red')
+    if sys.version_info[0:2] < (3, 6):
+        cprint("Error: Python 3.6 is required to run IPBB", style='red')
         raise SystemExit(-1)
 
     _compose_cli()
-
-    # if True:
-    if False:
-        from click._bashcomplete import get_choices
-
-        def choices_without_help(cli, args, incomplete):
-            completions = get_choices(cli, 'dummy', args, incomplete)
-            return [c[0] for c in completions]
-
-        for inc in [
-                '',
-                'f',
-                'felix-pie',
-                'felix-pie:',
-                'felix-pie:p',
-                'felix-pie:projects/',
-                'felix-pie:projects/hi',
-                'felix-pie:projects/hitfinder/'
-        ]:
-            print("-" * 80)
-            print("Completing component'" + inc + "'")
-            print("-" * 80)
-            print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG'], inc))
-            print()
-
-        for inc in [
-                '',
-        ]:
-            print("-" * 80)
-            print("Completing dep file'" + inc + "'")
-            print("-" * 80)
-            print(choices_without_help(climain, ['ipbb', 'toolbox', 'check-dep', 'felix-pie:projects/hitfinder'], inc))
-            print()
-
-        for inc in [
-                '',
-        ]:
-            print("-" * 80)
-            print("Completing dep file'" + inc + "'")
-            print("-" * 80)
-            print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG', 'felix-pie:projects/hitfinder', '-t'], inc))
-            print()
-        raise SystemExit(0)
 
     obj = Environment()
     try:
@@ -154,7 +155,7 @@ def main():
         exc_type, exc_obj, exc_tb = sys.exc_info()
         lFirstFrame = traceback.extract_tb(exc_tb)[-1]
 
-        secho(
+        cprint(
             u"ERROR ('{}' exception caught): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
                 exc_type.__name__,
                 e,
@@ -163,16 +164,16 @@ def main():
                 lFirstFrame[2],
                 lFirstFrame[3],
             ),
-            fg='red',
+            style='red',
         )
 
         if obj.printExceptionStack:
             lExc = (BytesIO() if (version_info[0] <= 2) else StringIO())
             traceback.print_exc(file=lExc)
-            print("Exception in user code:")
-            print('-' * 60)
-            secho(lExc.getvalue(), fg='red')
-            print('-' * 60)
+            cprint("Exception in user code:")
+            cprint('-' * 60)
+            cprint(lExc.getvalue(), style='red')
+            cprint('-' * 60)
         raise SystemExit(-1)
 
 

@@ -8,9 +8,9 @@ import sys
 import yaml
 
 # Elements
-from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
+from ..console import cprint
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
 from ..depparser import Pathmaker
 from ..tools.common import mkdir
@@ -19,13 +19,15 @@ from .formatters import DepFormatter
 from .proj import info as proj_info
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
-from texttable import Texttable
+from rich.table import Table
+
+# from texttable import Texttable
 
 # ------------------------------------------------------------------------------
 def init(env, workarea):
     '''Initialise a new firmware development area'''
 
-    secho('Setting up new firmware work area \'' + workarea + '\'', fg='green')
+    cprint('Setting up new firmware work area \'' + workarea + '\'', style='green')
 
     if env.work.path is not None:
         raise click.ClickException(
@@ -48,62 +50,71 @@ def info(env, verbose):
     '''Print a brief report about the current working area'''
 
     if not env.work.path:
-        secho('ERROR: No ipbb work area detected', fg='red')
+        cprint('ERROR: No ipbb work area detected', style='red')
         return
 
-    echo()
-    secho("ipbb environment", fg='blue')
-    # echo  ( "----------------")
+    cprint()
 
-    lEnvTable = Texttable(max_width=0)
-    lEnvTable.add_row(["Work path", env.work.path])
+    lEnvTable = Table('name', 'path', title='ipbb environment', title_style='blue', show_header=False)
+    lEnvTable.add_row("Work path", env.work.path)
     if env.currentproj.path:
-        lEnvTable.add_row(["Project path", env.currentproj.path])
-    echo(lEnvTable.draw())
+        lEnvTable.add_row("Project path", env.currentproj.path)
+    cprint(lEnvTable)
 
     if not env.currentproj.path:
-        echo()
+        cprint()
         srcs_info(env)
 
-        echo()
+        cprint()
         proj_info(env)
         return
 
-    echo()
+    cprint()
 
     if not env.currentproj.settings:
         return
 
-    secho("Project '%s'" % env.currentproj.name, fg='blue')
+    t = formatDictTable(env.currentproj.settings, aHeader=False)
+    t.title = "Project '[green]%s[/green]'" % env.currentproj.name
+    t.title_style = 'blue'
+    cprint(t)
 
-    echo(formatDictTable(env.currentproj.settings, aHeader=False))
-
-    echo()
+    cprint()
 
     if env.currentproj.usersettings:
-        secho("User settings", fg='blue')
-        echo(formatDictTable(env.currentproj.usersettings, aHeader=False))
+        cprint("User settings", style='blue')
+        t = formatDictTable(env.currentproj.usersettings, aHeader=False)
+        t.title = "User settings"
+        t.title_style = 'blue'
+        cprint(t)
 
-        echo()
+        cprint()
 
     lParser = env.depParser
     lDepFmt = DepFormatter(lParser)
     
     if lParser.errors:
-        secho("Dep tree parsing error(s):", fg='red')
-        echo(lDepFmt.drawParsingErrors())
-        echo()
+        t = lDepFmt.drawParsingErrors()
+        t.title = "Dep tree parsing error(s)"
+        t.title_style = 'red'
+        cprint(t)
+        
+        cprint()
 
-    secho("Dependecy tree elements", fg='blue')
-    echo(lDepFmt.drawDeptreeCommandsSummary())
+    t = lDepFmt.drawDeptreeCommandsSummary()
+    t.title = "Dependecy tree elements"
+    t.title_style = 'blue'
+    cprint(t)
 
-    echo()
+    cprint()
 
     if  lParser.unresolved:
-        secho("Unresolved item(s)", fg='red')
-        echo(lDepFmt.drawUnresolvedSummary())
+        t = lDepFmt.drawUnresolvedSummary()
+        t.title = "Unresolved item(s)"
+        t.title_style = 'red'
+        cprint(t)
 
-        echo()
+        cprint()
 # ------------------------------------------------------------------------------
 
 
@@ -121,18 +132,18 @@ def add(env):
 def _repoInit(env, dest):
 
     if dest not in env.sources:
-        secho('Source package {} not found'.format(dest), fg='red')
-        echo('Available repositories:')
+        cprint('Source package {} not found'.format(dest), style='red')
+        cprint('Available repositories:')
         for lPkg in env.sources:
-            echo(' - ' + lPkg)
+            cprint(' - ' + lPkg)
 
         raiseError("Source package {} not found".format(dest))
 
     setupPath = join(env.srcdir, dest, kRepoSetupFile)
     if not exists(setupPath):
-        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+        cprint('No repository setup file found in {}. Skipping'.format(dest), style='blue')
         return
-    secho('Setting up {}'.format(dest), fg='blue')
+    cprint('Setting up {}'.format(dest), style='blue')
 
     setupCfg = None
     with open(setupPath, 'r') as f:
@@ -140,7 +151,7 @@ def _repoInit(env, dest):
 
     setupCfg = setupCfg.get('init', None)
     if setupCfg is None:
-        echo("No init configuration file. Skipping.")
+        cprint("No init configuration file. Skipping.")
         return
 
     cmds = [ l.split() for l in setupCfg ]
@@ -148,9 +159,9 @@ def _repoInit(env, dest):
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
     if missingCmds:
-        secho('Some setup commands have not been found', fg='red')
+        cprint('Some setup commands have not been found', style='red')
         for i, cmd in missingCmds:
-            echo(' - {} (line {})'.format(cmd, i))
+            cprint(' - {} (line {})'.format(cmd, i))
 
         raiseError("Setup commands not found".format(dest))
 
@@ -161,25 +172,25 @@ def _repoInit(env, dest):
         # In red the failed one
         # In white the remaining commands
         for cmd in cmds:
-            secho('> '+' '.join(cmd), fg='cyan')
+            cprint('> '+' '.join(cmd), style='cyan')
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
 def _repoReset(env, dest):
 
     if dest not in env.sources:
-        secho('Source package {} not found'.format(dest), fg='red')
-        echo('Available repositories:')
+        cprint('Source package {} not found'.format(dest), style='red')
+        cprint('Available repositories:')
         for lPkg in env.sources:
-            echo(' - ' + lPkg)
+            cprint(' - ' + lPkg)
 
         raiseError("Source package {} not found".format(dest))
 
     setupPath = join(env.srcdir, dest, kRepoSetupFile)
     if not exists(setupPath):
-        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+        cprint('No repository setup file found in {}. Skipping'.format(dest), style='blue')
         return
-    secho('Resetting up {}'.format(dest), fg='blue')
+    cprint('Resetting up {}'.format(dest), style='blue')
 
     setupCfg = None
     with open(setupPath, 'r') as f:
@@ -187,7 +198,7 @@ def _repoReset(env, dest):
 
     setupCfg = setupCfg.get('reset', None)
     if setupCfg is None:
-        echo("No reset configuration file. Skipping.")
+        cprint("No reset configuration file. Skipping.")
         return
 
     cmds = [ l.split() for l in setupCfg ]
@@ -195,9 +206,9 @@ def _repoReset(env, dest):
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
     if missingCmds:
-        secho('Some setup commands have not been found', fg='red')
+        cprint('Some setup commands have not been found', style='red')
         for i, cmd in missingCmds:
-            echo(' - {} (line {})'.format(cmd, i))
+            cprint(' - {} (line {})'.format(cmd, i))
 
         raiseError("Setup commands not found".format(dest))
 
@@ -208,14 +219,14 @@ def _repoReset(env, dest):
         # In red the failed one
         # In white the remaining commands
         for cmd in cmds:
-            secho('> '+' '.join(cmd), fg='cyan')
+            cprint('> '+' '.join(cmd), style='cyan')
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
 def git(env, repo, branch, revision, dest):
     '''Add a git repository to the source area'''
 
-    echo('Adding git repository ' + style(repo, fg='blue'))
+    cprint('Adding git repository ' + style(repo, style='blue'))
 
     # Ensure that the destination direcotry doesn't exist
     # Maybe not necessary
@@ -243,7 +254,7 @@ def git(env, repo, branch, revision, dest):
             )
         # Multiple references
         elif len(lRemoteRefs) > 1:
-            echo(lRemoteRefs)
+            cprint(lRemoteRefs)
             raise click.ClickException(
                 'Found {} references matching \'{}\''.format(len(lRemoteRefs), branch)
             )
@@ -263,9 +274,9 @@ def git(env, repo, branch, revision, dest):
             )
 
         # All good, go ahead with cloning
-        echo(
+        cprint(
             "{} {} resolved as reference {}".format(
-                lRefKind.capitalize(), style(branch, fg='blue'), lRefName
+                lRefKind.capitalize(), style(branch, style='blue'), lRefName
             )
         )
 
@@ -281,11 +292,11 @@ def git(env, repo, branch, revision, dest):
     # option handling stage.
     if branch is not None:
 
-        echo('Checking out branch/tag ' + style(branch, fg='blue'))
+        cprint('Checking out branch/tag ' + style(branch, style='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 
     elif revision is not None:
-        echo('Checking out revision ' + style(revision, fg='blue'))
+        cprint('Checking out revision ' + style(revision, style='blue'))
         try:
             sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
         except Exception as err:
@@ -293,14 +304,14 @@ def git(env, repo, branch, revision, dest):
             # did not alter the state of the cloned repo in any
             # way. (This appears to be the case from experience but no
             # hard reference could be found.)
-            secho("Failed to check out requested revision." \
-                  " Staying on default branch.", fg='red')
+            cprint("Failed to check out requested revision." \
+                  " Staying on default branch.", style='red')
 
-    secho(
+    cprint(
         'Repository \'{}\' successfully cloned to:\n  {}'.format(
             lRepoName, join(env.srcdir, lRepoName)
         ),
-        fg='green',
+        style='green',
     )
 
     _repoInit(env, lRepoName)
@@ -314,7 +325,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
-    echo('Adding svn repository ' + style(repo, fg='blue'))
+    cprint('Adding svn repository ' + style(repo, style='blue'))
 
     lRepoLocalPath = join(env.srcdir, lRepoName)
 
@@ -335,11 +346,11 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
         # Do the checkout
         lCmd = ['svn'] + lArgs
-        echo('Executing ' + style(' '.join(lCmd), fg='blue'))
+        cprint('Executing ' + style(' '.join(lCmd), style='blue'))
         if not dryrun:
             sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
     else:
-        echo('Sparse checkout mode: ' + style(' '.join(sparse), fg='blue'))
+        cprint('Sparse checkout mode: ' + style(' '.join(sparse), style='blue'))
         # ----------------------------------------------------------------------
         # Checkout an empty base folder
         lArgs = ['checkout', '--depth=empty', repo]
@@ -352,7 +363,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             lArgs += ['-r', str(rev)]
 
         lCmd = ['svn'] + lArgs
-        echo('Executing ' + style(' '.join(lCmd), fg='blue'))
+        cprint('Executing ' + style(' '.join(lCmd), style='blue'))
         if not dryrun:
             sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
         # ----------------------------------------------------------------------
@@ -366,13 +377,13 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             # Recursively check out intermediate, empty folders
             for lPartial in lPartials:
                 lArgs = ['up', '--depth=empty', lPartial]
-                echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
+                cprint('Executing ' + style(' '.join(['svn'] + lArgs), style='blue'))
                 if not dryrun:
                     sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
             # Finally check out the target
             lArgs = ['up', '--set-depth=infinity', lPath]
-            echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
+            cprint('Executing ' + style(' '.join(['svn'] + lArgs), style='blue'))
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
@@ -385,7 +396,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 def tar(env, repo, dest, strip):
     '''Add a tarball-ed package to the source area'''
 
-    click.secho("Warning: Command 'untar' is still experimental", fg='yellow')
+    click.cprint("Warning: Command 'untar' is still experimental", style='yellow')
     lProtocols = ['file', 'http', 'https']
     lExtensions = ['.tar', '.tar.gz', '.tgz']
 
@@ -422,11 +433,11 @@ def tar(env, repo, dest, strip):
 
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
-    echo(
+    cprint(
         'Adding tarball '
-        + style(repo, fg='blue')
+        + style(repo, style='blue')
         + ' to '
-        + style(lRepoName, fg='blue')
+        + style(lRepoName, style='blue')
     )
     lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
@@ -460,11 +471,11 @@ def symlink(env, path):
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
-    echo(
+    cprint(
         'Adding symlink '
-        + style(abspath(path), fg='blue')
+        + style(abspath(path), style='blue')
         + ' as '
-        + style(lRepoName, fg='blue')
+        + style(lRepoName, style='blue')
     )
 
     sh.ln('-s', abspath(path), _cwd=env.srcdir )
@@ -479,19 +490,20 @@ def srcs(env):
 def srcs_info(env):
 
     if not env.work.path:
-        secho('ERROR: No ipbb work area detected', fg='red')
+        cprint('ERROR: No ipbb work area detected', style='red')
         return
 
-    echo()
-    secho("Firmware Packages", fg='blue')
+    cprint()
+    cprint("Firmware Packages", style='blue')
     lSrcs = env.sources
     if not lSrcs:
         return
 
-    lSrcTable = Texttable(max_width=0)
-    lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lSrcTable.set_chars(['-', '|', '+', '-'])
-    lSrcTable.header(['name', 'kind', 'version', 'hash'])
+    # lSrcTable = Texttable(max_width=0)
+    # lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+    # lSrcTable.set_chars(['-', '|', '+', '-'])
+    # lSrcTable.header(['name', 'kind', 'version', 'hash'])
+    lSrcTable = Table('name', 'kind', 'version', 'hash')
     for lSrc in lSrcs:
         lSrcDir = join(env.srcdir, lSrc)
 
@@ -564,8 +576,8 @@ def srcs_info(env):
 
                 lHash = lSVNInfo['Revision']
 
-        lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
-    echo(lSrcTable.draw())
+        lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
+    cprint(lSrcTable)
 
 
 # ------------------------------------------------------------------------------
@@ -574,13 +586,13 @@ def srcs_create_component(env, component):
 
     lCmpPath = lPathMaker.getPath(*component)
     if exists(lPathMaker.getPath(*component)):
-        secho("ERROR: Component '{}' already exists".format(lCmpPath), fg='red')
+        cprint("ERROR: Component '{}' already exists".format(lCmpPath), style='red')
         raise click.ClickException("Command aborted")
 
     for sd in ['src', 'include', 'iprepo', 'addrtab']:
         lPath = lPathMaker.getPath(*component, command=sd)
         mkdir(lPath)
-        secho("Folder {} created.".format(lPath), fg='cyan')
+        cprint("Folder {} created.".format(lPath), style='cyan')
 
 
 # ------------------------------------------------------------------------------
@@ -588,11 +600,11 @@ def srcs_run(env, pkg, cmd, args):
 
     if pkg:
         if pkg not in env.sources:
-            secho(
+            cprint(
                 "ERROR: '{}' package not known.\nKnown packages:\n{}".format(
                     pkg, '\n'.join((' * ' + s for s in env.sources))
                 ),
-                fg='red',
+                style='red',
             )
             raise click.ClickException("Command failed")
         wd = join(env.srcdir, pkg)
@@ -602,7 +614,7 @@ def srcs_run(env, pkg, cmd, args):
     try:
         lCmd = sh.Command(cmd)
     except sh.CommandNotFound as lExc:
-        secho("ERROR: Command '{}' not found in path".format(cmd), fg='red')
+        cprint("ERROR: Command '{}' not found in path".format(cmd), style='red')
         raise click.ClickException("Command aborted")
 
     try:

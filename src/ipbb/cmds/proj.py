@@ -16,8 +16,6 @@ from ..depparser import depfiletypes, Pathmaker
 
 from rich.table import Table
 from os.path import join, split, exists, splitext, relpath, isdir, basename
-# from click import echo, style, secho
-# from texttable import Texttable
 
 # ------------------------------------------------------------------------------
 def info(env):

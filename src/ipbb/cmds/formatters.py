@@ -91,16 +91,14 @@ class DepFormatter(object):
         if not lParser.unresolved:
             return ''
 
-        lUnresolved = Texttable()
-        lUnresolved.add_row(["packages", "components", "paths"])
+        lUnresolved = Table()
+        lUnresolved.add_row("packages", "components", "paths")
         lUnresolved.add_row(
-            [
-                len(lParser.unresolvedPackages),
-                len(lParser.unresolvedComponents),
-                len(lParser.unresolvedPaths),
-            ]
+            str(len(lParser.unresolvedPackages)),
+            str(len(lParser.unresolvedComponents)),
+            str(len(lParser.unresolvedPaths)),
         )
-        return lUnresolved.draw()
+        return lUnresolved
 
     def drawUnresolvedFiles(self):
         """
@@ -110,9 +108,8 @@ class DepFormatter(object):
         if not lFNF:
             return ""
 
-        lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(['path expression', 'package', 'component', 'included by'])
-        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lFNFTable = Table('path expression', 'package', 'component', 'included by')
+        # lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
 
         for pkg in sorted(lFNF):
             lCmps = lFNF[pkg]
@@ -120,16 +117,14 @@ class DepFormatter(object):
                 lPathExps = lCmps[cmp]
                 for pathexp in sorted(lPathExps):
                     lFNFTable.add_row(
-                        [
-                            relpath(pathexp, self.parser.rootdir),
-                            pkg,
-                            cmp,
-                            '\n'.join(
-                                [(relpath(src, self.parser.rootdir) if src != '__top__' else '(top)') for src in lPathExps[pathexp]]
-                            ),
-                        ]
+                        relpath(pathexp, self.parser.rootdir),
+                        pkg,
+                        cmp,
+                        '\n'.join(
+                            [(relpath(src, self.parser.rootdir) if src != '__top__' else '(top)') for src in lPathExps[pathexp]]
+                        ),
                     )
-        return lFNFTable.draw()
+        return lFNFTable
 
     def drawParsingErrors(self):
         """
@@ -141,18 +136,14 @@ class DepFormatter(object):
 
         lErrors = self.parser.errors
 
-        lErrTable = Texttable(max_width=0)
-        lErrTable.header(['dep file', 'line', 'error'])
-        lErrTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lErrTable = Table('dep file', 'line', 'error')
 
         for lPkg, lCmp, lDepName, lDepPath, lLineNo, lLine, lErr in lErrors:
             
             lErrTable.add_row(
-                [
                     relpath(lDepPath, self.parser.rootdir)+':'+str(lLineNo),
                     "'"+lLine+"'",
                     str(lErr)+(': {}'.format(lErr.__cause__) if hasattr(lErr,'__cause__') else ''),
-                ]
             )
 
         return lErrTable.draw()

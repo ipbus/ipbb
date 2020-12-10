@@ -44,24 +44,24 @@ def vivado_get_command_aliases(self, ctx, cmd_name):
     if rv is not None:
         return rv
     if cmd_name == 'project':
-        return click.Group.get_command(self, ctx, 'make-project')
+        return click.Group.get_command(self, ctx, 'generate-project')
 
 vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 
 
 # ------------------------------------------------------------------------------
-@vivado.command('make-project', short_help='Assemble the project from sources.')
+@vivado.command('generate-project', short_help='Assemble the project from sources.')
 @click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
 @click.option('-1', '--single', 'aOptimise', default=True, help="Disable project creation optimization. If present sources are added one at a time.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
 @click.pass_context
-def makeproject(ctx, *args, **kwargs):
+def genproject(ctx, *args, **kwargs):
     '''Creates the Vivado project from sources.'''
-    from ..cmds.vivado import makeproject
-    return (ctx.command.name, makeproject, args, kwargs)
+    from ..cmds.vivado import genproject
+    return (ctx.command.name, genproject, args, kwargs)
 
 
 # ------------------------------------------------------------------------------

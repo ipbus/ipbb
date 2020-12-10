@@ -50,10 +50,10 @@ def vivadohls(env, proj, verbosity):
     
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aToScript, aToStdout):
+def genproject(env, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
-    lSessionId = 'make-project'
+    lSessionId = 'generate-project'
 
     # Check if vivado is around
     ensureVivadoHLS(env)

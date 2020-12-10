@@ -149,8 +149,8 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 # ------------------------------------------------------------------------------
 def echoVivadoConsoleError( aExc ):
     cprint("Vivado error/critical warnings detected", style='red')
-    cprint("\n".join(aExc.errors), style='red')
-    cprint("\n".join(aExc.criticalWarns), style='yellow')    
+    cprint("\n".join(aExc.errors), markup=False, style='red')
+    cprint("\n".join(aExc.criticalWarns), markup=False, style='yellow')    
 
 
 # ------------------------------------------------------------------------------

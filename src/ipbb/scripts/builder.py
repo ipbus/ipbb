@@ -5,7 +5,9 @@ import click_didyoumean
 import ipbb
 import sys
 import traceback
+import rich
 from io import StringIO, BytesIO
+
 
 from ..cmds import Environment
 from ..cmds.formatters import DepFormatter
@@ -164,11 +166,12 @@ def main():
                 lFirstFrame[2],
                 lFirstFrame[3],
             ),
+            markup=False,
             style='red',
         )
 
         if obj.printExceptionStack:
-            lExc = (BytesIO() if (version_info[0] <= 2) else StringIO())
+            lExc = StringIO()
             traceback.print_exc(file=lExc)
             cprint("Exception in user code:")
             cprint('-' * 60)

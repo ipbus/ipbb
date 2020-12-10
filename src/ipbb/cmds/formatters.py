@@ -78,7 +78,8 @@ class DepFormatter(object):
         # return lDepTable.draw()
 
         lCommandKinds = ('setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo')
-        lDepTable = Table( *(Column(c, justify='center') for c in lCommandKinds) )
+        # lDepTable = Table( *(Column(c, justify='center') for c in lCommandKinds) )
+        lDepTable = Table( *lCommandKinds)
         lDepTable.add_row( *(str(len(self.parser.commands[k])) for k in lCommandKinds) )
         return lDepTable
 
@@ -91,8 +92,7 @@ class DepFormatter(object):
         if not lParser.unresolved:
             return ''
 
-        lUnresolved = Table()
-        lUnresolved.add_row("packages", "components", "paths")
+        lUnresolved = Table("packages", "components", "paths")
         lUnresolved.add_row(
             str(len(lParser.unresolvedPackages)),
             str(len(lParser.unresolvedComponents)),

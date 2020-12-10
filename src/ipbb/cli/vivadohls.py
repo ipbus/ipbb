@@ -32,16 +32,16 @@ def process_vivadohls(env, subcommands, proj, verbosity):
         cmd(*args, **kwargs)
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('make-project', short_help='Assemble the project from sources.')
+@vivadohls.command('generate-project', short_help='Assemble the project from sources.')
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
 @click.pass_context
-def makeproject(ctx, *args, **kwargs):
+def genproject(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
-    from ..cmds.vivadohls import makeproject
-    # makeproject(env, aToScript, aToStdout)
-    return (ctx.command.name, makeproject, args, kwargs)
+    from ..cmds.vivadohls import genproject
+    # genproject(env, aToScript, aToStdout)
+    return (ctx.command.name, genproject, args, kwargs)
 
 
 # ------------------------------------------------------------------------------

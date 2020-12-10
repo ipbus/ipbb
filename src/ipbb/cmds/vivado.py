@@ -109,10 +109,10 @@ def vivado(env, proj, verbosity, cmdlist):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
+def genproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
-    lSessionId = 'make-project'
+    lSessionId = 'generate-project'
 
     # Check if vivado is around
     ensureVivado(env)
@@ -626,7 +626,7 @@ def package(env, aTag):
 
     if not exists(env.vivadoProjFile):
         secho('Vivado project does not exist. Creating the project...', fg='yellow')
-        makeproject(env, True, True, None, False)
+        genproject(env, True, True, None, False)
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser

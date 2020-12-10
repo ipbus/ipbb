@@ -438,7 +438,7 @@ def fli_udp(env, port, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aOptimise, aToScript, aToStdout):
+def genproject(env, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
 

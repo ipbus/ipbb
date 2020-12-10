@@ -226,7 +226,7 @@ def _repoReset(env, dest):
 def git(env, repo, branch, revision, dest):
     '''Add a git repository to the source area'''
 
-    cprint('Adding git repository ' + style(repo, style='blue'))
+    cprint('Adding git repository [blue]{}[/blue]'.format(repo))
 
     # Ensure that the destination direcotry doesn't exist
     # Maybe not necessary
@@ -275,8 +275,8 @@ def git(env, repo, branch, revision, dest):
 
         # All good, go ahead with cloning
         cprint(
-            "{} {} resolved as reference {}".format(
-                lRefKind.capitalize(), style(branch, style='blue'), lRefName
+            "{} [blue]{}[/blue] resolved as reference {}".format(
+                lRefKind.capitalize(), branch, lRefName
             )
         )
 
@@ -292,11 +292,11 @@ def git(env, repo, branch, revision, dest):
     # option handling stage.
     if branch is not None:
 
-        cprint('Checking out branch/tag ' + style(branch, style='blue'))
+        cprint('Checking out branch/tag [blue]{}[/blue]'.format(branch))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 
     elif revision is not None:
-        cprint('Checking out revision ' + style(revision, style='blue'))
+        cprint('Checking out revision [blue]{}[/blue]'.format(revision))
         try:
             sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
         except Exception as err:
@@ -325,7 +325,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
-    cprint('Adding svn repository ' + style(repo, style='blue'))
+    cprint('Adding svn repository [blue]{}[/blue'.format(repo))
 
     lRepoLocalPath = join(env.srcdir, lRepoName)
 
@@ -346,11 +346,11 @@ def svn(env, repo, dest, rev, dryrun, sparse):
 
         # Do the checkout
         lCmd = ['svn'] + lArgs
-        cprint('Executing ' + style(' '.join(lCmd), style='blue'))
+        cprint('Executing [blue]{}[/blue]'.format(' '.join(lCmd)))
         if not dryrun:
             sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
     else:
-        cprint('Sparse checkout mode: ' + style(' '.join(sparse), style='blue'))
+        cprint('Sparse checkout mode: [blue]{}[/blue]'.format(sparse))
         # ----------------------------------------------------------------------
         # Checkout an empty base folder
         lArgs = ['checkout', '--depth=empty', repo]
@@ -363,7 +363,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             lArgs += ['-r', str(rev)]
 
         lCmd = ['svn'] + lArgs
-        cprint('Executing ' + style(' '.join(lCmd), style='blue'))
+        cprint('Executing [blue]{}[/blue]'.format(' '.join(lCmd)))
         if not dryrun:
             sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
         # ----------------------------------------------------------------------
@@ -377,13 +377,13 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             # Recursively check out intermediate, empty folders
             for lPartial in lPartials:
                 lArgs = ['up', '--depth=empty', lPartial]
-                cprint('Executing ' + style(' '.join(['svn'] + lArgs), style='blue'))
+                cprint('Executing [blue]{}[/blue]'.format(' '.join(['svn'] + lArgs)))
                 if not dryrun:
                     sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
             # Finally check out the target
             lArgs = ['up', '--set-depth=infinity', lPath]
-            cprint('Executing ' + style(' '.join(['svn'] + lArgs), style='blue'))
+            cprint('Executing [blue]{}[/blue]'.format(' '.join(['svn'] + lArgs)))
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
@@ -434,10 +434,7 @@ def tar(env, repo, dest, strip):
     # -------------------------------------------------------------------------
     # Stop if the target directory already exists
     cprint(
-        'Adding tarball '
-        + style(repo, style='blue')
-        + ' to '
-        + style(lRepoName, style='blue')
+        'Adding tarball [blue]{}[/blue] to [blue]{}[/blue]'.format(repo, lRepoName)
     )
     lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
 
@@ -472,10 +469,7 @@ def symlink(env, path):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
     cprint(
-        'Adding symlink '
-        + style(abspath(path), style='blue')
-        + ' as '
-        + style(lRepoName, style='blue')
+        'Adding symlink [blue]{}[/blue] to [blue]{}[/blue]'.format(path, lRepoName)
     )
 
     sh.ln('-s', abspath(path), _cwd=env.srcdir )
@@ -499,10 +493,6 @@ def srcs_info(env):
     if not lSrcs:
         return
 
-    # lSrcTable = Texttable(max_width=0)
-    # lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-    # lSrcTable.set_chars(['-', '|', '+', '-'])
-    # lSrcTable.header(['name', 'kind', 'version', 'hash'])
     lSrcTable = Table('name', 'kind', 'version', 'hash')
     for lSrc in lSrcs:
         lSrcDir = join(env.srcdir, lSrc)

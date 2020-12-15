@@ -27,16 +27,12 @@ def check_depfile(env, verbose, toolset, component, depfile):
     check_depfile(env, verbose, toolset, component, depfile)
 
 
-@toolbox.command('vhdl-beautify', short_help="Beautifies VHDL files in components within an ipbb work area or standalone files/directories")
+@toolbox.command('vhdl-beautify', help="Beautifies VHDL files in components within an ipbb work area or standalone files/directories")
 @click.option('-c', '--component', callback=validateMultiplePackageOrComponents, autocompletion=completeComponent, multiple=True)
 @click.option('-p', '--path', type=click.Path(), multiple=True)
 @click.pass_obj
 def vhdl_beautify(env, component, path):
-    '''Perform basic checks on dependency files
-    
-    Args:
-        env (TYPE): Description
-    '''
+    '''Runs code formatter over VHDL files under specified directory'''
     from ..cmds.toolbox import vhdl_beautify
     vhdl_beautify(env, component, path)
 

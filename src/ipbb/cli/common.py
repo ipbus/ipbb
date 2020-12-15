@@ -5,7 +5,7 @@ import click
 # ------------------------------------------------------------------------------
 @click.command(
     'cleanup',
-    short_help="Clean up the project directory. Delete all files and folders.",
+    help="Clean up the project directory. Delete all files and folders.",
 )
 @click.pass_obj
 @click.pass_context
@@ -21,7 +21,7 @@ def cleanup(ctx, *args, **kwargs):
     return (ctx.command.name, cleanup, args, kwargs)
 
 # ------------------------------------------------------------------------------
-@click.command('user-config', short_help="Manage project-wise user settings.")
+@click.command('user-config', help="Manage project-wise user settings.")
 @click.option('-l', '--list', 'aList', is_flag=True)
 @click.option('-a', '--add', 'aAdd', nargs=2, help='Add a new variable: name value')
 @click.option('-u', '--unset', 'aUnset', nargs=1, help='Remove a variable: name')
@@ -41,7 +41,7 @@ def user_config(ctx, *args, **kwargs):
 
 
 # ------------------------------------------------------------------------------
-@click.command('addrtab', short_help="Gather address table files.")
+@click.command('addrtab', help="Gather address table files.")
 @click.pass_obj
 @click.option('-d', '--dest', 'aDest', default='addrtab')
 @click.pass_context

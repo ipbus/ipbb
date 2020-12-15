@@ -2,7 +2,7 @@
 import click
 
 # ------------------------------------------------------------------------------
-@click.group()
+@click.group('ipbus', help='Collection of IPbus-specific commands')
 @click.pass_obj
 def ipbus(env):
     """Collection of ipbus specific commands
@@ -17,7 +17,7 @@ def ipbus(env):
 # ------------------------------------------------------------------------------
 @ipbus.command(
     'gendecoders',
-    short_help='Generate or update the ipbus address decoders references by dep files.',
+    help='Generate or update the ipbus address decoders references by dep files.',
 )
 @click.option('-c', '--check-up-to-date', 'aCheckUpToDate', is_flag=True, help='Checks for out-of-date or missing decoders. Returns error if any of the two are found.')
 @click.option('-f', '--force', 'aForce', is_flag=True, help='Force an update of the address decodes without asking for confirmation.')

@@ -18,7 +18,7 @@ class VivadoProjectMaker(object):
     filetypes = {
         'ip' : ('.xci', '.xcix'),
         'constr' : ('.xdc', '.tcl'),
-        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf'),
+        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem'),
     }
 
     @staticmethod

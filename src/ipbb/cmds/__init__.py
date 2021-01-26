@@ -1,15 +1,12 @@
-from __future__ import print_function, absolute_import
 
 # Import click for ansi colors
-import click
 import yaml
+from click import echo, secho, style, confirm
 
-from . import utils
+from . import _utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepFileParser import DepFileParser
 
 from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
 
@@ -114,18 +111,19 @@ class Environment(object):
     """docstring for Environment"""
 
     _verbosity = 0
+    printExceptionStack = False
 
     # ----------------------------------------------------------------------------
-    def __init__(self):
-        super(Environment, self).__init__()
+    def __init__(self, wd=getcwd()):
+        super().__init__()
 
+        self._wd = wd
         self._autodetect()
+
 
     # ------------------------------------------------------------------------------
     def _clear(self):
         self._depParser = None
-        # self.workPath = None
-        # self.workCfgFile = None
 
         self.work = FolderInfo()
         self.work.path = None
@@ -137,11 +135,12 @@ class Environment(object):
 
     # ----------------------------------------------------------------------------
     def _autodetect(self):
+        from ..depparser import Pathmaker
 
         self._clear()
 
         # -----------------------------
-        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile, getcwd())
+        lWorkAreaPath = _utils.findFileDirInParents(kWorkAreaFile, self._wd)
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
@@ -152,7 +151,7 @@ class Environment(object):
         # -----------------------------
 
         # -----------------------------
-        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile, getcwd())
+        lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, self._wd)
         if not lProjAreaPath:
             return
 
@@ -179,6 +178,8 @@ class Environment(object):
     def depParser(self):
         if self._depParser is None:
 
+            from ..depparser import DepFileParser
+
             self._depParser = DepFileParser(
                 self.currentproj.settings['toolset'],
                 self.pathMaker,
@@ -186,15 +187,14 @@ class Environment(object):
             )
 
             try:
-                self._depParser.parse(
-                    self.currentproj.settings['topPkg'],
-                    self.currentproj.settings['topCmp'],
-                    self.currentproj.settings['topDep'],
-                )
-            except OSError as e:
+                self._depParser.parse( self.currentproj.settings['topPkg'], self.currentproj.settings['topCmp'], self.currentproj.settings['topDep'],)
+            except OSError:
                 pass
 
+            if self._depParser.errors:
+                secho('WARNING: dep parsing errors detected', fg='yellow')
         return self._depParser
+
 
     # -----------------------------------------------------------------------------
     @property

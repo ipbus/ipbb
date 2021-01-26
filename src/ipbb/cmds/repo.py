@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.standard_library import install_aliases
-install_aliases()
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -9,19 +5,21 @@ import os
 import subprocess
 import sh
 import sys
+import yaml
 
 # Elements
 from click import echo, style, secho
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
-from ..defaults import kSourceDir, kProjDir, kWorkAreaFile
-from .utils import DirSentry, findFileInParents
-from ..depparser.Pathmaker import Pathmaker
+from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
+from ..depparser import Pathmaker
 from ..tools.common import mkdir
+from ._utils import DirSentry, findFileInParents, raiseError, formatDictTable
+from .formatters import DepFormatter
+from .proj import info as proj_info
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable
-
 
 # ------------------------------------------------------------------------------
 def init(env, workarea):
@@ -46,6 +44,70 @@ def init(env, workarea):
 
 
 # ------------------------------------------------------------------------------
+def info(env, verbose):
+    '''Print a brief report about the current working area'''
+
+    if not env.work.path:
+        secho('ERROR: No ipbb work area detected', fg='red')
+        return
+
+    echo()
+    secho("ipbb environment", fg='blue')
+    # echo  ( "----------------")
+
+    lEnvTable = Texttable(max_width=0)
+    lEnvTable.add_row(["Work path", env.work.path])
+    if env.currentproj.path:
+        lEnvTable.add_row(["Project path", env.currentproj.path])
+    echo(lEnvTable.draw())
+
+    if not env.currentproj.path:
+        echo()
+        srcs_info(env)
+
+        echo()
+        proj_info(env)
+        return
+
+    echo()
+
+    if not env.currentproj.settings:
+        return
+
+    secho("Project '%s'" % env.currentproj.name, fg='blue')
+
+    echo(formatDictTable(env.currentproj.settings, aHeader=False))
+
+    echo()
+
+    if env.currentproj.usersettings:
+        secho("User settings", fg='blue')
+        echo(formatDictTable(env.currentproj.usersettings, aHeader=False))
+
+        echo()
+
+    lParser = env.depParser
+    lDepFmt = DepFormatter(lParser)
+    
+    if lParser.errors:
+        secho("Dep tree parsing error(s):", fg='red')
+        echo(lDepFmt.drawParsingErrors())
+        echo()
+
+    secho("Dependecy tree elements", fg='blue')
+    echo(lDepFmt.drawDeptreeCommandsSummary())
+
+    echo()
+
+    if  lParser.unresolved:
+        secho("Unresolved item(s)", fg='red')
+        echo(lDepFmt.drawUnresolvedSummary())
+
+        echo()
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
 def add(env):
     '''Add a new package to the source area'''
     # -------------------------------------------------------------------------
@@ -56,7 +118,101 @@ def add(env):
 
 
 # ------------------------------------------------------------------------------
-def git(env, repo, branch, dest):
+def _repoInit(env, dest):
+
+    if dest not in env.sources:
+        secho('Source package {} not found'.format(dest), fg='red')
+        echo('Available repositories:')
+        for lPkg in env.sources:
+            echo(' - ' + lPkg)
+
+        raiseError("Source package {} not found".format(dest))
+
+    setupPath = join(env.srcdir, dest, kRepoSetupFile)
+    if not exists(setupPath):
+        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+        return
+    secho('Setting up {}'.format(dest), fg='blue')
+
+    setupCfg = None
+    with open(setupPath, 'r') as f:
+        setupCfg = yaml.safe_load(f)
+
+    setupCfg = setupCfg.get('init', None)
+    if setupCfg is None:
+        echo("No init configuration file. Skipping.")
+        return
+
+    cmds = [ l.split() for l in setupCfg ]
+
+    # ensure that all commands exist
+    missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
+    if missingCmds:
+        secho('Some setup commands have not been found', fg='red')
+        for i, cmd in missingCmds:
+            echo(' - {} (line {})'.format(cmd, i))
+
+        raiseError("Setup commands not found".format(dest))
+
+    with sh.pushd(join(env.srcdir, dest)):
+        # TODO: add error handling
+        # Show the list of commands
+        # In green the commands executed successfully
+        # In red the failed one
+        # In white the remaining commands
+        for cmd in cmds:
+            secho('> '+' '.join(cmd), fg='cyan')
+            sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
+
+# ------------------------------------------------------------------------------
+def _repoReset(env, dest):
+
+    if dest not in env.sources:
+        secho('Source package {} not found'.format(dest), fg='red')
+        echo('Available repositories:')
+        for lPkg in env.sources:
+            echo(' - ' + lPkg)
+
+        raiseError("Source package {} not found".format(dest))
+
+    setupPath = join(env.srcdir, dest, kRepoSetupFile)
+    if not exists(setupPath):
+        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+        return
+    secho('Resetting up {}'.format(dest), fg='blue')
+
+    setupCfg = None
+    with open(setupPath, 'r') as f:
+        setupCfg = yaml.safe_load(f)
+
+    setupCfg = setupCfg.get('reset', None)
+    if setupCfg is None:
+        echo("No reset configuration file. Skipping.")
+        return
+
+    cmds = [ l.split() for l in setupCfg ]
+
+    # ensure that all commands exist
+    missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
+    if missingCmds:
+        secho('Some setup commands have not been found', fg='red')
+        for i, cmd in missingCmds:
+            echo(' - {} (line {})'.format(cmd, i))
+
+        raiseError("Setup commands not found".format(dest))
+
+    with sh.pushd(join(env.srcdir, dest)):
+        # TODO: add error handling
+        # Show the list of commands
+        # In green the commands executed successfully
+        # In red the failed one
+        # In white the remaining commands
+        for cmd in cmds:
+            secho('> '+' '.join(cmd), fg='cyan')
+            sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
+
+# ------------------------------------------------------------------------------
+def git(env, repo, branch, revision, dest):
     '''Add a git repository to the source area'''
 
     echo('Adding git repository ' + style(repo, fg='blue'))
@@ -120,10 +276,25 @@ def git(env, repo, branch, dest):
 
     sh.git(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
 
+    # NOTE: The mutual exclusivity of checking out a branch and
+    # checkout out a revision should have been handled at the CLI
+    # option handling stage.
     if branch is not None:
 
         echo('Checking out branch/tag ' + style(branch, fg='blue'))
         sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+
+    elif revision is not None:
+        echo('Checking out revision ' + style(revision, fg='blue'))
+        try:
+            sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+        except Exception as err:
+            # NOTE: The assumption here is that the failed checkout
+            # did not alter the state of the cloned repo in any
+            # way. (This appears to be the case from experience but no
+            # hard reference could be found.)
+            secho("Failed to check out requested revision." \
+                  " Staying on default branch.", fg='red')
 
     secho(
         'Repository \'{}\' successfully cloned to:\n  {}'.format(
@@ -131,6 +302,8 @@ def git(env, repo, branch, dest):
         ),
         fg='green',
     )
+
+    _repoInit(env, lRepoName)
 
 
 # ------------------------------------------------------------------------------
@@ -202,6 +375,9 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             echo('Executing ' + style(' '.join(['svn'] + lArgs), fg='blue'))
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
+
+    _repoInit(env, lRepoName)
+
     # -------------------------------------------------------------------------
 
 
@@ -272,23 +448,27 @@ def tar(env, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
+    _repoInit(env, lRepoName)
 
+
+# ------------------------------------------------------------------------------
 def symlink(env, path):
 
     lRepoName = basename(path)
-    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
+    lRepoLocalPath = join(env.srcdir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
     echo(
         'Adding symlink '
-        + style(path, fg='blue')
+        + style(abspath(path), fg='blue')
         + ' as '
         + style(lRepoName, fg='blue')
     )
 
-    sh.ln('-s', abspath(path), _cwd=lRepoLocalPath )
+    sh.ln('-s', abspath(path), _cwd=env.srcdir )
+
 
 # ------------------------------------------------------------------------------
 def srcs(env):
@@ -296,14 +476,14 @@ def srcs(env):
 
 
 # ------------------------------------------------------------------------------
-def info(env):
+def srcs_info(env):
 
     if not env.work.path:
         secho('ERROR: No ipbb work area detected', fg='red')
         return
 
     echo()
-    secho("Packages", fg='blue')
+    secho("Firmware Packages", fg='blue')
     lSrcs = env.sources
     if not lSrcs:
         return
@@ -389,7 +569,7 @@ def info(env):
 
 
 # ------------------------------------------------------------------------------
-def create_component(env, component):
+def srcs_create_component(env, component):
     lPathMaker = Pathmaker(env.srcdir, env._verbosity)
 
     lCmpPath = lPathMaker.getPath(*component)
@@ -404,7 +584,7 @@ def create_component(env, component):
 
 
 # ------------------------------------------------------------------------------
-def run(env, pkg, cmd, args):
+def srcs_run(env, pkg, cmd, args):
 
     if pkg:
         if pkg not in env.sources:
@@ -436,5 +616,5 @@ def run(env, pkg, cmd, args):
 
 
 # ------------------------------------------------------------------------------
-def find(env):
+def srcs_find(env):
     sh.find(env.srcdir, '-name', '*.vhd', _out=sys.stdout)

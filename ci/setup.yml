@@ -1,0 +1,43 @@
+---
+.template_setup:
+  stage: setup
+  tags:
+    - docker
+
+setup_centos7_py3_venv:
+  extends: .template_setup
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
+  script:
+    - source env.sh
+    - ipbb --version
+  artifacts:
+    when: on_success
+    paths:
+      - venv/ipbb
+      - src/ipbb.egg-info
+    expire_in: 1 hour
+
+
+setup_centos7_py3_sys:
+  extends: .template_setup
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
+  script:
+    - sudo python3 -m pip install .
+    - ipbb --version
+
+
+setup_centos8_py3_venv:
+  extends: .template_setup
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
+  script:
+    - source env.sh
+    - ipbb --version
+
+
+setup_centos8_py3_sys:
+  extends: .template_setup
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
+  script:
+    - sudo python3 -m pip install .
+    - ipbb --version
+

@@ -71,10 +71,5 @@ if [[ "${IPBB_VENV}" != "${IPBB_ROOT}/venv/ipbb" ]]; then
   [[ ${SH_SOURCED} -eq 0 ]] && return -1 || exit -1
 fi
 
-
-# -----------------------------------------------------------------------------
-# Python version
-# PYTHON_MAJOR=$(python -c 'from sys import version_info; print (version_info[0])')
-# PYTHON_MINOR=$(python -c 'from sys import version_info; print (version_info[1])')
-# PYTHON_VERSION="${PYTHON_MAJOR}.${PYTHON_MINOR}"
-
+PYTHON_CMD='python3'
+PYTHON_PATH=$(command -v ${PYTHON_CMD})

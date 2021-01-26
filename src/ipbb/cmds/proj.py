@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 
 # Modules
 import click
@@ -6,43 +5,60 @@ import os
 import ipbb
 import subprocess
 
+
 # Elements
 from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from . import ProjectInfo
-from .utils import DirSentry, raiseError, validateComponent
-from ..depparser.Pathmaker import Pathmaker
+from ._utils import DirSentry, raiseError, validateComponent, findFirstParentDir
+from ..depparser import depfiletypes, Pathmaker
 
-from os.path import join, split, exists, splitext, relpath, isdir
+from os.path import join, split, exists, splitext, relpath, isdir, basename
 from click import echo, style, secho
+from texttable import Texttable
+
+# ------------------------------------------------------------------------------
+def info(env):
+
+    secho("Projects", fg='blue')
+
+    lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
+    lProjTable = Texttable(120)
+    lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+    lProjTable.set_chars(['-', '|', '+', '-'])
+    lProjTable.header(lHeader)
+
+    for p in sorted(env.projects):
+        lProjInfo = ProjectInfo(join(env.projdir, p))
+        lProjTable.add_row([p] + [lProjInfo.settings[k] for k in lHeader[1:]] )
+
+    echo(lProjTable.draw())
 
 
 # ------------------------------------------------------------------------------
-# TODO: move the list of supported products somewhere else
-def create(env, kind, projname, component, topdep):
-    '''Creates a new area of name PROJNAME of kind KIND
-
-      KIND: Area kind, choices: vivado, sim
-
-      PROJNAME: Name of the new project area
-
-      COMPONENT: Component <package:component> contaning the top-level
+def create(env, toolset, projname, component, topdep):
+    '''
+    Creates a new area of name PROJNAME
+    
+    TOOLSET: Toolset used for the project areas, choices: vivado, sim
+    
+    PROJNAME: Name of the new project area
+    
+    COMPONENT: Component <package:component> contaning the top-level
+    
+    TOPDEP: Top dependency file.
     '''
     # ------------------------------------------------------------------------------
     # Must be in a build area
     if env.work.path is None:
         raiseError("Build area root directory not found")
-        # raise click.ClickException('Build area root directory not found')
-    # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
     lProjAreaPath = join(env.work.path, kProjDir, projname)
     if exists(lProjAreaPath):
         raiseError("Directory {} already exists".format(lProjAreaPath))
-    # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
-
     lPathmaker = Pathmaker(env.srcdir, 0)
     lTopPackage, lTopComponent = component
 
@@ -53,7 +69,6 @@ def create(env, kind, projname, component, topdep):
             echo(' - ' + lPkg)
 
         raiseError("Top-level package {} not found".format(lTopPackage))
-        # raise click.ClickException('Top-level package %s not found' % lTopPackage)
 
     lTopComponentPath = lPathmaker.getPath(lTopPackage, lTopComponent)
     if not exists(lTopComponentPath):
@@ -62,14 +77,7 @@ def create(env, kind, projname, component, topdep):
             fg='red',
         )
 
-        # Search for the first existing parent  folder in path
-        p = lTopComponent
-        while True:
-            if not p or exists(lPathmaker.getPath(lTopPackage, p)):
-                break
-            p, _ = os.path.split(p)
-
-        lParent = lPathmaker.getPath(lTopPackage, p)
+        lParent = findFirstParentDir(lTopComponentPath, lPathmaker.getPath(lTopPackage))
         secho('\nSuggestions (based on the first existing parent path)', fg='cyan')
         # When in Py3 https://docs.python.org/3/library/os.html#os.scandir
         for d in [
@@ -82,23 +90,41 @@ def create(env, kind, projname, component, topdep):
 
         raise click.Abort()
 
-    lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', topdep)
-    if not exists(lTopDepPath):
+
+    # ------------------------------------------------------------------------------
+    # FIXME: This is just an initial implementation to prove it works.
+    # To be improved later.
+    if topdep == '__auto__':
+        lTopDefault = 'top'
+        lFilePaths, _ = lPathmaker.globall(
+            lTopPackage, lTopComponent, 'include', 
+            lPathmaker.getDefNames('include', lTopDefault)
+        )
+        lTopExists = (len(lFilePaths) == 1)
+        lTopDep = lFilePaths[0][0][0] if lTopExists else lPathmaker.getDefNames('include', lTopDefault, 'braces')
+        lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', lTopDep)
+    else:
+        lTopDep = topdep
+        lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', lTopDep)
+        lTopExists = exists(lTopDepPath)
+
+    # ------------------------------------------------------------------------------
+    if not lTopExists:
         import glob
+        secho('Top-level dep file {} not found or not uniquely resolved'.format(lTopDepPath), fg='red')
 
         lTopDepDir = lPathmaker.getPath(lTopPackage, lTopComponent, 'include')
-        lTopDepCandidates = [
-            "'{}'".format(relpath(p, lTopDepDir))
-            for p in glob.glob(join(lTopDepDir, '*.dep'))
-        ]
-        secho('Top-level dep file {} not found'.format(lTopDepPath), fg='red')
-        echo('Suggestions (*.dep):')
-        for lC in lTopDepCandidates:
-            echo(' - ' + lC)
+
+        for ft in depfiletypes:
+            lTopDepCandidates = [
+                "'{}'".format(relpath(p, lTopDepDir))
+                for p in glob.glob(join(lTopDepDir, '*' + ft))
+            ]
+            echo('Suggestions (*{}):'.format(ft))
+            for lC in lTopDepCandidates:
+                echo(' - ' + lC)
 
         raiseError("Top-level dependency file {} not found".format(lTopDepPath))
-        # raise click.ClickException('Top-level dependency file %s not found' % lTopDepPath)
-    # ------------------------------------------------------------------------------
 
     # Build source code directory
     os.makedirs(lProjAreaPath)
@@ -106,20 +132,17 @@ def create(env, kind, projname, component, topdep):
     pi = ProjectInfo()
     pi.path = lProjAreaPath
     pi.settings = {
-        'toolset': kind,
+        'toolset': toolset,
         'topPkg': lTopPackage,
         'topCmp': lTopComponent,
-        'topDep': topdep,
+        'topDep': lTopDep,
         'name': projname,
     }
     pi.saveSettings()
 
     secho(
-        '{} project area \'{}\' created'.format(kind.capitalize(), projname), fg='green'
+        '{} project area \'{}\' created'.format(toolset.capitalize(), projname), fg='green'
     )
-
-
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -137,9 +160,6 @@ def ls(env):
             ]
         ),
     )
-
-
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -164,4 +184,3 @@ def cd(env, projname, aVerbose):
         echo("New current directory %s" % os.getcwd())
 
 
-# ------------------------------------------------------------------------------

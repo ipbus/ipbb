@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
+from ._utils import completeProject
 
 
 # ------------------------------------------------------------------------------
 @click.group()
 @click.pass_obj
-@click.option('-p', '--proj', default=None)
+@click.option('-p', '--proj', default=None, autocompletion=completeProject)
 def dep(env, proj):
     '''Dependencies command group'''
     from ..cmds.dep import dep

@@ -4,7 +4,7 @@ import os
 # Elements
 from click import echo, style, secho
 from ..tools.xilinx import (
-    VivadoOpen,
+    VivadoSession,
     VivadoConsoleError,
     VivadoSnoozer,
     VivadoOutputFormatter,
@@ -29,7 +29,7 @@ def dump(env):
 
 
 # ------------------------------------------------------------------------------
-def ipy(env):
+def ipy(ctx, env):
     '''Opens IPython to inspect the parser'''
 
     import IPython
@@ -57,5 +57,5 @@ def test_vivado_formatter(env):
 
 # ------------------------------------------------------------------------------
 def test_vivado_console(env):
-    with VivadoOpen('debug') as lConsole:
+    with VivadoSession('debug') as lConsole:
         lConsole('puts "Hello Xilinx World"')

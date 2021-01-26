@@ -27,6 +27,17 @@ while true; do
 done
 #--------------------------
 
+# Locale settings
+if [[ ! -z "${PYTHON_PATH}" ]]; then
+    echo -e "${COL_GREEN}Python 3 detected${COL_NULL}"
+else
+    echo -e "${COL_RED}Unupported python version ${PYTHON_MAJOR}${COL_NULL}"
+    return
+fi
+
+export LANG="en_US.utf8"
+export LC_ALL="en_US.utf8"
+
 
 if [ ${RESET_VENV} = true ]; then
   echo "Resetting VENV"
@@ -42,10 +53,6 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
     echo -e "${COL_GREEN}Activating ipbb environment${COL_NULL}"
     source ${IPBB_VENV}/bin/activate
     
-    # Locale settings
-    export LANG=en_US.utf-8
-    export LC_ALL=en_US.utf-8
-
     # Consistency check
     if [[ ! ${IPBB_VENV} -ef ${VIRTUAL_ENV} ]]; then
         deactivate
@@ -63,9 +70,13 @@ pathadd PATH ${IPBB_ROOT}/tools/bin
 
 # Obscure click vodoo to enable bash autocompletion
 if [[ "$IAM" == "bash" ]]; then
-  eval "$(_IPBB_COMPLETE=source ipbb)"
-  eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"  
+  # eval "$(_IPBB_COMPLETE=source ipbb)"
+  # eval "$(_IPB_PROG_COMPLETE=source ipb-prog)"  
+  source ${IPBB_ROOT}/etc/bash_completion/ipbb
+  source ${IPBB_ROOT}/etc/bash_completion/ipb-prog
 elif [[ "$IAM" == "zsh" ]]; then
   eval "$(_IPBB_COMPLETE=source_zsh ipbb)"
   eval "$(_IPB_PROG_COMPLETE=source_zsh ipb-prog)"  
 fi
+
+alias reset-ipbb-env='reset_ipbb_venv.sh; deactivate'

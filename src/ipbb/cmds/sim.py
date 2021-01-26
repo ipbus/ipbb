@@ -1,7 +1,3 @@
-from __future__ import print_function, absolute_import
-from future.utils import raise_with_traceback, raise_from
-from future.utils import iterkeys, itervalues, iteritems
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -16,6 +12,8 @@ import collections
 import ipbb
 import ipbb.tools.xilinx as xilinx
 import ipbb.tools.mentor as mentor
+from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ..tools.common import DEFAULT_ENCODING
 
 # Elements
 from os.path import (
@@ -32,7 +30,7 @@ from os.path import (
 from click import echo, secho, style, confirm
 
 # Tools imports
-from .utils import (
+from ._utils import (
     DirSentry,
     ensureNoMissingFiles,
     echoVivadoConsoleError,
@@ -43,9 +41,8 @@ from .utils import (
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
-from ..depparser.IPCoresSimMaker import IPCoresSimMaker
-from ..depparser.SimlibMaker import SimlibMaker
-from ..depparser.ModelSimProjectMaker import ModelSimProjectMaker
+from ..makers.ipcoressim import IPCoresSimMaker
+from ..makers.modelsimproject import ModelSimProjectMaker
 
 
 kIPExportDir = 'ipcores_sim'
@@ -65,7 +62,8 @@ def ensureModelsim(env):
     try:
         env.siminfo = mentor.autodetect()
     except mentor.ModelSimNotFoundError as lExc:
-        raise raise_with_traceback(click.ClickException(str(lExc)))
+        tb = sys.exc_info()[2]
+        raise click.ClickException(str(lExc)).with_traceback(tb)
 
     try:
         env.vivadoinfo = xilinx.autodetect()
@@ -90,9 +88,9 @@ def findIPSrcs( srcs ):
     return [
         split(name)[1]
         for name, ext in (
-            splitext(src.FilePath) for src in srcs
+            splitext(src.filepath) for src in srcs
         )
-        if ext in [".xci"]
+        if ext in ('.xci', '.xcix')
     ]
 
 
@@ -115,7 +113,7 @@ def sim(env, proj):
 
 
 # ------------------------------------------------------------------------------
-def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
+def setupsimlib(env, aXilSimLibsPath, aForce):
     lSessionId = 'setup-simlib'
 
     # -------------------------------------------------------------------------
@@ -124,8 +122,6 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             'Vivado is not available. Have you sourced the environment script?'
         )
     # -------------------------------------------------------------------------
-
-    lDryRun = aToScript or aToStdout
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
@@ -165,33 +161,27 @@ def setupsimlib(env, aXilSimLibsPath, aToScript, aToStdout, aForce):
             )
         )
 
-        lSimlibMaker = SimlibMaker(lSimulator, lSimlibPath)
         try:
-            with (
-                # Pipe commands to Vivado console
-                xilinx.VivadoOpen(lSessionId)
-                if not lDryRun
-                else SmartOpen(
-                    # Dump to script
-                    aToScript
-                    if not aToStdout
-                    # Dump to terminal
-                    else None
+            with xilinx.VivadoSession(sid=lSessionId) as lVivadoConsole:
+                lVivadoConsole(
+                    'compile_simlib -verbose -simulator {} -family all -language all -library all -dir {{{}}}'.format(lSimulator, lSimlibPath)
                 )
-            ) as lVivadoConsole:
-
-                lSimlibMaker.write(lVivadoConsole)
 
         except xilinx.VivadoConsoleError as lExc:
             echoVivadoConsoleError(lExc)
             raise click.Abort()
         except RuntimeError as lExc:
             secho(
-                "Error caught while generating Vivado TCL commands:\n"
-                + "\n".join(lExc),
+                "Error caught while generating Vivado TCL commands:\n" + str(lExc),
                 fg='red',
             )
             raise click.Abort()
+
+    lModelsimIniPath = join(lSimlibPath, 'modelsim.ini')
+    if not exists(lModelsimIniPath):
+        raise click.ClickException(
+            'Failed to locate modelsim.ini in the simlin target folder. This usually means that Vivado failed to compile the simulation libraries. Please check the logs.'
+        )
 
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), '.')
     echo("\nmodelsim.ini imported from {}".format(lSimlibPath))
@@ -207,6 +197,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     lIPCoresModelsimIni = 'modelsim.ipcores.ini'
 
     lDryRun = aToScript or aToStdout
+    lScriptPath = aToScript if not aToStdout else None
 
     # Use compiler executable to detect Modelsim's flavour
     lSimVariant, lSimVersion = env.siminfo
@@ -247,15 +238,11 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
     lDepFileParser = env.depParser
 
-    # -------------------------------------------------------------------------
-    # Extract the list of cores
-    # lIPCores = [
-    #     split(name)[1]
-    #     for name, ext in (
-    #         splitext(src.FilePath) for src in lDepFileParser.commands["src"]
-    #     )
-    #     if ext in [".xci", ".edn"]
-    # ]
+    # Ensure that no parsing errors are present
+    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+
+    # Ensure that all dependencies are resolved
+    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lIPCores = findIPSrcs(lDepFileParser.commands["src"])
 
@@ -276,21 +263,14 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     try:
         with (
             # Pipe commands to Vivado console
-            xilinx.VivadoOpen(lSessionId)
-            if not lDryRun
-            else SmartOpen(
-                # Dump to script
-                aToScript
-                if not aToStdout
-                # Dump to terminal
-                else None
-            )
+            xilinx.VivadoSession(sid=lSessionId) if not lDryRun
+            else SmartOpen(lScriptPath)
         ) as lVivadoConsole:
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
-                lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.config,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )
@@ -299,7 +279,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
         raise click.Abort()
     except RuntimeError as lExc:
         secho(
-            "Error caught while generating Vivado TCL commands:\n" + "\n".join(lExc),
+            "Error caught while generating Vivado TCL commands:\n" + str(lExc),
             fg='red',
         )
         raise click.Abort()
@@ -351,7 +331,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     from configparser import RawConfigParser
 
     lIniParser = RawConfigParser()
-    lIniParser.read(lIPCoresModelsimIni, 'utf-8')
+    lIniParser.read(lIPCoresModelsimIni, DEFAULT_ENCODING)
     for lSimLib in lSimLibs:
         echo(' - ' + lSimLib)
         lIniParser.set('Library', lSimLib, join(lCoreSimDir, lSimLib))
@@ -458,7 +438,7 @@ def fli_udp(env, port, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
+def makeproject(env, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
 
@@ -502,10 +482,13 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = env.depParser
 
-    # Ensure thay all dependencies have been resolved
+    # Ensure that no parsing errors are present
+    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+
+    # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aReverse, aOptimise)
+    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
@@ -516,8 +499,8 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                lDepFileParser.vars,
-                lDepFileParser.components,
+                lDepFileParser.config,
+                lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
             )
@@ -554,7 +537,7 @@ def makeproject(env, aReverse, aOptimise, aToScript, aToStdout):
     )
 
     lVsimExtraArgs = ' '.join(
-        ['-G{}=\'{}\''.format(k, v) for k, v in iteritems(lVsimArgs) if v is not None]
+        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimArgs.items() if v is not None]
     )
     lVsimBody = '''#!/bin/sh
 
@@ -630,9 +613,9 @@ def mifs(env):
     # Seek mif files in sources
     lPaths = []
     for c in srcs:
-        if splitext(c.FilePath)[1] != '.mif':
+        if splitext(c.filepath)[1] != '.mif':
             continue
-        lPaths.append(c.FilePath)
+        lPaths.append(c.filepath)
 
     if lPaths:
         sh.mkdir('-p', 'mif')
@@ -646,11 +629,11 @@ def mifs(env):
 
     lIPSrcs = detectIPSimSrcs(env.currentproj.path, lIPCores)
 
-    lMissingIPSimSrcs = [ k for k, v in iteritems(lIPSrcs) if v is None]
+    lMissingIPSimSrcs = [ k for k, v in lIPSrcs.items() if v is None]
     if lMissingIPSimSrcs:
         raise click.ClickException('Failed to collect mifs. Simulation sources not found for cores: {}'.format(', '.join(lMissingIPSimSrcs)))
 
-    for c, d in iteritems(lIPSrcs):
+    for c, d in lIPSrcs.items():
         for file in os.listdir(d):
             if file.endswith(".mif"):
                 p = os.path.join(d, file)

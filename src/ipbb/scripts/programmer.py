@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Modules
 import click
 import click_didyoumean
@@ -10,7 +7,7 @@ import tarfile
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath
 from click import echo, secho, style
-from ..cmds.utils import echoVivadoConsoleError
+from ..cmds._utils import echoVivadoConsoleError
 from ..tools.common import which
 from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
 from .._version import __version__
@@ -20,7 +17,7 @@ class ProgEnvironment(object):
     """docstring for ProgEnvironment"""
 
     def __init__(self):
-        super(ProgEnvironment, self).__init__()
+        super().__init__()
         self.options = {}
 
 
@@ -164,9 +161,10 @@ def _validateDevice(ctx, param, value):
 @vivado.command('program')
 @click.argument('deviceid', callback=_validateDevice)
 @click.argument('bitfile', type=click.Path(exists=True))
+@click.option('-p', '--probe', type=click.Path(), default=None, help="Probe file")
 @click.option('-y', 'yes', is_flag=True, default=False, help="Proceed with asking for confirmation.")
 @click.pass_obj
-def program(obj, deviceid, bitfile, yes):
+def program(obj, deviceid, bitfile, probe, yes):
 
     lVerbosity = obj.options['vivado.verbosity']
 
@@ -177,17 +175,17 @@ def program(obj, deviceid, bitfile, yes):
         # Memento: delete tempdir
         lTmpDir = tempfile.mkdtemp()
         with tarfile.open(bitfile) as lTF:
-            lTopFiles = [m.name for m in lTF.getmembers() if m.name.endswith('top.bit')]
-            if len(lTopFiles) < 0:
-                raise RuntimeError('No top.bit images found in {}'.format(bitfile))
-            elif len(lTopFiles) > 1:
+            lBitFiles = [m.name for m in lTF.getmembers() if m.name.endswith('.bit')]
+            if len(lBitFiles) < 0:
+                raise RuntimeError('No .bit images found in {}'.format(bitfile))
+            elif len(lBitFiles) > 1:
                 raise RuntimeError(
-                    'Multiple top.bit images found in {}'.format(bitfile)
+                    'Multiple .bit images found in {}: {}'.format(bitfile, ' '.join(lBitFiles))
                 )
 
-            lTF.extract(lTopFiles[0], lTmpDir)
-        secho('Extracting top.bit from {} to {}'.format(bitfile, lTmpDir), fg='green')
-        bitfile = join(lTmpDir, lTopFiles[0])
+            lTF.extract(lBitFiles[0], lTmpDir)
+        secho('Extracting {} from {} to {}'.format(lBitFiles[0], bitfile, lTmpDir), fg='green')
+        bitfile = join(lTmpDir, lBitFiles[0])
 
     lHwServerURI = obj.options['vivado.hw_server']
 
@@ -253,7 +251,7 @@ def program(obj, deviceid, bitfile, yes):
             )
         ):
             echo("Programming {}".format(lTarget))
-            v.programDevice(device, bitfile)
+            v.programDevice(device, bitfile, probe)
             echo("Done.")
             secho(
                 "{} successfully programmed on {}".format(bitfile, lTarget), fg='green'

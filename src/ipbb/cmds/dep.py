@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
-from future.utils import iterkeys, itervalues, iteritems
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
@@ -25,10 +22,10 @@ from os.path import (
     isdir,
 )
 from ..tools.common import which, SmartOpen
-from .utils import DirSentry, printDictTable
+from .formatters import DepFormatter
+from ._utils import DirSentry, printDictTable, printAlienTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
-
 
 # ------------------------------------------------------------------------------
 def dep(env, proj):
@@ -78,7 +75,7 @@ def report(env, filters):
             i = lCmdHeaders.index(m.group(1))
             r = re.compile(m.group(2))
             lFilters.append((i, r))
-        except RuntimeError as e:
+        except RuntimeError:
             lFilterFormatErrors.append(f)
 
     if lFilterFormatErrors:
@@ -95,13 +92,17 @@ def report(env, filters):
             )
         )
 
+
     # return
     lParser = env.depParser
+    lDepFmt = DepFormatter(lParser)
+
     secho('* Variables', fg='blue')
-    printDictTable(lParser.vars, aHeader=False)
+    # printDictTable(lParser.vars, aHeader=False)
+    printAlienTable(lParser.config, aHeader=False)
 
     echo()
-    secho('* Parsed commands', fg='blue')
+    secho('* Dep-tree commands', fg='blue')
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
@@ -115,15 +116,12 @@ def report(env, filters):
         lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
         lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
-            # print(lCmd)
-            # lCmdTable.add_row([str(lCmd)])
             lRow = [
-                relpath(lCmd.FilePath, env.srcdir),
+                relpath(lCmd.filepath, env.srcdir),
                 ','.join(lCmd.flags()),
-                lCmd.Package,
-                lCmd.Component,
-                # lCmd.Map,
-                lCmd.Lib,
+                lCmd.package,
+                lCmd.component,
+                lCmd.lib if lCmd.cmd == 'src' else '',
             ]
 
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
@@ -141,65 +139,39 @@ def report(env, filters):
     # lString += '+----------------------------------+\n'
     # lString += '|  Resolved packages & components  |\n'
     # lString += '+----------------------------------+\n'
-    lString += 'packages: ' + ' '.join(iterkeys(lParser.components)) + '\n'
+    lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
     lString += 'components:\n'
-    for pkg in sorted(lParser.components):
-        lString += u'* %s (%d)\n' % (pkg, len(lParser.components[pkg]))
-        lSortCmp = sorted(lParser.components[pkg])
-        for cmp in lSortCmp[:-1]:
-            lString += u'  ├── ' + str(cmp) + '\n'
-        lString += u'  └── ' + str(lSortCmp[-1]) + '\n'
-    echo(lString)
+    lString += lDepFmt.drawComponents()
+    echo(lString+'\n')
 
-    if lParser.missing:
+    if lParser.errors:
+        secho("Dep tree parsing error(s):", fg='red')
+        echo(lDepFmt.drawParsingErrors())
+
+    if lParser.unresolved:
         lString = ''
-        if lParser.missingPackages:
-            secho('Missing packages:', fg='red')
-            echo(' '.join(list(lParser.missingPackages)))
+        if lParser.unresolvedPackages:
+            secho("Unresolved packages:", fg='red')
+            echo(lDepFmt.drawUnresolvedPackages())
+            echo()
 
         # ------
-        lCNF = lParser.missingComponents
+        lCNF = lParser.unresolvedComponents
         if lCNF:
-            secho('Missing components:', fg='red')
+            secho("Unresolved components:", fg='red')
+            echo(lDepFmt.drawUnresolvedComponents())
+            echo()
 
-            for pkg in sorted(lCNF):
-                lString += '+ %s (%d)\n' % (pkg, len(lCNF[pkg]))
-                lSortCNF = sorted(lCNF[pkg])
-                for cmp in lSortCNF[:-1]:
-                    lString += u'  ├──' + str(cmp) + '\n'
-                lString += u'  └──' + str(lSortCNF[-1]) + '\n'
 
         # ------
 
         # ------
         echo(lString)
 
-    lFNF = lParser.missingFiles
+    if lParser.unresolvedFiles:
+        secho("Unresolved files:", fg='red')
 
-    if lFNF:
-        secho('Missing files:', fg='red')
-
-        lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(['path expression', 'package', 'component', 'included by'])
-        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-
-        for pkg in sorted(lFNF):
-            lCmps = lFNF[pkg]
-            for cmp in sorted(lCmps):
-                lPathExps = lCmps[cmp]
-                for pathexp in sorted(lPathExps):
-
-                    lFNFTable.add_row(
-                        [
-                            relpath(pathexp, env.srcdir),
-                            pkg,
-                            cmp,
-                            '\n'.join(
-                                [relpath(src, env.srcdir) for src in lPathExps[pathexp]]
-                            ),
-                        ]
-                    )
-        echo(lPrepend.sub(r'\g<1>  ', lFNFTable.draw()))
+        echo(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
 
 
 # ------------------------------------------------------------------------------
@@ -214,14 +186,14 @@ def ls(env, group, output):
 
     with SmartOpen(output) as lWriter:
         for addrtab in env.depParser.commands[group]:
-            lWriter(addrtab.FilePath)
+            lWriter(addrtab.filepath)
 
 
 # ------------------------------------------------------------------------------
 def components(env, output):
 
     with SmartOpen(output) as lWriter:
-        for lPkt, lCmps in iteritems(env.depParser.components):
+        for lPkt, lCmps in env.depParser.packages.items():
             lWriter('[' + lPkt + ']')
             for lCmp in lCmps:
                 lWriter(lCmp)
@@ -331,7 +303,7 @@ def hash(env, output, verbose):
 
         lProjHash = lAlgo()
         lGrpHashes = collections.OrderedDict()
-        for lGrp, lCmds in iteritems(env.depParser.commands):
+        for lGrp, lCmds in env.depParser.commands.items():
             lGrpHash = lAlgo()
             if verbose:
                 lWriter("#" + "-" * 79)
@@ -339,10 +311,10 @@ def hash(env, output, verbose):
                 lWriter("#" + "-" * 79)
             for lCmd in lCmds:
                 lCmdHash = hashAndUpdate(
-                    lCmd.FilePath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
+                    lCmd.filepath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
                 ).hexdigest()
                 if verbose:
-                    lWriter(lCmdHash, lCmd.FilePath)
+                    lWriter(lCmdHash, lCmd.filepath)
 
             lGrpHashes[lGrp] = lGrpHash
 
@@ -353,7 +325,7 @@ def hash(env, output, verbose):
             lWriter("#" + "-" * 79)
             lWriter("# Per cmd-group hashes")
             lWriter("#" + "-" * 79)
-            for lGrp, lHash in iteritems(lGrpHashes):
+            for lGrp, lHash in lGrpHashes.items():
                 lWriter(lHash.hexdigest(), lGrp)
             lWriter()
 

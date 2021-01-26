@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 # Modules
 import click
 import click_didyoumean
@@ -13,7 +10,9 @@ from io import StringIO, BytesIO
 from texttable import Texttable
 from click import echo, style, secho
 
-from ..cmds import Environment, utils
+from ..cmds import Environment
+from ..cmds.formatters import DepFormatter
+
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -41,120 +40,14 @@ def climain(ctx, aExcStack):
 # ------------------------------------------------------------------------------
 
 
-# ------------------------------------------------------------------------------
-@climain.command()
-@click.option('-v', '--verbose', count=True, help="Verbosity")
-@click.pass_obj
-def info(env, verbose):
-    '''Print a brief report about the current working area'''
-
-    if not env.work.path:
-        secho('ERROR: No ipbb work area detected', fg='red')
-        return
-
-    echo()
-    secho("ipbb environment", fg='blue')
-    # echo  ( "----------------")
-    lEnvTable = Texttable(max_width=0)
-    lEnvTable.add_row(["Work path", env.work.path])
-    if env.currentproj.path:
-        lEnvTable.add_row(["Project path", env.currentproj.path])
-    echo(lEnvTable.draw())
-
-    if not env.currentproj.path:
-        echo()
-        secho("Firmware packages", fg='blue')
-        lSrcTable = Texttable()
-        lSrcTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-        for lSrc in env.sources:
-            lSrcTable.add_row([lSrc])
-        echo(lSrcTable.draw())
-
-        echo()
-        secho("Projects", fg='blue')
-        lProjTable = Texttable()
-        lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-        for lProj in env.projects:
-            lProjTable.add_row([lProj])
-        echo(lProjTable.draw())
-        return
-
-    echo()
-
-    if not env.currentproj.settings:
-        return
-
-    # lProjSettingsTable = Texttable()
-    # lProjSettingsTable.set_deco(Texttable.VLINES | Texttable.BORDER)
-
-    secho("Project '%s'" % env.currentproj.name, fg='blue')
-    # lProjSettingsTable.add_rows([
-    #     ["toolset", env.currentproj.settings['toolset']],
-    #     ["top package", env.currentproj.settings['topPkg']],
-    #     ["top component", env.currentproj.settings['topCmp']],
-    #     ["top dep file", env.currentproj.settings['topDep']],
-    # ], header=False)
-    # echo  ( lProjSettingsTable.draw() )
-
-    echo(utils.formatDictTable(env.currentproj.settings, aHeader=False))
-
-    echo()
-
-    if env.currentproj.usersettings:
-        secho("User settings", fg='blue')
-        echo(utils.formatDictTable(env.currentproj.usersettings, aHeader=False))
-
-        echo()
-
-    secho("Dependecy tree elements", fg='blue')
-    lCommandKinds = ['setup', 'src', 'addrtab', 'iprepo']
-    lDepTable = Texttable()
-    lDepTable.set_cols_align(['c'] * 4)
-    lDepTable.add_row(lCommandKinds)
-    lDepTable.add_row([len(env.depParser.commands[k]) for k in lCommandKinds])
-    echo(lDepTable.draw())
-
-    echo()
-
-    if not env.depParser.missing:
-        return
-    secho("Unresolved item(s)", fg='red')
-
-    lUnresolved = Texttable()
-    lUnresolved.add_row(["packages", "components", "paths"])
-    lUnresolved.add_row(
-        [
-            len(env.depParser.missingPackages),
-            len(env.depParser.missingComponents),
-            len(env.depParser.missingPaths),
-        ]
-    )
-    echo(lUnresolved.draw())
-
-    echo()
-
 
 # ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-def main():
-    '''Discovers the env at startup'''
-
-    if sys.version_info[0:2] < (2, 6):
-        click.secho("Error: I need python 2.6 to run", fg='red')
-        raise SystemExit(-1)
-    elif sys.version_info[0:2] == (2, 6):
-        click.secho(
-            "Warning: IPBB prefers python 2.7. python 2.6 will be deprecated soon.",
-            fg='yellow',
-        )
-
+def _compose_cli():
     # Add custom cli to shell
     from ..cli import repo
 
     climain.add_command(repo.init)
-    # climain.add_command(repo.cd)
+    climain.add_command(repo.info)
     climain.add_command(repo.add)
     climain.add_command(repo.srcs)
 
@@ -176,7 +69,6 @@ def main():
 
     vivado.vivado.add_command(common.cleanup)
     vivado.vivado.add_command(common.addrtab)
-    vivado.vivado.add_command(common.gendecoders)
     vivado.vivado.add_command(common.user_config)
     climain.add_command(vivado.vivado)
 
@@ -184,13 +76,75 @@ def main():
 
     sim.sim.add_command(common.cleanup)
     sim.sim.add_command(common.addrtab)
-    sim.sim.add_command(common.gendecoders)
     sim.sim.add_command(common.user_config)
     climain.add_command(sim.sim)
+
+    from ..cli import vivadohls
+    
+    vivadohls.vivadohls.add_command(common.cleanup)
+    climain.add_command(vivadohls.vivadohls)
+
+    from ..cli import ipbus
+    climain.add_command(ipbus.ipbus)
 
     from ..cli import debug
 
     climain.add_command(debug.debug)
+# ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+def main():
+    '''Discovers the env at startup'''
+
+    if sys.version_info[0:2] < (2, 7):
+        click.secho("Error: Python 2.7 is required to run IPBB", fg='red')
+        raise SystemExit(-1)
+
+    _compose_cli()
+
+    # if True:
+    if False:
+        from click._bashcomplete import get_choices
+
+        def choices_without_help(cli, args, incomplete):
+            completions = get_choices(cli, 'dummy', args, incomplete)
+            return [c[0] for c in completions]
+
+        for inc in [
+                '',
+                'f',
+                'felix-pie',
+                'felix-pie:',
+                'felix-pie:p',
+                'felix-pie:projects/',
+                'felix-pie:projects/hi',
+                'felix-pie:projects/hitfinder/'
+        ]:
+            print("-" * 80)
+            print("Completing component'" + inc + "'")
+            print("-" * 80)
+            print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG'], inc))
+            print()
+
+        for inc in [
+                '',
+        ]:
+            print("-" * 80)
+            print("Completing dep file'" + inc + "'")
+            print("-" * 80)
+            print(choices_without_help(climain, ['ipbb', 'toolbox', 'check-dep', 'felix-pie:projects/hitfinder'], inc))
+            print()
+
+        for inc in [
+                '',
+        ]:
+            print("-" * 80)
+            print("Completing dep file'" + inc + "'")
+            print("-" * 80)
+            print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG', 'felix-pie:projects/hitfinder', '-t'], inc))
+            print()
+        raise SystemExit(0)
 
     obj = Environment()
     try:

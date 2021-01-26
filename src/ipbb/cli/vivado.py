@@ -1,25 +1,8 @@
-from __future__ import print_function, absolute_import
-# ------------------------------------------------------------------------------
 
 # Modules
 import click
-
 import types
-
-from ..tools.common import which
-
-
-# ------------------------------------------------------------------------------
-def ensureVivado(env):
-    if env.currentproj.settings['toolset'] != 'vivado':
-        raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivado', found '%s'" % env.currentproj.settings['toolset'])
-
-    if not which('vivado'):
-        # if 'XILINX_VIVADO' not in os.environ:
-        raise click.ClickException(
-            "Vivado not found. Please source the Vivado environment before continuing.")
-# ------------------------------------------------------------------------------
+import importlib
 
 
 # ------------------------------------------------------------------------------
@@ -36,9 +19,21 @@ def vivado(env, proj, verbosity):
     - warnings-only:
     - none:
     '''
-    from ..cmds.vivado import vivado
-    vivado(env, proj, verbosity)
+    # from ..cmds.vivado import vivado
+    # vivado(env, proj, verbosity)
+    pass
 
+# ------------------------------------------------------------------------------
+@vivado.resultcallback()
+@click.pass_obj
+def process_vivado(env, subcommands, proj, verbosity):
+
+    from ..cmds.vivado import vivado
+    vivado(env, proj, verbosity, (name for name,_,_,_ in subcommands))
+
+    # Executed the chained commands
+    for name, cmd, args, kwargs in subcommands:
+        cmd(*args, **kwargs)
 
 # ------------------------------------------------------------------------------
 def vivado_get_command_aliases(self, ctx, cmd_name):
@@ -54,26 +49,30 @@ def vivado_get_command_aliases(self, ctx, cmd_name):
 vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 
+
 # ------------------------------------------------------------------------------
 @vivado.command('make-project', short_help='Assemble the project from sources.')
-@click.option('-c', '--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
-@click.option('-r/-n', '--reverse/--natural', 'aReverse', default=True)
-@click.option('-o/-1', '--optimize/--single', 'aOptimise', default=True, help="Toggle project script optimisation.")
+@click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
+@click.option('-1', '--single', 'aOptimise', default=True, help="Disable project creation optimization. If present sources are added one at a time.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")
 @click.pass_obj
-def makeproject(env, aEnableIPCache, aReverse, aOptimise, aToScript, aToStdout):
-    '''Make the Vivado project from sources described by dependency files.'''
+@click.pass_context
+def makeproject(ctx, *args, **kwargs):
+    '''Creates the Vivado project from sources.'''
     from ..cmds.vivado import makeproject
-    makeproject(env, aEnableIPCache, aReverse, aOptimise, aToScript, aToStdout)
+    return (ctx.command.name, makeproject, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivado.command('check-syntax', short_help='Run the synthesis step on the current project.')
+@vivado.command('check-syntax', short_help='Run the elaboration step on the current project.')
 @click.pass_obj
-def checksyntax(env):
+@click.pass_context
+def checksyntax(ctx, *args, **kwargs):
+    """Run Vivado syntax check on current project
+    """
     from ..cmds.vivado import checksyntax
-    checksyntax(env)
+    return (ctx.command.name, checksyntax, args, kwargs)
 
 
 # -------------------------------------
@@ -81,82 +80,113 @@ def checksyntax(env):
 @click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
 @click.option('-i', '--status-update-interval', 'aUpdateInt', type=int, default=1, help="Interal between status updates in minutes")
 @click.pass_obj
-def synth(env, aNumJobs, aUpdateInt):
+@click.pass_context
+def synth(ctx, *args, **kwargs):
     '''Run synthesis'''
     from ..cmds.vivado import synth
-    synth(env, aNumJobs, aUpdateInt)
+    return (ctx.command.name, synth, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
 @vivado.command('impl', short_help='Run the implementation step on the current project.')
-@click.option('-j', '--jobs', type=int, default=None, help="Number of parallel jobs")
+@click.option('-j', '--jobs', 'aNumJobs', type=int, default=None, help="Number of parallel jobs")
+@click.option('-s/-c', '--stop-on-timing-failure/--continue-on-timing-failure', 'aStopOnTimingErr', default=True)
 @click.pass_obj
-def impl(env, jobs):
+@click.pass_context
+def impl(ctx, *args, **kwargs):
     '''Launch an implementation run'''
-    '''Run synthesis'''
     from ..cmds.vivado import impl
-    impl(env, jobs)
+    return (ctx.command.name, impl, args, kwargs)
 
 
-# # ------------------------------------------------------------------------------
-# @vivado.command('order-constr', short_help='Change the order with which constraints are processed')
-# @click.option('-i/-r', '--initial/--reverse', 'order', default=True, help='Reset or invert the order of evaluation of constraint files.')
-# @click.pass_obj
-# def orderconstr(env, order):
-#     '''Reorder constraint set'''
-#     from ..cmds.vivado import orderconstr
-#     orderconstr(env, order)
-
+# ------------------------------------------------------------------------------
 @vivado.command('resource-usage', short_help="Resource usage")
+@click.option('-c', '--cell', 'aCell', default=None, help="Submodule name")
+@click.option('-d', '--depth', 'aDepth', type=int, default=1, help="Hierarchy depth")
+@click.option('-f', '--file', 'aFile', type=click.Path(), default=None, help="Output file")
 @click.pass_obj
-def resource_usage(env):
+@click.pass_context
+def resource_usage(ctx, *args, **kwargs):
     '''Create a resource_usage'''
     from ..cmds.vivado import resource_usage
-    resource_usage(env)
+    return (ctx.command.name, resource_usage, args, kwargs)
+
 
 # ------------------------------------------------------------------------------
 @vivado.command('bitfile', short_help="Generate the bitfile.")
 @click.pass_obj
-def bitfile(env):
+@click.pass_context
+def bitfile(ctx, *args, **kwargs):
     '''Create a bitfile'''
     from ..cmds.vivado import bitfile
-    bitfile(env)
+    return (ctx.command.name, bitfile, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
+@vivado.command('debug-probes', short_help="Generate (optional) debug-probes files (used for ILAs and VIO controls).")
+@click.pass_obj
+@click.pass_context
+def bitfile(ctx, *args, **kwargs):
+    '''Generate (optional) debug-probes files'''
+    from ..cmds.vivado import debugprobes
+    return (ctx.command.name, debugprobes, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
+@vivado.command('memcfg', short_help="Generate the memcfg.")
+@click.pass_obj
+@click.pass_context
+def memcfg(ctx, *args, **kwargs):
+    '''Create a memcfg file for PROM programming
+    
+    Supports bin and mcs file types
+    Requires the corresponding options to be defined in the dep files:
+ 
+    * bin: 'binfile_options'  
+    
+    * mcs: 'mcsfile_options'
+    '''
+    from ..cmds.vivado import memcfg
+    return (ctx.command.name, memcfg, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
 @vivado.command('status', short_help="Show the status of all runs in the current project.")
 @click.pass_obj
-def status(env):
+@click.pass_context
+def status(ctx, *args, **kwargs):
     '''Show the status of all runs in the current project.'''
     from ..cmds.vivado import status
-    status(env)
+    return (ctx.command.name, status, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivado.command('reset', short_help="Reset synthesis and implementation runs.")
+@vivado.command('reset-runs', short_help="Reset synthesis and implementation runs.")
 @click.pass_obj
-def reset(env):
+@click.pass_context
+def reset(ctx, *args, **kwargs):
     '''Reset synth and impl runs'''
 
     from ..cmds.vivado import reset
-    reset(env)
+    return (ctx.command.name, reset, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
 @vivado.command('package', short_help="Package the firmware image and metadata into a standalone archive")
-@click.pass_obj
 @click.option('--tag', '-t', 'aTag', default=None, help="Optional tag to add to the archive name.")
-def package(env, aTag):
+@click.pass_obj
+@click.pass_context
+def package(ctx, *args, **kwargs):
     '''Package bitfile with address table and file list
 
     '''
     from ..cmds.vivado import package
-    package(env, aTag)
-
+    return (ctx.command.name, package, args, kwargs)
 
 # ------------------------------------------------------------------------------
 @vivado.command()
 @click.pass_obj
-def archive(env):
+@click.pass_context
+def archive(ctx, *args, **kwargs):
     from ..cmds.vivado import archive
-    archive(env)
+    return (ctx.command.name, archive, args, kwargs)

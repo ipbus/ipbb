@@ -1,12 +1,10 @@
-from __future__ import print_function, absolute_import
-
 
 # Modules
 import click
 
 
 # ------------------------------------------------------------------------------
-@click.group()
+@click.group('debug', help='Collection of debug/utility commands')
 @click.pass_obj
 def debug(env):
     """Collection of debug/utility commands
@@ -27,20 +25,21 @@ def dump(env):
 
 
 # ------------------------------------------------------------------------------
-@debug.command('ipy')
+@debug.command('ipy', help='Loads the ipbb environment and opens a python shell')
 @click.pass_obj
-def ipy(env):
+@click.pass_context
+def ipy(ctx, env):
     """Loads the ipbb environment and opens a python shell
     
     Args:
         env (`obj:Context`): Environment object.
     """
     from ..cmds.debug import ipy
-    ipy(env)
+    ipy(ctx, env)
 
 
 # ------------------------------------------------------------------------------
-@debug.command('test-vivado-formatter')
+@debug.command('test-vivado-formatter', help='Test Vivado formatter')
 @click.pass_obj
 def test_vivado_formatter(env):
     """Test vivado formatter
@@ -53,7 +52,7 @@ def test_vivado_formatter(env):
 
 
 # ------------------------------------------------------------------------------
-@debug.command('test-vivado-console')
+@debug.command('test-vivado-console', help='Test Vivado console')
 @click.pass_obj
 def test_vivado_console(env):
     """Test Vivado console

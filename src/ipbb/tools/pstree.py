@@ -9,7 +9,7 @@ class ProcessIter(object):
         stack (obj: `list`): Node stack iterator
     """
     def __init__(self, root):
-        super(ProcessIter, self).__init__()
+        super().__init__()
         self.stack = [iter([root])]
         self.current = None
 
@@ -49,7 +49,7 @@ class ProcessNode(object):
         process (obj:`psutil.Process`): Actual Process object
     """
     def __init__(self, process):
-        super(ProcessNode, self).__init__()
+        super().__init__()
         self.parent = None
         self.process = process
         self.children = []
@@ -67,14 +67,14 @@ class ProcessTree(object):
         progenitor (obj:`psutil.Process`): Top-level process object.
     """
     def __init__(self, progenitor):
-        super(ProcessTree, self).__init__()
+        super().__init__()
         self.progenitor = progenitor
 
         lProgNode = ProcessNode(progenitor)
         lTreeNodes = { progenitor.pid: lProgNode }
         lTreeNodes.update({ cp.pid: ProcessNode(cp) for cp in progenitor.children(True) })
 
-        for lNode in lTreeNodes.itervalues():
+        for lNode in lTreeNodes.values():
             lPPid = lNode.process.parent().pid
             try:
                 lPNode = lTreeNodes[lPPid]
@@ -97,7 +97,7 @@ class ProcessTreeSnapshot(object):
         arg (TYPE): Description
     """
     def __init__(self, arg):
-        super(ProcessTreeSnapshot, self).__init__()
+        super().__init__()
         self.arg = arg
 
 
@@ -111,7 +111,7 @@ class ProcessTreeAnalyzer(object):
 
     # -----------------------------------------------------
     def __init__(self, process, fields=['name', 'cmdline', 'memory_full_info', 'cpu_percent', 'num_threads', 'cpu_times']):
-        super(ProcessTreeAnalyzer, self).__init__()
+        super().__init__()
         self.process = process
         self.fields = fields
 

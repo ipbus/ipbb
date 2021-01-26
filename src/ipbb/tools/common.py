@@ -1,6 +1,3 @@
-from __future__ import print_function, absolute_import
-from past.builtins import basestring
-# -------------------------------------------------------------------------
 
 import os
 import sys
@@ -8,13 +5,16 @@ import pexpect
 import subprocess
 import time
 
+from locale import getpreferredencoding
+
+DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
 
 # ------------------------------------------------------------------------------
 class SmartOpen(object):
 
     # -------------------------------------------
     def __init__(self, aTarget):
-        if isinstance(aTarget, basestring):
+        if isinstance(aTarget, str):
             self.target = open(aTarget, 'w')
         elif aTarget is None:
             self.target = sys.stdout
@@ -57,12 +57,15 @@ class OutputFormatter(object):
         quiet (bool): Suppress output.
     """
 
-    def __init__(self, prefix=None, quiet=False):
+    def __init__(self, prefix=None, sep='', quiet=False):
         self._write = sys.stdout.write
         self._flush = sys.stdout.flush
         self.quiet = quiet
-        self.prefix = prefix
-        self.pending = False
+        self._prefix = prefix
+        self._sep = sep
+        self._pending = False
+        # update prefixstr
+        self._update()
 
     def __del__(self):
         pass
@@ -72,6 +75,28 @@ class OutputFormatter(object):
 
     def __exit__(self, *args):
         pass
+
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @prefix.setter
+    def prefix(self, value):
+        self._prefix = value
+        self._update()
+
+    @property
+    def sep(self):
+        return self._sep
+
+    @sep.setter
+    def sep(self, value):
+        self._sep = value
+        self._update()
+
+    def _update(self):
+        self._prefixstr =  (self._prefix + self._sep) if self._prefix is not None else ''
 
     def write(self, message):
         """
@@ -85,15 +110,15 @@ class OutputFormatter(object):
         if self.quiet:
             return
 
-        msg = self.prefix if (self.pending and self.prefix) else ''
+        msg = (self.prefix + self.sep) if (self._pending and self.prefix) else ''
 
-        # update pending status
-        self.pending = message.endswith('\n')
+        # update _pending status
+        self._pending = message.endswith('\n')
 
         # furthemore, postfix the prefix to the newlines in message, execpt for the last one if pending is pn
         msg += (
             message.replace(
-                '\n', '\n' + self.prefix, message.count('\n') - self.pending
+                '\n', '\n' + (self.prefix + self.sep), message.count('\n') - self._pending
             )
             if self.prefix
             else message
@@ -132,5 +157,5 @@ def mkdir(path, mode=0o777):
         os.makedirs(path, mode)
     except OSError:
         if os.path.exists(path) and os.path.isdir(path):
-            pass
-        return
+            return
+        raise

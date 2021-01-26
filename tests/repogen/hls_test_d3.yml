@@ -1,0 +1,53 @@
+name: hls_test_d3
+top:
+  - cmp: ""
+    file: top_hls.d3
+files:
+  firmware/cfg:
+    top_hls.d3: |
+      @device_name = "xcku15p"
+      @device_package = "-ffva1760"
+      @device_speed = "-2-e"
+      @top_entity = "hls_main"
+      hlssrc hls_test.h hls_test.cpp
+      hlssrc --tb tb_test.cpp -i aa:bb
+  firmware/hls:
+    hls_test.h : |
+      char hls_main(char, char, char);
+    hls_test.cpp: |
+      #include "hls_test.h"
+
+      char hls_main(char v1, char v2, char v3) {
+      #ifndef __SYNTHESIS__
+        return v1 + v2 * v3;
+      #endif
+      #ifdef __SYNTHESIS__
+        return v1 + v2 * v3 + 1;
+      #endif 
+      }
+    tb_test.cpp: |
+      // Relative import
+      // #include "../hls/hls_test.h"
+      // From component's firmware folder
+      #include "hls/hls_test.h"
+      // From component's base folder
+      //#include "firmware/hls/hls_test.h"
+      // From package base folder
+      //#include "components/firmware/hls/hls_test.h"
+      // From `src` folder (reference to a different package)
+      //#include "hls_test_d3/components/firmware/hls/hls_test.h"
+
+      
+      #include <iostream>
+
+      int main(int argc, char const *argv[])
+      {
+        if (hls_main(1, 2, 3) == 1 + 2 * 3) {
+          std::cout << "----- Test is successful -----" << std::endl;
+          return 0;
+        } else {
+          std::cout << "----- Test has failed -----" << std::endl;
+          return -1;
+        }
+      }
+

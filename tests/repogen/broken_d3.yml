@@ -1,0 +1,27 @@
+name: broken
+top:
+  - cmp: ""
+    file: top_unres.d3
+  - cmp: ""
+    file: top_err.d3
+files:
+  firmware/cfg:
+    top_unres.d3: |
+      setup settings.tcl
+      src t0.vhd
+      src t1.vhd
+      src t2.vhd t3_not_here.vhd
+    settings.tcl: ""
+    top_err.d3: |
+      setup settings.tcl
+      src t0.vhd
+      src t1.vhd
+      srca t2.vhd t3_not_here.vhd
+    settings.tcl: ""
+  firmware/hdl:
+    t0.vhd: ""
+    t1.vhd: ""
+    t2.vhd: ""
+    t3.vhd: ""
+    d1.vhd: ""
+    d2.vhd: ""

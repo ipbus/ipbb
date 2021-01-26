@@ -1,4 +1,4 @@
-from __future__ import print_function, absolute_import
+
 import click
 
 import re
@@ -10,8 +10,7 @@ from click import echo, style, secho, confirm
 from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep, isdir, isfile
 from texttable import Texttable
 
-from ..depparser.Pathmaker import Pathmaker
-from ..depparser.DepFileParser import DepFileParser
+from ..depparser import Pathmaker, DepFileParser
 
 
 # ------------------------------------------------------------------------------
@@ -25,7 +24,7 @@ def toolbox(env):
 
 
 # ------------------------------------------------------------------------------
-def check_depfile(env, verbose, component, depfile, toolset):
+def check_depfile(env, verbose, toolset, component, depfile):
     '''Perform basic checks on dependency files'''
 
     lPackage, lComponent = component
@@ -49,7 +48,6 @@ def check_depfile(env, verbose, component, depfile, toolset):
     lCmdHeaders = [
         'path',
         'flags',
-        'map',
         'lib',
     ]  # ['path', 'flags', 'package', 'component', 'map', 'lib']
     lFilters = []
@@ -72,10 +70,9 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 # print(lCmd)
                 # lCmdTable.add_row([str(lCmd)])
                 lRow = [
-                    relpath(lCmd.FilePath, env.srcdir),
+                    relpath(lCmd.filepath, env.srcdir),
                     ','.join(lCmd.flags()),
-                    lCmd.Map,
-                    lCmd.Lib,
+                    lCmd.lib,
                 ]
 
                 if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
@@ -83,23 +80,23 @@ def check_depfile(env, verbose, component, depfile, toolset):
 
                 lCmdTable.add_row(lRow)
 
-            echo(lPrepend.sub('\g<1>    ', lCmdTable.draw()))
+            echo(lPrepend.sub(r'\g<1>    ', lCmdTable.draw()))
             echo()
 
         secho('Resolved packages & components', fg='blue')
 
         string = ''
-        for pkg in sorted(lParser.components):
-            string += '  + %s (%d)\n' % (pkg, len(lParser.components[pkg]))
-            for cmp in sorted(lParser.components[pkg]):
+        for pkg in sorted(lParser.packages):
+            string += '  + %s (%d)\n' % (pkg, len(lParser.packages[pkg]))
+            for cmp in sorted(lParser.packages[pkg]):
                 string += '    > ' + str(cmp) + '\n'
         echo(string)
 
-    if lParser.missingPackages:
+    if lParser.unresolvedPackages:
         secho('Missing packages:', fg='red')
-        echo(str(list(lParser.missingPackages)))
+        echo(str(list(lParser.unresolvedPackages)))
 
-    lCNF = lParser.missingComponents
+    lCNF = lParser.unresolvedComponents
     if lCNF:
         secho('Missing components:', fg='red')
         string = ''
@@ -111,7 +108,7 @@ def check_depfile(env, verbose, component, depfile, toolset):
                 string += '  > ' + str(cmp) + '\n'
         echo(string)
 
-    lFNF = lParser.missingFiles
+    lFNF = lParser.unresolvedFiles
     if lFNF:
         secho('Missing files:', fg='red')
 
@@ -138,7 +135,7 @@ def check_depfile(env, verbose, component, depfile, toolset):
         echo(lPrepend.sub('\g<1>  ', lFNFTable.draw()))
         echo()
 
-    if lParser.missingPackages or lParser.missingComponents or lParser.missingFiles:
+    if lParser.unresolvedPackages or lParser.unresolvedComponents or lParser.unresolvedFiles:
         raise click.ClickException(
             "Cannot find 1 or more files referenced by depfile {}".format(
                 lPathMaker.getPath(lPackage, lComponent, 'include', depfile)
@@ -219,7 +216,7 @@ def vhdl_beautify(env, component, path):
         shutil.copy(f, dirname(lTmpVHDLPath))
 
         echo('Processing vhdl file ' + style(f, fg="cyan"))
-        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '--eval', '(setq vhdl-basic-offset 4)', '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
+        sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '--eval', '(setq vhdl-basic-offset 2)', '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
 
         diff = sh.colordiff if which('colordiff') else sh.diff
         try:

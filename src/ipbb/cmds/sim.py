@@ -1,4 +1,3 @@
-
 # Modules
 import click
 import os
@@ -269,7 +268,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -454,7 +453,7 @@ def genproject(env, aOptimise, aToScript, aToStdout):
 
     """
 
-    lSessionId = 'project'
+    # lSessionId = 'genproject'
 
     # -------------------------------------------------------------------------
     # Must be in a build area
@@ -477,10 +476,9 @@ def genproject(env, aOptimise, aToScript, aToStdout):
         )
     # -------------------------------------------------------------------------
 
-    # Use compiler executable to detect Modelsim's flavour
-    # lSimulator = mentor.autodetect().lower()
-
     lDepFileParser = env.depParser
+
+    lSimLibrary = lDepFileParser.settings.get('sim.library', 'work')
 
     # Ensure that no parsing errors are present
     ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
@@ -488,7 +486,7 @@ def genproject(env, aOptimise, aToScript, aToStdout):
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aOptimise)
+    lSimProjMaker = ModelSimProjectMaker(env.currentproj, lSimLibrary, kIPVivadoProjName, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
@@ -499,7 +497,7 @@ def genproject(env, aOptimise, aToScript, aToStdout):
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -515,31 +513,23 @@ def genproject(env, aOptimise, aToScript, aToStdout):
 
     if lDryRun:
         return
+        
     # ----------------------------------------------------------
     # Create a wrapper to force default bindings at load time
-    print('Writing modelsim wrapper \'./vsim\'')
+    print("Writing modelsim wrapper 'run_sim'")
 
-    lVsimArgs = collections.OrderedDict(
-        [
-            (
-                'MAC_ADDR',
-                validateMacAddress(
-                    env.currentproj.usersettings.get('ipbus.fli.mac_address', None)
-                ),
-            ),
-            (
-                'IP_ADDR',
-                validateIpAddress(
-                    env.currentproj.usersettings.get('ipbus.fli.ip_address', None)
-                ),
-            ),
-        ]
+    lVsimOpts = collections.OrderedDict()
+    lVsimOpts['MAC_ADDR'] = validateMacAddress(
+        env.currentproj.usersettings.get('ipbus.fli.mac_address', None)
+    )
+    lVsimOpts['IP_ADDR'] = validateIpAddress(
+        env.currentproj.usersettings.get('ipbus.fli.ip_address', None)
     )
 
-    lVsimExtraArgs = ' '.join(
-        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimArgs.items() if v is not None]
+    lVsimOptStr = ' '.join(
+        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimOpts.items() if v is not None]
     )
-    lVsimBody = '''#!/bin/sh
+    lVsimBody = f'''#!/bin/sh
 
 if [ ! -f modelsim.ini ]; then
     echo "WARNING: modelsim.ini not found. Vivado simulation libraries won't be loaded."
@@ -547,15 +537,13 @@ fi
 
 export MTI_VCO_MODE=64
 export MODELSIM_DATAPATH="mif/"
-vsim {} "$@"
-    '''.format(
-        lVsimExtraArgs
-    )
-    with SmartOpen('vsim') as lVsimSh:
+vsim {lVsimOptStr} "$@"
+    '''
+    with SmartOpen('run_sim') as lVsimSh:
         lVsimSh(lVsimBody)
 
     # Make it executable
-    os.chmod('vsim', 0o755)
+    os.chmod('run_sim', 0o755)
 
 
 # ------------------------------------------------------------------------------

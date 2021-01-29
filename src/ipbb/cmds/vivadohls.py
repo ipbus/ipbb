@@ -79,7 +79,7 @@ def genproject(env, aToScript, aToStdout):
 
             lVivadoMaker.write(
                 lConsole,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.rootdir,

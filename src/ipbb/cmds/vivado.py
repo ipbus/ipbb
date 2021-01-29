@@ -22,7 +22,7 @@ from .dep import hash
 from ..tools.common import which, SmartOpen, mkdir
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..makers.vivadoproject import VivadoProjectMaker
+from ..generators.vivadoproject import VivadoProjectMaker
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 

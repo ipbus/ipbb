@@ -9,7 +9,7 @@ from click import echo, secho, style, confirm
 from ..tools.common import which, SmartOpen
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..makers.vivadohlsproject import VivadoHlsProjectMaker
+from ..generators.vivadohlsproject import VivadoHlsProjectMaker
 from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError
 
 

@@ -41,8 +41,8 @@ from ._utils import (
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
-from ..makers.ipcoressim import IPCoresSimMaker
-from ..makers.modelsimproject import ModelSimProjectMaker
+from ..generators.ipcoressim import IPCoresSimMaker
+from ..generators.modelsimproject import ModelSimProjectMaker
 
 
 kIPExportDir = 'ipcores_sim'

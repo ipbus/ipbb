@@ -75,8 +75,8 @@ class AlienBranch(object):
         self.__dict__['_locked'] = False
 
     def __repr__(self):
-        return str({ k:v for k, v in self.__dict__.items() if not k.startswith('_')})
-        
+        return str({ k: v for k, v in self.__dict__.items() if not k.startswith('_')})
+
     def __getattr__(self, name):
         try:
             return self.__dict__[name]
@@ -92,26 +92,24 @@ class AlienBranch(object):
             raise AttributeError("Attributes starting with '_' are reserved ")
         super().__setattr__(name, value)
 
-
     def __getitem__(self, name):
-        tokens = name.split('.',1)
-        item = getattr(self,tokens[0])
+        tokens = name.split('.', 1)
+        item = getattr(self, tokens[0])
         if len(tokens) == 1:
             return item
         else:
             return item[tokens[1]]
 
-
     def __setitem__(self, name, value):
 
-        tokens = name.rsplit('.',1)
+        tokens = name.rsplit('.', 1)
         if len(tokens) == 1:
             setattr(self, name, value)
         else:
-            setattr(self[tokens[0]],tokens[1], value)
+            setattr(self[tokens[0]], tokens[1], value)
 
     def __iter__(self):
-        for b,o in self.__dict__.items():
+        for b, o in self.__dict__.items():
             if b.startswith('_'):
                 continue
             elif isinstance(o, type(self)):

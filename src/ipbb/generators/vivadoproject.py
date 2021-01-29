@@ -26,7 +26,7 @@ class VivadoProjectMaker(object):
         lName, lExt = splitext(aSrcCmd.filepath)
 
         lFileSet = None
-        if lExt in  ('.xci', '.xcix'):
+        if lExt in ('.xci', '.xcix'):
             lFileSet = 'sources_1'
 
         elif lExt in ('.xdc', '.tcl'):
@@ -49,11 +49,10 @@ class VivadoProjectMaker(object):
     # --------------------------------------------------------------
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
 
-        lReqVariables = {'device_name', 'device_package', 'device_speed'}
-        if not lReqVariables.issubset(aSettings):
-            raise RuntimeError("Missing required variables: {}".format(', '.join(lReqVariables.difference(aScriptVariables))))
-        lXilinxPart = "{device_name}{device_package}{device_speed}".format(**aSettings)
-
+        lReqSettings = {'device_name', 'device_package', 'device_speed'}
+        if not lReqSettings.issubset(aSettings):
+            raise RuntimeError(f"Missing required variables: {', '.join(lReqSettings.difference(aSettings))}")
+        lXilinxPart = f'{aSettings.device_name}{aSettings.device_package}{aSettings.device_speed}'
 
         # ----------------------------------------------------------
         write = aOutput
@@ -69,9 +68,7 @@ class VivadoProjectMaker(object):
         write()
 
         write(
-            'create_project {0} {1} -part {2} -force'.format(
-                self.projInfo.name, lWorkingDir, lXilinxPart
-            )
+            f'create_project {self.projInfo.name} {lWorkingDir} -part {lXilinxPart} -force'
         )
 
         # Add ip repositories to the project variable
@@ -80,13 +77,13 @@ class VivadoProjectMaker(object):
         ))
 
         for util in (c for c in aCommandList['util']):
-            write('add_files -norecurse -fileset utils_1 {0}'.format(util.filepath))
+            write(f'add_files -norecurse -fileset utils_1 {util.filepath}')
 
         write('if {[string equal [get_filesets -quiet constrs_1] ""]} {create_fileset -constrset constrs_1}')
         write('if {[string equal [get_filesets -quiet sources_1] ""]} {create_fileset -srcset sources_1}')
 
         for setup in (c for c in aCommandList['setup'] if not c.finalize):
-            write('source {0}'.format(setup.filepath))
+            write(f'source {setup.filepath}')
 
         lXciBasenames = []
 
@@ -111,7 +108,7 @@ class VivadoProjectMaker(object):
 
             if lExt in ('.xci', '.xcix'):
 
-                c = 'import_files -norecurse -fileset {0} $files'.format(self.fileset(src))
+                c = f'import_files -norecurse -fileset {self.fileset(src)} $files'
                 f = src.filepath
 
                 lCommands += [(c, f)]
@@ -120,7 +117,7 @@ class VivadoProjectMaker(object):
                 # lXciTargetFiles.append(lTargetFile)
             else:
 
-                c = 'add_files -norecurse -fileset {0} $files'.format(self.fileset(src))
+                c = f'add_files -norecurse -fileset {self.fileset(src)} $files'
                 f = src.filepath
                 lCommands += [(c, f)]
 
@@ -133,9 +130,9 @@ class VivadoProjectMaker(object):
                     c = 'set_property USED_IN implementation [get_files {$files}]'
                     f = src.filepath
                     lCommands += [(c, f)]
-                    
+
                 if src.lib:
-                    c = 'set_property library {0} [ get_files {{$files}} ]'.format(src.lib)
+                    c = f'set_property library {src.lib} [ get_files {{$files}} ]'
                     f = src.filepath
                     lCommands += [(c, f)]
 
@@ -149,24 +146,24 @@ class VivadoProjectMaker(object):
             for c, f in lSrcCommandGroups.items():
                 write(tmpl(c).substitute(files=' '.join(f)))
 
-        write('set_property top {0} [get_filesets sources_1]'.format(lTopEntity))
+        write(f'set_property top {lTopEntity} [get_filesets sources_1]')
         if lSimTopEntity:
-            write('set_property top {0} [get_filesets sim_1]'.format(lSimTopEntity))
+            write(f'set_property top {lSimTopEntity} [get_filesets sim_1]')
 
         if self.ipCachePath:
-            write('config_ip_cache -import_from_project -use_cache_location {0}'.format(abspath(self.ipCachePath)))
+            write(f'config_ip_cache -import_from_project -use_cache_location {abspath(self.ipCachePath)}')
 
         for i in lXciBasenames:
-            write('upgrade_ip [get_ips {0}]'.format(i))
+            write(f'upgrade_ip [get_ips {i}]')
         # for i in lXciTargetFiles:
             # write('create_ip_run [get_files {0}]'.format(i))
         for i in lXciBasenames:
-            write('delete_ip_run [get_ips {0}]'.format(i))
-            write('generate_target all [get_ips {0}]'.format(i))
-            write('create_ip_run [get_ips {0}]'.format(i))
+            write(f'delete_ip_run [get_ips {i}]')
+            write(f'generate_target all [get_ips {i}]')
+            write(f'create_ip_run [get_ips {i}]')
 
         for setup in (c for c in aCommandList['setup'] if c.finalize):
-            write('source {0}'.format(setup.filepath))
+            write(f'source {setup.filepath}')
 
         write('close_project')
     # --------------------------------------------------------------

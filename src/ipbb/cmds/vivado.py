@@ -138,7 +138,7 @@ def genproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
         with lConsoleCtx as lConsole:
             lVivadoMaker.write(
                 lConsole,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -451,11 +451,11 @@ def memcfg(env):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    # lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
+    # lTopEntity = lDepFileParser.settings.get('top_entity', kTopEntity)
     # lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
     lBaseName = env.vivadoProdFileBase
 
-    if 'vivado' not in lDepFileParser.config:
+    if 'vivado' not in lDepFileParser.settings:
         secho('No memcfg settings found in this project. Exiting.', fg='yellow')
         return
 
@@ -466,7 +466,7 @@ def memcfg(env):
     # And that the Vivado env is up
     ensureVivado(env)
     
-    lVivadoCfg = lDepFileParser.config['vivado']
+    lVivadoCfg = lDepFileParser.settings['vivado']
     for k,o in _memCfgKinds.items():
 
         if o not in lVivadoCfg:
@@ -630,7 +630,7 @@ def package(env, aTag):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
+    lTopEntity = lDepFileParser.settings.get('top_entity', kTopEntity)
 
     lBaseName = env.vivadoProdFileBase
     lBitPath  = lBaseName + '.bit'
@@ -639,7 +639,7 @@ def package(env, aTag):
         bitfile(env)
 
     try:
-        lVivadoCfg = lDepFileParser.config['vivado']
+        lVivadoCfg = lDepFileParser.settings['vivado']
         lActiveMemCfgs = [k for k,o in _memCfgKinds.items() if o in lVivadoCfg]
         lMemCfgFiles = [lBaseName + '.' + k for k in lActiveMemCfgs]
 

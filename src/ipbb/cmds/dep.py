@@ -99,7 +99,7 @@ def report(env, filters):
 
     secho('* Variables', fg='blue')
     # printDictTable(lParser.vars, aHeader=False)
-    printAlienTable(lParser.config, aHeader=False)
+    printAlienTable(lParser.settings, aHeader=False)
 
     echo()
     secho('* Dep-tree commands', fg='blue')

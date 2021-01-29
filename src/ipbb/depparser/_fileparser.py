@@ -125,7 +125,7 @@ class DepFileParser(object):
         self._depregistry = OrderedDict()
 
         # Results
-        self.config = AlienTree()
+        self.settings = AlienTree()
         self.libs = set()
         self.packages = OrderedDict()
 
@@ -139,19 +139,19 @@ class DepFileParser(object):
         # Add to or override the Script Variables with user commandline
         for lArgs in aVariables:
             lKey, lVal = lArgs.split('=')
-            self.config[lKey] = lVal
+            self.settings[lKey] = lVal
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
         # Set the toolset
         if self._toolset == 'vivado':
-            self.config['toolset'] = 'Vivado'
+            self.settings['toolset'] = 'Vivado'
         elif self._toolset == 'vivadohls':
-            self.config['toolset'] = 'VivadoHls'
+            self.settings['toolset'] = 'VivadoHls'
         elif self._toolset == 'sim':
-            self.config['toolset'] = 'Modelsim'
+            self.settings['toolset'] = 'Modelsim'
         else:
-            self.config['toolset'] = 'other'
+            self.settings['toolset'] = 'other'
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -246,20 +246,20 @@ class DepFileParser(object):
 
         lPar, lExpr = [i.strip() for i in lTokens]
 
-        if lPar.strip() in self.config:
+        if lPar.strip() in self.settings:
             print("Warning!", lPar.strip(
             ), "already defined. Not redefining.")
         else:
             try:
-                # exec(aLine[1:], None, self.config)
-                lOldLock = self.config.locked
-                self.config.lock(True)
-                x = eval(lExpr, None, self.config)
-                self.config.lock(lOldLock)
-                self.config[lPar] = x
+                # exec(aLine[1:], None, self.settings)
+                lOldLock = self.settings.locked
+                self.settings.lock(True)
+                x = eval(lExpr, None, self.settings)
+                self.settings.lock(lOldLock)
+                self.settings[lPar] = x
 
             except Exception as lExc:
-                raise_from(DepLineError("VariableAssignmentError"), lExc)
+                raise DepLineError("VariableAssignmentError") from lExc
         if self._verbosity > 1:
             print(self._state.tab, ':', aLine)
 
@@ -280,10 +280,10 @@ class DepFileParser(object):
 
         try:
             lExprValue = eval(
-                aLine[lTokens[0] + 1: lTokens[1]], None, self.config
+                aLine[lTokens[0] + 1: lTokens[1]], None, self.settings
             )
         except Exception as lExc:
-            raise_from(DepLineError("Parsing directive failed"), lExc)
+            raise DepLineError("Parsing directive failed") from lExc
 
         if not isinstance(lExprValue, bool):
             raise DepLineError("Directive does not evaluate to boolean type in {0}".format(lExprValue))
@@ -301,9 +301,9 @@ class DepFileParser(object):
     # -------------------------------------------------------------------------
     def _lineReplaceVars(self, aLine):
         try:
-            lLine = AlienTemplate(aLine).substitute(self.config)
+            lLine = AlienTemplate(aLine).substitute(self.settings)
         except RuntimeError as lExc:
-            raise_from(DepLineError("Template substitution failed"), lExc)
+            raise DepLineError("Template substitution failed") from lExc
 
         return lLine
 
@@ -476,7 +476,7 @@ class DepFileParser(object):
         self.depfile = self._parseFile(aPackage, aComponent, aDepFileName)
 
         # Lock the config variables tree
-        self.config.lock(True)
+        self.settings.lock(True)
         # --------------------------------------------------------------
         # If we are exiting the top-level, uniquify the commands list, keeping
         # the order as defined in Dave's origianl voodoo

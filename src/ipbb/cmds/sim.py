@@ -442,8 +442,8 @@ def genproject(env, aOptimise, aToScript, aToStdout):
     Creates the modelsim project
 
     \b
-    1. Compiles the source code into the 'work' library,
-    2. Generates a 'vsim' wrapper that sets the simulation environment before invoking vsim.
+    1. Compiles the source code into the 'work' simulation library. A different name can be specified with the `sim.library` dep file setting.
+    2. Generates a 'run_sim' wrapper that sets the simulation environment before invoking vsim. The list of desing units to run can be specified with the `sim.run_sim.desing_units` dep file setting.
 
     NOTE: The ip/mac address of ipbus desings implementing a fli and exposing the ip/mac addresses via  top level generics can be set by defining the following user settings:
 
@@ -513,10 +513,13 @@ def genproject(env, aOptimise, aToScript, aToStdout):
 
     if lDryRun:
         return
-        
+
     # ----------------------------------------------------------
     # Create a wrapper to force default bindings at load time
-    print("Writing modelsim wrapper 'run_sim'")
+    lVsimWrapper = 'run_sim'
+    print(f"Writing modelsim wrapper '{lVsimWrapper}'")
+
+    lVsimArgStr = f"{lDepFileParser.settings.get(f'sim.{lVsimWrapper}.design_units', '')}"
 
     lVsimOpts = collections.OrderedDict()
     lVsimOpts['MAC_ADDR'] = validateMacAddress(
@@ -529,6 +532,9 @@ def genproject(env, aOptimise, aToScript, aToStdout):
     lVsimOptStr = ' '.join(
         ['-G{}=\'{}\''.format(k, v) for k, v in lVsimOpts.items() if v is not None]
     )
+
+    lVsimCmd = ' '.join(['vsim', lVsimArgStr, lVsimOptStr])
+
     lVsimBody = f'''#!/bin/sh
 
 if [ ! -f modelsim.ini ]; then
@@ -537,13 +543,17 @@ fi
 
 export MTI_VCO_MODE=64
 export MODELSIM_DATAPATH="mif/"
-vsim {lVsimOptStr} "$@"
+{lVsimCmd} "$@"
     '''
-    with SmartOpen('run_sim') as lVsimSh:
+    with SmartOpen(lVsimWrapper) as lVsimSh:
         lVsimSh(lVsimBody)
 
     # Make it executable
-    os.chmod('run_sim', 0o755)
+    os.chmod(lVsimWrapper, 0o755)
+
+    print(f"Vsim wrapper script '{lVsimWrapper}' created")
+    if lVsimCmd:
+        print(f"   Command: '{lVsimCmd}'")
 
 
 # ------------------------------------------------------------------------------

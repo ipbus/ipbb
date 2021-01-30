@@ -113,8 +113,8 @@ def genproject(ctx, *args, **kwargs):
     Creates the modelsim project
 
     \b
-    1. Compiles the source code into the 'work' library,
-    2. Generates a 'vsim' wrapper that sets the simulation environment before invoking vsim.
+    1. Compiles the source code into the 'work' simulation library. A different name can be specified with the `sim.library` dep file setting.
+    2. Generates a 'run_sim' wrapper that sets the simulation environment before invoking vsim. The list of desing units to run can be specified with the `sim.run_sim.desing_units` dep file setting.
 
     NOTE: The ip/mac address of ipbus desings implementing a fli and exposing the ip/mac addresses via  top level generics can be set by defining the following user settings:
 

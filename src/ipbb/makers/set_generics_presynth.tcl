@@ -32,9 +32,9 @@ set GIT_REPOS_REF [format "%u'h" [expr 160 * [llength $SOURCES_SUBDIRS]]]
 set GIT_REPOS_SHA [format "%u'h" [expr 28 * [llength $SOURCES_SUBDIRS]]]
 set GIT_REPOS_CLEAN [format "%u'b" [llength $SOURCES_SUBDIRS]]
 
-foreach SOURCE_AREA_NAME $SOURCES_SUBDIRS {
+foreach SOURCE_AREA_NAME $SOURCES_SUBDIRS {{
   puts "SOURCE AREA: $SOURCE_AREA_NAME"
-  set VAR_PREFIX [string map {- _} [string toupper $SOURCE_AREA_NAME]]
+  set VAR_PREFIX [string map {{- _}} [string toupper $SOURCE_AREA_NAME]]
   puts "  VAR_PREFIX=$VAR_PREFIX"
 
   binary scan [encoding convertto utf-8 "$SOURCE_AREA_NAME"] H* SOURCE_AREA_NAME_UTF
@@ -45,12 +45,12 @@ foreach SOURCE_AREA_NAME $SOURCES_SUBDIRS {
   puts "  pwd=[pwd]"
 
   set GIT_REF [exec git rev-parse --abbrev-ref HEAD]
-  if {$GIT_REF == {HEAD}} {
-    if { [catch {exec git describe --exact-match} GIT_REF] } {
+  if {{$GIT_REF == {{HEAD}}}} {{
+    if {{ [catch {{exec git describe --exact-match}} GIT_REF] }} {{
       puts "  Checked-out commit does not appear to match branch or tag"
       set GIT_REF ""
-    }
-  }
+    }}
+  }}
   puts "  GIT_REF=$GIT_REF"
   binary scan [encoding convertto utf-8 "$GIT_REF"] H* GIT_REF_UTF
   puts "  UTF-8-encoded ref: $GIT_REF_UTF"
@@ -61,13 +61,13 @@ foreach SOURCE_AREA_NAME $SOURCES_SUBDIRS {
   set [set VAR_PREFIX]_GIT_SHA "28'h$GIT_SHA"
   append GIT_REPOS_SHA $GIT_SHA
 
-  set GIT_CLEAN [string match 0 [catch { exec git diff --quiet HEAD }]]
+  set GIT_CLEAN [string match 0 [catch {{ exec git diff --quiet HEAD }}]]
   puts "  GIT_CLEAN=$GIT_CLEAN"
   append GIT_REPOS_CLEAN $GIT_CLEAN
   set [set VAR_PREFIX]_GIT_CLEAN $GIT_CLEAN
 
-  append GENERIC_VALUES " [set VAR_PREFIX]_GIT_SHA=28'h$GIT_SHA [set VAR_PREFIX]_GIT_CLEAN=1'b$GIT_CLEAN [set VAR_PREFIX]_GIT_REF={\"$GIT_REF\"}"
-}
+  append GENERIC_VALUES " [set VAR_PREFIX]_GIT_SHA=28'h$GIT_SHA [set VAR_PREFIX]_GIT_CLEAN=1'b$GIT_CLEAN [set VAR_PREFIX]_GIT_REF={{\"$GIT_REF\"}}"
+}}
 
 append GENERIC_VALUES " GIT_REPOS_NAME=$GIT_REPOS_NAME GIT_REPOS_REF=$GIT_REPOS_REF GIT_REPOS_SHA=$GIT_REPOS_SHA GIT_REPOS_CLEAN=$GIT_REPOS_CLEAN"
 puts ORIG_PWD=$ORIG_PWD
@@ -83,7 +83,7 @@ set GITLAB_CI_PROJECT_ID 0
 set GITLAB_CI_PIPELINE_ID 0
 set GITLAB_CI_JOB_ID 0
 
-if { [info exists ::env(GITLAB_CI) ] } {
+if {{ [info exists ::env(GITLAB_CI) ] }} {{
   set GITLAB_CI_PROJECT_ID $::env(CI_PROJECT_ID)
   set GITLAB_CI_PIPELINE_ID $::env(CI_PIPELINE_ID)
   set GITLAB_CI_JOB_ID $::env(CI_JOB_ID)
@@ -91,7 +91,7 @@ if { [info exists ::env(GITLAB_CI) ] } {
   puts "GITLAB_CI_PROJECT_ID : $GITLAB_CI_PROJECT_ID"
   puts "GITLAB_CI_PIPELINE_ID: $GITLAB_CI_PIPELINE_ID"
   puts "GITLAB_CI_JOB_ID     : $GITLAB_CI_JOB_ID"
-}
+}}
 
 append GENERIC_VALUES " GITLAB_CI_PROJECT_ID=$GITLAB_CI_PROJECT_ID"
 append GENERIC_VALUES " GITLAB_CI_PIPELINE_ID=$GITLAB_CI_PIPELINE_ID"

@@ -491,7 +491,7 @@ def genproject(env, aOptimise, aToScript, aToStdout):
     lDryRun = aToStdout or aToScript
 
     if not lDryRun:
-        sh.rm('-rf', 'work')
+        sh.rm('-rf', lSimLibrary)
 
     try:
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:

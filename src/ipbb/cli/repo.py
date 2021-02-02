@@ -95,6 +95,13 @@ def symlink(env, path):
     symlink(env, path)
 
 
+@add.command('dependencies', short_help="Add dependencies")
+@click.pass_obj
+def dependencies(env):
+    from ..cmds.repo import dependencies
+    dependencies(env)
+
+
 # ------------------------------------------------------------------------------
 @click.group('srcs', short_help="Utility commands to handle source packages.")
 @click.pass_obj

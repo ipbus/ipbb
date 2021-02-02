@@ -122,38 +122,28 @@ def add(env):
 def _repoInit(env, dest):
 
     if dest not in env.sources:
-        secho('Source package {} not found'.format(dest), fg='red')
+        secho(f'Source package {dest} not found', fg='red')
         echo('Available repositories:')
         for lPkg in env.sources:
             echo(' - ' + lPkg)
 
-        raiseError("Source package {} not found".format(dest))
+        raiseError(f"Source package {dest} not found")
 
-    setupPath = join(env.srcdir, dest, kRepoSetupFile)
-    if not exists(setupPath):
-        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
-        return
-    secho('Setting up {}'.format(dest), fg='blue')
-
-    setupCfg = None
-    with open(setupPath, 'r') as f:
-        setupCfg = yaml.safe_load(f)
-
-    setupCfg = setupCfg.get('init', None)
-    if setupCfg is None:
-        echo("No init configuration file. Skipping.")
+    initPars = env.srcinfo[dest].setupsettings.get('init', None)
+    if initPars is None:
+        echo("No init procedure defined.")
         return
 
-    cmds = [ l.split() for l in setupCfg ]
+    cmds = [ p.split() for p in initPars ]
 
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
     if missingCmds:
-        secho('Some setup commands have not been found', fg='red')
+        secho("The following commands are not available in PATH", fg='red')
         for i, cmd in missingCmds:
-            echo(' - {} (line {})'.format(cmd, i))
+            echo(f" - {cmd} (line {i})")
 
-        raiseError("Setup commands not found".format(dest))
+        raiseError("Setup commands not found")
 
     with sh.pushd(join(env.srcdir, dest)):
         # TODO: add error handling
@@ -169,38 +159,38 @@ def _repoInit(env, dest):
 def _repoReset(env, dest):
 
     if dest not in env.sources:
-        secho('Source package {} not found'.format(dest), fg='red')
+        secho(f"Source package {dest} not found", fg='red')
         echo('Available repositories:')
         for lPkg in env.sources:
             echo(' - ' + lPkg)
 
-        raiseError("Source package {} not found".format(dest))
+        raiseError(f"Source package {dest} not found")
 
-    setupPath = join(env.srcdir, dest, kRepoSetupFile)
-    if not exists(setupPath):
-        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+    # setupPath = join(env.srcdir, dest, kRepoSetupFile)
+    # if not exists(setupPath):
+    #     secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+    #     return
+    # secho('Resetting up {}'.format(dest), fg='blue')
+
+    # setupCfg = None
+    # with open(setupPath, 'r') as f:
+    #     setupCfg = yaml.safe_load(f)
+
+    resetPars = env.srcinfo[dest].setupsettings.get('reset', None)
+    if resetPars is None:
+        echo("No reset procedure defined.")
         return
-    secho('Resetting up {}'.format(dest), fg='blue')
 
-    setupCfg = None
-    with open(setupPath, 'r') as f:
-        setupCfg = yaml.safe_load(f)
-
-    setupCfg = setupCfg.get('reset', None)
-    if setupCfg is None:
-        echo("No reset configuration file. Skipping.")
-        return
-
-    cmds = [ l.split() for l in setupCfg ]
+    cmds = [ p.split() for p in resetPars ]
 
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
     if missingCmds:
-        secho('Some setup commands have not been found', fg='red')
+        secho("The following commands are not available in PATH", fg='red')
         for i, cmd in missingCmds:
-            echo(' - {} (line {})'.format(cmd, i))
+            echo(f" - {cmd} (line {i})")
 
-        raiseError("Setup commands not found".format(dest))
+        raiseError("Setup commands not found")
 
     with sh.pushd(join(env.srcdir, dest)):
         # TODO: add error handling
@@ -211,6 +201,53 @@ def _repoReset(env, dest):
         for cmd in cmds:
             secho('> '+' '.join(cmd), fg='cyan')
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
+
+# ------------------------------------------------------------------------------
+def dependencies(env):
+
+    import pprint
+    dep_pool = {}
+    for repo_name, i in env.srcinfo.items():
+        print(f'---{repo_name}---')
+        pprint.pprint(i.setupsettings)
+        i.validateSetup()
+
+        if 'dependencies' not in i.setupsettings:
+            continue
+            
+        for d in i.setupsettings['dependencies']:
+            dep_name = d['name']
+            if dep_name not in dep_pool:
+                dep_pool[dep_name] = []
+                # [ {'repos': [], 'data' = {}} ]
+
+            match = next((x for x in dep_pool[dep_name] if x['settings'] == d), None)
+            if match is not None:
+                match['repos'].append(repo_name)
+            else:
+                dep_pool[dep_name].append( {'repos': [repo_name], 'settings': d} )
+
+    mismatches = { k: v for k, v in dep_pool.items() if len(v) > 1}
+    if mismatches:
+        secho("ERROR: dependencies mismatch!", fg='red')
+        pprint.pprint(mismatches)
+
+        raiseError("Dependencies mismatch detected")
+
+    pprint.pprint(dep_pool)
+
+    add_cmds = {
+        'git': git,
+        'svn': svn,
+    }
+
+    for dep_name, info in dep_pool.items():
+        s = info[0]['settings']
+        if s['type'] not in add_cmds:
+            raise RuntimeError(f"Add cmd {s['type']} not known or supported")
+
+        add_cmds[s['type']](env, repo=s['path'], branch=s['branch'], revision=None, dest=s['name'])
+
 
 # ------------------------------------------------------------------------------
 def git(env, repo, branch, revision, dest):
@@ -289,12 +326,12 @@ def git(env, repo, branch, revision, dest):
         echo('Checking out revision ' + style(revision, fg='blue'))
         try:
             sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
-        except Exception as err:
+        except Exception:
             # NOTE: The assumption here is that the failed checkout
             # did not alter the state of the cloned repo in any
             # way. (This appears to be the case from experience but no
             # hard reference could be found.)
-            secho("Failed to check out requested revision." \
+            secho("Failed to check out requested revision."
                   " Staying on default branch.", fg='red')
 
     secho(
@@ -580,7 +617,6 @@ def srcs_info(env):
                     continue
 
                 for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
-                    print(lSubModDir)
                     with DirSentry(join(lSrcDir,lSubModDir)) as _:
                         lHEADId, lHash = _git_info()
                         lSrcTable.add_row([u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash])

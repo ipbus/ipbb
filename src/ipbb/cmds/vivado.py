@@ -51,7 +51,7 @@ _svfSettingName = 'svf_jtagchain_devices'
 # ------------------------------------------------------------------------------
 def ensure_vivado(ictx):
     """Utility function guaranteeing the correct Vivado environment.
-    
+
     Args:
         ictx (ipbb.Context): Context object
     
@@ -71,7 +71,7 @@ def ensure_vivado(ictx):
 # ------------------------------------------------------------------------------
 def ensure_vivado_project_path(aProjPath: str):
     """Utility function to ensure that the project path exists
-    
+
     Args:
         aProjPath (str): Vivado Project path
     
@@ -84,7 +84,7 @@ def ensure_vivado_project_path(aProjPath: str):
 # ------------------------------------------------------------------------------
 def vivado(ictx, loglevel, cmdlist):
     '''Vivado command group
-    
+
     Args:
         ctx (click.Context): Command context
         ictx (ipbb.Context): Context object
@@ -392,9 +392,9 @@ def resource_usage(ictx, aCell, aDepth, aFile, aSLR):
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
             for c in (
-                    'open_run impl_1',
-                    lCmd
-                ):
+                'open_run impl_1',
+                lCmd
+            ):
                 lConsole(c)
     except VivadoConsoleError as lExc:
         logVivadoConsoleError(lExc)
@@ -552,7 +552,7 @@ def debugprobes(ictx):
 # ------------------------------------------------------------------------------
 def memcfg(ictx):
     '''Create a memcfg file for PROM programming
-    
+
     Supports bin and mcs file types
     Requires the corresponding options to be defined in the dep files:
  

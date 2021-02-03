@@ -117,13 +117,12 @@ def test_alienbranch_template():
 
     template = AlienTemplate("a = ${lvl1.var}")
 
-
     branch = AlienBranch()
     branch.lvl1.var = "'Hello World'"
     branch._lock(True)
     # print('lvl1.var:', repr(branch.lvl1.var))
 
-    string = template.substitute(branch) 
+    string = template.substitute(branch)
     assert string == "a = {}".format(branch.lvl1.var)
 
 
@@ -142,22 +141,20 @@ def test_alienbranch_eval():
         # eval('b', None, branch)
 
 
-
 # -----------------------------------------------------------------------------
 def test_alientree():
 
     tree = AlienTree()
     leaves = [
-        ('v1_a','a'),
-        ('l1_a.v2_a','x'),
-        ('l1_a.l2_a.v3_a',3),
-        ]
+        ('v1_a', 'a'),
+        ('l1_a.v2_a', 'x'),
+        ('l1_a.l2_a.v3_a', 3),
+    ]
 
     for k, v in leaves:
         tree[k] = v
 
-    assert set(n for n in tree) == {'l1_a.v2_a', 'l1_a.l2_a.v3_a', 'l1_a.l2_a', 'l1_a', 'v1_a',}
-
+    assert set(n for n in tree) == {'l1_a.v2_a', 'l1_a.l2_a.v3_a', 'l1_a.l2_a', 'l1_a', 'v1_a', }
 
     assert {'l1_a.v2_a'}.issubset(tree)
 

@@ -22,7 +22,7 @@ from .dep import hash
 from ..tools.common import which, SmartOpen, mkdir
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..makers.vivadoproject import VivadoProjectMaker
+from ..generators.vivadoproject import VivadoProjectMaker
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 
@@ -109,10 +109,10 @@ def vivado(env, proj, verbosity, cmdlist):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
+def genproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
-    lSessionId = 'make-project'
+    lSessionId = 'generate-project'
 
     # Check if vivado is around
     ensureVivado(env)
@@ -138,7 +138,7 @@ def makeproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
         with lConsoleCtx as lConsole:
             lVivadoMaker.write(
                 lConsole,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -451,11 +451,11 @@ def memcfg(env):
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    # lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
+    # lTopEntity = lDepFileParser.settings.get('top_entity', kTopEntity)
     # lBasePath = join(env.vivadoProjPath, lProjName + '.runs', 'impl_1', lTopEntity)
     lBaseName = env.vivadoProdFileBase
 
-    if 'vivado' not in lDepFileParser.config:
+    if 'vivado' not in lDepFileParser.settings:
         secho('No memcfg settings found in this project. Exiting.', fg='yellow')
         return
 
@@ -466,7 +466,7 @@ def memcfg(env):
     # And that the Vivado env is up
     ensureVivado(env)
     
-    lVivadoCfg = lDepFileParser.config['vivado']
+    lVivadoCfg = lDepFileParser.settings['vivado']
     for k,o in _memCfgKinds.items():
 
         if o not in lVivadoCfg:
@@ -626,11 +626,11 @@ def package(env, aTag):
 
     if not exists(env.vivadoProjFile):
         secho('Vivado project does not exist. Creating the project...', fg='yellow')
-        makeproject(env, True, True, None, False)
+        genproject(env, True, True, None, False)
 
     lProjName = env.currentproj.name
     lDepFileParser = env.depParser
-    lTopEntity = lDepFileParser.config.get('top_entity', kTopEntity)
+    lTopEntity = lDepFileParser.settings.get('top_entity', kTopEntity)
 
     lBaseName = env.vivadoProdFileBase
     lBitPath  = lBaseName + '.bit'
@@ -639,7 +639,7 @@ def package(env, aTag):
         bitfile(env)
 
     try:
-        lVivadoCfg = lDepFileParser.config['vivado']
+        lVivadoCfg = lDepFileParser.settings['vivado']
         lActiveMemCfgs = [k for k,o in _memCfgKinds.items() if o in lVivadoCfg]
         lMemCfgFiles = [lBaseName + '.' + k for k in lActiveMemCfgs]
 

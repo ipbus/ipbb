@@ -41,10 +41,6 @@ def sim_get_command_aliases(self, ctx, cmd_name):
     rv = click.Group.get_command(self, ctx, cmd_name)
     if rv is not None:
         return rv
-    if cmd_name == 'project':
-        return click.Group.get_command(self, ctx, 'make-project')
-    if cmd_name == 'fli':
-        return click.Group.get_command(self, ctx, 'fli-eth')
 
 sim.get_command = types.MethodType(sim_get_command_aliases, sim)
 # ------------------------------------------------------------------------------
@@ -106,19 +102,19 @@ def fli_udp(ctx, *args, **kwargs):
 
 
 # ------------------------------------------------------------------------------
-@sim.command('make-project', short_help="Assemble the simulation project from sources")
-@click.option('-1', '--single', 'aOptimise', default=True, help="Disable project creation optimization. If present sources are added one at a time.")
+@sim.command('generate-project', short_help="Assemble the simulation project from sources")
+@click.option(' /-1', '--opt/--no-opt', 'aOptimise', default=True, help="Disable project creation optimization. If present sources are added one at a time.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Modelsim tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Modelsim tcl commands to screen and exit (dry run).")
 @click.pass_obj
 @click.pass_context
-def makeproject(ctx, *args, **kwargs):
+def genproject(ctx, *args, **kwargs):
     """
     Creates the modelsim project
 
     \b
-    1. Compiles the source code into the 'work' library,
-    2. Generates a 'vsim' wrapper that sets the simulation environment before invoking vsim.
+    1. Compiles the source code into the 'work' simulation library. A different name can be specified with the `sim.library` dep file setting.
+    2. Generates a 'run_sim' wrapper that sets the simulation environment before invoking vsim. The list of desing units to run can be specified with the `sim.run_sim.desing_units` dep file setting.
 
     NOTE: The ip/mac address of ipbus desings implementing a fli and exposing the ip/mac addresses via  top level generics can be set by defining the following user settings:
 
@@ -127,8 +123,8 @@ def makeproject(ctx, *args, **kwargs):
     - 'ipbus.fli.ip_address': mapped to IP_ADDR top-level generic
 
     """
-    from ..cmds.sim import makeproject
-    return (ctx.command.name, makeproject, args, kwargs)
+    from ..cmds.sim import genproject
+    return (ctx.command.name, genproject, args, kwargs)
 
 # ------------------------------------------------------------------------------
 @sim.command()

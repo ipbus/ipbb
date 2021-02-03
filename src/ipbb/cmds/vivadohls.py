@@ -9,7 +9,7 @@ from click import echo, secho, style, confirm
 from ..tools.common import which, SmartOpen
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..makers.vivadohlsproject import VivadoHlsProjectMaker
+from ..generators.vivadohlsproject import VivadoHlsProjectMaker
 from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError
 
 
@@ -50,10 +50,10 @@ def vivadohls(env, proj, verbosity):
     
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aToScript, aToStdout):
+def genproject(env, aToScript, aToStdout):
     '''Make the Vivado project from sources described by dependency files.'''
 
-    lSessionId = 'make-project'
+    lSessionId = 'generate-project'
 
     # Check if vivado is around
     ensureVivadoHLS(env)
@@ -79,7 +79,7 @@ def makeproject(env, aToScript, aToStdout):
 
             lVivadoMaker.write(
                 lConsole,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.rootdir,

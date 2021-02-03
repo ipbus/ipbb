@@ -1,4 +1,3 @@
-
 # Modules
 import click
 import os
@@ -41,8 +40,8 @@ from ._utils import (
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
-from ..makers.ipcoressim import IPCoresSimMaker
-from ..makers.modelsimproject import ModelSimProjectMaker
+from ..generators.ipcoressim import IPCoresSimMaker
+from ..generators.modelsimproject import ModelSimProjectMaker
 
 
 kIPExportDir = 'ipcores_sim'
@@ -269,7 +268,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
             lIPCoreSimMaker.write(
                 lVivadoConsole,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -438,13 +437,13 @@ def fli_udp(env, port, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-def makeproject(env, aOptimise, aToScript, aToStdout):
+def genproject(env, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
 
     \b
-    1. Compiles the source code into the 'work' library,
-    2. Generates a 'vsim' wrapper that sets the simulation environment before invoking vsim.
+    1. Compiles the source code into the 'work' simulation library. A different name can be specified with the `sim.library` dep file setting.
+    2. Generates a 'run_sim' wrapper that sets the simulation environment before invoking vsim. The list of desing units to run can be specified with the `sim.run_sim.desing_units` dep file setting.
 
     NOTE: The ip/mac address of ipbus desings implementing a fli and exposing the ip/mac addresses via  top level generics can be set by defining the following user settings:
 
@@ -454,7 +453,7 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
 
     """
 
-    lSessionId = 'project'
+    # lSessionId = 'genproject'
 
     # -------------------------------------------------------------------------
     # Must be in a build area
@@ -477,10 +476,9 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
         )
     # -------------------------------------------------------------------------
 
-    # Use compiler executable to detect Modelsim's flavour
-    # lSimulator = mentor.autodetect().lower()
-
     lDepFileParser = env.depParser
+
+    lSimLibrary = lDepFileParser.settings.get('sim.library', 'work')
 
     # Ensure that no parsing errors are present
     ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
@@ -488,18 +486,18 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(env.currentproj, kIPVivadoProjName, aOptimise)
+    lSimProjMaker = ModelSimProjectMaker(env.currentproj, lSimLibrary, kIPVivadoProjName, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
     if not lDryRun:
-        sh.rm('-rf', 'work')
+        sh.rm('-rf', lSimLibrary)
 
     try:
         with mentor.ModelSimBatch(aToScript, echo=aToStdout, dryrun=lDryRun) as lSim:
             lSimProjMaker.write(
                 lSim,
-                lDepFileParser.config,
+                lDepFileParser.settings,
                 lDepFileParser.packages,
                 lDepFileParser.commands,
                 lDepFileParser.libs,
@@ -515,31 +513,29 @@ def makeproject(env, aOptimise, aToScript, aToStdout):
 
     if lDryRun:
         return
+
     # ----------------------------------------------------------
     # Create a wrapper to force default bindings at load time
-    print('Writing modelsim wrapper \'./vsim\'')
+    lVsimWrapper = 'run_sim'
+    print(f"Writing modelsim wrapper '{lVsimWrapper}'")
 
-    lVsimArgs = collections.OrderedDict(
-        [
-            (
-                'MAC_ADDR',
-                validateMacAddress(
-                    env.currentproj.usersettings.get('ipbus.fli.mac_address', None)
-                ),
-            ),
-            (
-                'IP_ADDR',
-                validateIpAddress(
-                    env.currentproj.usersettings.get('ipbus.fli.ip_address', None)
-                ),
-            ),
-        ]
+    lVsimArgStr = f"{lDepFileParser.settings.get(f'sim.{lVsimWrapper}.design_units', '')}"
+
+    lVsimOpts = collections.OrderedDict()
+    lVsimOpts['MAC_ADDR'] = validateMacAddress(
+        env.currentproj.usersettings.get('ipbus.fli.mac_address', None)
+    )
+    lVsimOpts['IP_ADDR'] = validateIpAddress(
+        env.currentproj.usersettings.get('ipbus.fli.ip_address', None)
     )
 
-    lVsimExtraArgs = ' '.join(
-        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimArgs.items() if v is not None]
+    lVsimOptStr = ' '.join(
+        ['-G{}=\'{}\''.format(k, v) for k, v in lVsimOpts.items() if v is not None]
     )
-    lVsimBody = '''#!/bin/sh
+
+    lVsimCmd = ' '.join(['vsim', lVsimArgStr, lVsimOptStr])
+
+    lVsimBody = f'''#!/bin/sh
 
 if [ ! -f modelsim.ini ]; then
     echo "WARNING: modelsim.ini not found. Vivado simulation libraries won't be loaded."
@@ -547,15 +543,17 @@ fi
 
 export MTI_VCO_MODE=64
 export MODELSIM_DATAPATH="mif/"
-vsim {} "$@"
-    '''.format(
-        lVsimExtraArgs
-    )
-    with SmartOpen('vsim') as lVsimSh:
+{lVsimCmd} "$@"
+    '''
+    with SmartOpen(lVsimWrapper) as lVsimSh:
         lVsimSh(lVsimBody)
 
     # Make it executable
-    os.chmod('vsim', 0o755)
+    os.chmod(lVsimWrapper, 0o755)
+
+    print(f"Vsim wrapper script '{lVsimWrapper}' created")
+    if lVsimCmd:
+        print(f"   Command: '{lVsimCmd}'")
 
 
 # ------------------------------------------------------------------------------

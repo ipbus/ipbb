@@ -32,7 +32,7 @@ class VivadoProjectMaker(object):
         elif lExt in ('.xdc', '.tcl'):
             lFileSet = 'constrs_1'
 
-        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf'):
+        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf', '.mem'):
             if aSrcCmd.useInSynth:
                 lFileSet = 'sources_1'
             elif aSrcCmd.useInSim:

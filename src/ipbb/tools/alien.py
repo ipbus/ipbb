@@ -173,6 +173,19 @@ class AlienTree(object):
     def __repr__(self):
         return self.__class__.__name__+repr(self._trunk)
 
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            if self._locked or name.startswith('__'):
+                raise
+            else:
+                value = self.__dict__[name] = type(self)()
+                return value
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+
     @property
     def trunk(self):
         return self._trunk

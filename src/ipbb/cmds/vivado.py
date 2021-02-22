@@ -36,7 +36,7 @@ def ensureVivado(env):
     """Utility function guaranteeing the correct Vivado environment.
     
     Args:
-        env (ipbb.Environment): Environment object
+        env (ipbb.Context): Context object
     
     Raises:
         click.ClickException: Toolset mismatch or Vivado not available
@@ -71,7 +71,7 @@ def vivado(env, proj, verbosity, cmdlist):
     
     Args:
         ctx (click.Context): Command context
-        env (ipbb.Environment): Environment object
+        env (ipbb.Context): Context object
         proj (str): Project name
         verbosity (str): Verbosity level
     

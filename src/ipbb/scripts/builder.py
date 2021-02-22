@@ -10,7 +10,7 @@ from io import StringIO, BytesIO
 from texttable import Texttable
 from click import echo, style, secho
 
-from ..cmds import Environment
+from ..context import Context
 from ..cmds.formatters import DepFormatter
 
 from .._version import __version__
@@ -99,7 +99,7 @@ def main():
 
     _compose_cli()
 
-    obj = Environment()
+    obj = Context()
     try:
         climain(obj=obj)
     except Exception as e:

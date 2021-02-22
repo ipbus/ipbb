@@ -6,59 +6,59 @@ import click
 # ------------------------------------------------------------------------------
 @click.group('debug', help='Collection of debug/utility commands')
 @click.pass_obj
-def debug(env):
+def debug(ictx):
     """Collection of debug/utility commands
     
     Args:
-        env (`obj`): Environment object.
+        ictx (`obj`): Context object.
     """
     from ..cmds.debug import debug
-    debug(env)
+    debug(ictx)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('dump')
 @click.pass_obj
-def dump(env):
+def dump(ictx):
     from ..cmds.debug import dump
-    dump(env)
+    dump(ictx)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('ipy', help='Loads the ipbb environment and opens a python shell')
 @click.pass_obj
 @click.pass_context
-def ipy(ctx, env):
+def ipy(ctx, ictx):
     """Loads the ipbb environment and opens a python shell
     
     Args:
-        env (`obj:Context`): Environment object.
+        ictx (`obj:Context`): Context object.
     """
     from ..cmds.debug import ipy
-    ipy(ctx, env)
+    ipy(ctx, ictx)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('test-vivado-formatter', help='Test Vivado formatter')
 @click.pass_obj
-def test_vivado_formatter(env):
+def test_vivado_formatter(ictx):
     """Test vivado formatter
     
     Args:
-        env (`obj:Context`): Environment object.
+        ictx (`obj:Context`): Context object.
     """
     from ..cmds.debug import test_vivado_formatter
-    test_vivado_formatter(env)
+    test_vivado_formatter(ictx)
 
 
 # ------------------------------------------------------------------------------
 @debug.command('test-vivado-console', help='Test Vivado console')
 @click.pass_obj
-def test_vivado_console(env):
+def test_vivado_console(ictx):
     """Test Vivado console
     
     Args:
-        env (`obj:Context`): Environment object.
+        ictx (`obj:Context`): Context object.
     """
     from ..cmds.debug import test_vivado_console
-    test_vivado_console(env)
+    test_vivado_console(ictx)

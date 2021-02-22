@@ -7,12 +7,12 @@ import click
 
 # ------------------------------------------------------------------------------
 @click.command('init', short_help="Initialise a new working area.")
-@click.argument('workarea')
+@click.argument('directory')
 @click.pass_obj
-def init(env, workarea):
+def init(env, directory):
     '''Initialise a new firmware development area'''
     from ..cmds.repo import init
-    init(env, workarea)
+    init(env, directory)
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------

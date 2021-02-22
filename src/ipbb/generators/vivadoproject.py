@@ -40,6 +40,8 @@ class VivadoProjectMaker(object):
 
         return lFileSet
 
+    reqsettings = {'device_name', 'device_package', 'device_speed'}
+
     # --------------------------------------------------------------
     def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True):
         self.projInfo = aProjInfo
@@ -49,10 +51,9 @@ class VivadoProjectMaker(object):
     # --------------------------------------------------------------
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
 
-        lReqSettings = {'device_name', 'device_package', 'device_speed'}
-        if not lReqSettings.issubset(aSettings):
-            raise RuntimeError(f"Missing required variables: {', '.join(lReqSettings.difference(aSettings))}")
-        lXilinxPart = f'{aSettings.device_name}{aSettings.device_package}{aSettings.device_speed}'
+        if not self.reqsettings.issubset(aSettings):
+            raise RuntimeError(f"Missing required variables: {', '.join(self.reqsettings.difference(aSettings))}")
+        lXilinxPart = f'{aSettings["device_name"]}{aSettings["device_package"]}{aSettings["device_speed"]}'
 
         # ----------------------------------------------------------
         write = aOutput

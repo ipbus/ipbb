@@ -12,9 +12,9 @@ from ..tools.common import which
 
 
 # ------------------------------------------------------------------------------
-def cleanup(env):
+def cleanup(ictx):
 
-    _, lSubdirs, lFiles = next(os.walk(env.currentproj.path))
+    _, lSubdirs, lFiles = next(os.walk(ictx.currentproj.path))
     for f in [kProjAreaFile, kProjUserFile]:
         if f not in lFiles:
             continue
@@ -24,7 +24,7 @@ def cleanup(env):
     if lFiles and not click.confirm(
         style(
             "All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format(
-                env.currentproj.path
+                ictx.currentproj.path
             ),
             fg='yellow',
         )
@@ -39,25 +39,25 @@ def cleanup(env):
 
 
 # ------------------------------------------------------------------------------
-def user_config(env, aList, aAdd, aUnset):
+def user_config(ictx, aList, aAdd, aUnset):
 
     echo("User settings")
 
     if aAdd:
         lKey, lValue = aAdd
-        env.currentproj.usersettings[lKey] = lValue
-        env.currentproj.saveUserSettings()
+        ictx.currentproj.usersettings[lKey] = lValue
+        ictx.currentproj.saveUserSettings()
 
     if aUnset:
-        del env.currentproj.usersettings[aUnset]
-        env.currentproj.saveUserSettings()
+        del ictx.currentproj.usersettings[aUnset]
+        ictx.currentproj.saveUserSettings()
 
-    if env.currentproj.usersettings:
-        echo(formatDictTable(env.currentproj.usersettings))
+    if ictx.currentproj.usersettings:
+        echo(formatDictTable(ictx.currentproj.usersettings))
 
 
 # ------------------------------------------------------------------------------
-def addrtab(env, aDest):
+def addrtab(ictx, aDest):
     '''Copy address table files into addrtab subfolder'''
 
     try:
@@ -67,20 +67,20 @@ def addrtab(env, aDest):
 
     import sh
 
-    if not env.depParser.commands["addrtab"]:
+    if not ictx.depParser.commands["addrtab"]:
         secho(
             "\nWARNING no address table files defined in {}.\n".format(
-                env.currentproj.name
+                ictx.currentproj.name
             ),
             fg='yellow',
         )
         return
 
-    for addrtab in env.depParser.commands["addrtab"]:
+    for addrtab in ictx.depParser.commands["addrtab"]:
         print(sh.cp('-avL', addrtab.filepath, join(aDest, basename(addrtab.filepath))))
     secho(
         "\n{}: Address table files collected in '{}'.\n".format(
-            env.currentproj.name, aDest
+            ictx.currentproj.name, aDest
         ),
         fg='green',
     )

@@ -5,7 +5,7 @@ import glob
 import copy
 import string
 
-from .definitions import depfiletypes
+from . import depfiletypes
 from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import SrcCommand, IncludeCommand
@@ -13,9 +13,6 @@ from ..tools.alien import AlienTree, AlienTemplate
 
 from collections import OrderedDict
 from os.path import exists, splitext, sep
-# from string import Template
-
-
 
 
 # -----------------------------------------------------------------------------
@@ -29,8 +26,8 @@ def _copyUpdateCommand(aCmd, aFilePath, aPkg, aCmp):
     cmd.component = aCmp
     return cmd
 
+
 # -----------------------------------------------------------------------------
-# Experimental
 class DepFile(object):
     """docstring for DepFile"""
     def __init__(self, aPackage, aComponent, aName, aPath):

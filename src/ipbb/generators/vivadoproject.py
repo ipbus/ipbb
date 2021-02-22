@@ -9,7 +9,7 @@ from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class VivadoProjectMaker(object):
+class VivadoProjectGenerator(object):
     """
     Attributes:
         filesets (obj:`dict`): extension-to-fileset association

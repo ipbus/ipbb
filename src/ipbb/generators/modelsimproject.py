@@ -7,7 +7,7 @@ from ..tools.common import SmartOpen
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-class ModelSimProjectMaker(object):
+class ModelSimGenerator(object):
     # --------------------------------------------------------------
     def __init__(self, aProjInfo, aSimLibrary, aIPProjName, aTurbo=True):
         self.projInfo = aProjInfo

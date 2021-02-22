@@ -22,7 +22,7 @@ from .dep import hash
 from ..tools.common import which, SmartOpen, mkdir
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..generators.vivadoproject import VivadoProjectMaker
+from ..generators.vivadoproject import VivadoProjectGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 
@@ -126,7 +126,7 @@ def genproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
     lVivadoIPCache = join(env.work.path, 'var', 'vivado-ip-cache') if aEnableIPCache else None
-    lVivadoMaker = VivadoProjectMaker(env.currentproj, lVivadoIPCache, aOptimise)
+    lVivadoMaker = VivadoProjectGenerator(env.currentproj, lVivadoIPCache, aOptimise)
 
     if aToScript or aToStdout:
         # Dry run

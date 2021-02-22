@@ -5,7 +5,7 @@ import shutil
 from os.path import abspath, join, split, splitext
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class IPCoresSimMaker(object):
+class IPCoresSimGenerator(object):
 
     _compiler = 'vcom'
 

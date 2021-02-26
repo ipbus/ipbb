@@ -269,7 +269,7 @@ def synth(env, aNumJobs, aUpdateInt):
         raise click.Abort()
     except RuntimeError as lExc:
         secho(
-            "ERROR: \n" + "\n".join(lExc),
+            "ERROR: " + str(lExc),
             fg='red',
         )
         raise click.Abort()

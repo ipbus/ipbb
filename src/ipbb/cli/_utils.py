@@ -1,5 +1,5 @@
 
-from ..cmds import Context
+from ..context import Context
 from os import walk
 from os.path import join, relpath, dirname, basename, exists, normpath
 

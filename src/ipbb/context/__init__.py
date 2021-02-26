@@ -3,7 +3,7 @@
 import yaml
 from click import echo, secho, style, confirm
 
-from . import _utils
+from .. import utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
@@ -145,7 +145,7 @@ class ProjectInfo(FolderInfo):
         self.loadUserSettings()
 
     # ------------------------------------------------------------------------------
-    def loadsettings(self):
+    def loadSettings(self):
         if not exists(self.filepath):
             return
 
@@ -235,7 +235,7 @@ class Context(object):
         self._clear()
 
         # -----------------------------
-        lWorkAreaPath = _utils.findFileDirInParents(kWorkAreaFile, self._wd)
+        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile, self._wd)
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
@@ -247,7 +247,7 @@ class Context(object):
         self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
 
         # -----------------------------
-        lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, self._wd)
+        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile, self._wd)
         if not lProjAreaPath:
             return
 

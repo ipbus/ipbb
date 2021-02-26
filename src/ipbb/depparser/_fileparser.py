@@ -5,7 +5,7 @@ import glob
 import copy
 import string
 
-from . import depfiletypes
+from ._definitions import depfiletypes
 from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import SrcCommand, IncludeCommand

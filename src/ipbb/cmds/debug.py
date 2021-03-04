@@ -12,24 +12,23 @@ from ..tools.xilinx import (
 
 
 # ------------------------------------------------------------------------------
-def debug(env):
+def debug(ictx):
     pass
 
 
 # ------------------------------------------------------------------------------
-def dump(env):
+def dump(ictx):
 
     if 'IPBB_ROOT' in os.environ:
         echo(style('IPBB_ROOT', fg='blue') + ': ' + os.environ['IPBB_ROOT'])
 
-    env = env.obj
-    echo(style('src dir', fg='blue') + ': ' + env.srcdir)
-    echo(style('proj dir', fg='blue') + ': ' + env.projdir)
-    echo(style('project name', fg='blue') + ': ' + env.currentproj.name)
+    echo(style('src dir', fg='blue') + ': ' + ictx.srcdir)
+    echo(style('proj dir', fg='blue') + ': ' + ictx.projdir)
+    echo(style('project name', fg='blue') + ': ' + ictx.currentproj.name)
 
 
 # ------------------------------------------------------------------------------
-def ipy(ctx, env):
+def ipy(ctx, ictx):
     '''Opens IPython to inspect the parser'''
 
     import IPython
@@ -38,7 +37,7 @@ def ipy(ctx, env):
 
 
 # ------------------------------------------------------------------------------
-def test_vivado_formatter(env):
+def test_vivado_formatter(ictx):
 
     out = VivadoOutputFormatter('test | ')
 
@@ -56,6 +55,6 @@ def test_vivado_formatter(env):
 
 
 # ------------------------------------------------------------------------------
-def test_vivado_console(env):
+def test_vivado_console(ictx):
     with VivadoSession('debug') as lConsole:
         lConsole('puts "Hello Xilinx World"')

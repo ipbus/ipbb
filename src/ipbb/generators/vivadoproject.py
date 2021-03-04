@@ -9,7 +9,7 @@ from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class VivadoProjectMaker(object):
+class VivadoProjectGenerator(object):
     """
     Attributes:
         filesets (obj:`dict`): extension-to-fileset association
@@ -18,7 +18,7 @@ class VivadoProjectMaker(object):
     filetypes = {
         'ip' : ('.xci', '.xcix'),
         'constr' : ('.xdc', '.tcl'),
-        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem'),
+        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem', '.mif'),
     }
 
     @staticmethod
@@ -32,13 +32,15 @@ class VivadoProjectMaker(object):
         elif lExt in ('.xdc', '.tcl'):
             lFileSet = 'constrs_1'
 
-        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf', '.mem'):
+        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf', '.mem', '.mif'):
             if aSrcCmd.useInSynth:
                 lFileSet = 'sources_1'
             elif aSrcCmd.useInSim:
                 lFileSet = 'sim_1'
 
         return lFileSet
+
+    reqsettings = {'device_name', 'device_package', 'device_speed'}
 
     # --------------------------------------------------------------
     def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True):
@@ -49,10 +51,9 @@ class VivadoProjectMaker(object):
     # --------------------------------------------------------------
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
 
-        lReqSettings = {'device_name', 'device_package', 'device_speed'}
-        if not lReqSettings.issubset(aSettings):
-            raise RuntimeError(f"Missing required variables: {', '.join(lReqSettings.difference(aSettings))}")
-        lXilinxPart = f'{aSettings.device_name}{aSettings.device_package}{aSettings.device_speed}'
+        if not self.reqsettings.issubset(aSettings):
+            raise RuntimeError(f"Missing required variables: {', '.join(self.reqsettings.difference(aSettings))}")
+        lXilinxPart = f'{aSettings["device_name"]}{aSettings["device_package"]}{aSettings["device_speed"]}'
 
         # ----------------------------------------------------------
         write = aOutput
@@ -70,6 +71,12 @@ class VivadoProjectMaker(object):
         write(
             f'create_project {self.projInfo.name} {lWorkingDir} -part {lXilinxPart} -force'
         )
+
+        # if 'board_part' in aSettings:
+        #     write('set_property -name "board_part" -value "{board_part}" -objects [current_project]'.format(**aSettings))
+        # if 'dsa_board_id' in aSettings:
+        #     write('set_property -name "dsa.board_id" -value "{dsa_board_id}" -objects [current_project]'.format(**aSettings))
+
 
         # Add ip repositories to the project variable
         write('set_property ip_repo_paths {{{}}} [current_project]'.format(

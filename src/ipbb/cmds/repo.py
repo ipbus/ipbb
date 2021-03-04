@@ -14,81 +14,83 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
 from ..depparser import Pathmaker
 from ..tools.common import mkdir
-from ._utils import DirSentry, findFileInParents, raiseError, formatDictTable
+from ..utils import DirSentry, findFileInParents, raiseError, formatDictTable
 from .formatters import DepFormatter
 from .proj import info as proj_info
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from texttable import Texttable
 
+
 # ------------------------------------------------------------------------------
-def init(env, workarea):
+def init(ictx, directory):
     '''Initialise a new firmware development area'''
 
-    secho('Setting up new firmware work area \'' + workarea + '\'', fg='green')
+    secho('Setting up new firmware work area \'' + directory + '\'', fg='green')
 
-    if env.work.path is not None:
+    if ictx.work.path is not None:
         raise click.ClickException(
-            'Cannot create a new work area inside an existing one %s' % env.work.path
+            'Cannot create a new work area inside an existing one %s' % ictx.work.path
         )
 
-    if exists(workarea) and os.listdir(workarea):
-        raise click.ClickException('Directory \'%s\' already exists and it\'s not empty' % workarea)
+    if exists(directory) and os.listdir(directory):
+        raise click.ClickException('Directory \'%s\' already exists and it\'s not empty' % directory)
 
     # Build source code directory
-    mkpath(join(workarea, kSourceDir))
-    mkpath(join(workarea, kProjDir))
+    mkpath(join(directory, kSourceDir))
+    mkpath(join(directory, kProjDir))
 
-    with open(join(workarea, kWorkAreaFile), 'w') as lSignature:
+    with open(join(directory, kWorkAreaFile), 'w') as lSignature:
         lSignature.write('\n')
 
 
 # ------------------------------------------------------------------------------
-def info(env, verbose):
+def info(ictx, verbose):
     '''Print a brief report about the current working area'''
 
-    if not env.work.path:
+    if not ictx.work.path:
         secho('ERROR: No ipbb work area detected', fg='red')
         return
 
     echo()
-    secho("ipbb environment", fg='blue')
+    secho("ipbb waironment", fg='blue')
     # echo  ( "----------------")
 
     lEnvTable = Texttable(max_width=0)
-    lEnvTable.add_row(["Work path", env.work.path])
-    if env.currentproj.path:
-        lEnvTable.add_row(["Project path", env.currentproj.path])
+    lEnvTable.add_row(["Work path", ictx.work.path])
+    if ictx.currentproj.path:
+        lEnvTable.add_row(["Project path", ictx.currentproj.path])
     echo(lEnvTable.draw())
 
-    if not env.currentproj.path:
-        echo()
-        srcs_info(env)
+    echo()
+    srcs_info(ictx)
 
-        echo()
-        proj_info(env)
+    echo()
+    proj_info(ictx)
+
+    if not ictx.currentproj.path:
         return
 
     echo()
 
-    if not env.currentproj.settings:
+    if not ictx.currentproj.settings:
         return
 
-    secho("Project '%s'" % env.currentproj.name, fg='blue')
+    secho("Project '%s'" % ictx.currentproj.name, fg='blue')
 
-    echo(formatDictTable(env.currentproj.settings, aHeader=False))
+    echo(formatDictTable(ictx.currentproj.settings, aHeader=False))
 
     echo()
 
-    if env.currentproj.usersettings:
+    if ictx.currentproj.usersettings:
         secho("User settings", fg='blue')
-        echo(formatDictTable(env.currentproj.usersettings, aHeader=False))
+        echo(formatDictTable(ictx.currentproj.usersettings, aHeader=False))
 
         echo()
 
-    lParser = env.depParser
+    lParser = ictx.depParser
     lDepFmt = DepFormatter(lParser)
-    
+
     if lParser.errors:
         secho("Dep tree parsing error(s):", fg='red')
         echo(lDepFmt.drawParsingErrors())
@@ -99,7 +101,7 @@ def info(env, verbose):
 
     echo()
 
-    if  lParser.unresolved:
+    if lParser.unresolved:
         secho("Unresolved item(s)", fg='red')
         echo(lDepFmt.drawUnresolvedSummary())
 
@@ -108,29 +110,29 @@ def info(env, verbose):
 
 
 # ------------------------------------------------------------------------------
-def add(env):
+def add(ictx):
     '''Add a new package to the source area'''
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.work.path is None:
+    if ictx.work.path is None:
         raise click.ClickException('Build area root directory not found')
     # -------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-def _repoInit(env, dest):
+def _repoInit(ictx, dest):
 
-    if dest not in env.sources:
-        secho('Source package {} not found'.format(dest), fg='red')
+    if dest not in ictx.sources:
+        secho(f'Source package {dest} not found', fg='red')
         echo('Available repositories:')
-        for lPkg in env.sources:
+        for lPkg in ictx.sources:
             echo(' - ' + lPkg)
 
         raiseError("Source package {} not found".format(dest))
 
-    setupPath = join(env.srcdir, dest, kRepoSetupFile)
-    if not exists(setupPath):
-        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+    initPars = ictx.srcinfo[dest].setupsettings.get('init', None)
+    if initPars is None:
+        echo("No init procedure defined.")
         return
     secho('Setting up {}'.format(dest), fg='blue')
 
@@ -154,7 +156,7 @@ def _repoInit(env, dest):
 
         raiseError("Setup commands not found".format(dest))
 
-    with sh.pushd(join(env.srcdir, dest)):
+    with sh.pushd(join(ictx.srcdir, dest)):
         # TODO: add error handling
         # Show the list of commands
         # In green the commands executed successfully
@@ -165,29 +167,29 @@ def _repoInit(env, dest):
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
-def _repoReset(env, dest):
+def _repoReset(ictx, dest):
 
-    if dest not in env.sources:
-        secho('Source package {} not found'.format(dest), fg='red')
+    if dest not in ictx.sources:
+        secho(f"Source package {dest} not found", fg='red')
         echo('Available repositories:')
-        for lPkg in env.sources:
+        for lPkg in ictx.sources:
             echo(' - ' + lPkg)
 
         raiseError("Source package {} not found".format(dest))
 
-    setupPath = join(env.srcdir, dest, kRepoSetupFile)
-    if not exists(setupPath):
-        secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
-        return
-    secho('Resetting up {}'.format(dest), fg='blue')
+    # setupPath = join(ictx.srcdir, dest, kRepoSetupFile)
+    # if not exists(setupPath):
+    #     secho('No repository setup file found in {}. Skipping'.format(dest), fg='blue')
+    #     return
+    # secho('Resetting up {}'.format(dest), fg='blue')
 
     setupCfg = None
     with open(setupPath, 'r') as f:
         setupCfg = yaml.safe_load(f)
 
-    setupCfg = setupCfg.get('reset', None)
-    if setupCfg is None:
-        echo("No reset configuration file. Skipping.")
+    resetPars = ictx.srcinfo[dest].setupsettings.get('reset', None)
+    if resetPars is None:
+        echo("No reset procedure defined.")
         return
 
     cmds = [ l.split() for l in setupCfg ]
@@ -201,7 +203,7 @@ def _repoReset(env, dest):
 
         raiseError("Setup commands not found".format(dest))
 
-    with sh.pushd(join(env.srcdir, dest)):
+    with sh.pushd(join(ictx.srcdir, dest)):
         # TODO: add error handling
         # Show the list of commands
         # In green the commands executed successfully
@@ -211,8 +213,9 @@ def _repoReset(env, dest):
             secho('> '+' '.join(cmd), fg='cyan')
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
+
 # ------------------------------------------------------------------------------
-def git(env, repo, branch, revision, dest):
+def git(ictx, repo, branch, revision, dest):
     '''Add a git repository to the source area'''
 
     echo('Adding git repository ' + style(repo, fg='blue'))
@@ -223,7 +226,7 @@ def git(env, repo, branch, revision, dest):
     lUrl = urlparse(repo)
     # Strip '.git' at the end
     lRepoName = splitext(basename(lUrl.path))[0] if dest is None else dest
-    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
+    lRepoLocalPath = join(ictx.work.path, kSourceDir, lRepoName)
 
     # Check for
     if exists(lRepoLocalPath):
@@ -274,7 +277,7 @@ def git(env, repo, branch, revision, dest):
     if dest is not None:
         lArgs += [dest]
 
-    sh.git(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
+    sh.git(*lArgs, _out=sys.stdout, _cwd=ictx.srcdir)
 
     # NOTE: The mutual exclusivity of checking out a branch and
     # checkout out a revision should have been handled at the CLI
@@ -298,16 +301,16 @@ def git(env, repo, branch, revision, dest):
 
     secho(
         'Repository \'{}\' successfully cloned to:\n  {}'.format(
-            lRepoName, join(env.srcdir, lRepoName)
+            lRepoName, join(ictx.srcdir, lRepoName)
         ),
         fg='green',
     )
 
-    _repoInit(env, lRepoName)
+    _repoInit(ictx, lRepoName)
 
 
 # ------------------------------------------------------------------------------
-def svn(env, repo, dest, rev, dryrun, sparse):
+def svn(ictx, repo, dest, rev, dryrun, sparse):
     '''Add a svn repository REPO to the source area'''
 
     lUrl = urlparse(repo)
@@ -316,7 +319,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
     # Stop if the target directory already exists
     echo('Adding svn repository ' + style(repo, fg='blue'))
 
-    lRepoLocalPath = join(env.srcdir, lRepoName)
+    lRepoLocalPath = join(ictx.srcdir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
@@ -337,7 +340,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
         lCmd = ['svn'] + lArgs
         echo('Executing ' + style(' '.join(lCmd), fg='blue'))
         if not dryrun:
-            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
+            sh.svn(*lArgs, _out=sys.stdout, _cwd=ictx.srcdir)
     else:
         echo('Sparse checkout mode: ' + style(' '.join(sparse), fg='blue'))
         # ----------------------------------------------------------------------
@@ -354,7 +357,7 @@ def svn(env, repo, dest, rev, dryrun, sparse):
         lCmd = ['svn'] + lArgs
         echo('Executing ' + style(' '.join(lCmd), fg='blue'))
         if not dryrun:
-            sh.svn(*lArgs, _out=sys.stdout, _cwd=env.srcdir)
+            sh.svn(*lArgs, _out=sys.stdout, _cwd=ictx.srcdir)
         # ----------------------------------------------------------------------
         lArgs = ['update']
         lCmd = ['svn'] + lArgs
@@ -376,13 +379,13 @@ def svn(env, repo, dest, rev, dryrun, sparse):
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoInit(env, lRepoName)
+    _repoInit(ictx, lRepoName)
 
     # -------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-def tar(env, repo, dest, strip):
+def tar(ictx, repo, dest, strip):
     '''Add a tarball-ed package to the source area'''
 
     click.secho("Warning: Command 'untar' is still experimental", fg='yellow')
@@ -428,7 +431,7 @@ def tar(env, repo, dest, strip):
         + ' to '
         + style(lRepoName, fg='blue')
     )
-    lRepoLocalPath = join(env.work.path, kSourceDir, lRepoName)
+    lRepoLocalPath = join(ictx.work.path, kSourceDir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
@@ -448,14 +451,14 @@ def tar(env, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoInit(env, lRepoName)
+    _repoInit(ictx, lRepoName)
 
 
 # ------------------------------------------------------------------------------
-def symlink(env, path):
+def symlink(ictx, path):
 
     lRepoName = basename(path)
-    lRepoLocalPath = join(env.srcdir, lRepoName)
+    lRepoLocalPath = join(ictx.srcdir, lRepoName)
 
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
@@ -467,24 +470,87 @@ def symlink(env, path):
         + style(lRepoName, fg='blue')
     )
 
-    sh.ln('-s', abspath(path), _cwd=env.srcdir )
+    sh.ln('-s', abspath(path), _cwd=ictx.srcdir )
 
 
 # ------------------------------------------------------------------------------
-def srcs(env):
+def srcs(ictx):
     pass
 
+# ------------------------------------------------------------------------------
+def _git_info():
+    lHEADId, lHash = None, None
+
+    try:
+        lBranch = '/'.join(
+            sh.git('symbolic-ref', 'HEAD').split('/')[2:]
+        ).strip()
+    except sh.ErrorReturnCode_128:
+        lBranch = None
+
+    try:
+        lTag = sh.git(
+            'describe', '--tags', '--exact-match', 'HEAD'
+        ).strip()   
+    except sh.ErrorReturnCode_128:
+        lTag = None
+
+    lHash = sh.git('rev-parse', '--short=8', 'HEAD').strip() + '...'
+
+    if lTag is not None:
+        lHEADId = lTag
+    elif lBranch is not None:
+        lHEADId = lBranch
+    else:
+        lHEADId = lHash
+
+    try:
+        sh.git('diff', '--no-ext-diff', '--quiet').strip()
+    except sh.ErrorReturnCode_1:
+        lHEADId += '*'
+
+    try:
+        sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
+    except sh.ErrorReturnCode_1:
+        lHEADId += '+'
+
+    return lHEADId, lHash
 
 # ------------------------------------------------------------------------------
-def srcs_info(env):
+def _svn_info():
+    lHEADId, lHash = None, None
 
-    if not env.work.path:
+    lSVNInfoRaw = sh.svn('info')
+
+    lSVNInfo = {
+        lEntry[0]: lEntry[1].strip()
+        for lEntry in (
+            lLine.split(':', 1)
+            for lLine in lSVNInfoRaw.split('\n')
+            if lLine
+        )
+    }
+
+    lHEADId = lSVNInfo['URL'].replace(lSVNInfo['Repository Root'] + '/', '')
+
+    lSVNStatus = sh.svn('status', '-q')
+    if len(lSVNStatus):
+        lHEADId += '*'
+
+    lHash = lSVNInfo['Revision']
+
+    return lHEADId, lHash
+
+# ------------------------------------------------------------------------------
+def srcs_info(ictx):
+
+    if not ictx.work.path:
         secho('ERROR: No ipbb work area detected', fg='red')
         return
 
     echo()
     secho("Firmware Packages", fg='blue')
-    lSrcs = env.sources
+    lSrcs = ictx.sources
     if not lSrcs:
         return
 
@@ -493,7 +559,7 @@ def srcs_info(env):
     lSrcTable.set_chars(['-', '|', '+', '-'])
     lSrcTable.header(['name', 'kind', 'version', 'hash'])
     for lSrc in lSrcs:
-        lSrcDir = join(env.srcdir, lSrc)
+        lSrcDir = join(ictx.srcdir, lSrc)
 
         lKind, lHEADId, lHash = "unknown", None, None
 
@@ -505,72 +571,38 @@ def srcs_info(env):
                 try:
                     sh.git('rev-parse', '--git-dir')
                 except sh.ErrorReturnCode_128:
-                    lKind += ' (broken)'
-                    lHEADId = '(unknown)'
+                    lSrcTable.add_row([lSrc, lKind+' (broken)', '(unknown)', None])
+                    continue
 
-                if lKind == 'git':
-                    try:
-                        lBranch = '/'.join(
-                            sh.git('symbolic-ref', 'HEAD').split('/')[2:]
-                        ).strip()
-                    except sh.ErrorReturnCode_128:
-                        lBranch = None
+                lHEADId, lHash = _git_info()
+                lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
 
-                    try:
-                        lTag = sh.git(
-                            'describe', '--tags', '--exact-match', 'HEAD'
-                        ).strip()
-                    except sh.ErrorReturnCode_128:
-                        lTag = None
+                lSubmods = sh.git('submodule').strip()
+                if not lSubmods:
+                    continue
 
-                    lHash = sh.git('rev-parse', '--short=8', 'HEAD').strip() + '...'
+                for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
+                    print(lSubModDir)
+                    with DirSentry(join(lSrcDir,lSubModDir)) as _:
+                        lHEADId, lHash = _git_info()
+                        lSrcTable.add_row([u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash])
 
-                    if lTag is not None:
-                        lHEADId = lTag
-                    elif lBranch is not None:
-                        lHEADId = lBranch
-                    else:
-                        lHEADId = lHash
-
-                    try:
-                        sh.git('diff', '--no-ext-diff', '--quiet').strip()
-                    except sh.ErrorReturnCode_1:
-                        lHEADId += '*'
-
-                    try:
-                        sh.git('diff', '--no-ext-diff', '--cached', '--quiet').strip()
-                    except sh.ErrorReturnCode_1:
-                        lHEADId += '+'
         elif exists(join(lSrcDir, '.svn')):
             with DirSentry(lSrcDir) as _:
                 lKind = 'svn'
 
-                lSVNInfoRaw = sh.svn('info')
+                lHEADId, lHash = _svn_info()
+                lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
+        else:
+            lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
 
-                lSVNInfo = {
-                    lEntry[0]: lEntry[1].strip()
-                    for lEntry in (
-                        lLine.split(':', 1)
-                        for lLine in lSVNInfoRaw.split('\n')
-                        if lLine
-                    )
-                }
 
-                lHEADId = lSVNInfo['URL'].replace(lSVNInfo['Repository Root'] + '/', '')
-
-                lSVNStatus = sh.svn('status', '-q')
-                if len(lSVNStatus):
-                    lHEADId += '*'
-
-                lHash = lSVNInfo['Revision']
-
-        lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
     echo(lSrcTable.draw())
 
 
 # ------------------------------------------------------------------------------
-def srcs_create_component(env, component):
-    lPathMaker = Pathmaker(env.srcdir, env._verbosity)
+def srcs_create_component(ictx, component):
+    lPathMaker = Pathmaker(ictx.srcdir, ictx._verbosity)
 
     lCmpPath = lPathMaker.getPath(*component)
     if exists(lPathMaker.getPath(*component)):
@@ -584,20 +616,20 @@ def srcs_create_component(env, component):
 
 
 # ------------------------------------------------------------------------------
-def srcs_run(env, pkg, cmd, args):
+def srcs_run(ictx, pkg, cmd, args):
 
     if pkg:
-        if pkg not in env.sources:
+        if pkg not in ictx.sources:
             secho(
                 "ERROR: '{}' package not known.\nKnown packages:\n{}".format(
-                    pkg, '\n'.join((' * ' + s for s in env.sources))
+                    pkg, '\n'.join((' * ' + s for s in ictx.sources))
                 ),
                 fg='red',
             )
             raise click.ClickException("Command failed")
-        wd = join(env.srcdir, pkg)
+        wd = join(ictx.srcdir, pkg)
     else:
-        wd = env.srcdir
+        wd = ictx.srcdir
 
     try:
         lCmd = sh.Command(cmd)
@@ -616,5 +648,5 @@ def srcs_run(env, pkg, cmd, args):
 
 
 # ------------------------------------------------------------------------------
-def srcs_find(env):
-    sh.find(env.srcdir, '-name', '*.vhd', _out=sys.stdout)
+def srcs_find(ictx):
+    sh.find(ictx.srcdir, '-name', '*.vhd', _out=sys.stdout)

@@ -64,7 +64,6 @@ class DepFormatter(object):
         """
         return self._drawComponents(self.parser.unresolvedComponents)
 
-
     def drawDeptreeCommandsSummary(self):
         """
         Draws a deptree commands summary table.

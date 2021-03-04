@@ -12,18 +12,18 @@ from ._utils import DirSentry, formatDictTable
 from .common import addrtab
 
 # ------------------------------------------------------------------------------
-def ipbus(env):
+def ipbus(ictx):
     pass
 
 # ------------------------------------------------------------------------------
-def gendecoders(env, aCheckUpToDate, aForce):
+def gendecoders(ictx, aCheckUpToDate, aForce):
 
     lDecodersDir = 'decoders'
 
-    with DirSentry(env.currentproj.path):
+    with DirSentry(ictx.currentproj.path):
         sh.rm('-rf', lDecodersDir)
         # Gather address tables
-        addrtab(env, aDest=lDecodersDir)
+        addrtab(ictx, aDest=lDecodersDir)
 
     lGenScript = 'gen_ipbus_addr_decode'
 
@@ -37,8 +37,8 @@ def gendecoders(env, aCheckUpToDate, aForce):
     lUpdatedDecoders = []
     lGen = sh.Command(which(lGenScript))
     lErrors = {}
-    with DirSentry(join(env.currentproj.path, lDecodersDir)):
-        for lAddr in env.depParser.commands['addrtab']:
+    with DirSentry(join(ictx.currentproj.path, lDecodersDir)):
+        for lAddr in ictx.depParser.commands['addrtab']:
             echo("Processing " + style(basename(lAddr.filepath), fg='blue'))
             # Interested in top-level address tables only
             if not lAddr.toplevel:
@@ -61,7 +61,7 @@ def gendecoders(env, aCheckUpToDate, aForce):
             lDecoder = 'ipbus_decode_{0}.vhd'.format(
                 splitext(basename(lAddr.filepath))[0]
             )
-            lTarget = env.pathMaker.getPath(
+            lTarget = ictx.pathMaker.getPath(
                 lAddr.package, lAddr.component, 'src', lDecoder
             )
 
@@ -90,7 +90,7 @@ def gendecoders(env, aCheckUpToDate, aForce):
         if not lUpdatedDecoders:
             secho(
                 "\n{}: All ipbus decoders are up-to-date.\n".format(
-                    env.currentproj.name
+                    ictx.currentproj.name
                 ),
                 fg='green',
             )
@@ -112,7 +112,7 @@ def gendecoders(env, aCheckUpToDate, aForce):
 
         secho(
             "\n\n{}: {} decoders updated.\n".format(
-                env.currentproj.name, len(lUpdatedDecoders)
+                ictx.currentproj.name, len(lUpdatedDecoders)
             ),
             fg='green',
         )

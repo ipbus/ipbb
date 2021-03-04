@@ -7,7 +7,7 @@ import re
 from click import echo, secho, style, confirm, get_current_context, ClickException, Abort, BadParameter
 from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
-from ..tools.alien import AlienBranch
+from .tools.alien import AlienBranch
 
 # ------------------------------------------------------------------------------
 class DirSentry:

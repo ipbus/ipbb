@@ -9,7 +9,7 @@ import subprocess
 from ..tools.common import SmartOpen
 # from . import kProjAreaFile, kProjDir, ProjectInfo
 # from ..cli.utils import DirSentry, raiseError, validateComponent
-from ..cmds._utils import validateComponent
+from ..utils import validateComponent
 from ._utils import completeComponent, completeProject, completeDepFile
 
 from os.path import join, split, exists, splitext, relpath, isdir

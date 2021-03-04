@@ -9,8 +9,8 @@ import subprocess
 # Elements
 from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
-from . import ProjectInfo
-from ._utils import DirSentry, raiseError, validateComponent, findFirstParentDir
+from ..context import ProjectInfo
+from ..utils import DirSentry, raiseError, validateComponent, findFirstParentDir
 from ..depparser import depfiletypes, Pathmaker
 
 from os.path import join, split, exists, splitext, relpath, isdir, basename

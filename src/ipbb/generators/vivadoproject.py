@@ -18,7 +18,7 @@ class VivadoProjectGenerator(object):
     filetypes = {
         'ip' : ('.xci', '.xcix'),
         'constr' : ('.xdc', '.tcl'),
-        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem'),
+        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem', '.mif'),
     }
 
     @staticmethod
@@ -32,7 +32,7 @@ class VivadoProjectGenerator(object):
         elif lExt in ('.xdc', '.tcl'):
             lFileSet = 'constrs_1'
 
-        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf', '.mem'):
+        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf', '.mem', '.mif'):
             if aSrcCmd.useInSynth:
                 lFileSet = 'sources_1'
             elif aSrcCmd.useInSim:

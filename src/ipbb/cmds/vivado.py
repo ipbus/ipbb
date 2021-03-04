@@ -20,7 +20,7 @@ from collections import OrderedDict
 from .dep import hash
 
 from ..tools.common import which, SmartOpen, mkdir
-from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..generators.vivadoproject import VivadoProjectGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject

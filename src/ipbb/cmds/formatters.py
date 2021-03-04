@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from rich.table import Table, Column
 from os.path import (
     join,

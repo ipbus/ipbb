@@ -9,8 +9,8 @@ from os.path import join, relpath, exists, split, realpath
 from rich.prompt import Confirm
 from rich.table import Table
 
-from ..tools.alien import AlienBranch
-from ..console import cprint
+from .tools.alien import AlienBranch
+from .console import cprint
 
 
 # ------------------------------------------------------------------------------

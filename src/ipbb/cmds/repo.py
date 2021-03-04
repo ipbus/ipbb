@@ -56,18 +56,18 @@ def info(ictx, verbose):
 
     cprint()
 
-    lEnvTable = Table('name', 'path', title='ipbb environment', title_style='blue', show_header=False)
+    lEnvTable = Table('name', 'path', title='ipbb context', title_style='blue', show_header=False)
     lEnvTable.add_row("Work path", ictx.work.path)
     if ictx.currentproj.path:
         lEnvTable.add_row("Project path", ictx.currentproj.path)
     cprint(lEnvTable)
 
-    if not env.currentproj.path:
+    if not ictx.currentproj.path:
         cprint()
-        srcs_info(env)
+        srcs_info(ictx)
 
         cprint()
-        proj_info(env)
+        proj_info(ictx)
         return
 
     cprint()
@@ -82,9 +82,9 @@ def info(ictx, verbose):
 
     cprint()
 
-    if env.currentproj.usersettings:
+    if ictx.currentproj.usersettings:
         cprint("User settings", style='blue')
-        t = formatDictTable(env.currentproj.usersettings, aHeader=False)
+        t = formatDictTable(ictx.currentproj.usersettings, aHeader=False)
         t.title = "User settings"
         t.title_style = 'blue'
         cprint(t)

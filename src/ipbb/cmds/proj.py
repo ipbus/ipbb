@@ -18,7 +18,7 @@ from rich.table import Table
 from os.path import join, split, exists, splitext, relpath, isdir, basename
 
 # ------------------------------------------------------------------------------
-def info(env):
+def info(ictx):
 
     cprint("Projects", style='blue')
 
@@ -31,15 +31,15 @@ def info(env):
     lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
     lProjTable = Table(*lHeader)
 
-    for p in sorted(env.projects):
-        lProjInfo = ProjectInfo(join(env.projdir, p))
+    for p in sorted(ictx.projects):
+        lProjInfo = ProjectInfo(join(ictx.projdir, p))
         lProjTable.add_row(p, *(lProjInfo.settings[k] for k in lHeader[1:]) )
 
     cprint(lProjTable)
 
 
 # ------------------------------------------------------------------------------
-def create(env, toolset, projname, component, topdep):
+def create(ictx, toolset, projname, component, topdep):
     '''
     Creates a new area of name PROJNAME
     
@@ -53,22 +53,22 @@ def create(env, toolset, projname, component, topdep):
     '''
     # ------------------------------------------------------------------------------
     # Must be in a build area
-    if env.work.path is None:
+    if ictx.work.path is None:
         raiseError("Build area root directory not found")
 
     # ------------------------------------------------------------------------------
-    lProjAreaPath = join(env.work.path, kProjDir, projname)
+    lProjAreaPath = join(ictx.work.path, kProjDir, projname)
     if exists(lProjAreaPath):
         raiseError("Directory {} already exists".format(lProjAreaPath))
 
     # ------------------------------------------------------------------------------
-    lPathmaker = Pathmaker(env.srcdir, 0)
+    lPathmaker = Pathmaker(ictx.srcdir, 0)
     lTopPackage, lTopComponent = component
 
-    if lTopPackage not in env.sources:
+    if lTopPackage not in ictx.sources:
         cprint('Top-level package {} not found'.format(lTopPackage), style='red')
         cprint('Available packages:')
-        for lPkg in env.sources:
+        for lPkg in ictx.sources:
             cprint(' - ' + lPkg)
 
         raiseError("Top-level package {} not found".format(lTopPackage))
@@ -149,16 +149,16 @@ def create(env, toolset, projname, component, topdep):
 
 
 # ------------------------------------------------------------------------------
-def ls(env):
+def ls(ictx):
     '''Lists all available project areas
     '''
-    lProjects = env.projects
-    print('Main work area:', env.work.path)
+    lProjects = ictx.projects
+    print('Main work area:', ictx.work.path)
     print(
         'Projects areas:',
         ', '.join(
             [
-                lProject + ('*' if lProject == env.currentproj.name else '')
+                lProject + ('*' if lProject == ictx.currentproj.name else '')
                 for lProject in lProjects
             ]
         ),
@@ -166,23 +166,23 @@ def ls(env):
 
 
 # ------------------------------------------------------------------------------
-def cd(env, projname, aVerbose):
+def cd(ictx, projname, aVerbose):
     '''Changes current working directory (command line only)
     '''
 
     if projname[-1] == os.sep:
         projname = projname[:-1]
 
-    lProjects = env.projects
+    lProjects = ictx.projects
     if projname not in lProjects:
         raise click.ClickException(
             'Requested work area not found. Available areas: %s' % ', '.join(lProjects)
         )
 
-    with DirSentry(join(env.projdir, projname)) as lSentry:
-        env._autodetect()
+    with DirSentry(join(ictx.projdir, projname)) as lSentry:
+        ictx._autodetect()
 
-    os.chdir(join(env.projdir, projname))
+    os.chdir(join(ictx.projdir, projname))
     if aVerbose:
         cprint("New current directory %s" % os.getcwd())
 

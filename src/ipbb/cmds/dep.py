@@ -24,23 +24,23 @@ from os.path import (
 from ..console import cprint
 from ..tools.common import which, SmartOpen
 from .formatters import DepFormatter
-from ._utils import DirSentry, printDictTable, printAlienTable
+from ..utils import DirSentry, printDictTable, printAlienTable
 from rich.table import Table, Column
 from rich.padding import Padding
 
 # ------------------------------------------------------------------------------
-def dep(env, proj):
+def dep(ictx, proj):
     '''Dependencies command group'''
 
-    lProj = proj if proj is not None else env.currentproj.name
+    lProj = proj if proj is not None else ictx.currentproj.name
     if lProj is not None:
         # Change directory before executing subcommand
         from .proj import cd
 
-        cd(env, lProj, False)
+        cd(ictx, lProj, False)
         return
     else:
-        if env.currentproj.name is None:
+        if ictx.currentproj.name is None:
             raise click.ClickException(
                 'Project area not defined. Move into a project area and try again'
             )
@@ -50,7 +50,7 @@ def dep(env, proj):
 
 
 # ------------------------------------------------------------------------------
-def report(env, filters):
+def report(ictx, filters):
     '''Summarise the dependency tree of the current project'''
 
     lCmdHeaders = ['path', 'flags', 'package', 'component', 'lib']
@@ -95,7 +95,7 @@ def report(env, filters):
 
 
     # return
-    lParser = env.depParser
+    lParser = ictx.depParser
     lDepFmt = DepFormatter(lParser)
 
     cprint('* Variables', style='blue')
@@ -117,7 +117,7 @@ def report(env, filters):
         # lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
             lRow = [
-                relpath(lCmd.filepath, env.srcdir),
+                relpath(lCmd.filepath, ictx.srcdir),
                 ','.join(lCmd.flags()),
                 lCmd.package,
                 lCmd.component,
@@ -177,7 +177,7 @@ def report(env, filters):
 
 
 # ------------------------------------------------------------------------------
-def ls(env, group, output):
+def ls(ictx, group, output):
     '''List project files by group
 
     - setup: Project setup scripts
@@ -187,15 +187,15 @@ def ls(env, group, output):
     '''
 
     with SmartOpen(output) as lWriter:
-        for addrtab in env.depParser.commands[group]:
+        for addrtab in ictx.depParser.commands[group]:
             lWriter(addrtab.filepath)
 
 
 # ------------------------------------------------------------------------------
-def components(env, output):
+def components(ictx, output):
 
     with SmartOpen(output) as lWriter:
-        for lPkt, lCmps in env.depParser.packages.items():
+        for lPkt, lCmps in ictx.depParser.packages.items():
             lWriter('[' + lPkt + ']')
             for lCmp in lCmps:
                 lWriter(lCmp)
@@ -282,7 +282,7 @@ def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.s
 # ----------------------------
 
 
-def hash(env, output, verbose):
+def hash(ictx, output, verbose):
 
     lAlgoName = 'sha1'
 
@@ -296,7 +296,7 @@ def hash(env, output, verbose):
 
         if verbose:
             lTitle = "{0} hashes for project '{1}'".format(
-                lAlgoName, env.currentproj.name
+                lAlgoName, ictx.currentproj.name
             )
             lWriter("# " + '=' * len(lTitle))
             lWriter("# " + lTitle)
@@ -305,7 +305,7 @@ def hash(env, output, verbose):
 
         lProjHash = lAlgo()
         lGrpHashes = collections.OrderedDict()
-        for lGrp, lCmds in env.depParser.commands.items():
+        for lGrp, lCmds in ictx.depParser.commands.items():
             lGrpHash = lAlgo()
             if verbose:
                 lWriter("#" + "-" * 79)
@@ -332,9 +332,9 @@ def hash(env, output, verbose):
             lWriter()
 
             lWriter("#" + "-" * 79)
-            lWriter("# Global hash for project '" + env.currentproj.name + "'")
+            lWriter("# Global hash for project '" + ictx.currentproj.name + "'")
             lWriter("#" + "-" * 79)
-            lWriter(lProjHash.hexdigest(), env.currentproj.name)
+            lWriter(lProjHash.hexdigest(), ictx.currentproj.name)
 
         if not verbose:
             lWriter(lProjHash.hexdigest())
@@ -343,7 +343,7 @@ def hash(env, output, verbose):
 
 
 # ------------------------------------------------------------------------------
-def archive(env):
+def archive(ictx):
     print('archive')
 
 

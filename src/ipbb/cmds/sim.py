@@ -11,7 +11,7 @@ import collections
 import ipbb
 import ipbb.tools.xilinx as xilinx
 import ipbb.tools.mentor as mentor
-from ._utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ..utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 from ..tools.common import DEFAULT_ENCODING
 
 # Elements
@@ -40,8 +40,8 @@ from ._utils import (
 from ..tools.common import which, mkdir, SmartOpen
 
 # DepParser imports
-from ..generators.ipcoressim import IPCoresSimMaker
-from ..generators.modelsimproject import ModelSimProjectMaker
+from ..generators.ipcoressim import IPCoresSimGenerator
+from ..generators.modelsimproject import ModelSimGenerator
 
 
 kIPExportDir = 'ipcores_sim'
@@ -255,7 +255,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     # -------------------------------------------------------------------------
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lIPCoreSimMaker = IPCoresSimMaker(env.currentproj, lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
+    lIPCoreSimMaker = IPCoresSimGenerator(env.currentproj, lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
 
     secho("Generating ipcore simulation code", fg='blue')
 
@@ -486,7 +486,7 @@ def genproject(env, aOptimise, aToScript, aToStdout):
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimProjectMaker(env.currentproj, lSimLibrary, kIPVivadoProjName, aOptimise)
+    lSimProjMaker = ModelSimGenerator(env.currentproj, lSimLibrary, kIPVivadoProjName, aOptimise)
 
     lDryRun = aToStdout or aToScript
 

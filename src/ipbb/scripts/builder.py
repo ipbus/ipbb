@@ -9,7 +9,7 @@ import rich
 from io import StringIO, BytesIO
 
 
-from ..cmds import Environment
+from ..context import Context
 from ..cmds.formatters import DepFormatter
 from ..console import cprint
 from .._version import __version__
@@ -34,10 +34,6 @@ def climain(ctx, aExcStack):
     env = ctx.obj
 
     env.printExceptionStack = aExcStack
-
-
-# ------------------------------------------------------------------------------
-
 
 
 # ------------------------------------------------------------------------------
@@ -79,7 +75,7 @@ def _compose_cli():
     climain.add_command(sim.sim)
 
     from ..cli import vivadohls
-    
+
     vivadohls.vivadohls.add_command(common.cleanup)
     climain.add_command(vivadohls.vivadohls)
 
@@ -149,7 +145,7 @@ def main():
 
     _compose_cli()
 
-    obj = Environment()
+    obj = Context()
     try:
         climain(obj=obj)
     except Exception as e:

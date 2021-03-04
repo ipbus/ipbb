@@ -8,7 +8,7 @@ def ipbus(env):
     """Collection of ipbus specific commands
     
     Args:
-        env (`obj`): Environment object.
+        env (`obj`): Context object.
     """
     from ..cmds.ipbus import ipbus
     ipbus(env)

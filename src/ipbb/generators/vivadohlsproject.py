@@ -7,10 +7,13 @@ from ..depparser import Pathmaker
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext, dirname
 
-class VivadoHlsProjectMaker(object):
+class VivadoHlsProjectGenerator(object):
     """
-    docstring for VivadoHlsProjectMaker
+    docstring for VivadoHlsProjectGenerator
     """
+
+    reqsettings = {'device_name', 'device_package', 'device_speed'}
+
     # --------------------------------------------------------------
     def __init__(self, aProjInfo):
         self.projInfo = aProjInfo
@@ -21,9 +24,8 @@ class VivadoHlsProjectMaker(object):
         write = aOutput
         pathFinder = Pathmaker(aRootDir)
 
-        lReqVariables = {'device_name', 'device_package', 'device_speed'}
-        if not lReqVariables.issubset(aSettings.keys()):
-            raise RuntimeError("Missing required variables: {}".format(lReqVariables.difference(aSettings)))
+        if not self.reqsettings.issubset(aSettings.keys()):
+            raise RuntimeError("Missing required variables: {}".format(self.reqsettings.difference(aSettings)))
         lXilinxPart = "{device_name}{device_package}{device_speed}".format(**aSettings)
 
         # ----------------------------------------------------------

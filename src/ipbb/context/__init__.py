@@ -2,7 +2,7 @@
 # Import click for ansi colors
 import yaml
 
-from . import _utils
+from .. import utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
@@ -11,14 +11,91 @@ from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, 
 from ..console import cprint
 
 
+# TODO:
+# Look into schema yaml schema validation: i.e.
+# https://github.com/Grokzen/pykwalify
+# or
+# https://docs.python-cerberus.org/en/stable/install.html
 # ------------------------------------------------------------------------------
 class FolderInfo(object):
     '''Utility class, attributes holder'''
-
     pass
 
 
 # ------------------------------------------------------------------------------
+class SourceInfo(FolderInfo):
+    """Helper Class to contain source repository settings"""
+    def __init__(self, aPath):
+        super(SourceInfo, self).__init__()
+
+        self._setupsettings = None
+
+        self.path = aPath
+
+    # ------------------------------------------------------------------------------
+    @property
+    def setuppath(self):
+        if self.path is None:
+            return ""
+        return join(self.path, kRepoSetupFile)
+
+    # ------------------------------------------------------------------------------
+    @property
+    def setupsettings(self):
+        if self._setupsettings is None:
+            self.loadSetup()
+
+        return self._setupsettings
+
+    # ------------------------------------------------------------------------------
+    def loadSetup(self):
+        if not exists(self.setuppath):
+            self._setupsettings = {}
+            return
+
+        with open(self.setuppath, 'r') as f:
+            self._setupsettings = yaml.safe_load(f)
+
+    # ------------------------------------------------------------------------------
+    def validateSetup(self):
+
+        ss = self.setupsettings
+        if not ss:
+            return
+
+        import cerberus
+        schema = {
+            'reset': {
+                'type': 'list',
+                'schema': {
+                    'type': 'string'
+                }
+            },
+            'init': {
+                'type': 'list',
+                'schema': {
+                    'type': 'string'
+                }
+            },
+            'dependencies': {
+                'type': 'list',
+                'schema': {
+                    'type': 'dict',
+                    'schema': {
+                        'name': {'type': 'string'},
+                        'branch': {'type': 'string'},
+                        'path': {'type': 'string'},
+                        'type': {'type': 'string'},
+                    }
+                }
+            },
+        }
+
+        vtor = cerberus.Validator()
+
+        x = vtor.validate(ss, schema)
+        print('Proj Doc Validated', x)
+        print(vtor.errors)
 
 
 # ------------------------------------------------------------------------------
@@ -69,11 +146,9 @@ class ProjectInfo(FolderInfo):
 
     # ------------------------------------------------------------------------------
     def loadSettings(self):
-        # lProjAreaFilePath = join(self.path, kProjAreaFile)
         if not exists(self.filepath):
             return
 
-        # self.path, self.file = split(lProjAreaFilePath)
         self.name = basename(self.path)
 
         # Import project settings
@@ -102,12 +177,31 @@ class ProjectInfo(FolderInfo):
         with open(self.userfilepath, 'w') as f:
             yaml.safe_dump(self.usersettings, f, indent=jsonindent, default_flow_style=False)
 
+    # ------------------------------------------------------------------------------
+    def validateSettings(self):
+        import cerberus
+        schema = {
+            'name': {'type': 'string'},
+            'toolset': {'type': 'string', 'allowed': ['vivado', 'vivado_hls', 'sim']},
+            'topCmp': {'type': 'string'},
+            'topDep': {'type': 'string'},
+            'topPkg': {'type': 'string'},
+        }
+
+        v = cerberus.Validator()
+
+        x = v.validate(self.settings, schema)
+        print('Proj Doc Validated', x)
+        print(v.errors)
+
+    # ------------------------------------------------------------------------------
+    def validateUserSettings(self):
+        pass
+
+
 
 # ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
-class Environment(object):
+class Context(object):
     """docstring for Environment"""
 
     _verbosity = 0
@@ -129,6 +223,7 @@ class Environment(object):
         self.work.path = None
         self.work.cfgFile = None
 
+        # self.srcinfo = {}
         self.currentproj = ProjectInfo()
 
         self.pathMaker = None
@@ -140,18 +235,19 @@ class Environment(object):
         self._clear()
 
         # -----------------------------
-        lWorkAreaPath = _utils.findFileDirInParents(kWorkAreaFile, self._wd)
+        lWorkAreaPath = utils.findFileDirInParents(kWorkAreaFile, self._wd)
 
         # Stop here is no signature is found
         if not lWorkAreaPath:
             return
 
         self.work.path, self.work.cfgFile = lWorkAreaPath, kWorkAreaFile
-        self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
-        # -----------------------------
 
         # -----------------------------
-        lProjAreaPath = _utils.findFileDirInParents(kProjAreaFile, self._wd)
+        self.pathMaker = Pathmaker(self.srcdir, self._verbosity)
+
+        # -----------------------------
+        lProjAreaPath = utils.findFileDirInParents(kProjAreaFile, self._wd)
         if not lProjAreaPath:
             return
 
@@ -221,6 +317,8 @@ class Environment(object):
         ]
 
     # -----------------------------------------------------------------------------
-
+    @property
+    def srcinfo(self):
+        return {src: SourceInfo(join(self.srcdir, src)) for src in self.sources }
 
 # -----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 
-from ..cmds import Environment
+from ..context import Context
 from os import walk
 from os.path import join, relpath, dirname, basename, exists, normpath
 
@@ -16,7 +16,7 @@ def completeDepFile(cmp_argname):
         # print (ctx.command.params)
         if ctx.params.get(cmp_argname, None) is None:
             return []
-        env = Environment()
+        env = Context()
         # nothing to complete if not in an ipbb area
         if env.work.path is None:
             return []
@@ -26,7 +26,7 @@ def completeDepFile(cmp_argname):
         if not exists(basepath):
             return []
 
-        from ..depparser.definitions import depfiletypes
+        from ..depparser import depfiletypes
 
         # print()
         # print(basepath)
@@ -42,7 +42,7 @@ def completeDepFile(cmp_argname):
 
 # ------------------------------------------------------------------------------
 def completeProject(ctx, args, incomplete):
-    env = Environment()
+    env = Context()
 
     # nothing to complete if not in an ipbb area
     if env.work.path is None:
@@ -53,7 +53,7 @@ def completeProject(ctx, args, incomplete):
 
 # ------------------------------------------------------------------------------
 def completeSrcPackage(ctx, args, incomplete):
-    env = Environment()
+    env = Context()
 
     # nothing to complete if not in an ipbb area
     if env.work.path is None:
@@ -64,7 +64,7 @@ def completeSrcPackage(ctx, args, incomplete):
 
 # ------------------------------------------------------------------------------
 def completeComponent(ctx, args, incomplete):
-    env = Environment()
+    env = Context()
 
     # nothing to complete if not in an ipbb area
     if env.work.path is None:

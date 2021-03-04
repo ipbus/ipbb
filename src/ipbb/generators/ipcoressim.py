@@ -5,9 +5,11 @@ import shutil
 from os.path import abspath, join, split, splitext
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-class IPCoresSimMaker(object):
+class IPCoresSimGenerator(object):
 
     _compiler = 'vcom'
+
+    reqsettings = {'device_name', 'device_package', 'device_speed'}
 
     # --------------------------------------------------------------
     def __init__(self, aProjInfo, aSimlibPath, aSimulator, aExportDir, aIPProjName):
@@ -25,9 +27,8 @@ class IPCoresSimMaker(object):
     # --------------------------------------------------------------
     def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
 
-        lReqVariables = {'device_name', 'device_package', 'device_speed'}
-        if not lReqVariables.issubset(aScriptVariables):
-            raise RuntimeError("Missing required variables: {}".format(', '.join(lReqVariables.difference(aScriptVariables))))
+        if not self.reqsettings.issubset(aScriptVariables):
+            raise RuntimeError("Missing required variables: {}".format(', '.join(self.reqsettings.difference(aScriptVariables))))
 
         write = aTarget
 

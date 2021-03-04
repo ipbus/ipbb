@@ -9,7 +9,7 @@ from click import echo, secho, style, confirm
 from ..tools.common import which, SmartOpen
 from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
-from ..generators.vivadohlsproject import VivadoHlsProjectMaker
+from ..generators.vivadohlsproject import VivadoHlsProjectGenerator
 from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError
 
 
@@ -66,7 +66,7 @@ def genproject(env, aToScript, aToStdout):
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
 
-    lVivadoMaker = VivadoHlsProjectMaker(env.currentproj)
+    lVivadoMaker = VivadoHlsProjectGenerator(env.currentproj)
 
     lDryRun = aToScript or aToStdout
     lScriptPath = aToScript if not aToStdout else None

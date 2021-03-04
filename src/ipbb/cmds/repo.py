@@ -534,6 +534,19 @@ def _svn_info():
             if lLine
         )
     }
+    
+    lHEADId = lSVNInfo['URL'].replace(lSVNInfo['Repository Root'] + '/', '')
+
+    lSVNStatus = sh.svn('status', '-q')
+    if len(lSVNStatus):
+        lHEADId += '*'
+
+    lHash = lSVNInfo['Revision']
+
+    return lHEADId, lHash
+
+# ------------------------------------------------------------------------------
+def srcs_info(ictx):
 
     if not ictx.work.path:
         cprint('ERROR: No ipbb work area detected', style='red')
@@ -559,11 +572,11 @@ def _svn_info():
                 try:
                     sh.git('rev-parse', '--git-dir')
                 except sh.ErrorReturnCode_128:
-                    lSrcTable.add_row([lSrc, lKind+' (broken)', '(unknown)', None])
+                    lSrcTable.add_row(lSrc, lKind+' (broken)', '(unknown)', None)
                     continue
 
                 lHEADId, lHash = _git_info()
-                lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
+                lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
 
                 lSubmods = sh.git('submodule').strip()
                 if not lSubmods:
@@ -580,9 +593,9 @@ def _svn_info():
                 lKind = 'svn'
 
                 lHEADId, lHash = _svn_info()
-                lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
+                lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
         else:
-            lSrcTable.add_row([lSrc, lKind, lHEADId, lHash])
+            lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
 
 
         lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)

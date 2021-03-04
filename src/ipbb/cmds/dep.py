@@ -23,7 +23,7 @@ from os.path import (
 )
 from ..tools.common import which, SmartOpen
 from .formatters import DepFormatter
-from ._utils import DirSentry, printDictTable, printAlienTable
+from ..utils import DirSentry, printDictTable, printAlienTable
 from click import echo, secho, style, confirm
 from texttable import Texttable
 

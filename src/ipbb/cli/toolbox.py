@@ -1,7 +1,7 @@
 
 import click
 
-from ..cmds._utils import validateComponent, validateMultiplePackageOrComponents
+from ..utils import validateComponent, validateMultiplePackageOrComponents
 from ._utils import completeComponent, completeDepFile
 
 

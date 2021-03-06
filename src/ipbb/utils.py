@@ -104,7 +104,7 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
     if not aDepFileParser.errors:
         return
 
-    from .formatters import DepFormatter
+    from .cmds.formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
     secho("ERROR: Project '{}' contains {} parsing error{}.".format(
         aCurrentProj,
@@ -127,7 +127,7 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     if not aDepFileParser.unresolved:
         return
 
-    from .formatters import DepFormatter
+    from .cmds.formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
     secho("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
         aCurrentProj,

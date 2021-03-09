@@ -11,7 +11,7 @@ from texttable import Texttable
 from click import echo, style, secho
 
 from ..context import Context
-from ..cmds.formatters import DepFormatter
+from .depparser import DepFormatter
 
 from .._version import __version__
 

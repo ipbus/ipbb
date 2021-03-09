@@ -7,7 +7,7 @@ from os.path import join, split, exists, splitext, abspath, basename
 from click import echo, secho, style, confirm
 
 from ..tools.common import which, SmartOpen
-from ._utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 
 from ..generators.vivadohlsproject import VivadoHlsProjectGenerator
 from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError

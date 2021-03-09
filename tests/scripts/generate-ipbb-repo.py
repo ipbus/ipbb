@@ -61,7 +61,7 @@ def cli(repofile, dest):
         pprint.pprint(dp.unresolved)
 
         df = DepFormatter(dp)
-        print(df.summary())
+        print(df.drawSummary())
 
 
 def main():
@@ -72,7 +72,7 @@ def main():
         echo()
         secho(hline, fg='red')
         secho("FATAL ERROR: Caught '" + type(e).__name__ + "' exception:", fg='red')
-        secho(e.message, fg='red')
+        secho(e, fg='red')
         secho(hline, fg='red')
         import StringIO
 

@@ -7,7 +7,7 @@ import click
 from click import echo, secho, style, confirm
 from os.path import join, split, exists, abspath, splitext, relpath, basename
 from ..defaults import kProjAreaFile, kProjUserFile
-from ._utils import DirSentry, formatDictTable
+from ..utils import DirSentry, formatDictTable
 from ..tools.common import which
 
 

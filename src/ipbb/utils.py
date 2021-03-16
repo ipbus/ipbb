@@ -8,6 +8,7 @@ from click import echo, secho, style, confirm, get_current_context, ClickExcepti
 from texttable import Texttable
 from os.path import join, relpath, exists, split, realpath
 from .tools.alien import AlienBranch
+from .depparser import DepFormatter
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -104,7 +105,6 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
     if not aDepFileParser.errors:
         return
 
-    from .cmds.formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
     secho("ERROR: Project '{}' contains {} parsing error{}.".format(
         aCurrentProj,
@@ -127,7 +127,6 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     if not aDepFileParser.unresolved:
         return
 
-    from .cmds.formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
     secho("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
         aCurrentProj,

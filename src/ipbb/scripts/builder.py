@@ -11,7 +11,6 @@ from texttable import Texttable
 from click import echo, style, secho
 
 from ..context import Context
-from ..cmds.formatters import DepFormatter
 
 from .._version import __version__
 
@@ -32,9 +31,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.pass_context
 @click.version_option()
 def climain(ctx, aExcStack):
-    env = ctx.obj
+    ictx = ctx.obj
 
-    env.printExceptionStack = aExcStack
+    ictx.printExceptionStack = aExcStack
 
 
 # ------------------------------------------------------------------------------

@@ -31,9 +31,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.pass_context
 @click.version_option()
 def climain(ctx, aExcStack):
-    env = ctx.obj
+    ictx = ctx.obj
 
-    env.printExceptionStack = aExcStack
+    ictx.printExceptionStack = aExcStack
 
 
 # ------------------------------------------------------------------------------

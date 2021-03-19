@@ -3,6 +3,7 @@
 # Modules
 import click
 from ._utils import completeProject
+from ..depparser import dep_command_types
 
 
 # ------------------------------------------------------------------------------
@@ -28,16 +29,20 @@ def report(env, filters):
 
 # ------------------------------------------------------------------------------
 @dep.command('ls', short_help="List project files by group")
-@click.argument('group', type=click.Choice(['setup', 'src', 'addrtab', 'cgpfile']))
+@click.argument('group', type=click.Choice(dep_command_types))
 @click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")
 @click.pass_obj
 def ls(env, group, output):
     '''List project files by group
 
+    \b
     - setup: Project setup scripts
     - src: Code files
+    - hlssrc: HLS source files
     - addrtab: Address tables 
-    - cgpfile: ?
+    - utils: Utility files
+    - iprepo: IP repository
+    
     '''
 
     from ..cmds.dep import ls

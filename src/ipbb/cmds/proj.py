@@ -12,7 +12,7 @@ from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from ..context import ProjectInfo
 from ..utils import DirSentry, raiseError, validateComponent, findFirstParentDir
-from ..depparser import depfiletypes, Pathmaker
+from ..depparser import dep_file_types, Pathmaker
 
 from rich.table import Table
 from os.path import join, split, exists, splitext, relpath, isdir, basename
@@ -118,7 +118,7 @@ def create(ictx, toolset, projname, component, topdep):
 
         lTopDepDir = lPathmaker.getPath(lTopPackage, lTopComponent, 'include')
 
-        for ft in depfiletypes:
+        for ft in dep_file_types:
             lTopDepCandidates = [
                 "'{}'".format(relpath(p, lTopDepDir))
                 for p in glob.glob(join(lTopDepDir, '*' + ft))

@@ -10,6 +10,7 @@ from os.path import (
     isfile,
     isdir,
 )
+from ._definitions import dep_command_types
 
 
 class DepFormatter(object):
@@ -67,17 +68,9 @@ class DepFormatter(object):
         Draws a deptree commands summary table.
         
         """
-        # lCommandKinds = ['setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo']
-        # lDepTable = Texttable()
-        # lDepTable.set_cols_align(['c'] * len(lCommandKinds))
-        # lDepTable.add_row(lCommandKinds)
-        # lDepTable.add_row([len(self.parser.commands[k]) for k in lCommandKinds])
-        # return lDepTable.draw()
 
-        lCommandKinds = ('setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo')
-        # lDepTable = Table( *(Column(c, justify='center') for c in lCommandKinds) )
-        lDepTable = Table( *lCommandKinds)
-        lDepTable.add_row( *(str(len(self.parser.commands[k])) for k in lCommandKinds) )
+        lDepTable = Table( *dep_command_types)
+        lDepTable.add_row( *(str(len(self.parser.commands[k])) for k in dep_command_types) )
         return lDepTable
 
 

@@ -145,3 +145,19 @@ class DepFormatter(object):
 
         return lErrTable.draw()
 
+    # -----------------------------------------------------------------------------
+    def drawSummary(self):
+
+        lOutTxt = ''
+        lOutTxt += self.drawDeptreeCommandsSummary()
+
+        lOutTxt += '\n'
+        lOutTxt += self.drawPackages()
+
+        if self.parser.unresolved:
+            lOutTxt += '\n'
+            lOutTxt += self.drawUnresolvedSummary()
+            return lOutTxt
+
+        return lOutTxt
+    # -----------------------------------------------------------------------------

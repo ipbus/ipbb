@@ -29,7 +29,7 @@ from os.path import (
 from click import echo, secho, style, confirm
 
 # Tools imports
-from ._utils import (
+from ..utils import (
     DirSentry,
     ensureNoMissingFiles,
     echoVivadoConsoleError,

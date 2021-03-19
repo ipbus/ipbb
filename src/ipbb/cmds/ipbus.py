@@ -8,7 +8,7 @@ from click import echo, secho, style, confirm
 from os.path import join, split, exists, abspath, splitext, relpath, basename
 from ..defaults import kProjAreaFile, kProjUserFile
 from ..tools.common import which, DEFAULT_ENCODING
-from ._utils import DirSentry, formatDictTable
+from ..utils import DirSentry, formatDictTable
 from .common import addrtab
 
 # ------------------------------------------------------------------------------

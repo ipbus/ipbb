@@ -23,7 +23,7 @@ from os.path import (
 )
 from ..console import cprint
 from ..tools.common import which, SmartOpen
-from .formatters import DepFormatter
+from ..depparser import DepFormatter
 from ..utils import DirSentry, printDictTable, printAlienTable
 from rich.table import Table, Column
 from rich.padding import Padding

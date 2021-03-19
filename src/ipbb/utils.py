@@ -11,7 +11,7 @@ from rich.table import Table
 
 from .tools.alien import AlienBranch
 from .console import cprint
-
+from .depparser import DepFormatter
 
 # ------------------------------------------------------------------------------
 class DirSentry:
@@ -108,7 +108,6 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
     if not aDepFileParser.errors:
         return
 
-    from .formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
     cprint("ERROR: Project '{}' contains {} parsing error{}.".format(
         aCurrentProj,
@@ -131,7 +130,6 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     if not aDepFileParser.unresolved:
         return
 
-    from .formatters import DepFormatter
     fmt = DepFormatter(aDepFileParser)
     cprint("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
         aCurrentProj,

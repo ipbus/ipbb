@@ -13,7 +13,6 @@ from ..utils import validateComponent
 from ._utils import completeComponent, completeProject, completeDepFile
 
 from os.path import join, split, exists, splitext, relpath, isdir
-from click import echo, style, secho
 
 
 # ------------------------------------------------------------------------------

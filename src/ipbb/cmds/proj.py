@@ -7,32 +7,35 @@ import subprocess
 
 
 # Elements
+from ..console import cprint
 from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir
 from ..context import ProjectInfo
 from ..utils import DirSentry, raiseError, validateComponent, findFirstParentDir
 from ..depparser import depfiletypes, Pathmaker
 
+from rich.table import Table
 from os.path import join, split, exists, splitext, relpath, isdir, basename
-from click import echo, style, secho
-from texttable import Texttable
 
 # ------------------------------------------------------------------------------
 def info(ictx):
 
-    secho("Projects", fg='blue')
+    cprint("Projects", style='blue')
+
+    # lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
+    # lProjTable = Texttable(120)
+    # lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+    # lProjTable.set_chars(['-', '|', '+', '-'])
+    # lProjTable.header(lHeader)
 
     lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
-    lProjTable = Texttable(120)
-    lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lProjTable.set_chars(['-', '|', '+', '-'])
-    lProjTable.header(lHeader)
+    lProjTable = Table(*lHeader)
 
     for p in sorted(ictx.projects):
         lProjInfo = ProjectInfo(join(ictx.projdir, p))
-        lProjTable.add_row([p] + [lProjInfo.settings[k] for k in lHeader[1:]] )
+        lProjTable.add_row(p, *(lProjInfo.settings[k] for k in lHeader[1:]) )
 
-    echo(lProjTable.draw())
+    cprint(lProjTable)
 
 
 # ------------------------------------------------------------------------------
@@ -63,30 +66,30 @@ def create(ictx, toolset, projname, component, topdep):
     lTopPackage, lTopComponent = component
 
     if lTopPackage not in ictx.sources:
-        secho('Top-level package {} not found'.format(lTopPackage), fg='red')
-        echo('Available packages:')
+        cprint('Top-level package {} not found'.format(lTopPackage), style='red')
+        cprint('Available packages:')
         for lPkg in ictx.sources:
-            echo(' - ' + lPkg)
+            cprint(' - ' + lPkg)
 
         raiseError("Top-level package {} not found".format(lTopPackage))
 
     lTopComponentPath = lPathmaker.getPath(lTopPackage, lTopComponent)
     if not exists(lTopComponentPath):
-        secho(
+        cprint(
             "Top-level component '{}:{}'' not found".format(lTopPackage, lTopComponent),
-            fg='red',
+            style='red',
         )
 
         lParent = findFirstParentDir(lTopComponentPath, lPathmaker.getPath(lTopPackage))
-        secho('\nSuggestions (based on the first existing parent path)', fg='cyan')
+        cprint('\nSuggestions (based on the first existing parent path)', style='cyan')
         # When in Py3 https://docs.python.org/3/library/os.html#os.scandir
         for d in [
             join(lParent, s)
             for s in os.listdir(lParent)
             if isdir(join(lParent, s))
         ]:
-            echo(' - ' + d)
-        echo()
+            cprint(' - ' + d)
+        cprint()
 
         raise click.Abort()
 
@@ -111,7 +114,7 @@ def create(ictx, toolset, projname, component, topdep):
     # ------------------------------------------------------------------------------
     if not lTopExists:
         import glob
-        secho('Top-level dep file {} not found or not uniquely resolved'.format(lTopDepPath), fg='red')
+        cprint('Top-level dep file {} not found or not uniquely resolved'.format(lTopDepPath), style='red')
 
         lTopDepDir = lPathmaker.getPath(lTopPackage, lTopComponent, 'include')
 
@@ -120,9 +123,9 @@ def create(ictx, toolset, projname, component, topdep):
                 "'{}'".format(relpath(p, lTopDepDir))
                 for p in glob.glob(join(lTopDepDir, '*' + ft))
             ]
-            echo('Suggestions (*{}):'.format(ft))
+            cprint('Suggestions (*{}):'.format(ft))
             for lC in lTopDepCandidates:
-                echo(' - ' + lC)
+                cprint(' - ' + lC)
 
         raiseError("Top-level dependency file {} not found".format(lTopDepPath))
 
@@ -140,8 +143,8 @@ def create(ictx, toolset, projname, component, topdep):
     }
     pi.saveSettings()
 
-    secho(
-        '{} project area \'{}\' created'.format(toolset.capitalize(), projname), fg='green'
+    cprint(
+        '{} project area \'{}\' created'.format(toolset.capitalize(), projname), style='green'
     )
 
 
@@ -181,6 +184,6 @@ def cd(ictx, projname, aVerbose):
 
     os.chdir(join(ictx.projdir, projname))
     if aVerbose:
-        echo("New current directory %s" % os.getcwd())
+        cprint("New current directory %s" % os.getcwd())
 
 

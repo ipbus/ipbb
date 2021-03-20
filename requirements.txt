@@ -4,12 +4,12 @@ click-didyoumean==0.0.3
 configparser==5.0.0
 future==0.18.2
 ipaddress==1.0.23
-ipaddress
-ipdb==0.13.3
+ipdb==0.13.4
 ipython==7.16.1
 pexpect==4.8.0
 psutil==5.7.2
-pytest==6.0.2
+pytest==6.1.1
 PyYAML==5.3.1
+rich==6.1.2
 sh==1.14.0
 texttable==1.6.3

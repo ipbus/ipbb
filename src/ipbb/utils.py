@@ -4,10 +4,13 @@ import ipaddress
 import sys
 import re
 
-from click import echo, secho, style, confirm, get_current_context, ClickException, Abort, BadParameter
-from texttable import Texttable
+from click import get_current_context, ClickException, Abort, BadParameter
 from os.path import join, relpath, exists, split, realpath
+from rich.prompt import Confirm
+from rich.table import Table
+
 from .tools.alien import AlienBranch
+from .console import cprint
 from .depparser import DepFormatter
 
 # ------------------------------------------------------------------------------
@@ -40,7 +43,7 @@ def raiseError(aMessage):
     Print the error message to screen in bright red and a ClickException error
     """
 
-    secho("\nERROR: " + aMessage + "\n", fg='red')
+    cprint("\nERROR: " + aMessage + "\n", style='red')
     raise ClickException("Command aborted.")
 
 # ------------------------------------------------------------------------------
@@ -106,12 +109,12 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
         return
 
     fmt = DepFormatter(aDepFileParser)
-    secho("ERROR: Project '{}' contains {} parsing error{}.".format(
+    cprint("ERROR: Project '{}' contains {} parsing error{}.".format(
         aCurrentProj,
         len(aDepFileParser.errors),
         ("" if len(aDepFileParser.errors) == 1 else "s"),
-    ), fg='red')
-    secho(fmt.drawParsingErrors(), fg='red')
+    ), style='red')
+    cprint(fmt.drawParsingErrors(), style='red')
 
     raise Abort()
 
@@ -128,25 +131,25 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
         return
 
     fmt = DepFormatter(aDepFileParser)
-    secho("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
+    cprint("ERROR: Project '{}' contains unresolved dependencies: {} unresolved file{}.".format(
         aCurrentProj,
         len(aDepFileParser.unresolved),
         ("" if len(aDepFileParser.unresolved) == 1 else "s"),
-    ), fg='red')
-    secho(fmt.drawUnresolvedFiles(), fg='red')
+    ), style='red')
+    cprint(fmt.drawUnresolvedFiles(), style='red')
 
-    secho("")
-    confirm("Do you want to continue anyway?", abort=True)
+    cprint("")
+    if not Confirm.ask("Do you want to continue anyway?"):
+        raise click.Abort()
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 def echoVivadoConsoleError( aExc ):
-    echo(
-        style("Vivado error/critical warnings detected\n", fg='red') +
-        style("\n".join(aExc.errors), fg='red') + '\n' +
-        style("\n".join(aExc.criticalWarns), fg='yellow')
-    )
+    cprint("Vivado error/critical warnings detected", style='red')
+    cprint("\n".join(aExc.errors), markup=False, style='red')
+    cprint("\n".join(aExc.criticalWarns), markup=False, style='yellow')    
+
 
 # ------------------------------------------------------------------------------
 
@@ -193,7 +196,6 @@ def validateIpAddress(value):
     lHexIp = ''.join([ '%02x' % ord(c) for c in lIp.packed])
 
     return 'X"{}"'.format(lHexIp)
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -208,80 +210,58 @@ def validateMacAddress(value):
 
     lHexMac = ''.join([ '%02x' % int(c, 16) for c in value.split(':')])
     return 'X"{}"'.format(lHexMac)
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
 def printRegTable(aRegs, aHeader=True, aSort=True):
-    echo ( formatRegTable(aRegs, aHeader, aSort) )
-# ------------------------------------------------------------------------------
+    cprint ( formatRegTable(aRegs, aHeader, aSort) )
 
 
 # ------------------------------------------------------------------------------
 def formatRegTable(aRegs, aHeader=True, aSort=True):
-    lRegTable = Texttable(max_width=0)
-    lRegTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
-    lRegTable.set_chars(['-', '|', '+', '-'])
-    if aHeader:
-        lRegTable.header( ['name', 'value'] )
 
-    lRegs = sorted(aRegs) if aSort else aRegs
-    for k in lRegs:
-        lRegTable.add_row( [str(k), hex(aRegs[k])] )
-
-    return lRegTable.draw()
-# ------------------------------------------------------------------------------
+    lRegTable = Table('name', 'value', show_header=aHeader)
+    for k in (sorted(aRegs) if aSort else aRegs):
+        lRegTable.add_row( str(k), hex(aRegs[k]) )
+    return lRegTable
 
 
 # ------------------------------------------------------------------------------
 def printDictTable(aDict, aHeader=True, aSort=True, aFmtr=None):
-    echo ( formatDictTable(aDict, aHeader, aSort, aFmtr) )
-# ------------------------------------------------------------------------------
+    cprint ( formatDictTable(aDict, aHeader, aSort, aFmtr) )
 
 
 # ------------------------------------------------------------------------------
 def formatDictTable(aDict, aHeader=True, aSort=True, aFmtr=str):
-    lDictTable = Texttable(max_width=0)
-    lDictTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
-    lDictTable.set_chars(['-', '|', '+', '-'])
-    if aHeader:
-        lDictTable.header( ['name', 'value'] )
 
+    lDictTable = Table('name', 'value', show_header=aHeader)
     for k in (sorted(aDict) if aSort else aDict):
         v = aDict[k]
-        lDictTable.add_row( [str(k), aFmtr(v) if aFmtr else v])
+        lDictTable.add_row(str(k), aFmtr(v) if aFmtr else v)
+    return lDictTable
 
-    return lDictTable.draw()
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 def printAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=None):
-    echo ( formatAlienTable(aBranch, aHeader, aSort, aFmtr) )
-# ------------------------------------------------------------------------------
+    cprint ( formatAlienTable(aBranch, aHeader, aSort, aFmtr) )
 
 
 # ------------------------------------------------------------------------------
 def formatAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=str):
-    lAlienTable = Texttable(max_width=0)
-    lAlienTable.set_deco(Texttable.VLINES | Texttable.BORDER | Texttable.HEADER)
-    lAlienTable.set_chars(['-', '|', '+', '-'])
-    if aHeader:
-        lAlienTable.header( ['name', 'value'] )
+    lAlienTable = Table('name', 'value', show_header=aHeader)
 
     for k in (sorted(aBranch) if aSort else aBranch):
         v = aBranch[k]
         if isinstance(v, AlienBranch):
             continue
-        lAlienTable.add_row( [str(k), aFmtr(v) if aFmtr else v])
+        lAlienTable.add_row( str(k), aFmtr(v) if aFmtr else v)
 
-    return lAlienTable.draw()
-# ------------------------------------------------------------------------------
+    return lAlienTable
 
 
 
 # ------------------------------------------------------------------------------
 def getClickRootName():
     return get_current_context().find_root().info_name
-# ------------------------------------------------------------------------------
 
 

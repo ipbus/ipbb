@@ -16,13 +16,13 @@ def completeDepFile(cmp_argname):
         # print (ctx.command.params)
         if ctx.params.get(cmp_argname, None) is None:
             return []
-        env = Context()
+        ictx = Context()
         # nothing to complete if not in an ipbb area
-        if env.work.path is None:
+        if ictx.work.path is None:
             return []
 
         lPkg, lCmp = ctx.params[cmp_argname]
-        basepath = env.pathMaker.getPath(lPkg, lCmp, 'include')
+        basepath = ictx.pathMaker.getPath(lPkg, lCmp, 'include')
         if not exists(basepath):
             return []
 
@@ -42,43 +42,43 @@ def completeDepFile(cmp_argname):
 
 # ------------------------------------------------------------------------------
 def completeProject(ctx, args, incomplete):
-    env = Context()
+    ictx = Context()
 
     # nothing to complete if not in an ipbb area
-    if env.work.path is None:
+    if ictx.work.path is None:
         return []
 
-    return [proj for proj in env.projects if incomplete in proj]
+    return [proj for proj in ictx.projects if incomplete in proj]
 
 
 # ------------------------------------------------------------------------------
 def completeSrcPackage(ctx, args, incomplete):
-    env = Context()
+    ictx = Context()
 
     # nothing to complete if not in an ipbb area
-    if env.work.path is None:
+    if ictx.work.path is None:
         return []
 
-    return [pkg for pkg in env.sources if incomplete in pkg]
+    return [pkg for pkg in ictx.sources if incomplete in pkg]
 
 
 # ------------------------------------------------------------------------------
 def completeComponent(ctx, args, incomplete):
-    env = Context()
+    ictx = Context()
 
     # nothing to complete if not in an ipbb area
-    if env.work.path is None:
+    if ictx.work.path is None:
         return []
 
     lPkgSeps = incomplete.count(':')
     if lPkgSeps > 1:
         return []
     elif lPkgSeps == 0:
-        return [ (p + ':') for p in env.sources if p.startswith(incomplete) ]
-        # pkgs = [p for p in env.sources if p.startswith(incomplete) ]
+        return [ (p + ':') for p in ictx.sources if p.startswith(incomplete) ]
+        # pkgs = [p for p in ictx.sources if p.startswith(incomplete) ]
         # comps = []
         # for p in pkgs:
-        #     comps += _findComponentsInPackage(env, p)
+        #     comps += _findComponentsInPackage(ictx, p)
 
         # return comps
 
@@ -86,23 +86,23 @@ def completeComponent(ctx, args, incomplete):
         lPkg, incomp_cmp = incomplete.split(':')
 
         # bail out if package is misspelled
-        if lPkg not in env.sources:
+        if lPkg not in ictx.sources:
             return []
 
         # Scan the package for matches with the partial component path
-        return _findComponentsInPackage(env, lPkg, incomp_cmp)
+        return _findComponentsInPackage(ictx, lPkg, incomp_cmp)
 
     return []
 
 
 # ------------------------------------------------------------------------------
-def _findComponentsInPackage(env, pkg, incomp_cmp='', exclude=['.git', '.svn'], match_subdir='firmware'):
+def _findComponentsInPackage(ictx, pkg, incomp_cmp='', exclude=['.git', '.svn'], match_subdir='firmware'):
     """
     Helper function to find components in a package, starting from an incomplete component path
 
     """
     lMatchingComps = []
-    lPkgPath = join(env.srcdir, pkg)
+    lPkgPath = join(ictx.srcdir, pkg)
 
     # Resolve the list of paths to 
     lSearchPaths = []

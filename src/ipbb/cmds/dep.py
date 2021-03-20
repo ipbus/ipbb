@@ -21,11 +21,12 @@ from os.path import (
     isfile,
     isdir,
 )
+from ..console import cprint
 from ..tools.common import which, SmartOpen
 from ..depparser import DepFormatter
 from ..utils import DirSentry, printDictTable, printAlienTable
-from click import echo, secho, style, confirm
-from texttable import Texttable
+from rich.table import Table, Column
+from rich.padding import Padding
 
 # ------------------------------------------------------------------------------
 def dep(ictx, proj):
@@ -97,24 +98,23 @@ def report(ictx, filters):
     lParser = ictx.depParser
     lDepFmt = DepFormatter(lParser)
 
-    secho('* Variables', fg='blue')
+    cprint('* Variables', style='blue')
     # printDictTable(lParser.vars, aHeader=False)
     printAlienTable(lParser.settings, aHeader=False)
 
-    echo()
-    secho('* Dep-tree commands', fg='blue')
+    cprint()
+    cprint('* Dep-tree commands', style='blue')
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
-        echo('  + {0} ({1})'.format(k, len(lParser.commands[k])))
+        cprint('  + {0} ({1})'.format(k, len(lParser.commands[k])))
         if not lParser.commands[k]:
-            echo()
+            cprint()
             continue
 
-        lCmdTable = Texttable(max_width=0)
-        lCmdTable.header(lCmdHeaders)
-        lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-        lCmdTable.set_chars(['-', '|', '+', '-'])
+        lCmdTable = Table(*lCmdHeaders)
+        # lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        # lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
             lRow = [
                 relpath(lCmd.filepath, ictx.srcdir),
@@ -127,12 +127,13 @@ def report(ictx, filters):
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
                 continue
 
-            lCmdTable.add_row(lRow)
+            lCmdTable.add_row(*lRow)
 
-        echo(lPrepend.sub(r'\g<1>  ', lCmdTable.draw()))
-        echo()
+        # cprint(lPrepend.sub(r'\g<1>  ', lCmdTable.draw()))
+        cprint(Padding.indent(lCmdTable, 4))
+        cprint()
 
-    secho('Resolved packages & components', fg='blue')
+    cprint('Resolved packages & components', style='blue')
 
     lString = ''
 
@@ -142,36 +143,37 @@ def report(ictx, filters):
     lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
     lString += 'components:\n'
     lString += lDepFmt.drawComponents()
-    echo(lString+'\n')
+    cprint(lString+'\n')
 
     if lParser.errors:
-        secho("Dep tree parsing error(s):", fg='red')
-        echo(lDepFmt.drawParsingErrors())
+        cprint("Dep tree parsing error(s):", style='red')
+        cprint(lDepFmt.drawParsingErrors())
 
     if lParser.unresolved:
         lString = ''
         if lParser.unresolvedPackages:
-            secho("Unresolved packages:", fg='red')
-            echo(lDepFmt.drawUnresolvedPackages())
-            echo()
+            cprint("Unresolved packages:", style='red')
+            cprint(lDepFmt.drawUnresolvedPackages())
+            cprint()
 
         # ------
         lCNF = lParser.unresolvedComponents
         if lCNF:
-            secho("Unresolved components:", fg='red')
-            echo(lDepFmt.drawUnresolvedComponents())
-            echo()
+            cprint("Unresolved components:", style='red')
+            cprint(lDepFmt.drawUnresolvedComponents())
+            cprint()
 
 
         # ------
 
         # ------
-        echo(lString)
+        cprint(lString)
 
     if lParser.unresolvedFiles:
-        secho("Unresolved files:", fg='red')
+        cprint("Unresolved files:", style='red')
 
-        echo(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
+        # cprint(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
+        cprint(Padding.indent(lDepFmt.drawUnresolvedFiles(), 4))
 
 
 # ------------------------------------------------------------------------------

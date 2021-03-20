@@ -1,14 +1,14 @@
 
 # Import click for ansi colors
 import yaml
-from click import echo, secho, style, confirm
 
 from .. import utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
-from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoSetupFile
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
+from ..console import cprint
 
 
 # TODO:
@@ -288,7 +288,7 @@ class Context(object):
                 pass
 
             if self._depParser.errors:
-                secho('WARNING: dep parsing errors detected', fg='yellow')
+                cprint('WARNING: dep parsing errors detected', style='yellow')
         return self._depParser
 
 

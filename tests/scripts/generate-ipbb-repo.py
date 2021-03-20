@@ -5,11 +5,14 @@ import traceback
 import yaml
 import pprint
 from click import echo, secho
+from rich.panel import Panel
+from rich.text import Text
 from os.path import exists, dirname, join, basename, splitext
 from os import mkdir, makedirs
 from shutil import rmtree
 from ipbb.depparser import DepFileParser, DepFormatter
 from ipbb.depparser import Pathmaker
+from ipbb.console import cprint, console
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -18,9 +21,11 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.argument('repofile', type=click.Path(exists=True))
 @click.argument('dest', type=click.Path())
 def cli(repofile, dest):
+
     with open(repofile, 'r') as f:
         repocfg = yaml.safe_load(f)
-    pprint.pprint(repocfg)
+    cprint(Panel.fit("Repo config"))
+    cprint(repocfg)
 
     reponame = repocfg.get('name', splitext(basename(repofile)))
     repopath = join(dest, reponame)
@@ -41,45 +46,34 @@ def cli(repofile, dest):
     pm = Pathmaker(dest)
 
     for t in repocfg['top']:
-        print('++++++++++++++++++++++++ Parsing',t, '+++++++++')
+        cprint("Parsing", t)
         dp = DepFileParser('vivado', pm, {}, 0)
         # import ipdb
         # ipdb.set_trace()
         dp.parse(reponame, t['cmp'], t['file'])
 
-        print('\n\n\n')
-        print('-'*80)
-        print('   Summary   ', t['file'])
-        print('-'*80)
-        print(">>> Commands")
-        pprint.pprint(dp.commands)
-        print(">>> Libs")
-        pprint.pprint(dp.libs)
-        print(">>> Errors")
-        pprint.pprint(dp.errors)
-        print(">>> Lost files")
-        pprint.pprint(dp.unresolved)
+        cprint('\n')
+        cprint('-'*80)
+        cprint('   Summary   ', t['file'])
+        cprint('-'*80)
+        cprint(">>> Commands")
+        cprint(dp.commands)
+        cprint(">>> Libs")
+        cprint(dp.libs)
+        cprint(">>> Errors")
+        cprint(dp.errors)
+        cprint(">>> Lost files")
+        cprint(dp.unresolved)
 
         df = DepFormatter(dp)
-        print(df.drawSummary())
+        cprint(Panel.fit(df.drawSummary()))
 
 
 def main():
     try:
         cli()
     except Exception as e:
-        hline = '-' * 80
-        echo()
-        secho(hline, fg='red')
-        secho("FATAL ERROR: Caught '" + type(e).__name__ + "' exception:", fg='red')
-        secho(e, fg='red')
-        secho(hline, fg='red')
-        import StringIO
-
-        lTrace = StringIO.StringIO()
-        traceback.print_exc(file=lTrace)
-        print(lTrace.getvalue())
-        # Do something with lTrace
+        console.print_exception()
         raise SystemExit(-1)
 
 

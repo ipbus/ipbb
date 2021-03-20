@@ -11,7 +11,7 @@ from io import StringIO, BytesIO
 
 from ..context import Context
 
-from ..cmds.formatters import DepFormatter
+from ..depparser import DepFormatter
 from ..console import cprint
 from .._version import __version__
 

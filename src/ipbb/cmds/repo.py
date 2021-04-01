@@ -583,10 +583,9 @@ def srcs_info(ictx):
                     continue
 
                 for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
-                    print(lSubModDir)
                     with DirSentry(join(lSrcDir,lSubModDir)) as _:
                         lHEADId, lHash = _git_info()
-                        lSrcTable.add_row([u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash])
+                        lSrcTable.add_row(u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash)
 
         elif exists(join(lSrcDir, '.svn')):
             with DirSentry(lSrcDir) as _:
@@ -597,8 +596,6 @@ def srcs_info(ictx):
         else:
             lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
 
-
-        lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
     cprint(lSrcTable)
 
 

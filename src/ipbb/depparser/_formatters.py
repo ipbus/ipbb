@@ -136,21 +136,33 @@ class DepFormatter(object):
                     str(lErr)+(': {}'.format(lErr.__cause__) if hasattr(lErr,'__cause__') else ''),
             )
 
-        return lErrTable.draw()
+        return lErrTable
 
     # -----------------------------------------------------------------------------
     def drawSummary(self):
 
-        lOutTxt = ''
-        lOutTxt += self.drawDeptreeCommandsSummary()
-
-        lOutTxt += '\n'
-        lOutTxt += self.drawPackages()
-
+        grid = Table.grid(expand=True)
+        grid.add_column()
+        grid.add_row("[bold]Groups[/]")
+        grid.add_row(self.drawDeptreeCommandsSummary())
+        grid.add_row("")
+        grid.add_row("[bold]Packages[/]")
+        grid.add_row(self.drawPackages())
+        grid.add_row("")
         if self.parser.unresolved:
-            lOutTxt += '\n'
-            lOutTxt += self.drawUnresolvedSummary()
-            return lOutTxt
+            grid.add_row("[bold]Unresolved[/]")
+            grid.add_row(self.drawUnresolvedSummary())
 
-        return lOutTxt
+        # Switch to using tables
+        # lOutTxt = ''
+        # lOutTxt += self.drawDeptreeCommandsSummary()
+
+        # lOutTxt += '\n'
+        # lOutTxt += self.drawPackages()
+
+        # if self.parser.unresolved:
+        #     lOutTxt += self.drawUnresolvedSummary()
+        #     return lOutTxt
+
+        return grid
     # -----------------------------------------------------------------------------

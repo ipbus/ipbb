@@ -26,14 +26,14 @@ def completeDepFile(cmp_argname):
         if not exists(basepath):
             return []
 
-        from ..depparser import depfiletypes
+        from ..depparser import dep_file_types
 
         # print()
         # print(basepath)
 
         lDepFiles = []
         for root, dirs, files in walk(basepath):
-            lDepFiles += [normpath(f) for f in files if any([f.endswith(ext) for ext in depfiletypes])]
+            lDepFiles += [normpath(f) for f in files if any([f.endswith(ext) for ext in dep_file_types])]
 
         return [ f for f in lDepFiles if f.startswith(incomplete)]
 

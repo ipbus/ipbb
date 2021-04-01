@@ -5,10 +5,11 @@ import glob
 import copy
 import string
 
-from ._definitions import depfiletypes
+from ._definitions import dep_file_types, dep_command_types
 from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import SrcCommand, IncludeCommand
+
 from ..tools.alien import AlienTree, AlienTemplate
 
 from collections import OrderedDict
@@ -99,7 +100,7 @@ class DepFileParser(object):
     @staticmethod
     def forwardparsing(aDepFileName):
 
-        ftype = depfiletypes.get(splitext(aDepFileName)[1], None)
+        ftype = dep_file_types.get(splitext(aDepFileName)[1], None)
         if ftype is not None:
             return ftype['fwd']
         return True
@@ -126,7 +127,7 @@ class DepFileParser(object):
         self.libs = set()
         self.packages = OrderedDict()
 
-        self.commands = {c: [] for c in ['setup', 'util', 'src', 'hlssrc', 'addrtab', 'iprepo']}
+        self.commands = {c: [] for c in dep_command_types}
 
         self.unresolved = list()
         self.errors = list()

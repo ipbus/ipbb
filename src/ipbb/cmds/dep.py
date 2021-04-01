@@ -23,7 +23,7 @@ from os.path import (
 )
 from ..console import cprint
 from ..tools.common import which, SmartOpen
-from ..depparser import DepFormatter
+from ..depparser import DepFormatter, dep_command_types
 from ..utils import DirSentry, printDictTable, printAlienTable
 from rich.table import Table, Column
 from rich.padding import Padding
@@ -59,8 +59,6 @@ def report(ictx, filters):
     lFilterFormatErrors = []
     lFieldNotFound = []
     lFilters = []
-
-    # print ( filters )
 
     for f in filters:
         m = lFilterFormat.match(f)
@@ -113,8 +111,6 @@ def report(ictx, filters):
             continue
 
         lCmdTable = Table(*lCmdHeaders)
-        # lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-        # lCmdTable.set_chars(['-', '|', '+', '-'])
         for lCmd in lParser.commands[k]:
             lRow = [
                 relpath(lCmd.filepath, ictx.srcdir),
@@ -137,9 +133,6 @@ def report(ictx, filters):
 
     lString = ''
 
-    # lString += '+----------------------------------+\n'
-    # lString += '|  Resolved packages & components  |\n'
-    # lString += '+----------------------------------+\n'
     lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
     lString += 'components:\n'
     lString += lDepFmt.drawComponents()
@@ -177,22 +170,43 @@ def report(ictx, filters):
 
 
 # ------------------------------------------------------------------------------
-def ls(ictx, group, output):
-    '''List project files by group
 
+def ls(ictx, group: str, output: str):
+    '''
+    List project files by group
+    
     - setup: Project setup scripts
     - src: Code files
-    - addrtab: Address tables 
-    - cgpfile: ?
+    - addrtab: Address tables
+    
+    :param      ictx:    The ictx
+    :type       ictx:    { type_description }
+    :param      group:   The group
+    :type       group:   str
+    :param      output:  The output
+    :type       output:  str
+    
+
+
+    :rtype:     None
     '''
 
     with SmartOpen(output) as lWriter:
-        for addrtab in ictx.depParser.commands[group]:
-            lWriter(addrtab.filepath)
+        for f in ictx.depParser.commands[group]:
+            lWriter(f.filepath)
 
 
 # ------------------------------------------------------------------------------
-def components(ictx, output):
+
+def components(ictx, output: str):
+    """
+    { function_description }
+
+    :param      ictx:    The ictx
+    :type       ictx:    { type_description }
+    :param      output:  The output
+    :type       output:  str
+    """
 
     with SmartOpen(output) as lWriter:
         for lPkt, lCmps in ictx.depParser.packages.items():
@@ -204,10 +218,7 @@ def components(ictx, output):
 
 # ------------------------------------------------------------------------------
 
-
 # ------------------------------------------------------------------------------
-
-
 @contextlib.contextmanager
 def set_env(**environ):
     """
@@ -234,7 +245,7 @@ def set_env(**environ):
 
 # ------------------------------------------------------------------------------
 # ----------------------------
-def hashAndUpdate0g(
+def hash_and_update0g(
     aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1
 ):
 
@@ -257,7 +268,7 @@ def hashAndUpdate0g(
 
 
 # ----------------------------
-def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
+def hash_and_update(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
 
     # New instance of the selected algorithm
     lHash = aAlgo()
@@ -274,7 +285,7 @@ def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.s
     elif isdir(aPath):
         for root, dirs, files in os.walk(aPath):
             for f in files:
-                hashAndUpdate(f, aChunkSize, aUpdateHashes=aUpdateHashes, aAlgo=aAlgo)
+                hash_and_update(f, aChunkSize, aUpdateHashes=aUpdateHashes, aAlgo=aAlgo)
 
     return lHash
 
@@ -312,7 +323,7 @@ def hash(ictx, output, verbose):
                 lWriter("# " + lGrp)
                 lWriter("#" + "-" * 79)
             for lCmd in lCmds:
-                lCmdHash = hashAndUpdate(
+                lCmdHash = hash_and_update(
                     lCmd.filepath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
                 ).hexdigest()
                 if verbose:
@@ -344,7 +355,19 @@ def hash(ictx, output, verbose):
 
 # ------------------------------------------------------------------------------
 def archive(ictx):
-    print('archive')
+
+    import tarfile
+    def tarinfo_relpath(tarinfo):
+        # Note: the source dir leading '/' [1:] is removed because tarindo names don't have it
+        tarinfo.name = relpath(tarinfo.name, ictx.srcdir[1:])
+        return tarinfo
+
+    with tarfile.open(f"{ictx.currentproj.name}_src.tar.gz", "w:gz") as tar:
+        for c in dep_command_types:
+            for f in ictx.depParser.commands[c]:
+                print(f.filepath)
+                tar.add(f.filepath, filter=tarinfo_relpath)
+
 
 
 # ------------------------------------------------------------------------------

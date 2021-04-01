@@ -148,7 +148,7 @@ def main():
 
     obj = Context()
     try:
-        climain(obj=obj)
+        climain(obj=obj, show_default=True)
     except Exception as e:
         from sys import version_info
         exc_type, exc_obj, exc_tb = sys.exc_info()

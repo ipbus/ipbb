@@ -12,10 +12,9 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from ..console import cprint
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
-from ..depparser import Pathmaker
+from ..depparser import Pathmaker, DepFormatter, dep_command_types
 from ..tools.common import mkdir
 from ..utils import DirSentry, findFileInParents, raiseError, formatDictTable
-from ..depparser import DepFormatter
 from .proj import info as proj_info
 from urllib.parse import urlparse
 from distutils.dir_util import mkpath
@@ -608,7 +607,7 @@ def srcs_create_component(ictx, component):
         cprint("ERROR: Component '{}' already exists".format(lCmpPath), style='red')
         raise click.ClickException("Command aborted")
 
-    for sd in ['src', 'include', 'iprepo', 'addrtab']:
+    for sd in lPathMaker.fpaths:
         lPath = lPathMaker.getPath(*component, command=sd)
         mkdir(lPath)
         cprint("Folder {} created.".format(lPath), style='cyan')

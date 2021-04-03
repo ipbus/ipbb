@@ -10,7 +10,7 @@ from rich.prompt import Confirm
 from rich.table import Table
 
 from .tools.alien import AlienBranch
-from .console import cprint
+from .console import cprint, console
 from .depparser import DepFormatter
 
 # ------------------------------------------------------------------------------
@@ -145,10 +145,10 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 
 
 # ------------------------------------------------------------------------------
-def echoVivadoConsoleError( aExc ):
-    cprint("Vivado error/critical warnings detected", style='red')
-    cprint("\n".join(aExc.errors), markup=False, style='red')
-    cprint("\n".join(aExc.criticalWarns), markup=False, style='yellow')    
+def logVivadoConsoleError( aExc ):
+    console.log("Vivado error/critical warnings detected", style='red')
+    console.log("\n".join(aExc.errors), markup=False, style='red')
+    console.log("\n".join(aExc.criticalWarns), markup=False, style='yellow')    
 
 
 # ------------------------------------------------------------------------------

@@ -13,14 +13,15 @@ import re
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
-from click import echo, secho, style, confirm
-from texttable import Texttable
+# from click import echo, secho, style, confirm
 from collections import OrderedDict
+from rich.table import Table
 
 from .dep import hash
 
+from ..console import cprint, console
 from ..tools.common import which, SmartOpen, mkdir
-from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 
 from ..generators.vivadoproject import VivadoProjectGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
@@ -145,13 +146,14 @@ def genproject(env, aEnableIPCache, aOptimise, aToScript, aToStdout):
             )
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
-        secho(
-            "Error caught while generating Vivado TCL commands:\n" + "\n".join(lExc),
-            fg='red',
+        cprint(
+            "Error caught while generating Vivado TCL commands:",
+            style='red',
         )
+        cprint(lExc)
         raise click.Abort()
     # -------------------------------------------------------------------------
 
@@ -181,12 +183,12 @@ def checksyntax(env):
             lConsole('check_syntax')
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    secho(
+    cprint(
         "\n{}: Synthax check completed successfully.\n".format(env.currentproj.name),
-        fg='green',
+        style='green',
     )
 
 # -------------------------------------
@@ -225,9 +227,9 @@ def synth(env, aNumJobs, aUpdateInt):
 
             # Reset IP runs, if needed
             for run in lIPRunsToReset:
-                secho(
-                    'IP run {} found in running state. Resetting.'.format(run),
-                    fg='yellow',
+                cprint(
+                    f"IP run {run} found in running state. Resetting.",
+                    style='yellow',
                 )
                 lConsole('reset_run {}'.format(run))
 
@@ -237,10 +239,10 @@ def synth(env, aNumJobs, aUpdateInt):
 
             # Monitor OOC and synth run progress
             if not aUpdateInt:
-                secho("Run monitoring disabled", fg='cyan')
+                cprint("Run monitoring disabled", style='cyan')
                 lConsole('wait_on_run synth_1')
             else:
-                secho("Starting run monitoring loop, update interval: {} min(s)".format(aUpdateInt), fg='cyan')
+                cprint(f"Starting run monitoring loop, update interval: {aUpdateInt} min(s)", style='cyan')
                 while True:
 
                     with VivadoSnoozer(lConsole):
@@ -254,13 +256,13 @@ def synth(env, aNumJobs, aUpdateInt):
                     ]
 
                     if lPendingOOCRuns:
-                        secho('\n' + makeRunsTable(lOOCRunProps).draw(), fg='cyan')
+                        cprint(makeRunsTable(lOOCRunProps), style='light_sky_blue1')
                     else:
-                        secho('\n OOC runs: {} completed.'.format(len(lOOCRunProps)), fg='cyan')
+                        cprint(f"OOC runs: {len(lOOCRunProps)} completed.", style='light_sky_blue1')
 
                     lSynthProps = { k: v for k, v in lRunProps.items() if k == lSynthRun }
 
-                    secho('\n' + makeRunsTable(lSynthProps).draw(), fg='cyan')
+                    cprint(makeRunsTable(lSynthProps), style='light_sky_blue1')
 
                     lRunsInError = [ k for k, v in lRunProps.items() if v['STATUS'] == 'synth_design ERROR']
                     if lRunsInError:
@@ -273,18 +275,19 @@ def synth(env, aNumJobs, aUpdateInt):
                     lConsole('wait_on_run synth_1 -timeout {}'.format(aUpdateInt))
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
-        secho(
-            "ERROR: " + str(lExc),
-            fg='red',
+        console.log(
+            "ERROR",
+            style='red',
         )
+        console.log(lExc)
         raise click.Abort()
 
-    secho(
-        "\n{}: Synthesis completed successfully.\n".format(env.currentproj.name),
-        fg='green',
+    console.log(
+        f"{env.currentproj.name}: Synthesis completed successfully.",
+        style='green',
     )
 
 
@@ -329,12 +332,12 @@ def impl(env, aNumJobs, aStopOnTimingErr):
                 lConsole(c)
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    secho(
-        "\n{}: Implementation completed successfully.\n".format(env.currentproj.name),
-        fg='green',
+    console.log(
+        f"{env.currentproj.name}: Implementation completed successfully.\n",
+        style='green',
     )
 
 
@@ -367,7 +370,7 @@ def resource_usage(env, aCell, aDepth, aFile):
                 ):
                 lConsole(c)
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
 
@@ -394,11 +397,12 @@ def bitfile(env):
             lConsole(lWriteBitStreamCmd)
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    secho(
-        "\n{}: Bitfile successfully written.\n".format(env.currentproj.name), fg='green'
+    console.log(
+        f"{env.currentproj.name}: Bitfile successfully written.",
+        style='green'
     )
 
 
@@ -431,13 +435,13 @@ def debugprobes(env):
             lConsole(lWriteDebugProbesCmd)
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    secho(
-        "\n{}: Debug probes file successfully written.\n".format(env.currentproj.name), fg='green'
+    console.log(
+        f"{env.currentproj.name}: Debug probes file successfully written.",
+        style='green'
     )
-
 
 # ------------------------------------------------------------------------------
 def memcfg(env):
@@ -464,7 +468,7 @@ def memcfg(env):
     lBaseName = env.vivadoProdFileBase
 
     if 'vivado' not in lDepFileParser.settings:
-        secho('No memcfg settings found in this project. Exiting.', fg='yellow')
+        cprint('No memcfg settings found in this project. Exiting.', style='yellow')
         return
 
     lBitPath = lBaseName + '.bit'
@@ -494,13 +498,13 @@ def memcfg(env):
                     )
                 )
         except VivadoConsoleError as lExc:
-            echoVivadoConsoleError(lExc)
+            logVivadoConsoleError(lExc)
             raise click.Abort()
 
-        secho(
-            "\n{}: {}file successfully written.\n".format(k.capitalize(), env.currentproj.name), fg='green'
-    )
-
+        console.log(
+            f"{env.currentproj.name}: {k.capitalize} file successfully written.",
+            style='green'
+        )
 
 # ------------------------------------------------------------------------------
 def readRunInfo(aConsole, aProps=None):
@@ -529,21 +533,15 @@ def readRunInfo(aConsole, aProps=None):
     return lInfos
 
 # ------------------------------------------------------------------------------
-def makeRunsTable(lInfos):
-    lSummary = Texttable(max_width=0)
-    if not lInfos:
+def makeRunsTable(aInfos, title=None):
+    lSummary = Table("Run", *list(next(iter(aInfos.values()))), title=title)
+    if not aInfos:
         return lSummary
 
-    # lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lSummary.set_deco(Texttable.HEADER | Texttable.BORDER)
-    lSummary.set_chars( ['-', '|', '+', '-'] )
-    lSummary.header(['Run'] + list(next(iter(lInfos.values()))))
-    for lRun in sorted(lInfos):
-        lInfo = lInfos[lRun]
-        lSummary.add_row([lRun] + list(lInfo.values()))
-
+    for lRun in sorted(aInfos):
+        lInfo = aInfos[lRun]
+        lSummary.add_row(lRun, *list(lInfo.values()))
     return lSummary
-
 
 # ------------------------------------------------------------------------------
 def status(env):
@@ -577,18 +575,15 @@ def status(env):
                 lInfos = lProject.readRunInfo(lProps)
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    echo()
+    # echo()
 
-    lOocTable = makeRunsTable({ k: v for k, v in lInfos.items() if lOOCRegex.match(k)})
-    secho("Out of context runs", fg='blue')
-    echo(lOocTable.draw())
-    echo()
-    secho("Design runs", fg='blue')
-    aaa = makeRunsTable({ k: v for k, v in lInfos.items() if lRunRegex.match(k)})
-    echo(aaa.draw())
+    lOocTable = makeRunsTable({ k: v for k, v in lInfos.items() if lOOCRegex.match(k)}, title="Out of context runs")
+    cprint(lOocTable)
+    lDesignRuns = makeRunsTable({ k: v for k, v in lInfos.items() if lRunRegex.match(k)}, title="Design runs")
+    cprint(lDesignRuns)
 # ------------------------------------------------------------------------------
 
 
@@ -614,12 +609,12 @@ def reset(env):
                 lConsole(c)
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    secho(
-        "\n{}: synth_1 and impl_1 successfully reset.\n".format(env.currentproj.name),
-        fg='green',
+    console.log(
+        f"{env.currentproj.name}: synth_1 and impl_1 successfully reset.",
+        style='green',
     )
 # ------------------------------------------------------------------------------
 
@@ -633,7 +628,7 @@ def package(env, aTag):
     ensureVivado(env)
 
     if not exists(env.vivadoProjFile):
-        secho('Vivado project does not exist. Creating the project...', fg='yellow')
+        cprint('Vivado project does not exist. Creating the project...', style='yellow')
         genproject(env, True, True, None, False)
 
     lProjName = env.currentproj.name
@@ -643,7 +638,7 @@ def package(env, aTag):
     lBaseName = env.vivadoProdFileBase
     lBitPath  = lBaseName + '.bit'
     if not exists(lBitPath):
-        secho('Bitfile does not exist. Attempting a build ...', fg='yellow')
+        cprint('Bitfile does not exist. Starting a build ...', style='yellow')
         bitfile(env)
 
     try:
@@ -675,7 +670,7 @@ def package(env, aTag):
     # -------------------------------------------------------------------------
     # Generate a json signature file
 
-    secho("Generating summary files", fg='blue')
+    console.log("Generating summary files", style='blue')
 
     # -------------------------------------------------------------------------
 
@@ -699,21 +694,19 @@ def package(env, aTag):
 
     # -------------------------------------------------------------------------
     # Copy bitfile, memcfg, and address table into the packaging area
-    secho("Collecting bitfile", fg='blue')
+    console.log("Collecting bitfile", style='blue')
     sh.cp('-av', lBitPath, lPkgSrcPath, _out=sys.stdout)
     echo()
 
     for f in lMemCfgFiles:
-        secho("Collecting memcfg {}".format(f), fg='blue')
+        console.log("Collecting memcfg {}".format(f), style='blue')
         sh.cp('-av', f, lPkgSrcPath, _out=sys.stdout)
-        echo()
 
     if lDebugProbesPath:
-        secho("Collecting debug-probes file", fg='blue')
+        console.log("Collecting debug-probes file", style='blue')
         sh.cp('-av', lDebugProbesPath, lPkgSrcPath, _out=sys.stdout)
-        echo()
 
-    secho("Collecting address tables", fg='blue')
+    console.log("Collecting address tables", style='blue')
     for addrtab in env.depParser.commands['addrtab']:
         sh.cp('-avL', addrtab.filepath, join(lPkgSrcPath, 'addrtab'), _out=sys.stdout)
     echo()
@@ -721,7 +714,7 @@ def package(env, aTag):
 
     # -------------------------------------------------------------------------
     # Tar everything up
-    secho("Generating tarball", fg='blue')
+    console.log("Generating tarball", style='blue')
 
     lTgzBaseName = '_'.join(
         [env.currentproj.settings['name']]
@@ -743,9 +736,9 @@ def package(env, aTag):
     )
     echo()
 
-    secho(
-        "Package " + style('%s' % lTgzPath, fg='green') + " successfully created.",
-        fg='green',
+    console.log(
+        f"Package {lTgzPath} successfully created.",
+        style='green',
     )
     # -------------------------------------------------------------------------
 
@@ -769,7 +762,7 @@ def archive(env):
                 )
             )
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
 

@@ -10,5 +10,5 @@ pexpect==4.8.0
 psutil==5.8.0
 pytest==6.2.2
 PyYAML==5.4.1
-rich==9.13.0
+rich==10.1.0
 sh==1.14.1

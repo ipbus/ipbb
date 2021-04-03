@@ -5,14 +5,13 @@ import click_didyoumean
 import ipbb
 import sys
 import traceback
-import rich
 from io import StringIO, BytesIO
 
 
 from ..context import Context
 
 from ..depparser import DepFormatter
-from ..console import cprint
+from ..console import cprint, console
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -87,55 +86,6 @@ def _compose_cli():
 
     climain.add_command(debug.debug)
 
-
-# ------------------------------------------------------------------------------
-def validate_completion():
-    """
-    This function should be moved to an unit test
-    """
-
-    _compose_cli()
-
-    from click._bashcomplete import get_choices
-
-    def choices_without_help(cli, args, incomplete):
-        completions = get_choices(cli, 'dummy', args, incomplete)
-        return [c[0] for c in completions]
-
-    for inc in [
-            '',
-            'f',
-            'felix-pie',
-            'felix-pie:',
-            'felix-pie:p',
-            'felix-pie:projects/',
-            'felix-pie:projects/hi',
-            'felix-pie:projects/hitfinder/'
-    ]:
-        print("-" * 80)
-        print("Completing component'" + inc + "'")
-        print("-" * 80)
-        print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG'], inc))
-        print()
-
-    for inc in [
-            '',
-    ]:
-        print("-" * 80)
-        print("Completing dep file'" + inc + "'")
-        print("-" * 80)
-        print(choices_without_help(climain, ['ipbb', 'toolbox', 'check-dep', 'felix-pie:projects/hitfinder'], inc))
-        print()
-
-    for inc in [
-            '',
-    ]:
-        print("-" * 80)
-        print("Completing dep file'" + inc + "'")
-        print("-" * 80)
-        print(choices_without_help(climain, ['proj', 'create', 'vivado', 'jbsc-hf-fc-tightG', 'felix-pie:projects/hitfinder', '-t'], inc))
-        print()
-    raise SystemExit(0)
 # ------------------------------------------------------------------------------
 def main():
     '''Discovers the env at startup'''
@@ -150,30 +100,28 @@ def main():
     try:
         climain(obj=obj, show_default=True)
     except Exception as e:
-        from sys import version_info
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        lFirstFrame = traceback.extract_tb(exc_tb)[-1]
+        # from sys import version_info
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # lFirstFrame = traceback.extract_tb(exc_tb)[-1]
 
-        cprint(
-            u"ERROR ('{}' exception caught): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
-                exc_type.__name__,
-                e,
-                lFirstFrame[0],
-                lFirstFrame[1],
-                lFirstFrame[2],
-                lFirstFrame[3],
-            ),
-            markup=False,
-            style='red',
-        )
+        # cprint(
+        #     u"ERROR ('{}' exception caught): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
+        #         exc_type.__name__,
+        #         e,
+        #         lFirstFrame[0],
+        #         lFirstFrame[1],
+        #         lFirstFrame[2],
+        #         lFirstFrame[3],
+        #     ),
+        #     markup=False,
+        #     style='red',
+        # )
 
+        console.log(e)
+        
         if obj.printExceptionStack:
-            lExc = StringIO()
-            traceback.print_exc(file=lExc)
-            cprint("Exception in user code:")
-            cprint('-' * 60)
-            cprint(lExc.getvalue(), style='red')
-            cprint('-' * 60)
+            console.print_exception()
+
         raise SystemExit(-1)
 
 

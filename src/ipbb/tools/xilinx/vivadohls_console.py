@@ -126,8 +126,6 @@ class VivadoHLSOutputFormatter(OutputFormatter):
 
         # Iterate over pairs, line and newline match
         for lLine,lRet in zip(lines[::2], lines[1::2]):
-            # if kHLSLogDebug:
-            #     print("zzzz  >> ", kOrange,repr(lLine), repr(lRet), kReset)
             if lLine in self.skiplines:
                 continue
 

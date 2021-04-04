@@ -13,7 +13,6 @@ import re
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
-# from click import echo, secho, style, confirm
 from collections import OrderedDict
 from rich.table import Table
 
@@ -186,7 +185,7 @@ def checksyntax(env):
         logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    cprint(
+    console.log(
         "\n{}: Synthax check completed successfully.\n".format(env.currentproj.name),
         style='green',
     )
@@ -482,7 +481,7 @@ def memcfg(env):
     for k,o in _memCfgKinds.items():
 
         if o not in lVivadoCfg:
-            echo("No configuration found for '{}' files. Skipping.".format(k))
+            cprint(f"No configuration found for '{k}' files. Skipping.")
             continue
 
         lMemCmdOptions = lVivadoCfg[o]
@@ -577,8 +576,6 @@ def status(env):
     except VivadoConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()
-
-    # echo()
 
     lOocTable = makeRunsTable({ k: v for k, v in lInfos.items() if lOOCRegex.match(k)}, title="Out of context runs")
     cprint(lOocTable)
@@ -689,14 +686,12 @@ def package(env, aTag):
 
     with open(join(lPkgSrcPath, 'summary.txt'), 'w') as lSummaryFile:
         yaml.safe_dump(lSummary, lSummaryFile, indent=2, default_flow_style=False)
-    echo()
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
     # Copy bitfile, memcfg, and address table into the packaging area
     console.log("Collecting bitfile", style='blue')
     sh.cp('-av', lBitPath, lPkgSrcPath, _out=sys.stdout)
-    echo()
 
     for f in lMemCfgFiles:
         console.log("Collecting memcfg {}".format(f), style='blue')
@@ -709,7 +704,6 @@ def package(env, aTag):
     console.log("Collecting address tables", style='blue')
     for addrtab in env.depParser.commands['addrtab']:
         sh.cp('-avL', addrtab.filepath, join(lPkgSrcPath, 'addrtab'), _out=sys.stdout)
-    echo()
     # -------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
@@ -734,7 +728,6 @@ def package(env, aTag):
         'src',
         _out=sys.stdout,
     )
-    echo()
 
     console.log(
         f"Package {lTgzPath} successfully created.",

@@ -581,7 +581,8 @@ def srcs_info(ictx):
                 if not lSubmods:
                     continue
 
-                for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
+                for _, lSubModDir in (l.split() for l in lSubmods.split('\n')):
+                # for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
                     with DirSentry(join(lSrcDir,lSubModDir)) as _:
                         lHEADId, lHash = _git_info()
                         lSrcTable.add_row(u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash)

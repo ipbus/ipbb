@@ -117,8 +117,9 @@ def main():
         #     style='red',
         # )
 
-        console.log(e)
-        
+        console.log("ERROR: exception caught!", style='red')
+        console.log(e, style='red')
+
         if obj.printExceptionStack:
             console.print_exception()
 

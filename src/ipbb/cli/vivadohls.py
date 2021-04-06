@@ -40,7 +40,6 @@ def process_vivadohls(env, subcommands, proj, verbosity):
 def genproject(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import genproject
-    # genproject(env, aToScript, aToStdout)
     return (ctx.command.name, genproject, args, kwargs)
 
 
@@ -48,30 +47,47 @@ def genproject(ctx, *args, **kwargs):
 @vivadohls.command('csynth', short_help='Run C-synthesis.')
 @click.pass_obj
 @click.pass_context
-def synth(ctx, *args, **kwargs):
+def csynth(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import csynth
-    # synth(env)
     return (ctx.command.name, csynth, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('csim', short_help='Run C-synthesis.')
+@vivadohls.command('csim', short_help='Run C-simulation.')
 @click.pass_obj
 @click.pass_context
 def sim(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import csim
-    # sim(env)
     return (ctx.command.name, csim, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('cosim', short_help='Run C-synthesis.')
+@vivadohls.command('cosim', short_help='Run Cosimulation.')
 @click.pass_obj
 @click.pass_context
 def cosim(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import cosim
-    # cosim(env)
     return (ctx.command.name, cosim, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('export-ip-catalog', short_help='Export ip repostory.')
+@click.pass_obj
+@click.pass_context
+def export_ip_catalog(ctx, *args, **kwargs):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.vivadohls import export_ip_catalog
+    return (ctx.command.name, export_ip_catalog, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('debug', short_help='Export ip repostory.')
+@click.pass_obj
+@click.pass_context
+def debug(ctx, *args, **kwargs):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.vivadohls import debug
+    return (ctx.command.name, debug, args, kwargs)

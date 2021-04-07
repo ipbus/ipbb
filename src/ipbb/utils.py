@@ -180,6 +180,13 @@ def validateMultiplePackageOrComponents(ctx, param, value):
     return tuple(pocs)
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+def validateOptionalComponent(ctx, param, value):
+    if value is None:
+        return None
+    
+    return validateComponent(ctx, param, value)
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 def validateIpAddress(value):

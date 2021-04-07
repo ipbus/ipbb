@@ -54,9 +54,17 @@ Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 
 
 # ------------------------------------------------
-def autodetecthls(executable='vivado_hls'):
+def autodetecthls(executable: str='vivado_hls') -> tuple:
     """
-
+    Args:
+        executable (str, optional): hls executable name
+    
+    Returns:
+        tuple: HLS version
+    
+    Raises:
+        VivadoHLSNotFoundError: Description
+    
     """
 
 
@@ -72,9 +80,13 @@ def autodetecthls(executable='vivado_hls'):
 # -------------------------------------------------------------------------
 class VivadoHLSOutputFormatter(OutputFormatter):
     """Formatter for Vivado command line output
-
+    
     Arguments:
         prefix (string): String to prepend to each line of output
+    
+    Attributes:
+        pendingchars (str): Description
+        skiplines (list): Regexes which, if matched, will skip the writing of a line
     """
     def __init__(self, prefix=None, sep=' | ', quiet=False):
         super().__init__(prefix, sep, quiet)

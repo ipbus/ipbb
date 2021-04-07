@@ -8,9 +8,7 @@ import shutil
 import getpass
 import collections
 
-import ipbb
-import ipbb.tools.xilinx as xilinx
-import ipbb.tools.mentor as mentor
+from .tools import xilinx, mentor
 from ..utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 from ..tools.common import DEFAULT_ENCODING
 

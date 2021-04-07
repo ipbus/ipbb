@@ -2,7 +2,10 @@
 # Modules
 import click
 
-import types
+from ..utils import validateOptionalComponent
+from ._utils import completeComponent
+
+# import types
 
 # ------------------------------------------------------------------------------
 @click.group('vivado-hls', short_help='Set up, syntesize, implement VivadoHLS projects.', chain=True)
@@ -75,6 +78,7 @@ def cosim(ctx, *args, **kwargs):
 
 # ------------------------------------------------------------------------------
 @vivadohls.command('export-ip-catalog', short_help='Export ip repostory.')
+@click.option('-c', '--to-component', callback=validateOptionalComponent, autocompletion=completeComponent)
 @click.pass_obj
 @click.pass_context
 def export_ip_catalog(ctx, *args, **kwargs):

@@ -397,7 +397,7 @@ def svn(ictx, repo, dest, rev, dryrun, sparse):
 def tar(ictx, repo, dest, strip):
     '''Add a tarball-ed package to the source area'''
 
-    click.cprint("Warning: Command 'untar' is still experimental", style='yellow')
+    cprint("Warning: Command 'untar' is still experimental", style='yellow')
     lProtocols = ['file', 'http', 'https']
     lExtensions = ['.tar', '.tar.gz', '.tgz']
 
@@ -423,7 +423,7 @@ def tar(ictx, repo, dest, strip):
     if not lUrlPath:
         raise click.ClickException('Malformed url: ' + lUrl)
 
-    lMatches = filter(lambda lOpt: lUrlPath.endswith(lOpt), lExtensions)
+    lMatches = list(filter(lambda lOpt: lUrlPath.endswith(lOpt), lExtensions))
     if not lMatches:
         raise click.ClickException(
             'File format not supported. Supported formats :' + ' '.join(lExtensions)

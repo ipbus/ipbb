@@ -217,6 +217,9 @@ def cosim(ictx):
 
 # ------------------------------------------------------------------------------
 def export_ip(ictx, to_component):
+    """
+    TODO : allow user to choose what export_desing flow to use
+    """
     from ..defaults import kTopEntity
 
     lSessionId = 'export-ip-catalog'
@@ -255,7 +258,7 @@ def export_ip(ictx, to_component):
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
             lConsole(f'open_solution {ictx.vivado_hls_solution}')
-            lConsole(f'export_design -flow syn -format ip_catalog -ipname {lIPName} -vendor {lHLSSettings["vendor"]} -library {lHLSSettings["library"]} -version "{lHLSSettings["version"]}"')
+            lConsole(f'export_design -format ip_catalog -ipname {lIPName} -vendor {lHLSSettings["vendor"]} -library {lHLSSettings["library"]} -version "{lHLSSettings["version"]}"')
 
     except VivadoHLSConsoleError as lExc:
         logVivadoConsoleError(lExc)

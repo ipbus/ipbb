@@ -11,6 +11,7 @@ class Pathmaker(object):
         'fw': 'firmware',
         'src': 'firmware/hdl',
         'hlssrc': 'firmware/hls',
+        'hlstb': 'firmware/hls_tb',
         'include': 'firmware/cfg',
         'addrtab': 'addr_table',
         'setup': 'firmware/cfg',

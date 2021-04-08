@@ -131,7 +131,6 @@ def _findComponentsInPackage(ictx, pkg, incomp_cmp='', exclude=['.git', '.svn'],
     return lMatchingComps
 
 
-from click import command, option, Option, UsageError
 
 
 # ------------------------------------------------------------------------------

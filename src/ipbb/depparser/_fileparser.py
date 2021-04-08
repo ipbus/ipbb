@@ -10,6 +10,7 @@ from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import SrcCommand, IncludeCommand
 
+from ..console import cprint, console
 from ..tools.alien import AlienTree, AlienTemplate
 
 from collections import OrderedDict
@@ -245,8 +246,7 @@ class DepFileParser(object):
         lPar, lExpr = [i.strip() for i in lTokens]
 
         if lPar.strip() in self.settings:
-            print("Warning!", lPar.strip(
-            ), "already defined. Not redefining.")
+            console.log(f"WARNING: `{lPar.strip()}` is already defined with value `{self.settings[lPar.strip()]}`. New value will not be applied.", style='yellow')
         else:
             try:
                 # exec(aLine[1:], None, self.settings)

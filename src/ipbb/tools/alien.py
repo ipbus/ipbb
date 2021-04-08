@@ -193,12 +193,9 @@ class AlienTree(object):
     def locked(self):
         return self._trunk._locked
 
-    # @lock.setter
     def lock(self, value):
         self._trunk._lock(value)
     
-    # def lock(self, value):
-
     def get(self, name, default=None):
         return self._trunk._get(name, default)
 
@@ -211,33 +208,36 @@ class AlienTree(object):
     def branches(self):
         return self._trunk._iterbranches()
 
+    def walk(self):
+        return None 
+
         
 
-# ------------------------------------------------------------------------------
-def iterleaves(branch):
-    """
-    Helper function to iterate over a branch tree
+# # ------------------------------------------------------------------------------
+# def iterleaves(branch):
+#     """
+#     Helper function to iterate over a branch tree
     
-    :param      branch:  A branch tree
-    :type       branch:  AlienBranch
+#     :param      branch:  A branch tree
+#     :type       branch:  AlienBranch
     
-    :returns:   A branch leaf
-    :rtype:     anything
-    """
-    return branch._iterleaves()
+#     :returns:   A branch leaf
+#     :rtype:     anything
+#     """
+#     return branch._iterleaves()
 
-# ------------------------------------------------------------------------------
-def iterbranches(branch):
-    """
-    Helper function to iterate over a branch tree
+# # ------------------------------------------------------------------------------
+# def iterbranches(branch):
+#     """
+#     Helper function to iterate over a branch tree
     
-    :param      branch:  A branch tree
-    :type       branch:  AlienBranch
+#     :param      branch:  A branch tree
+#     :type       branch:  AlienBranch
     
-    :returns:   A branch leaf
-    :rtype:     anything
-    """
-    return branch._iterbranches()
+#     :returns:   A branch leaf
+#     :rtype:     anything
+#     """
+#     return branch._iterbranches()
 # ------------------------------------------------------------------------------
 class AlienTemplate(Template):
     """

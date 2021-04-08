@@ -175,7 +175,7 @@ def vhdl_beautify(env, component, path):
 
     # Add references to working area paths
     if component:
-        lPathmaker = Pathmaker(env.srcdir, 0)
+        lPathmaker = Pathmaker(env.srcdir)
 
         for c in component:
             lAllPaths.append(str(lPathmaker.getPath(*c)))

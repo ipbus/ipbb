@@ -8,9 +8,10 @@ from click import get_current_context, ClickException, Abort, BadParameter
 from os.path import join, relpath, exists, split, realpath
 from rich.prompt import Confirm
 from rich.table import Table
+from typing import NoReturn
 
 from .tools.alien import AlienBranch
-from .console import cprint
+from .console import cprint, console
 from .depparser import DepFormatter
 
 # ------------------------------------------------------------------------------
@@ -65,16 +66,16 @@ def findFirstParentDir(aDirPath, aParentDir='/'):
 
 
 # ------------------------------------------------------------------------------
-def findFileDirInParents(aFileName, aDirPath):
+def findFileDirInParents(aFileName : str, aDirPath : str) -> str:
     """
     Find, in the current directory tree, the folder in which a given file is located.
-
+    
     Args:
         aFileName (str): Name of the file to search
-        aDirPath (str, optional): Search path
-
+        aDirPath (str): Search path
+    
     Returns:
-        TYPE: Description
+        str: Description
     """
     lDirPath = aDirPath
     while lDirPath != '/':
@@ -88,10 +89,17 @@ def findFileDirInParents(aFileName, aDirPath):
 
 
 # ------------------------------------------------------------------------------
-def findFileInParents(aFileName, aDirPath=os.getcwd()):
+def findFileInParents(aFileName : str, aDirPath : str=os.getcwd()) -> str:
     """
     Find a file of given name, in the current directory tree branch,
     starting from dirpat and moving upwards
+    
+    Args:
+        aFileName (str): Filename to find
+        aDirPath (str, optional): Search path
+    
+    Returns:
+        str: Path to the file
     """
 
     lDirPath = findFileDirInParents(aFileName, aDirPath)
@@ -101,9 +109,19 @@ def findFileInParents(aFileName, aDirPath=os.getcwd()):
 
 
 # ------------------------------------------------------------------------------
-def ensureNoParsingErrors(aCurrentProj, aDepFileParser):
+def ensureNoParsingErrors(aCurrentProj, aDepFileParser) -> NoReturn:
     """
-    { item_description }
+    Throwns an exception if dep parsing errors are detected.
+
+    Args:
+        aCurrentProj (TYPE): Description
+        aDepFileParser (TYPE): Description
+    
+    Returns:
+        NoReturn: nothing
+    
+    Raises:
+        Abort: Description
     """
     if not aDepFileParser.errors:
         return
@@ -140,15 +158,15 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
 
     cprint("")
     if not Confirm.ask("Do you want to continue anyway?"):
-        raise click.Abort()
+        raise Abort()
 # ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-def echoVivadoConsoleError( aExc ):
-    cprint("Vivado error/critical warnings detected", style='red')
-    cprint("\n".join(aExc.errors), markup=False, style='red')
-    cprint("\n".join(aExc.criticalWarns), markup=False, style='yellow')    
+def logVivadoConsoleError( aExc ):
+    console.log("Vivado error/critical warnings detected", style='red')
+    console.log("\n".join(aExc.errors), markup=False, style='red')
+    console.log("\n".join(aExc.criticalWarns), markup=False, style='yellow')    
 
 
 # ------------------------------------------------------------------------------
@@ -180,6 +198,13 @@ def validateMultiplePackageOrComponents(ctx, param, value):
     return tuple(pocs)
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+def validateOptionalComponent(ctx, param, value):
+    if value is None:
+        return None
+    
+    return validateComponent(ctx, param, value)
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 def validateIpAddress(value):

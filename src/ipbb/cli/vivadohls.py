@@ -2,7 +2,10 @@
 # Modules
 import click
 
-import types
+from ..utils import validateOptionalComponent
+from ._utils import completeComponent
+
+# import types
 
 # ------------------------------------------------------------------------------
 @click.group('vivado-hls', short_help='Set up, syntesize, implement VivadoHLS projects.', chain=True)
@@ -40,7 +43,6 @@ def process_vivadohls(env, subcommands, proj, verbosity):
 def genproject(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
     from ..cmds.vivadohls import genproject
-    # genproject(env, aToScript, aToStdout)
     return (ctx.command.name, genproject, args, kwargs)
 
 
@@ -48,30 +50,48 @@ def genproject(ctx, *args, **kwargs):
 @vivadohls.command('csynth', short_help='Run C-synthesis.')
 @click.pass_obj
 @click.pass_context
-def synth(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
+def csynth(ctx, *args, **kwargs):
+    '''Run C-synthesis.'''
     from ..cmds.vivadohls import csynth
-    # synth(env)
     return (ctx.command.name, csynth, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('csim', short_help='Run C-synthesis.')
+@vivadohls.command('csim', short_help='Run C-simulation.')
 @click.pass_obj
 @click.pass_context
-def sim(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
+def csim(ctx, *args, **kwargs):
+    '''Run C-simulation.'''
     from ..cmds.vivadohls import csim
-    # sim(env)
     return (ctx.command.name, csim, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('cosim', short_help='Run C-synthesis.')
+@vivadohls.command('cosim', short_help='Run Cosimulation.')
 @click.pass_obj
 @click.pass_context
 def cosim(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
+    '''Run Co-simulation.'''
     from ..cmds.vivadohls import cosim
-    # cosim(env)
     return (ctx.command.name, cosim, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('export-ip', short_help='Export ip repostory.')
+@click.option('-c', '--to-component', callback=validateOptionalComponent, autocompletion=completeComponent)
+@click.pass_obj
+@click.pass_context
+def export_ip(ctx, *args, **kwargs):
+    '''Export the HLS ip as Xilinx ip catalog and XCI file.'''
+    from ..cmds.vivadohls import export_ip
+    return (ctx.command.name, export_ip, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
+@vivadohls.command('debug', short_help='Export ip repostory.')
+@click.pass_obj
+@click.pass_context
+def debug(ctx, *args, **kwargs):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.vivadohls import debug
+    return (ctx.command.name, debug, args, kwargs)

@@ -8,8 +8,9 @@ import shutil
 import getpass
 import collections
 
-from .tools import xilinx, mentor
+from ..tools import xilinx, mentor
 from ..tools.common import DEFAULT_ENCODING
+from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 
 # Elements
 from os.path import (

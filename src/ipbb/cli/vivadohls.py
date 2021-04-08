@@ -51,7 +51,7 @@ def genproject(ctx, *args, **kwargs):
 @click.pass_obj
 @click.pass_context
 def csynth(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
+    '''Run C-synthesis.'''
     from ..cmds.vivadohls import csynth
     return (ctx.command.name, csynth, args, kwargs)
 
@@ -60,8 +60,8 @@ def csynth(ctx, *args, **kwargs):
 @vivadohls.command('csim', short_help='Run C-simulation.')
 @click.pass_obj
 @click.pass_context
-def sim(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
+def csim(ctx, *args, **kwargs):
+    '''Run C-simulation.'''
     from ..cmds.vivadohls import csim
     return (ctx.command.name, csim, args, kwargs)
 
@@ -71,20 +71,20 @@ def sim(ctx, *args, **kwargs):
 @click.pass_obj
 @click.pass_context
 def cosim(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
+    '''Run Co-simulation.'''
     from ..cmds.vivadohls import cosim
     return (ctx.command.name, cosim, args, kwargs)
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('export-ip-catalog', short_help='Export ip repostory.')
+@vivadohls.command('export-ip', short_help='Export ip repostory.')
 @click.option('-c', '--to-component', callback=validateOptionalComponent, autocompletion=completeComponent)
 @click.pass_obj
 @click.pass_context
-def export_ip_catalog(ctx, *args, **kwargs):
-    '''Make the Vivado project from sources described by dependency files.'''
-    from ..cmds.vivadohls import export_ip_catalog
-    return (ctx.command.name, export_ip_catalog, args, kwargs)
+def export_ip(ctx, *args, **kwargs):
+    '''Export the HLS ip as Xilinx ip catalog and XCI file.'''
+    from ..cmds.vivadohls import export_ip
+    return (ctx.command.name, export_ip, args, kwargs)
 
 
 # ------------------------------------------------------------------------------

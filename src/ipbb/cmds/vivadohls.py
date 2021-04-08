@@ -216,14 +216,11 @@ def cosim(ictx):
 
 
 # ------------------------------------------------------------------------------
-def export_ip_catalog(ictx, to_component):
+def export_ip(ictx, to_component):
     from ..defaults import kTopEntity
 
     lSessionId = 'export-ip-catalog'
     
-    # console.log('I shall run export_design -flow syn -rtl vhdl -format ip_catalog -description "A description" -vendor "me" -library "mylib" -version "1.2.3" -display_name "hello"')
-    # console.log('which should generate "hls_example/sol1/impl/ip/me_mylib_add7_1_2.zip"')
-
     """
     zipfile name = "<vendor>_<lib>_<top>_<versionmajor>_<versionminor>.zip"
     defaults: 
@@ -250,24 +247,24 @@ def export_ip_catalog(ictx, to_component):
     # Check if vivado_hls is accessible
     ensureVivadoHLS(ictx)
 
-    if False:
-        try:
-            with VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+    # -- Export the HSL code as a Xilinx IP catalog
+    console.log("Exporting IP catalog")
+    try:
+        with VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
-                # Open the project
-                lConsole(f'open_project {ictx.currentproj.name}')
-                lConsole(f'open_solution {ictx.vivado_hls_solution}')
-                lConsole(f'export_design -flow syn -format ip_catalog -ipname {lIPName} -vendor {lHLSSettings["vendor"]} -library {lHLSSettings["library"]} -version "{lHLSSettings["version"]}"')
+            # Open the project
+            lConsole(f'open_project {ictx.currentproj.name}')
+            lConsole(f'open_solution {ictx.vivado_hls_solution}')
+            lConsole(f'export_design -flow syn -format ip_catalog -ipname {lIPName} -vendor {lHLSSettings["vendor"]} -library {lHLSSettings["library"]} -version "{lHLSSettings["version"]}"')
 
-        except VivadoHLSConsoleError as lExc:
-            logVivadoConsoleError(lExc)
-            raise click.Abort()
-        except RuntimeError as lExc:
-            console.log("ERROR:", style='red')
-            console.print(lExc)
-            raise click.Abort()
+    except VivadoHLSConsoleError as lExc:
+        logVivadoConsoleError(lExc)
+        raise click.Abort()
+    except RuntimeError as lExc:
+        console.log("ERROR:", style='red')
+        console.print(lExc)
+        raise click.Abort()
 
-        console.log(f"{ictx.currentproj.name}: Export completed successfully.", style='green')
 
     lIPCatalogDir = join(ictx.currentproj.name, ictx.vivado_hls_solution, 'impl', 'ip')
     zips = glob.glob(join(lIPCatalogDir, "*.zip"))
@@ -282,49 +279,51 @@ def export_ip_catalog(ictx, to_component):
     lIPCatalogZip = join(ictx.vivado_hls_prod_path, lIPCatalogName)
     lXciModName = f"{lIPLib}_{lIPName}"
 
-    if False:
-        mkdir(ictx.vivado_hls_prod_path)
-        shutil.copy(lIPCatalogExportPath, lIPCatalogZip)
+    # -- Generate an XCI file for the IP
+    mkdir(ictx.vivado_hls_prod_path)
+    shutil.copy(lIPCatalogExportPath, lIPCatalogZip)
 
-        console.log(f"{ictx.currentproj.name}: HLS IP catalog exported to {lIPCatalogZip}", style='green')
+    console.log(f"{ictx.currentproj.name}: HLS IP catalog exported to {lIPCatalogZip}", style='green')
+    console.log("Creating XCI file")
 
-        lXilinxPart = f'{lSettings["device_name"]}{lSettings["device_package"]}{lSettings["device_speed"]}'
+    lXilinxPart = f'{lSettings["device_name"]}{lSettings["device_package"]}{lSettings["device_speed"]}'
 
-        try:
-            with VivadoSession(sid=lSessionId) as lVivadoConsole:
-                lVivadoConsole(f'create_project -in_memory -part {lXilinxPart} -force')
-                lVivadoConsole(f'set_property ip_repo_paths {lIPCatalogDir} [current_project]')
-                lVivadoConsole('update_ip_catalog -rebuild')
-                lVivadoConsole('set repo_path [get_property ip_repo_paths [current_project]]')
-                ip_vlnv_list = lVivadoConsole(f'foreach n [get_ipdefs -filter REPOSITORY==$repo_path] {{ puts "$n" }}')
-                if len(ip_vlnv_list) > 1:
-                    raise RuntimeError(f"Found more than 1 core in ip catalog! {', '.join(ip_vlnv_list)}")
-                vlnv = ip_vlnv_list[0]
-                lVivadoConsole(f'create_ip -vlnv {vlnv} -module_name {lXciModName} -dir {ictx.vivado_hls_prod_path}')
+    try:
+        with VivadoSession(sid=lSessionId) as lVivadoConsole:
+            lVivadoConsole(f'create_project -in_memory -part {lXilinxPart} -force')
+            lVivadoConsole(f'set_property ip_repo_paths {lIPCatalogDir} [current_project]')
+            lVivadoConsole('update_ip_catalog -rebuild')
+            lVivadoConsole('set repo_path [get_property ip_repo_paths [current_project]]')
+            ip_vlnv_list = lVivadoConsole(f'foreach n [get_ipdefs -filter REPOSITORY==$repo_path] {{ puts "$n" }}')
+            if len(ip_vlnv_list) > 1:
+                raise RuntimeError(f"Found more than 1 core in ip catalog! {', '.join(ip_vlnv_list)}")
+            vlnv = ip_vlnv_list[0]
+            lVivadoConsole(f'create_ip -vlnv {vlnv} -module_name {lXciModName} -dir {ictx.vivado_hls_prod_path}')
 
-        except VivadoConsoleError as lExc:
-            logVivadoConsoleError(lExc)
-            raise click.Abort()
-        except RuntimeError as lExc:
-            console.log("ERROR:", style='red')
-            console.print(lExc)
-            raise click.Abort()
+    except VivadoConsoleError as lExc:
+        logVivadoConsoleError(lExc)
+        raise click.Abort()
+    except RuntimeError as lExc:
+        console.log("ERROR:", style='red')
+        console.print(lExc)
+        raise click.Abort()
 
-    if not to_component:
-        return
+    dest = to_component if to_component is not None else (ictx.currentproj.settings['topPkg'], ictx.currentproj.settings['topCmp'])
 
-    lIPDest = ictx.pathMaker.getPath(*to_component, 'iprepo')
+    lIPDest = ictx.pathMaker.getPath(*dest, 'iprepo')
     lIPRepoDest = join(lIPDest, lIPCatalogRoot)
+
     shutil.rmtree(lIPRepoDest, True)
     mkdir(lIPRepoDest)
     from zipfile import ZipFile
 
     with ZipFile(lIPCatalogZip, 'r') as zipObj:
         zipObj.extractall(lIPRepoDest)
-    console.log(f"{lIPCatalogZip} copied to in {lIPRepoDest}")
+    console.log(f"{lIPCatalogName} unzipped into {lIPRepoDest}")
 
     shutil.copy(join(ictx.vivado_hls_prod_path, lXciModName, f'{lXciModName}.xci'), lIPDest)
-    console.log(f"{lXciModName}.xci copied to in {lIPDest}")
+    console.log(f"{lXciModName}.xci copied to {lIPDest}")
+    console.log(f"{ictx.currentproj.name}: Export completed successfully.", style='green')
 
 
 

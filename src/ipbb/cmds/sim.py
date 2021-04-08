@@ -9,7 +9,6 @@ import getpass
 import collections
 
 from .tools import xilinx, mentor
-from ..utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
 from ..tools.common import DEFAULT_ENCODING
 
 # Elements
@@ -30,7 +29,7 @@ from click import echo, secho, style, confirm
 from ..utils import (
     DirSentry,
     ensureNoMissingFiles,
-    echoVivadoConsoleError,
+    logVivadoConsoleError,
     getClickRootName,
     validateIpAddress,
     validateMacAddress,
@@ -165,7 +164,7 @@ def setupsimlib(env, aXilSimLibsPath, aForce):
                 )
 
         except xilinx.VivadoConsoleError as lExc:
-            echoVivadoConsoleError(lExc)
+            logVivadoConsoleError(lExc)
             raise click.Abort()
         except RuntimeError as lExc:
             secho(
@@ -272,7 +271,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
                 lDepFileParser.libs,
             )
     except xilinx.VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
         secho(

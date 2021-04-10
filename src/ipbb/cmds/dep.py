@@ -21,7 +21,7 @@ from os.path import (
     isfile,
     isdir,
 )
-from ..console import cprint
+from ..console import cprint, console
 from ..tools.common import which, SmartOpen
 from ..depparser import DepFormatter, dep_command_types
 from ..utils import DirSentry, printDictTable, printAlienTable
@@ -354,7 +354,7 @@ def hash(ictx, output, verbose):
 
 
 # ------------------------------------------------------------------------------
-def archive(ictx):
+def archive(ictx, tag):
 
     import tarfile
     def tarinfo_relpath(tarinfo):
@@ -362,12 +362,23 @@ def archive(ictx):
         tarinfo.name = relpath(tarinfo.name, ictx.srcdir[1:])
         return tarinfo
 
-    with tarfile.open(f"{ictx.currentproj.name}_src.tar.gz", "w:gz") as tar:
+    lTgzPath = '_'.join(
+        [ictx.currentproj.settings['name']]
+        + ([tag] if tag is not None else [])
+    ) + '_sources.tgz'
+
+    console.log("Creating tarball", style='blue')
+    with tarfile.open(lTgzPath, "w:gz") as tar:
         for c in dep_command_types:
             for f in ictx.depParser.commands[c]:
-                print(f.filepath)
+                cprint(f"Adding {f.filepath}")
                 tar.add(f.filepath, filter=tarinfo_relpath)
 
+    console.log(
+        f"Source tarball '{lTgzPath}' successfully created.",
+        style='green',
+    )
+    # -------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------

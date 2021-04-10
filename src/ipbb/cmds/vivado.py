@@ -718,7 +718,7 @@ def package(ictx, aTag):
 
     # -------------------------------------------------------------------------
     # Tar everything up
-    console.log("Generating tarball", style='blue')
+    console.log("Creating tarball", style='blue')
 
     lTgzBaseName = '_'.join(
         [ictx.currentproj.settings['name']]

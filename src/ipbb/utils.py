@@ -279,7 +279,7 @@ def formatAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=str):
         v = aBranch[k]
         if isinstance(v, AlienBranch):
             continue
-        lAlienTable.add_row( str(k), aFmtr(v) if aFmtr else v)
+        lAlienTable.add_row( str(k), aFmtr(v) if aFmtr else str(v))
 
     return lAlienTable
 

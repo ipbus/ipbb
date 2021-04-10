@@ -105,12 +105,12 @@ def report(ictx, filters):
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
-        cprint('  + {0} ({1})'.format(k, len(lParser.commands[k])))
+        cprint(f'  + {k} ({len(lParser.commands[k])})')
         if not lParser.commands[k]:
             cprint()
             continue
 
-        lCmdTable = Table(*lCmdHeaders)
+        lCmdTable = Table(*lCmdHeaders, title=f'{k} ({len(lParser.commands[k])})')
         for lCmd in lParser.commands[k]:
             lRow = [
                 relpath(lCmd.filepath, ictx.srcdir),

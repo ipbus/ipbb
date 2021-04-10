@@ -14,8 +14,10 @@ import re
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
 from collections import OrderedDict
+from copy import deepcopy
 from rich.table import Table
 
+from .schema import project_schema
 from .dep import hash
 
 from ..console import cprint, console
@@ -25,6 +27,18 @@ from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsol
 from ..generators.vivadoproject import VivadoProjectGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
+
+
+_vivado_group='vivado'
+_schema = deepcopy(project_schema)
+_schema.update({
+    _vivado_group: {
+        'schema': {
+            'binfile_options': {'type': 'string'},
+            'mcsfile_options': {'type': 'string'},
+        }
+    }
+})
 
 _memCfgKinds = {
     'bin': 'binfile_options',
@@ -490,9 +504,7 @@ def memcfg(ictx):
 
                 lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
                 lConsole(
-                    'write_cfgmem -force -format {} {} -loadbit {{up 0x00000000 "{}" }} -file "{}"'.format(
-                        k, lMemCmdOptions, lBitPath, lMemPath
-                    )
+                    f'write_cfgmem -force -format {k} {lMemCmdOptions} -loadbit {{up 0x00000000 "{lBitPath}" }} -file "{lMemPath}"'
                 )
         except VivadoConsoleError as lExc:
             logVivadoConsoleError(lExc)
@@ -775,3 +787,13 @@ def ipy(ictx):
     import IPython
 
     IPython.embed()
+
+# ------------------------------------------------------------------------------
+def validate_settings(ictx):
+
+    v = cerberus.Validator(_schema)
+    lSettings = ictx.depParser.settings.dict()
+    # Need to convert the settings to a plain dict
+    # Need to add a walk-like iterator
+    cprint(v.validate(lSettings))
+    cprint(v.errors)

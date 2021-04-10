@@ -101,7 +101,6 @@ class AlienBranch(object):
             return item[tokens[1]]
 
     def __setitem__(self, name, value):
-
         tokens = name.rsplit('.', 1)
         if len(tokens) == 1:
             setattr(self, name, value)
@@ -148,7 +147,6 @@ class AlienBranch(object):
                     yield b+'.'+cb, co
                 yield b, o
 
-    # @_lock.setter
     def _lock(self, value):
         self._locked = value
         for b, o in self._iterbranches():
@@ -160,6 +158,17 @@ class AlienBranch(object):
             return self[name]
         except KeyError:
             return default
+
+    def _dict(self):
+        d = {}
+        for b, o in self.__dict__.items():
+            if b.startswith('_'):
+                continue
+            elif isinstance(o, type(self)):
+                d[b] = o._dict()
+            else:
+                d[b] = o
+        return d
 
 # ------------------------------------------------------------------------------
 class AlienTree(object):
@@ -208,8 +217,8 @@ class AlienTree(object):
     def branches(self):
         return self._trunk._iterbranches()
 
-    def walk(self):
-        return None 
+    def dict(self):
+        return self._trunk._dict()
 
         
 

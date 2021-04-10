@@ -3,6 +3,7 @@ import pytest
 from ipbb.depparser._cmdparser import DepCmdParser
 from ipbb.depparser._cmdtypes import IncludeCommand, SetupCommand
 
+# -----------------------------------------------------------------------------
 def test_cmdparser_include():
 
     cp = DepCmdParser()
@@ -15,6 +16,8 @@ def test_cmdparser_include():
     assert args.component == 'b'
     assert args.filepath == ['afile.vhd']
 
+
+# -----------------------------------------------------------------------------
 def test_cmdparser_setup():
 
     cp = DepCmdParser()

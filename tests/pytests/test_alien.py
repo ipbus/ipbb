@@ -1,7 +1,7 @@
 import pytest
 
 from ipbb.tools.alien import AlienDict, AlienTemplate, AlienBranch, AlienTree
-
+from ipbb.console import cprint
 
 # -----------------------------------------------------------------------------
 def test_alienbranch_settergetter():
@@ -107,5 +107,19 @@ def test_alientree():
 
     assert {'l1_a.v2_a'}.issubset(tree)
 
-    # print()
-    # print('\n'.join( n+': '+str(v) for n,v in tree.branches()))
+# -----------------------------------------------------------------------------
+def test_alientree_dict():
+    tree = AlienTree()
+    leaves = [
+        ('v1_a', 'a'),
+        ('l1_a.v2_a', 'x'),
+        ('l1_a.l2_a.v3_a', 3),
+    ]
+
+    for k, v in leaves:
+        tree[k] = v
+
+    d = {'v1_a': 'a', 'l1_a': {'v2_a': 'x', 'l2_a': {'v3_a': 3}}}
+    assert tree.dict() == d
+
+

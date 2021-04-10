@@ -7,8 +7,11 @@ import cerberus
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
-from ..console import cprint, console
+from copy import deepcopy
 
+from .schema import project_schema
+
+from ..console import cprint, console
 from ..tools.common import which, SmartOpen, mkdir
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 from ..defaults import kTopEntity
@@ -28,23 +31,20 @@ from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError, VivadoSessio
 # @vivado_hls.library = "emp_hls_examples"
 # @vivado_hls.version = "1.1"
 _vivado_hls_group='vivado_hls'
-_schema = {
-    'device_generation': {'type': 'string'},
-    'device_name': {'type': 'string'},
-    'device_speed': {'type': 'string'},
-    'boardname': {'type': 'string'},
-    'top_entity': {'type': 'string'},
-    'vivado_hls': {
+_schema = deepcopy(project_schema)
+_schema.update({
+    _vivado_hls_group: {
         'schema': {
             'solution': {'type': 'string'},
             'ipname': {'type': 'string'},
             'vendor': {'type': 'string'},
             'library': {'type': 'string'},
             'version': {'type': 'string', 'regex': r'\d\.\d(\.\d)?'},
+            'cflags': {'type': 'string'},
+            'csimflags': {'type': 'string'},
         }
     }
-
-}
+})
 
 # ------------------------------------------------------------------------------
 def ensureVivadoHLS(ictx):
@@ -331,14 +331,12 @@ def export_ip(ictx, to_component):
 
 
 # ------------------------------------------------------------------------------
-def debug(ictx):
+def validate_settings(ictx):
 
     v = cerberus.Validator(_schema)
-    lSettings = ictx.depParser.settings
-    lHLSSettings = lSettings.get(_vivado_hls_group, {})
+    lSettings = ictx.depParser.settings.dict()
     # Need to convert the settings to a plain dict
     # Need to add a walk-like iterator
-    # v.validate(lHLSSettings)
+    cprint(v.validate(lSettings))
+    cprint(v.errors)
 
-
-    pass

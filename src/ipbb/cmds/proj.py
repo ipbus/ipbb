@@ -9,7 +9,7 @@ import subprocess
 # Elements
 from ..console import cprint
 from ..tools.common import SmartOpen
-from ..defaults import kProjAreaFile, kProjDir
+from ..defaults import kProjAreaFile, kProjDir, kTopDep
 from ..context import ProjectInfo
 from ..utils import DirSentry, raiseError, validateComponent, findFirstParentDir
 from ..depparser import dep_file_types, Pathmaker
@@ -96,15 +96,15 @@ def create(ictx, toolset, projname, component, topdep):
 
     # ------------------------------------------------------------------------------
     # FIXME: This is just an initial implementation to prove it works.
+    # What was "it"?
     # To be improved later.
     if topdep == '__auto__':
-        lTopDefault = 'top'
         lFilePaths, _ = lPathmaker.globall(
             lTopPackage, lTopComponent, 'include', 
-            lPathmaker.getDefNames('include', lTopDefault)
+            lPathmaker.getDefNames('include', kTopDep)
         )
         lTopExists = (len(lFilePaths) == 1)
-        lTopDep = lFilePaths[0][0][0] if lTopExists else lPathmaker.getDefNames('include', lTopDefault, 'braces')
+        lTopDep = lFilePaths[0][0][0] if lTopExists else lPathmaker.getDefNames('include', kTopDep, mode='braces')
         lTopDepPath = lPathmaker.getPath(lTopPackage, lTopComponent, 'include', lTopDep)
     else:
         lTopDep = topdep

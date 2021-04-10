@@ -302,7 +302,8 @@ def export_ip(ictx, to_component):
                 raise RuntimeError(f"Found more than 1 core in ip catalog! {', '.join(ip_vlnv_list)}")
             vlnv = ip_vlnv_list[0]
             lVivadoConsole(f'create_ip -vlnv {vlnv} -module_name {lXciModName} -dir {ictx.vivado_hls_prod_path}')
-
+            lVivadoConsole('report_ip_status')
+            
     except VivadoConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()

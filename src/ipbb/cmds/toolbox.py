@@ -6,9 +6,8 @@ import ipaddress
 import sh
 import os
 
-# from click import echo, style, secho, confirm
+from rich.prompt import Confirm
 from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep, isdir, isfile
-# from texttable import Texttable
 
 from ..console import cprint, console
 from ..depparser import Pathmaker, DepFileParser
@@ -216,7 +215,9 @@ def vhdl_beautify(env, component, path):
         + '\n'.join( [f"* [blue]{f}[/blue]" for f in lBeautifiedFiles])
         + '\n'
     )
-    confirm('Do you want to continue?', abort=True)
+    if not Confirm.ask("Do you want to continue?"):
+        return 
+        
     for lTarget, lBeautified in lBeautifiedFiles:
         print(sh.cp('-av', lBeautified, lTarget))
 

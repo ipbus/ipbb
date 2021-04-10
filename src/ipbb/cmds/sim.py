@@ -11,6 +11,7 @@ import cerberus
 
 from copy import deepcopy
 from rich.table import Table
+from rich.prompt import Confirm
 
 from .schema import project_schema
 
@@ -118,11 +119,16 @@ def sim(ictx, proj):
         from .proj import cd
 
         cd(ictx, projname=proj, aVerbose=False)
-    else:
-        if ictx.currentproj.name is None:
-            raise click.ClickException(
-                'Project area not defined. Move into a project area and try again.'
-            )
+
+    if ictx.currentproj.name is None:
+        raise click.ClickException(
+            'Project area not defined. Move into a project area and try again.'
+        )
+
+    lValidator = cerberus.Validator(_schema)
+    if not lValidator.validate(ictx.depParser.settings.dict()):
+        cprint(f"ERROR:\n{lValidator.errors}\n{ictx.depParser.settings.dict()}", style="red")
+        raise RuntimeError(f"vivadohls settings validation failed: {lValidator.errors}")
 
     ensureModelsim(ictx)
 
@@ -165,7 +171,7 @@ def setupsimlib(ictx, aXilSimLibsPath, aForce):
 
     if not lCompileSimlib:
         cprint(
-            f"Xilinx simulation library exist at {lSimlibPath}. Compilation will be skipped.".
+            f"Xilinx simulation library exist at {lSimlibPath}. Compilation will be skipped."
         )
     else:
         cprint(
@@ -239,10 +245,11 @@ def ipcores(ictx, aXilSimLibsPath, aToScript, aToStdout):
 
     if not exists(lSimlibPath):
         cprint(
-            f"WARNING: Xilinx simulation libraries not found. Likely this is a problem.\nPlease execute {getClickRootName()} sim setup-simlibs to generate them."
-            style='yellow',
+            f"WARNING: Xilinx simulation libraries not found. Likely this is a problem.\nPlease execute {getClickRootName()} sim setup-simlibs to generate them.",
+            style='yellow'
         )
-        confirm("Do you want to continue anyway?", abort=True)
+        if not Confirm.ask("Do you want to continue anyway?"):
+            return
     # -------------------------------------------------------------------------
 
     lDepFileParser = ictx.depParser

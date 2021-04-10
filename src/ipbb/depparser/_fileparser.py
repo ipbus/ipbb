@@ -149,14 +149,15 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set the toolset
-        if self._toolset == 'vivado':
-            self.settings['toolset'] = 'vivado'
-        elif self._toolset == 'vivadohls':
-            self.settings['toolset'] = 'vivado_hls'
-        elif self._toolset == 'sim':
-            self.settings['toolset'] = 'sim'
-        else:
-            self.settings['toolset'] = 'other'
+        self.settings['toolset'] = self._toolset
+        # if self._toolset == 'vivado':
+        #     self.settings['toolset'] = 'vivado'
+        # elif self._toolset == 'vivado_hls':
+        #     self.settings['toolset'] = 'vivado_hls'
+        # elif self._toolset == 'sim':
+        #     self.settings['toolset'] = 'sim'
+        # else:
+        #     self.settings['toolset'] = 'other'
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -266,7 +267,7 @@ class DepFileParser(object):
         
 
         if lPar in self.settings:
-            console.log(f"WARNING: `{lPar.strip()}` is already defined with value `{self.settings[lPar.strip()]}`. New value will not be applied ({lExpr}).", style='yellow')
+            console.log(f"WARNING: '{lPar.strip()}' is already defined with value '{self.settings[lPar.strip()]}'. New value will not be applied ({lExpr}).", style='yellow')
         else:
             lOldLock = self.settings.locked
             self.settings.lock(True)

@@ -1,5 +1,5 @@
 project_schema = {
-    'toolset': {'type': 'string', 'allowed': ['ModelSim', 'Vivado', 'VivadoHLS'], 'required': True},
+    'toolset': {'type': 'string', 'allowed': ['sim', 'vivado', 'vivado_hls'], 'required': True},
     'device_generation': {'type': 'string'},
     'device_name': {'type': 'string', 'required': True},
     'device_speed': {'type': 'string', 'required': True},

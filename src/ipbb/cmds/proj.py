@@ -7,7 +7,7 @@ import subprocess
 
 
 # Elements
-from ..console import cprint
+from ..console import cprint, console
 from ..tools.common import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir, kTopDep
 from ..context import ProjectInfo
@@ -135,7 +135,7 @@ def create(ictx, toolset, projname, component, topdep):
     pi = ProjectInfo()
     pi.path = lProjAreaPath
     pi.settings = {
-        'toolset': toolset,
+        'toolset': toolset.replace('-', '_'),
         'topPkg': lTopPackage,
         'topCmp': lTopComponent,
         'topDep': lTopDep,
@@ -143,9 +143,7 @@ def create(ictx, toolset, projname, component, topdep):
     }
     pi.saveSettings()
 
-    cprint(
-        '{} project area \'{}\' created'.format(toolset.capitalize(), projname), style='green'
-    )
+    console.log(f"{toolset.capitalize()} project area '{projname}' created", style='green')
 
 
 # ------------------------------------------------------------------------------

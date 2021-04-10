@@ -67,11 +67,11 @@ def ensureVivado(ictx):
         )
 
 # ------------------------------------------------------------------------------
-def ensureVivadoProjPath(aProjPath):
+def ensureVivadoProjPath(aProjPath: str):
     """Utility function to ensure that the project path exists
     
     Args:
-        aProjPath (TYPE): Description
+        aProjPath (str): Vivado Project path
     
     Raises:
         click.ClickException: Description
@@ -101,14 +101,16 @@ def vivado(ictx, proj, verbosity, cmdlist):
         from .proj import cd
 
         cd(ictx, projname=proj, aVerbose=False)
-        return
-    else:
-        if ictx.currentproj.name is None:
-            raise click.ClickException(
-                'Project area not defined. Move to a project area and try again'
-            )
 
-    ensureVivado(ictx)
+    if ictx.currentproj.name is None:
+        raise click.ClickException(
+            'Project area not defined. Move to a project area and try again'
+        )
+
+    lValidator = cerberus.Validator(_schema)
+    if not lValidator.validate(ictx.depParser.settings.dict()):
+        cprint(f"ERROR:\n{lValidator.errors}\n{ictx.depParser.settings.dict()}", style="red")
+        raise RuntimeError(f"vivadohls settings validation failed: {lValidator.errors}")
 
     lKeep = True
     lLogLabel = None if not lKeep else '_'.join( cmdlist )
@@ -120,6 +122,9 @@ def vivado(ictx, proj, verbosity, cmdlist):
     ictx.vivadoProdFileBase = join(ictx.vivadoProdPath, ictx.currentproj.name)
 
     ictx.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
+
+    ensureVivado(ictx)
+
 
 
 # ------------------------------------------------------------------------------
@@ -164,10 +169,15 @@ def genproject(ictx, aEnableIPCache, aOptimise, aToScript, aToStdout):
     except RuntimeError as lExc:
         cprint(
             "Error caught while generating Vivado TCL commands:",
-            style='red',
+            style='red'
         )
         cprint(lExc)
         raise click.Abort()
+    
+    console.log(
+        f"{ictx.currentproj.name}: Project created successfully.",
+        style='green',
+    )
     # -------------------------------------------------------------------------
 
 

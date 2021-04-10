@@ -25,7 +25,7 @@ def proj():
 # ------------------------------------------------------------------------------
 # TODO: move the list of supported products somewhere else
 @proj.command('create', short_help="Create a new project area.")
-@click.argument('toolset', type=click.Choice(['vivado', 'sim', 'vivadohls']))
+@click.argument('toolset', type=click.Choice(['vivado', 'sim', 'vivado-hls']))
 @click.argument('projname')
 @click.argument('component', callback=validateComponent, autocompletion=completeComponent)
 @click.argument('topdep', default='__auto__', autocompletion=completeDepFile('component'))

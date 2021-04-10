@@ -10,12 +10,15 @@ import types
 import socket
 import yaml
 import re
+import cerberus
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
 from collections import OrderedDict
+from copy import deepcopy
 from rich.table import Table
 
+from .schema import project_schema
 from .dep import hash
 
 from ..console import cprint, console
@@ -25,6 +28,18 @@ from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsol
 from ..generators.vivadoproject import VivadoProjectGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
+
+
+_toolset='vivado'
+_schema = deepcopy(project_schema)
+_schema.update({
+    _toolset: {
+        'schema': {
+            'binfile_options': {'type': 'string'},
+            'mcsfile_options': {'type': 'string'},
+        }
+    }
+})
 
 _memCfgKinds = {
     'bin': 'binfile_options',
@@ -41,10 +56,9 @@ def ensureVivado(ictx):
     Raises:
         click.ClickException: Toolset mismatch or Vivado not available
     """
-    if ictx.currentproj.settings['toolset'] != 'vivado':
+    if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivado', found '%s'"
-            % ictx.currentproj.settings['toolset']
+            f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
     if not which('vivado'):
@@ -53,11 +67,11 @@ def ensureVivado(ictx):
         )
 
 # ------------------------------------------------------------------------------
-def ensureVivadoProjPath(aProjPath):
+def ensureVivadoProjPath(aProjPath: str):
     """Utility function to ensure that the project path exists
     
     Args:
-        aProjPath (TYPE): Description
+        aProjPath (str): Vivado Project path
     
     Raises:
         click.ClickException: Description
@@ -87,14 +101,16 @@ def vivado(ictx, proj, verbosity, cmdlist):
         from .proj import cd
 
         cd(ictx, projname=proj, aVerbose=False)
-        return
-    else:
-        if ictx.currentproj.name is None:
-            raise click.ClickException(
-                'Project area not defined. Move to a project area and try again'
-            )
 
-    ensureVivado(ictx)
+    if ictx.currentproj.name is None:
+        raise click.ClickException(
+            'Project area not defined. Move to a project area and try again'
+        )
+
+    lValidator = cerberus.Validator(_schema)
+    if not lValidator.validate(ictx.depParser.settings.dict()):
+        cprint(f"ERROR:\n{lValidator.errors}\n{ictx.depParser.settings.dict()}", style="red")
+        raise RuntimeError(f"vivadohls settings validation failed: {lValidator.errors}")
 
     lKeep = True
     lLogLabel = None if not lKeep else '_'.join( cmdlist )
@@ -106,6 +122,9 @@ def vivado(ictx, proj, verbosity, cmdlist):
     ictx.vivadoProdFileBase = join(ictx.vivadoProdPath, ictx.currentproj.name)
 
     ictx.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
+
+    ensureVivado(ictx)
+
 
 
 # ------------------------------------------------------------------------------
@@ -150,10 +169,15 @@ def genproject(ictx, aEnableIPCache, aOptimise, aToScript, aToStdout):
     except RuntimeError as lExc:
         cprint(
             "Error caught while generating Vivado TCL commands:",
-            style='red',
+            style='red'
         )
         cprint(lExc)
         raise click.Abort()
+    
+    console.log(
+        f"{ictx.currentproj.name}: Project created successfully.",
+        style='green',
+    )
     # -------------------------------------------------------------------------
 
 
@@ -490,9 +514,7 @@ def memcfg(ictx):
 
                 lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
                 lConsole(
-                    'write_cfgmem -force -format {} {} -loadbit {{up 0x00000000 "{}" }} -file "{}"'.format(
-                        k, lMemCmdOptions, lBitPath, lMemPath
-                    )
+                    f'write_cfgmem -force -format {k} {lMemCmdOptions} -loadbit {{up 0x00000000 "{lBitPath}" }} -file "{lMemPath}"'
                 )
         except VivadoConsoleError as lExc:
             logVivadoConsoleError(lExc)
@@ -706,7 +728,7 @@ def package(ictx, aTag):
 
     # -------------------------------------------------------------------------
     # Tar everything up
-    console.log("Generating tarball", style='blue')
+    console.log("Creating tarball", style='blue')
 
     lTgzBaseName = '_'.join(
         [ictx.currentproj.settings['name']]
@@ -775,3 +797,13 @@ def ipy(ictx):
     import IPython
 
     IPython.embed()
+
+# ------------------------------------------------------------------------------
+def validate_settings(ictx):
+
+    v = cerberus.Validator(_schema)
+    lSettings = ictx.depParser.settings.dict()
+    # Need to convert the settings to a plain dict
+    # Need to add a walk-like iterator
+    cprint(v.validate(lSettings))
+    cprint(v.errors)

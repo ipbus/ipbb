@@ -88,10 +88,10 @@ def export_ip(ctx, *args, **kwargs):
 
 
 # ------------------------------------------------------------------------------
-@vivadohls.command('debug', short_help='Export ip repostory.')
+@vivadohls.command('validate-settings', short_help='Validate project settings.')
 @click.pass_obj
 @click.pass_context
-def debug(ctx, *args, **kwargs):
+def validate_settings(ctx, *args, **kwargs):
     '''Make the Vivado project from sources described by dependency files.'''
-    from ..cmds.vivadohls import debug
-    return (ctx.command.name, debug, args, kwargs)
+    from ..cmds.vivadohls import validate_settings
+    return (ctx.command.name, validate_settings, args, kwargs)

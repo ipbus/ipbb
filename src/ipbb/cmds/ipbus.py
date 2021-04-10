@@ -4,8 +4,10 @@ import sh
 import sys
 import click
 
-from click import echo, secho, style, confirm
+from rich.prompt import Confirm
+
 from os.path import join, split, exists, abspath, splitext, relpath, basename
+from ..console import cprint, console
 from ..defaults import kProjAreaFile, kProjUserFile
 from ..tools.common import which, DEFAULT_ENCODING
 from ..utils import DirSentry, formatDictTable
@@ -30,7 +32,7 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
     if not which(lGenScript):
         raise click.ClickException("'{0}' script not found.".format(lGenScript))
 
-    secho("Using " + which(lGenScript), fg='green')
+    cprint(f"Using {which(lGenScript)}", style='green')
 
     # ------------------------------------------------------------------------------
 
@@ -39,14 +41,12 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
     lErrors = {}
     with DirSentry(join(ictx.currentproj.path, lDecodersDir)):
         for lAddr in ictx.depParser.commands['addrtab']:
-            echo("Processing " + style(basename(lAddr.filepath), fg='blue'))
+            cprint(f"Processing [blue]{basename(lAddr.filepath)}[/blue]")
             # Interested in top-level address tables only
             if not lAddr.toplevel:
-                secho(
-                    "{} is not a top-level address table. Decoder will not be generated.".format(
-                        lAddr.filepath
-                    ),
-                    fg='cyan',
+                cprint(
+                    f"{lAddr.filepath} is not a top-level address table. Decoder will not be generated.",
+                    style='cyan',
                 )
                 continue
 
@@ -54,13 +54,11 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
             try:
                 lGen(basename(lAddr.filepath), _out=sys.stdout, _err=sys.stderr, _tee=True)
             except Exception as lExc:
-                secho('Failed to generate decoder for '+basename(lAddr.filepath), fg='red')
+                cprint(f"Failed to generate decoder for {basename(lAddr.filepath)}", style='red')
                 lErrors[lAddr] = lExc
                 continue
 
-            lDecoder = 'ipbus_decode_{0}.vhd'.format(
-                splitext(basename(lAddr.filepath))[0]
-            )
+            lDecoder = f'ipbus_decode_{splitext(basename(lAddr.filepath))[0]}.vhd'
             lTarget = ictx.pathMaker.getPath(
                 lAddr.package, lAddr.component, 'src', lDecoder
             )
@@ -74,13 +72,13 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
                 lUpdatedDecoders.append((lDecoder, lTarget))
 
         if lErrors:
-            secho(
+            cprint(
                 "\nERROR: decoder generation failed",
-                fg='red',
+                style='red',
             )
             for a in sorted(lErrors):
-                echo(' - ' + basename(a.filepath))
-                echo('   ' + lErrors[a].stdout.decode(DEFAULT_ENCODING, "replace"))
+                cprint(' - ' + basename(a.filepath))
+                cprint('   ' + lErrors[a].stdout.decode(DEFAULT_ENCODING, "replace"))
             raise SystemExit(-1)
 
 
@@ -88,32 +86,29 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
         # ------------------------------------------------------------------------------
         # If no difference between old and newly generated decoders, quit here.
         if not lUpdatedDecoders:
-            secho(
-                "\n{}: All ipbus decoders are up-to-date.\n".format(
-                    ictx.currentproj.name
-                ),
-                fg='green',
+            console.log(
+                f"{ictx.currentproj.name}: All ipbus decoders are up-to-date.",
+                style='green',
             )
             return
 
         # ------------------------------------------------------------------------------
-        echo(
+        cprint(
             'The following decoders have changed and must be updated:\n'
-            + '\n'.join(map(lambda s: '* ' + style(s[0], fg='blue'), lUpdatedDecoders))
+            + '\n'.join([f" * [blue]{d}[/blue]" for d in UpdatedDecoders])
             + '\n'
         )
         if aCheckUpToDate:
             raise SystemExit(-1)
 
-        if not aForce:
-            confirm('Do you want to continue?', abort=True)
-        for lDecoder, lTarget in lUpdatedDecoders:
-            print(sh.cp('-av', lDecoder, lTarget))
+        if not aForce and not Confirm.ask("Do you want to continue?"):
+            return
 
-        secho(
-            "\n\n{}: {} decoders updated.\n".format(
-                ictx.currentproj.name, len(lUpdatedDecoders)
-            ),
-            fg='green',
+        for lDecoder, lTarget in lUpdatedDecoders:
+            cprint(sh.cp('-av', lDecoder, lTarget))
+
+        console.log(
+            f"{ictx.currentproj.name}: {len(lUpdatedDecoders)} decoders updated.",
+            style='green',
         )
 # ------------------------------------------------------------------------------

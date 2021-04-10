@@ -50,10 +50,13 @@ class VivadoHlsProjectGenerator(object):
 
         lHlsSrcs = aCommandList['hlssrc'] 
 
+        # Note to self: Hardcoding "vivado_hls" will lead to troubles
+        common_cflags = aSettings.get('vivado_hls.cflags', None)
+        common_csimflags = aSettings.get('vivado_hls.csimflags', None)
+
         for src in lHlsSrcs:
 
-
-            inc = [pathFinder.getPath(src.package, src.component, 'hlssrc')] + [pathFinder.getPath(src.package, src.component, 'hlstb')] if src.testbench else []
+            inc = [pathFinder.getPath(src.package, src.component, 'hlssrc')] + ([pathFinder.getPath(src.package, src.component, 'hlstb')] if src.testbench else [])
             for p,c in src.includeComponents:
                 inc += [pathFinder.getPath(p, c, 'hlssrc')]
             lIncludes = ' '.join(['-I'+i for i in inc])
@@ -62,11 +65,13 @@ class VivadoHlsProjectGenerator(object):
             if src.testbench:
                 opts += ['-tb']
 
-            if lIncludes or src.cflags:
-                opts += [f'-cflags {{{" ".join( (f for f in (lIncludes, src.cflags) if f))}}}']
+            cflags = (common_cflags, src.cflags, lIncludes)
+            if any(cflags):
+                opts += [f'-cflags {{{" ".join( (f for f in cflags if f) )}}}']
 
-            if src.csimflags:
-                opts += [f'-csimflags {{{src.csimflags}}}']
+            csimflags = (common_csimflags, src.cflags)
+            if any(csimflags):
+                opts += [f'-csimflags {{{" ".join( (f for f in csimflags if f) )}}}']
 
             lCommand = f'add_files {" ".join(opts)} {src.filepath}'
             write(lCommand)

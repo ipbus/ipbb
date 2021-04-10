@@ -20,8 +20,6 @@ from urllib.parse import urlparse
 from distutils.dir_util import mkpath
 from rich.table import Table
 
-# from texttable import Texttable
-
 
 # ------------------------------------------------------------------------------
 def init(ictx, directory):

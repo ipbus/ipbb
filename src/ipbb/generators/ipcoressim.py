@@ -7,8 +7,6 @@ from os.path import abspath, join, split, splitext
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class IPCoresSimGenerator(object):
 
-    _compiler = 'vcom'
-
     reqsettings = {'device_name', 'device_package', 'device_speed'}
 
     # --------------------------------------------------------------
@@ -20,15 +18,11 @@ class IPCoresSimGenerator(object):
         self.ipProjName = aIPProjName
 
     # --------------------------------------------------------------
-    @property
-    def targetSimulator(self):
-        return self.simulator
+    def write(self, aTarget, aSettings, aComponentPaths, aCommandList, aLibs):
 
-    # --------------------------------------------------------------
-    def write(self, aTarget, aScriptVariables, aComponentPaths, aCommandList, aLibs):
-
-        if not self.reqsettings.issubset(aScriptVariables):
-            raise RuntimeError("Missing required variables: {}".format(', '.join(self.reqsettings.difference(aScriptVariables))))
+        if not self.reqsettings.issubset(aSettings):
+            raise RuntimeError(f"Missing required variables: {', '.join(self.reqsettings.difference(aSettings))}")
+        lXilinxPart = f'{aSettings["device_name"]}{aSettings["device_package"]}{aSettings["device_speed"]}'
 
         write = aTarget
 
@@ -38,33 +32,20 @@ class IPCoresSimGenerator(object):
 
         lWorkingDir = abspath(join(self.projInfo.path, self.ipProjName))
 
-        # write('set outputDir {0}'.format(lWorkingDir))
-        # write('file mkdir {0}'.format(lWorkingDir))
-
-        write(
-            'create_project {0} {1} -part {device_name}{device_package}{device_speed} -force'.format(
-                self.ipProjName, lWorkingDir, **aScriptVariables
-            )
-        )
+        write(f'create_project {self.ipProjName} {lWorkingDir} -part {lXilinxPart} -force')
 
         # Add ip repositories to the project variable
-        write('set_property ip_repo_paths {{{}}} [current_project]'.format(
-                ' '.join(map( lambda c: c.filepath, aCommandList['iprepo']))
-            )
-        )
+        write(f'set_property ip_repo_paths {{{" ".join([c.filepath for c in aCommandList["iprepo"]])}}} [current_project]')
 
         write('set_property "default_lib" "xil_defaultlib" [current_project]')
         write('set_property "simulator_language" "Mixed" [current_project]')
         write('set_property "source_mgmt_mode" "DisplayOnly" [current_project]')
         write('set_property "target_language" "VHDL" [current_project]')
 
-        write('set_property target_simulator ' + self.targetSimulator + ' [current_project]')
+        write(f'set_property target_simulator {self.simulator} [current_project]')
 
         write(
-            'set_property compxlib.{}_compiled_library_dir {} [current_project]'.format(
-                self.targetSimulator,
-                self.simlibPath
-            )
+            f'set_property compxlib.{self.simulator}_compiled_library_dir {self.simlibPath} [current_project]'
         )
 
         write()
@@ -74,20 +55,19 @@ class IPCoresSimGenerator(object):
             lName, lExt = splitext(lBasename)
 
             if lExt in ('.xci', '.xcix', '.edn'):
-                write(
-                    'import_files -norecurse -fileset sources_1 {0}'.format(src.filepath))
+                write(f'import_files -norecurse -fileset sources_1 {src.filepath}')
                 if lExt in ('.xci', '.xcix'):
                     lXCIs.append( (lName, lBasename) )
 
         if lXCIs:
             lIPs, lIPFiles = zip(*lXCIs)
-            write('upgrade_ip [get_ips {0}]'.format(' '.join(lIPs)))
+            write(f'upgrade_ip [get_ips {" ".join(lIPs)}]')
 
             for lFile in lIPFiles:
-                write('generate_target simulation [get_files {0}]'.format(lFile))
+                write(f'generate_target simulation [get_files {lFile}]')
 
         # Is this needed?
         write('set_property top top [get_filesets sim_1]')
-        write('export_simulation -force -simulator {} -directory {} -lib_map_path {}'.format(self.targetSimulator, self.exportdir, self.simlibPath))
+        write(f'export_simulation -force -simulator {self.simulator} -directory {self.exportdir} -lib_map_path {self.simlibPath}')
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -30,10 +30,10 @@ from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError, VivadoSessio
 # @vivado_hls.vendor = "cern_cms"
 # @vivado_hls.library = "emp_hls_examples"
 # @vivado_hls.version = "1.1"
-_vivado_hls_group='vivado_hls'
+_toolset='vivado_hls'
 _schema = deepcopy(project_schema)
 _schema.update({
-    _vivado_hls_group: {
+    _toolset: {
         'schema': {
             'solution': {'type': 'string'},
             'ipname': {'type': 'string'},
@@ -48,10 +48,10 @@ _schema.update({
 
 # ------------------------------------------------------------------------------
 def ensureVivadoHLS(ictx):
-    if ictx.currentproj.settings['toolset'] != 'vivadohls':
+    
+    if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivadohls', found '%s'"
-            % ictx.currentproj.settings['toolset']
+            f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
     if not which('vivado_hls'):
@@ -81,7 +81,7 @@ def vivadohls(ictx, proj, verbosity):
 
     ictx.vivado_hls_proj_path = join(ictx.currentproj.path, ictx.currentproj.name)
     ictx.vivado_hls_prod_path = join(ictx.currentproj.path, 'ip')
-    ictx.vivado_hls_solution = ictx.depParser.settings.get(f'{_vivado_hls_group}.solution', 'sol1')
+    ictx.vivado_hls_solution = ictx.depParser.settings.get(f'{_toolset}.solution', 'sol1')
     
 
 # ------------------------------------------------------------------------------
@@ -236,10 +236,10 @@ def export_ip(ictx, to_component):
     reqsettings = {'vendor', 'library', 'version'}
 
     lSettings = ictx.depParser.settings
-    lHLSSettings = lSettings.get(_vivado_hls_group, {})
+    lHLSSettings = lSettings.get(_toolset, {})
 
     if not lHLSSettings or not reqsettings.issubset(lHLSSettings):
-        raise RuntimeError(f"Missing variables required to create an ip repository: {', '.join([f'{_vivado_hls_group}.{s}' for s in reqsettings.difference(lHLSSettings)])}")
+        raise RuntimeError(f"Missing variables required to create an ip repository: {', '.join([f'{_toolset}.{s}' for s in reqsettings.difference(lHLSSettings)])}")
 
     lIPName = lHLSSettings['ipname'] if 'ipname' in lHLSSettings else lSettings.get('top_entity', kTopEntity)
     lIPVendor = lHLSSettings['vendor']
@@ -303,7 +303,7 @@ def export_ip(ictx, to_component):
             vlnv = ip_vlnv_list[0]
             lVivadoConsole(f'create_ip -vlnv {vlnv} -module_name {lXciModName} -dir {ictx.vivado_hls_prod_path}')
             lVivadoConsole('report_ip_status')
-            
+
     except VivadoConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()

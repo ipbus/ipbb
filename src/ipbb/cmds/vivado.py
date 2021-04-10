@@ -10,6 +10,7 @@ import types
 import socket
 import yaml
 import re
+import cerberus
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename
@@ -29,10 +30,10 @@ from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleErr
 from ..defaults import kTopEntity
 
 
-_vivado_group='vivado'
+_toolset='vivado'
 _schema = deepcopy(project_schema)
 _schema.update({
-    _vivado_group: {
+    _toolset: {
         'schema': {
             'binfile_options': {'type': 'string'},
             'mcsfile_options': {'type': 'string'},
@@ -55,10 +56,9 @@ def ensureVivado(ictx):
     Raises:
         click.ClickException: Toolset mismatch or Vivado not available
     """
-    if ictx.currentproj.settings['toolset'] != 'vivado':
+    if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'vivado', found '%s'"
-            % ictx.currentproj.settings['toolset']
+            f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
     if not which('vivado'):

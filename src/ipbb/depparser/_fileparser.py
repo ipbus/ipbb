@@ -150,11 +150,11 @@ class DepFileParser(object):
         # --------------------------------------------------------------
         # Set the toolset
         if self._toolset == 'vivado':
-            self.settings['toolset'] = 'Vivado'
+            self.settings['toolset'] = 'vivado'
         elif self._toolset == 'vivadohls':
-            self.settings['toolset'] = 'VivadoHLS'
+            self.settings['toolset'] = 'vivado_hls'
         elif self._toolset == 'sim':
-            self.settings['toolset'] = 'Modelsim'
+            self.settings['toolset'] = 'sim'
         else:
             self.settings['toolset'] = 'other'
         # --------------------------------------------------------------

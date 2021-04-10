@@ -53,10 +53,10 @@ kVsimWrapper = 'run_sim'
 kIPExportDir = 'ipcores_sim'
 kIPVivadoProjName = 'ipcores_proj'
 
-_sim_group='sim'
+_toolset='sim'
 _schema = deepcopy(project_schema)
 _schema.update({
-    _sim_group : {
+    _toolset : {
         'schema': {
             'library' : {'type': 'string'},
             kVsimWrapper : {'type': 'string'},
@@ -69,10 +69,9 @@ _schema.update({
 def ensureModelsim(ictx):
     '''Utility function ensuring that the simulation environment is correctly setup'''
 
-    if ictx.currentproj.settings['toolset'] != 'sim':
+    if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'sim', found '%s'"
-            % ictx.currentproj.settings['toolset']
+            f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
     try:
@@ -488,7 +487,7 @@ def genproject(ictx, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = ictx.depParser
 
-    lSimLibrary = lDepFileParser.settings.get('{_sim_group}.library', 'work')
+    lSimLibrary = lDepFileParser.settings.get('{_toolset}.library', 'work')
 
     # Ensure that no parsing errors are present
     ensureNoParsingErrors(ictx.currentproj.name, lDepFileParser)
@@ -526,7 +525,7 @@ def genproject(ictx, aOptimise, aToScript, aToStdout):
     # Create a wrapper to force default bindings at load time
     cprint(f"Writing modelsim wrapper '{kVsimWrapper}'")
 
-    lVsimArgStr = f"{lDepFileParser.settings.get(f'{_sim_group}.{kVsimWrapper}.design_units', '')}"
+    lVsimArgStr = f"{lDepFileParser.settings.get(f'{_toolset}.{kVsimWrapper}.design_units', '')}"
 
     lVsimOpts = collections.OrderedDict()
     lVsimOpts['MAC_ADDR'] = validateMacAddress(

@@ -125,10 +125,7 @@ def sim(ictx, proj):
             'Project area not defined. Move into a project area and try again.'
         )
 
-    lValidator = cerberus.Validator(_schema)
-    if not lValidator.validate(ictx.depParser.settings.dict()):
-        cprint(f"ERROR:\n{lValidator.errors}\n{ictx.depParser.settings.dict()}", style="red")
-        raise RuntimeError(f"vivadohls settings validation failed: {lValidator.errors}")
+    validate(_schema, ictx.depParser.settings, _toolset)
 
     ensureModelsim(ictx)
 
@@ -654,10 +651,6 @@ def mifs(ictx):
 # ------------------------------------------------------------------------------
 def validate_settings(ictx):
 
-    v = cerberus.Validator(_schema)
-    lSettings = ictx.depParser.settings.dict()
-    # Need to convert the settings to a plain dict
-    # Need to add a walk-like iterator
-    cprint(v.validate(lSettings))
-    cprint(v.errors)
+    validate(_schema, ictx.depParser.settings, _toolset)
+
 

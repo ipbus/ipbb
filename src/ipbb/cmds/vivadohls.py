@@ -80,10 +80,7 @@ def vivadohls(ictx, proj, verbosity):
             'Project area not defined. Move to a project area and try again'
         )
 
-    lValidator = cerberus.Validator(_schema)
-    if not lValidator.validate(ictx.depParser.settings.dict()):
-        cprint(f"ERROR:\n{lValidator.errors}\n{ictx.depParser.settings.dict()}", style="red")
-        raise RuntimeError(f"vivadohls settings validation failed: {lValidator.errors}")
+    validate(_schema, ictx.depParser.settings, _toolset)
 
     ictx.vivadohls_proj_path = join(ictx.currentproj.path, ictx.currentproj.name)
     ictx.vivadohls_prod_path = join(ictx.currentproj.path, 'ip')
@@ -354,14 +351,8 @@ def export_ip(ictx, to_component):
     console.log(f"{ictx.currentproj.name}: Export completed successfully.", style='green')
 
 
-
 # ------------------------------------------------------------------------------
 def validate_settings(ictx):
 
-    v = cerberus.Validator(_schema)
-    lSettings = ictx.depParser.settings.dict()
-    # Need to convert the settings to a plain dict
-    # Need to add a walk-like iterator
-    cprint(v.validate(lSettings))
-    cprint(v.errors)
-
+    validate(_schema, ictx.depParser.settings, _toolset)
+   

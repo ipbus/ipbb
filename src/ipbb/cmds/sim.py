@@ -13,7 +13,7 @@ from copy import deepcopy
 from rich.table import Table
 from rich.prompt import Confirm
 
-from .schema import project_schema
+from .schema import project_schema, validate
 
 from ..console import cprint, console
 from ..tools import xilinx, mentor

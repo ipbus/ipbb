@@ -10,7 +10,7 @@ import sh
 from os.path import join, split, exists, splitext, abspath, basename
 from copy import deepcopy
 
-from .schema import project_schema
+from .schema import project_schema, validate
 
 from ..console import cprint, console
 from ..tools.common import which, SmartOpen, mkdir

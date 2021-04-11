@@ -18,7 +18,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from rich.table import Table
 
-from .schema import project_schema
+from .schema import project_schema, validate
 from .dep import hash
 
 from ..console import cprint, console
@@ -106,11 +106,8 @@ def vivado(ictx, proj, verbosity, cmdlist):
         raise click.ClickException(
             'Project area not defined. Move to a project area and try again'
         )
-
-    lValidator = cerberus.Validator(_schema)
-    if not lValidator.validate(ictx.depParser.settings.dict()):
-        cprint(f"ERROR:\n{lValidator.errors}\n{ictx.depParser.settings.dict()}", style="red")
-        raise RuntimeError(f"vivadohls settings validation failed: {lValidator.errors}")
+    
+    validate(_schema, ictx.depParser.settings, _toolset)
 
     lKeep = True
     lLogLabel = None if not lKeep else '_'.join( cmdlist )
@@ -801,9 +798,5 @@ def ipy(ictx):
 # ------------------------------------------------------------------------------
 def validate_settings(ictx):
 
-    v = cerberus.Validator(_schema)
-    lSettings = ictx.depParser.settings.dict()
-    # Need to convert the settings to a plain dict
-    # Need to add a walk-like iterator
-    cprint(v.validate(lSettings))
-    cprint(v.errors)
+    validate(_schema, ictx.depParser.settings, _toolset)
+

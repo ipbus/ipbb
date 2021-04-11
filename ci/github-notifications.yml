@@ -1,6 +1,6 @@
 
 .template_github_commit_status:
-  image: cern/cc7-base:20170113
+  image: cern/cc7-base:20210401-1.x86_64
   tags:
     - docker
   # only:

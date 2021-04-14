@@ -517,6 +517,21 @@ def _git_info():
 
     return lHEADId, lHash
 
+
+# ------------------------------------------------------------------------------
+def _git_submod_info():
+
+    lSubmods = sh.git('submodule', 'status', '--recursive').strip()
+    if not lSubmods:
+        return []
+
+    lSubmodTokens = [l.strip().split() for l in lSubmods.split('\n')]
+
+    lSubmodInfos = [t[0:2] + [(t[2] if len(t) == 2 else '')] for t in lSubmodTokens]
+
+    return lSubmodInfos
+
+
 # ------------------------------------------------------------------------------
 def _svn_info():
     lHEADId, lHash = None, None
@@ -550,12 +565,11 @@ def srcs_info(ictx):
         return
 
     cprint()
-    cprint("Firmware Packages", style='blue')
     lSrcs = ictx.sources
     if not lSrcs:
         return
 
-    lSrcTable = Table('name', 'kind', 'version', 'hash')
+    lSrcTable = Table('name', 'kind', 'version', 'hash', title="Firmware Packages", title_style='blue')
     for lSrc in lSrcs:
         lSrcDir = join(ictx.srcdir, lSrc)
 
@@ -575,12 +589,9 @@ def srcs_info(ictx):
                 lHEADId, lHash = _git_info()
                 lSrcTable.add_row(lSrc, lKind, lHEADId, lHash)
 
-                lSubmods = sh.git('submodule').strip()
-                if not lSubmods:
-                    continue
+                lSubmods = sh.git('submodule', 'status', '--recursive').strip()
 
-                for _, lSubModDir in (l.split() for l in lSubmods.split('\n')):
-                # for _, lSubModDir, _ in (l.split() for l in lSubmods.split('\n')):
+                for lFullHash, lSubModDir, lDescribe in _git_submod_info():
                     with DirSentry(join(lSrcDir,lSubModDir)) as _:
                         lHEADId, lHash = _git_info()
                         lSrcTable.add_row(u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash)

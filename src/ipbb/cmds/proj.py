@@ -20,16 +20,8 @@ from os.path import join, split, exists, splitext, relpath, isdir, basename
 # ------------------------------------------------------------------------------
 def info(ictx):
 
-    cprint("Projects", style='blue')
-
-    # lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
-    # lProjTable = Texttable(120)
-    # lProjTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-    # lProjTable.set_chars(['-', '|', '+', '-'])
-    # lProjTable.header(lHeader)
-
     lHeader = ('name', 'toolset', 'topPkg', 'topCmp', 'topDep')
-    lProjTable = Table(*lHeader)
+    lProjTable = Table(*lHeader, title="Projects", title_style='blue')
 
     for p in sorted(ictx.projects):
         lProjInfo = ProjectInfo(join(ictx.projdir, p))

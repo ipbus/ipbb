@@ -526,8 +526,7 @@ def _git_submod_info():
         return []
 
     lSubmodTokens = [l.strip().split() for l in lSubmods.split('\n')]
-
-    lSubmodInfos = [t[0:2] + [(t[2] if len(t) == 2 else '')] for t in lSubmodTokens]
+    lSubmodInfos = [t[0:2] + [(t[2] if len(t) == 3 else '')] for t in lSubmodTokens]
 
     return lSubmodInfos
 
@@ -592,9 +591,13 @@ def srcs_info(ictx):
                 lSubmods = sh.git('submodule', 'status', '--recursive').strip()
 
                 for lFullHash, lSubModDir, lDescribe in _git_submod_info():
-                    with DirSentry(join(lSrcDir,lSubModDir)) as _:
-                        lHEADId, lHash = _git_info()
-                        lSrcTable.add_row(u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash)
+                    if lFullHash[0] == '-':
+                        # Module not initialized
+                        lSrcTable.add_row(u'  └──'+basename(lSubModDir), lKind, '-', '-')
+                    else:
+                        with DirSentry(join(lSrcDir,lSubModDir)) as _:
+                            lHEADId, lHash = _git_info()
+                            lSrcTable.add_row(u'  └──'+basename(lSubModDir), lKind, lHEADId, lHash)
 
         elif exists(join(lSrcDir, '.svn')):
             with DirSentry(lSrcDir) as _:

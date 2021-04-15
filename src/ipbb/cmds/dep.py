@@ -24,9 +24,10 @@ from os.path import (
 from ..console import cprint, console
 from ..tools.common import which, SmartOpen
 from ..depparser import DepFormatter, dep_command_types
-from ..utils import DirSentry, printDictTable, printAlienTable
+from ..utils import DirSentry, printDictTable, printAlienTable, formatAlienTable
 from rich.table import Table, Column
 from rich.padding import Padding
+from rich.panel import Panel
 
 # ------------------------------------------------------------------------------
 def dep(ictx, proj):
@@ -96,21 +97,22 @@ def report(ictx, filters):
     lParser = ictx.depParser
     lDepFmt = DepFormatter(lParser)
 
-    cprint('* Variables', style='blue')
-    # printDictTable(lParser.vars, aHeader=False)
-    printAlienTable(lParser.settings, aHeader=False)
+    t = formatAlienTable(lParser.settings, aHeader=False)
+    t.title = 'Variables'
+    t.title_style = 'blue'
+    cprint(t)
 
     cprint()
-    cprint('* Dep-tree commands', style='blue')
+
+    lCmdsTable = Table.grid(Column('cmd_tables'))
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
-        cprint(f'  + {k} ({len(lParser.commands[k])})')
+
         if not lParser.commands[k]:
-            cprint()
             continue
 
-        lCmdTable = Table(*lCmdHeaders, title=f'{k} ({len(lParser.commands[k])})')
+        lCmdTable = Table(*lCmdHeaders, title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
         for lCmd in lParser.commands[k]:
             lRow = [
                 relpath(lCmd.filepath, ictx.srcdir),
@@ -125,37 +127,46 @@ def report(ictx, filters):
 
             lCmdTable.add_row(*lRow)
 
-        # cprint(lPrepend.sub(r'\g<1>  ', lCmdTable.draw()))
-        cprint(Padding.indent(lCmdTable, 4))
-        cprint()
 
-    cprint('Resolved packages & components', style='blue')
+        lCmdsTable.add_row(lCmdTable)
+        lCmdsTable.add_row('')
+
+    lCmdsTable.add_row("No entries: "+", ".join(f"[blue]{k}[/blue]" for k in lParser.commands if not lParser.commands[k]))
+    cprint(Panel.fit(lCmdsTable, title='[bold blue]dep tree commands[/bold blue]'))
+    cprint()
+    # cprint('Resolved packages & components', style='blue')
 
     lString = ''
 
-    lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
-    lString += 'components:\n'
+    # lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
     lString += lDepFmt.drawComponents()
-    cprint(lString+'\n')
+    cprint(Panel.fit(lString, title="[bold blue]Resolved packages & components[/bold blue]"))
+
+    lErrsTable = Table.grid(Column('error_tables'))
 
     if lParser.errors:
-        cprint("Dep tree parsing error(s):", style='red')
-        cprint(lDepFmt.drawParsingErrors())
+        t = lDepFmt.drawParsingErrors()
+        t.title = "Dep tree parsing error(s)"
+        t.title_style = 'bold red'
+        t.title_justify = 'left'
+        lErrsTable.add_row(t)
 
     if lParser.unresolved:
         lString = ''
         if lParser.unresolvedPackages:
-            cprint("Unresolved packages:", style='red')
-            cprint(lDepFmt.drawUnresolvedPackages())
-            cprint()
-
+            t = lDepFmt.drawUnresolvedPackages()
+            t.title = "Unresolved packages"
+            t.title_style = 'bold red'
+            t.title_justify = 'left'
+            lErrsTable.add_row(t)
         # ------
         lCNF = lParser.unresolvedComponents
         if lCNF:
-            cprint("Unresolved components:", style='red')
-            cprint(lDepFmt.drawUnresolvedComponents())
-            cprint()
-
+            t = lDepFmt.drawUnresolvedComponents()
+            t.title = "Unresolved components"
+            t.title_style = 'bold red'
+            t.title_justify = 'left'
+            lErrsTable.add_row(t)
 
         # ------
 
@@ -163,10 +174,14 @@ def report(ictx, filters):
         cprint(lString)
 
     if lParser.unresolvedFiles:
-        cprint("Unresolved files:", style='red')
+        t = lDepFmt.drawUnresolvedFiles()
+        t.title = "Unresolved files"
+        t.title_style = 'bold red'
+        t.title_justify = 'left'
+        lErrsTable.add_row(t)
 
-        # cprint(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
-        cprint(Padding.indent(lDepFmt.drawUnresolvedFiles(), 4))
+    cprint(Panel.fit(lErrsTable, title='[bold red]dep tree errors[/bold red]'))
+
 
 
 # ------------------------------------------------------------------------------

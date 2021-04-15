@@ -1,0 +1,18 @@
+name: pkgAB_i133
+multi_pkg: True
+top:
+  - pkg: "packageB"
+    cmp: "components"
+    file: B.d3
+files:
+  packageA/components/firmware/cfg:
+    A.dep: |
+      src A.vhd
+  packageA/components/firmware/hdl:
+    A.vhd: ""
+  packageB/components/firmware/cfg:
+    B.d3: |
+      src B.vhd
+      include -c packageA:components A.dep
+  packageB/components/firmware/hdl:
+    B.vhd: ""

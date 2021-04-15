@@ -150,14 +150,6 @@ class DepFileParser(object):
         # --------------------------------------------------------------
         # Set the toolset
         self.settings['toolset'] = self._toolset
-        # if self._toolset == 'vivado':
-        #     self.settings['toolset'] = 'vivado'
-        # elif self._toolset == 'vivado_hls':
-        #     self.settings['toolset'] = 'vivado_hls'
-        # elif self._toolset == 'sim':
-        #     self.settings['toolset'] = 'sim'
-        # else:
-        #     self.settings['toolset'] = 'other'
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -334,6 +326,13 @@ class DepFileParser(object):
         # Set package and component to current ones if not defined
         lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
         lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
+        if not aParsedCmd.component:
+            if lPackage == aCurPackage:
+                lComponent = aCurComponent
+            else:
+                lComponent = ""
+        else:
+            lComponent = lComponent
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------

@@ -43,14 +43,18 @@ def cli(repofile, dest):
             with open(join(ad, f), 'w') as f:
                 f.write(t)
 
-    pm = Pathmaker(dest)
+    pm = Pathmaker( repopath if repocfg.get('multi_pkg', False) else dest )
 
     for t in repocfg['top']:
+        cmp = t['cmp']
+        pkg = t['pkg'] if 'pkg' in t else reponame
+
+
         cprint("Parsing", t)
         dp = DepFileParser('vivado', pm, {}, 0)
         # import ipdb
         # ipdb.set_trace()
-        dp.parse(reponame, t['cmp'], t['file'])
+        dp.parse(pkg, t['cmp'], t['file'])
 
         cprint('\n')
         cprint('-'*80)

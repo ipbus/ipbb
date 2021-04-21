@@ -5,6 +5,7 @@ import glob
 import copy
 import string
 import re
+import shlex
 
 from ._definitions import dep_file_types, dep_command_types
 from ._pathmaker import Pathmaker
@@ -448,7 +449,7 @@ class DepFileParser(object):
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
                 try:
-                    lParsedCmd = self.parseLine(lLine.split())
+                    lParsedCmd = self.parseLine(shlex.split(lLine))
                 except DepCmdParserError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue

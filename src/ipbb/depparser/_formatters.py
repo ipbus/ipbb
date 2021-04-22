@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from texttable import Texttable
+from rich.table import Table, Column
 from os.path import (
     join,
     split,
@@ -12,6 +10,7 @@ from os.path import (
     isfile,
     isdir,
 )
+from ._definitions import dep_command_types
 
 
 class DepFormatter(object):
@@ -69,12 +68,11 @@ class DepFormatter(object):
         Draws a deptree commands summary table.
         
         """
-        lCommandKinds = ['setup', 'src', 'hlssrc', 'util', 'addrtab', 'iprepo']
-        lDepTable = Texttable()
-        lDepTable.set_cols_align(['c'] * len(lCommandKinds))
-        lDepTable.add_row(lCommandKinds)
-        lDepTable.add_row([len(self.parser.commands[k]) for k in lCommandKinds])
-        return lDepTable.draw()
+
+        lDepTable = Table( *dep_command_types)
+        lDepTable.add_row( *(str(len(self.parser.commands[k])) for k in dep_command_types) )
+        return lDepTable
+
 
     def drawUnresolvedSummary(self):
         """
@@ -84,16 +82,13 @@ class DepFormatter(object):
         if not lParser.unresolved:
             return ''
 
-        lUnresolved = Texttable()
-        lUnresolved.add_row(["packages", "components", "paths"])
+        lUnresolved = Table("packages", "components", "paths")
         lUnresolved.add_row(
-            [
-                len(lParser.unresolvedPackages),
-                len(lParser.unresolvedComponents),
-                len(lParser.unresolvedPaths),
-            ]
+            str(len(lParser.unresolvedPackages)),
+            str(len(lParser.unresolvedComponents)),
+            str(len(lParser.unresolvedPaths)),
         )
-        return lUnresolved.draw()
+        return lUnresolved
 
     def drawUnresolvedFiles(self):
         """
@@ -103,9 +98,8 @@ class DepFormatter(object):
         if not lFNF:
             return ""
 
-        lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(['path expression', 'package', 'component', 'included by'])
-        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lFNFTable = Table('path expression', 'package', 'component', 'included by')
+        # lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
 
         for pkg in sorted(lFNF):
             lCmps = lFNF[pkg]
@@ -113,16 +107,14 @@ class DepFormatter(object):
                 lPathExps = lCmps[cmp]
                 for pathexp in sorted(lPathExps):
                     lFNFTable.add_row(
-                        [
-                            relpath(pathexp, self.parser.rootdir),
-                            pkg,
-                            cmp,
-                            '\n'.join(
-                                [(relpath(src, self.parser.rootdir) if src != '__top__' else '(top)') for src in lPathExps[pathexp]]
-                            ),
-                        ]
+                        relpath(pathexp, self.parser.rootdir),
+                        pkg,
+                        cmp,
+                        '\n'.join(
+                            [(relpath(src, self.parser.rootdir) if src != '__top__' else '(top)') for src in lPathExps[pathexp]]
+                        ),
                     )
-        return lFNFTable.draw()
+        return lFNFTable
 
     def drawParsingErrors(self):
         """
@@ -134,19 +126,43 @@ class DepFormatter(object):
 
         lErrors = self.parser.errors
 
-        lErrTable = Texttable(max_width=0)
-        lErrTable.header(['dep file', 'line', 'error'])
-        lErrTable.set_deco(Texttable.HEADER | Texttable.BORDER)
+        lErrTable = Table('dep file', 'line', 'error')
 
         for lPkg, lCmp, lDepName, lDepPath, lLineNo, lLine, lErr in lErrors:
             
             lErrTable.add_row(
-                [
                     relpath(lDepPath, self.parser.rootdir)+':'+str(lLineNo),
                     "'"+lLine+"'",
                     str(lErr)+(': {}'.format(lErr.__cause__) if hasattr(lErr,'__cause__') else ''),
-                ]
             )
 
-        return lErrTable.draw()
+        return lErrTable
 
+    # -----------------------------------------------------------------------------
+    def drawSummary(self):
+
+        grid = Table.grid(expand=True)
+        grid.add_column()
+        grid.add_row("[bold]Groups[/]")
+        grid.add_row(self.drawDeptreeCommandsSummary())
+        grid.add_row("")
+        grid.add_row("[bold]Packages[/]")
+        grid.add_row(self.drawPackages())
+        grid.add_row("")
+        if self.parser.unresolved:
+            grid.add_row("[bold]Unresolved[/]")
+            grid.add_row(self.drawUnresolvedSummary())
+
+        # Switch to using tables
+        # lOutTxt = ''
+        # lOutTxt += self.drawDeptreeCommandsSummary()
+
+        # lOutTxt += '\n'
+        # lOutTxt += self.drawPackages()
+
+        # if self.parser.unresolved:
+        #     lOutTxt += self.drawUnresolvedSummary()
+        #     return lOutTxt
+
+        return grid
+    # -----------------------------------------------------------------------------

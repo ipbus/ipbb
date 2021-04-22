@@ -6,11 +6,13 @@ import ipaddress
 import sh
 import os
 
-from click import echo, style, secho, confirm
+from rich.prompt import Confirm
 from os.path import basename, dirname, relpath, abspath, exists, splitext, join, isabs, sep, isdir, isfile
-from texttable import Texttable
 
+from ..console import cprint, console
 from ..depparser import Pathmaker, DepFileParser
+from rich.table import Table, Column
+from rich.padding import Padding
 
 
 # ------------------------------------------------------------------------------
@@ -39,7 +41,7 @@ def check_depfile(env, verbose, toolset, component, depfile):
     except OSError as lExc:
         raise click.ClickException("Failed to parse dep file - '{}'".format(lExc))
 
-    echo()
+    cprint()
 
     # N.B. Rest of this function is heavily based on implementation of 'dep report' command; assuming
     #   that output of these 2 commands does not significantly diverge, might make sense to implement
@@ -54,21 +56,15 @@ def check_depfile(env, verbose, toolset, component, depfile):
 
     lPrepend = re.compile('(^|\n)')
     if verbose:
-        secho('Parsed commands', fg='blue')
+        cprint('Parsed commands', style='blue')
 
         for k in lParser.commands:
-            echo('  + {0} ({1})'.format(k, len(lParser.commands[k])))
+            cprint(f"  + {k} ({len(lParser.commands[k])})")
             if not lParser.commands[k]:
-                echo()
                 continue
 
-            lCmdTable = Texttable(max_width=0)
-            lCmdTable.header(lCmdHeaders)
-            lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-            lCmdTable.set_chars(['-', '|', '+', '-'])
+            lCmdTable = Table(*lCmdHeaders, title=f"{k} ({len(lParser.commands[k])})")
             for lCmd in lParser.commands[k]:
-                # print(lCmd)
-                # lCmdTable.add_row([str(lCmd)])
                 lRow = [
                     relpath(lCmd.filepath, env.srcdir),
                     ','.join(lCmd.flags()),
@@ -78,27 +74,26 @@ def check_depfile(env, verbose, toolset, component, depfile):
                 if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
                     continue
 
-                lCmdTable.add_row(lRow)
+                lCmdTable.add_row(*lRow)
 
-            echo(lPrepend.sub(r'\g<1>    ', lCmdTable.draw()))
-            echo()
+            cprint(Padding.indent(lCmdTable, 4))
 
-        secho('Resolved packages & components', fg='blue')
+        cprint('Resolved packages & components', style='blue')
 
         string = ''
         for pkg in sorted(lParser.packages):
             string += '  + %s (%d)\n' % (pkg, len(lParser.packages[pkg]))
             for cmp in sorted(lParser.packages[pkg]):
                 string += '    > ' + str(cmp) + '\n'
-        echo(string)
+        cprint(string)
 
     if lParser.unresolvedPackages:
-        secho('Missing packages:', fg='red')
-        echo(str(list(lParser.unresolvedPackages)))
+        cprint('Missing packages:', style='red')
+        cprint(str(list(lParser.unresolvedPackages)))
 
     lCNF = lParser.unresolvedComponents
     if lCNF:
-        secho('Missing components:', fg='red')
+        cprint('Missing components:', style='red')
         string = ''
 
         for pkg in sorted(lCNF):
@@ -106,18 +101,13 @@ def check_depfile(env, verbose, toolset, component, depfile):
 
             for cmp in sorted(lCNF[pkg]):
                 string += '  > ' + str(cmp) + '\n'
-        echo(string)
+        cprint(string)
 
     lFNF = lParser.unresolvedFiles
     if lFNF:
-        secho('Missing files:', fg='red')
+        cprint('Missing files:', style='red')
 
-        lFNFTable = Texttable(max_width=0)
-        lFNFTable.header(
-            ['path', 'included by']
-        )  # ['path expression','package','component','included by'])
-        lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-
+        lFNFTable = Table('path', 'included by')
         for pkg in sorted(lFNF):
             lCmps = lFNF[pkg]
             for cmp in sorted(lCmps):
@@ -125,27 +115,20 @@ def check_depfile(env, verbose, toolset, component, depfile):
                 for pathexp in sorted(lPathExps):
 
                     lFNFTable.add_row(
-                        [
-                            relpath(pathexp, env.srcdir),
-                            '\n'.join(
-                                [relpath(src, env.srcdir) for src in lPathExps[pathexp]]
-                            ),
-                        ]
+                        relpath(pathexp, env.srcdir),
+                        '\n'.join(
+                            [relpath(src, env.srcdir) for src in lPathExps[pathexp]]
+                        ),
                     )
-        echo(lPrepend.sub('\g<1>  ', lFNFTable.draw()))
-        echo()
+        cprint(Padding.indent(lFNFTable, 4))
 
     if lParser.unresolvedPackages or lParser.unresolvedComponents or lParser.unresolvedFiles:
         raise click.ClickException(
-            "Cannot find 1 or more files referenced by depfile {}".format(
-                lPathMaker.getPath(lPackage, lComponent, 'include', depfile)
-            )
+            f"Cannot find 1 or more files referenced by depfile {lPathMaker.getPath(lPackage, lComponent, 'include', depfile)}"                
         )
     elif not verbose:
-        echo(
-            "No errors found in depfile {}".format(
-                lPathMaker.getPath(lPackage, lComponent, 'include', depfile)
-            )
+        cprint(
+            f"No errors found in depfile {lPathMaker.getPath(lPackage, lComponent, 'include', depfile)}"
         )
 
 
@@ -175,7 +158,7 @@ def vhdl_beautify(env, component, path):
 
     # Add references to working area paths
     if component:
-        lPathmaker = Pathmaker(env.srcdir, 0)
+        lPathmaker = Pathmaker(env.srcdir)
 
         for c in component:
             lAllPaths.append(str(lPathmaker.getPath(*c)))
@@ -215,7 +198,7 @@ def vhdl_beautify(env, component, path):
 
         shutil.copy(f, dirname(lTmpVHDLPath))
 
-        echo('Processing vhdl file ' + style(f, fg="cyan"))
+        cprint('Processing vhdl file ' + style(f, style="cyan"))
         sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '--eval', '(setq vhdl-basic-offset 2)', '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
 
         diff = sh.colordiff if which('colordiff') else sh.diff
@@ -227,12 +210,14 @@ def vhdl_beautify(env, component, path):
             print('Beautified!')
             lBeautifiedFiles.append((f, lTmpVHDLPath))
 
-    echo(
+    cprint(
         'The following vhdl files are ready to be beautified:\n'
-        + '\n'.join(map(lambda s: '* ' + style(s[0], fg='blue'), lBeautifiedFiles))
+        + '\n'.join( [f"* [blue]{f}[/blue]" for f in lBeautifiedFiles])
         + '\n'
     )
-    confirm('Do you want to continue?', abort=True)
+    if not Confirm.ask("Do you want to continue?"):
+        return 
+        
     for lTarget, lBeautified in lBeautifiedFiles:
         print(sh.cp('-av', lBeautified, lTarget))
 

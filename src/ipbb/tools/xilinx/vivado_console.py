@@ -174,7 +174,7 @@ class VivadoConsole(object):
             echo=echo,
             logfile=self._out,
             encoding=DEFAULT_ENCODING,
-            # preexec_fn=on_parent_exit('SIGTERM')
+            preexec_fn=on_parent_exit('SIGTERM')
         )
 
         # Compile the list of patterns to detect the prompt
@@ -393,7 +393,6 @@ class VivadoSession(VivadoConsole):
 
     """Summary
     """
-    
     pass
 
 

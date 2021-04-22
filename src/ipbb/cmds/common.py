@@ -4,10 +4,13 @@ import sh
 import sys
 import click
 
-from click import echo, secho, style, confirm
+from rich.prompt import Confirm
+from rich.text import Text
 from os.path import join, split, exists, abspath, splitext, relpath, basename
+
+from ..console import cprint, console
 from ..defaults import kProjAreaFile, kProjUserFile
-from ._utils import DirSentry, formatDictTable
+from ..utils import DirSentry, formatDictTable
 from ..tools.common import which
 
 
@@ -21,13 +24,9 @@ def cleanup(ictx):
 
         lFiles.remove(f)
 
-    if lFiles and not click.confirm(
-        style(
-            "All files and directories in\n'{}'\n will be deleted.\nDo you want to continue?".format(
-                ictx.currentproj.path
-            ),
-            fg='yellow',
-        )
+    if lFiles and not Confirm.ask(
+            Text(f"All files and directories in\n'{ictx.currentproj.path}'\n will be deleted.\nDo you want to continue?",
+            style='yellow')
     ):
         return
 
@@ -41,7 +40,7 @@ def cleanup(ictx):
 # ------------------------------------------------------------------------------
 def user_config(ictx, aList, aAdd, aUnset):
 
-    echo("User settings")
+    cprint("User settings")
 
     if aAdd:
         lKey, lValue = aAdd
@@ -53,7 +52,7 @@ def user_config(ictx, aList, aAdd, aUnset):
         ictx.currentproj.saveUserSettings()
 
     if ictx.currentproj.usersettings:
-        echo(formatDictTable(ictx.currentproj.usersettings))
+        cprint(formatDictTable(ictx.currentproj.usersettings))
 
 
 # ------------------------------------------------------------------------------
@@ -65,22 +64,17 @@ def addrtab(ictx, aDest):
     except OSError:
         pass
 
-    import sh
-
     if not ictx.depParser.commands["addrtab"]:
-        secho(
-            "\nWARNING no address table files defined in {}.\n".format(
-                ictx.currentproj.name
-            ),
-            fg='yellow',
+        cprint(
+            f"\nWARNING no address table files defined in {ictx.currentproj.name}.\n",
+            style='yellow',
         )
         return
 
     for addrtab in ictx.depParser.commands["addrtab"]:
-        print(sh.cp('-avL', addrtab.filepath, join(aDest, basename(addrtab.filepath))))
-    secho(
-        "\n{}: Address table files collected in '{}'.\n".format(
-            ictx.currentproj.name, aDest
-        ),
-        fg='green',
+        cprint(sh.cp('-avL', addrtab.filepath, join(aDest, basename(addrtab.filepath))))
+    
+    console.log(
+        f"{ictx.currentproj.name}: Address table files collected in '{aDest}'.",
+        style='green',
     )

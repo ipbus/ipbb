@@ -149,3 +149,12 @@ def mifs(ctx, *args, **kwargs):
     from ..cmds.sim import mifs
     return (ctx.command.name, mifs, args, kwargs)
 
+
+# ------------------------------------------------------------------------------
+@sim.command('validate-settings', short_help='Validate project settings.')
+@click.pass_obj
+@click.pass_context
+def validate_settings(ictx, *args, **kwargs):
+    '''Make the Vivado project from sources described by dependency files.'''
+    from ..cmds.sim import validate_settings
+    return (ictx.command.name, validate_settings, args, kwargs)

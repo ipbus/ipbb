@@ -7,12 +7,18 @@ import sh
 import shutil
 import getpass
 import collections
+import cerberus
 
-import ipbb
-import ipbb.tools.xilinx as xilinx
-import ipbb.tools.mentor as mentor
-from ..utils import DirSentry, ensureNoParsingErrors, ensureNoMissingFiles, echoVivadoConsoleError
+from copy import deepcopy
+from rich.table import Table
+from rich.prompt import Confirm
+
+from .schema import project_schema, validate
+
+from ..console import cprint, console
+from ..tools import xilinx, mentor
 from ..tools.common import DEFAULT_ENCODING
+from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 
 # Elements
 from os.path import (
@@ -26,13 +32,13 @@ from os.path import (
     abspath,
     expandvars,
 )
-from click import echo, secho, style, confirm
+# from click import echo, secho, style, confirm
 
 # Tools imports
-from ._utils import (
+from ..utils import (
     DirSentry,
     ensureNoMissingFiles,
-    echoVivadoConsoleError,
+    logVivadoConsoleError,
     getClickRootName,
     validateIpAddress,
     validateMacAddress,
@@ -43,37 +49,48 @@ from ..tools.common import which, mkdir, SmartOpen
 from ..generators.ipcoressim import IPCoresSimGenerator
 from ..generators.modelsimproject import ModelSimGenerator
 
-
+# Constants
+kVsimWrapper = 'run_sim'
 kIPExportDir = 'ipcores_sim'
 kIPVivadoProjName = 'ipcores_proj'
 
+_toolset='sim'
+_schema = deepcopy(project_schema)
+_schema.update({
+    _toolset : {
+        'schema': {
+            'library' : {'type': 'string'},
+            kVsimWrapper : {'type': 'string'},
+        }
+    }
+})
+
 
 # ------------------------------------------------------------------------------
-def ensureModelsim(env):
+def ensureModelsim(ictx):
     '''Utility function ensuring that the simulation environment is correctly setup'''
 
-    if env.currentproj.settings['toolset'] != 'sim':
+    if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
-            "Work area toolset mismatch. Expected 'sim', found '%s'"
-            % env.currentproj.settings['toolset']
+            f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
     try:
-        env.siminfo = mentor.autodetect()
+        ictx.siminfo = mentor.autodetect()
     except mentor.ModelSimNotFoundError as lExc:
         tb = sys.exc_info()[2]
         raise click.ClickException(str(lExc)).with_traceback(tb)
 
     try:
-        env.vivadoinfo = xilinx.autodetect()
+        ictx.vivadoinfo = xilinx.autodetect()
     except xilinx.VivadoNotFoundError as lExc:
-        env.vivadoinfo = None
+        ictx.vivadoinfo = None
 
 
 # ------------------------------------------------------------------------------
-def simlibPath(env, aBasePath):
-    lSimVariant, lSimVersion = env.siminfo
-    lVivadoVariant, lVivadoVersion = env.vivadoinfo
+def simlibPath(ictx, aBasePath):
+    lSimVariant, lSimVersion = ictx.siminfo
+    lVivadoVariant, lVivadoVersion = ictx.vivadoinfo
 
     return expandvars(
         join(
@@ -94,25 +111,27 @@ def findIPSrcs( srcs ):
 
 
 # ------------------------------------------------------------------------------
-def sim(env, proj):
+def sim(ictx, proj):
     '''Simulation commands group'''
 
     if proj is not None:
         # Change directory before executing subcommand
         from .proj import cd
 
-        cd(env, projname=proj, aVerbose=False)
-    else:
-        if env.currentproj.name is None:
-            raise click.ClickException(
-                'Project area not defined. Move into a project area and try again.'
-            )
+        cd(ictx, projname=proj, aVerbose=False)
 
-    ensureModelsim(env)
+    if ictx.currentproj.name is None:
+        raise click.ClickException(
+            'Project area not defined. Move into a project area and try again.'
+        )
+
+    validate(_schema, ictx.depParser.settings, _toolset)
+
+    ensureModelsim(ictx)
 
 
 # ------------------------------------------------------------------------------
-def setupsimlib(env, aXilSimLibsPath, aForce):
+def setupsimlib(ictx, aXilSimLibsPath, aForce):
     lSessionId = 'setup-simlib'
 
     # -------------------------------------------------------------------------
@@ -123,41 +142,37 @@ def setupsimlib(env, aXilSimLibsPath, aForce):
     # -------------------------------------------------------------------------
 
     # Use compiler executable to detect Modelsim's flavour
-    lSimVariant, lSimVersion = env.siminfo
+    lSimVariant, lSimVersion = ictx.siminfo
 
     # For questa and modelsim the simulator name is the variant name in lowercase
     lSimulator = lSimVariant.lower()
-    echo(style(lSimVariant, fg='blue') + " detected")
+    cprint(f"[blue]{lSimVariant}[/blue] detected")
 
     # Guess the current vivado version from environment
-    if env.vivadoinfo is None:
+    if ictx.vivadoinfo is None:
         raise click.ClickException(
             "Missing Vivado environment. Please source the veivado environment and try again"
         )
 
-    lVivadoVariant, lVivadoVersion = env.vivadoinfo
-    secho('Using Vivado version: ' + lVivadoVersion, fg='green')
+    lVivadoVariant, lVivadoVersion = ictx.vivadoinfo
+    cprint(f"Using Vivado version: {lVivadoVersion}", style='green')
 
     # -------------------------------------------------------------------------
-    # Store the target path in the env, for it to be retrieved by Vivado
+    # Store the target path in the ictx, for it to be retrieved by Vivado
     # i.e. .xilinx_sim_libs/2017.4/modelsim_106.c
-    lSimlibPath = simlibPath(env, aXilSimLibsPath)
+    lSimlibPath = simlibPath(ictx, aXilSimLibsPath)
 
-    echo("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
+    cprint(f"Using Xilinx simulation library path: [blue]{lSimlibPath}[/blue]")
 
     lCompileSimlib = not exists(lSimlibPath) or aForce
 
     if not lCompileSimlib:
-        echo(
-            "Xilinx simulation library exist at {}. Compilation will be skipped.".format(
-                lSimlibPath
-            )
+        cprint(
+            f"Xilinx simulation library exist at {lSimlibPath}. Compilation will be skipped."
         )
     else:
-        echo(
-            "Xilinx simulation library will be generated at {}".format(
-                style(lSimlibPath, fg='blue')
-            )
+        cprint(
+            f"Xilinx simulation library will be generated at [blue]{lSimlibPath}[/blue]"
         )
 
         try:
@@ -167,12 +182,12 @@ def setupsimlib(env, aXilSimLibsPath, aForce):
                 )
 
         except xilinx.VivadoConsoleError as lExc:
-            echoVivadoConsoleError(lExc)
+            logVivadoConsoleError(lExc)
             raise click.Abort()
         except RuntimeError as lExc:
-            secho(
-                "Error caught while generating Vivado TCL commands:\n" + str(lExc),
-                fg='red',
+            console.log(
+                f"Error caught while generating Vivado TCL commands: {lExc}",
+                style='red',
             )
             raise click.Abort()
 
@@ -183,11 +198,11 @@ def setupsimlib(env, aXilSimLibsPath, aForce):
         )
 
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), '.')
-    echo("\nmodelsim.ini imported from {}".format(lSimlibPath))
+    cprint(f"modelsim.ini imported from {lSimlibPath}")
 
 
 # ------------------------------------------------------------------------------
-def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
+def ipcores(ictx, aXilSimLibsPath, aToScript, aToStdout):
     '''
     Generate the vivado libraries and cores required to simulate the current design.
 
@@ -199,65 +214,64 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     lScriptPath = aToScript if not aToStdout else None
 
     # Use compiler executable to detect Modelsim's flavour
-    lSimVariant, lSimVersion = env.siminfo
+    lSimVariant, lSimVersion = ictx.siminfo
     lSimulator = lSimVariant.lower()
 
     if lSimulator in ['questasim']:
         lSimulator = 'questa'
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    echo(style(lSimVariant, fg='blue') + " detected")
-    secho('Using simulator: {} {}'.format(lSimVariant, lSimVersion), fg='green')
+    cprint(f"[blue]{lSimVariant}[/blue] detected")
+    cprint(f'Using simulator: {lSimVariant} {lSimVersion}', style='green')
 
     # Guess the current vivado version from environment
-    if env.vivadoinfo is None:
+    if ictx.vivadoinfo is None:
         raise click.ClickException(
             "Missing Vivado environment. Please source the veivado environment and try again"
         )
 
-    lVivadoVariant, lVivadoVersion = env.vivadoinfo
-    secho('Using Vivado version: ' + lVivadoVersion, fg='green')
+    lVivadoVariant, lVivadoVersion = ictx.vivadoinfo
+    cprint(f"Using Vivado version: {lVivadoVersion}", style='green')
 
     # -------------------------------------------------------------------------
-    # Store the target path in the env, for it to be retrieved by Vivado
+    # Store the target path in the ictx, for it to be retrieved by Vivado
     # i.e. .xilinx_sim_libs/2017.4/modelsim_106.c
-    lSimlibPath = simlibPath(env, aXilSimLibsPath)
+    lSimlibPath = simlibPath(ictx, aXilSimLibsPath)
 
-    echo("Using Xilinx simulation library path: " + style(lSimlibPath, fg='blue'))
+    cprint(f"Using Xilinx simulation library path: [blue]{lSimlibPath}[/blue]")
 
     if not exists(lSimlibPath):
-        secho(
-            "Warning: Simulation Xilinx libraries not found. Likely this is a problem.\nPlease execute {} sim setup-simlibs to generate them.".format(
-                getClickRootName()
-            ),
-            fg='yellow',
+        cprint(
+            f"WARNING: Xilinx simulation libraries not found. Likely this is a problem.\nPlease execute {getClickRootName()} sim setup-simlibs to generate them.",
+            style='yellow'
         )
-        confirm("Do you want to continue anyway?", abort=True)
+        if not Confirm.ask("Do you want to continue anyway?"):
+            return
     # -------------------------------------------------------------------------
 
-    lDepFileParser = env.depParser
+    lDepFileParser = ictx.depParser
 
     # Ensure that no parsing errors are present
-    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+    ensureNoParsingErrors(ictx.currentproj.name, lDepFileParser)
 
     # Ensure that all dependencies are resolved
-    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
+    ensureNoMissingFiles(ictx.currentproj.name, lDepFileParser)
 
     lIPCores = findIPSrcs(lDepFileParser.commands["src"])
 
     if not lIPCores:
-        secho("WARNING: No ipcore files detected in this project", fg='yellow')
+        cprint("WARNING: No ipcore files detected in this project", style='yellow')
         return
     else:
-        echo('List of ipcores in project')
+        cprint("List of ipcores in project")
         for lIPCore in lIPCores:
-            echo('- ' + style(lIPCore, fg='blue'))
+            cprint(f"- [blue]{lIPCore}[/blue]")
     # -------------------------------------------------------------------------
 
     # For questa and modelsim the simulator name is the variant name in lowercase
-    lIPCoreSimMaker = IPCoresSimGenerator(env.currentproj, lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
+    lIPCoreSimMaker = IPCoresSimGenerator(ictx.currentproj, lSimlibPath, lSimulator, kIPExportDir, kIPVivadoProjName)
 
-    secho("Generating ipcore simulation code", fg='blue')
+    cprint("Generating ipcore simulation code", style='blue')
 
     try:
         with (
@@ -274,12 +288,12 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
                 lDepFileParser.libs,
             )
     except xilinx.VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
-        secho(
-            "Error caught while generating Vivado TCL commands:\n" + str(lExc),
-            fg='red',
+        cprint(
+            f"Error caught while generating Vivado TCL commands: {lExc}",
+            style='red',
         )
         raise click.Abort()
 
@@ -287,9 +301,9 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     shutil.copy(
         join(lSimlibPath, 'modelsim.ini'), join(os.getcwd(), lIPCoresModelsimIni)
     )
-    secho(
-        "Imported modelsim.ini from {} to {}".format(lSimlibPath, lIPCoresModelsimIni),
-        fg='blue',
+    cprint(
+        f"Imported modelsim.ini from {lSimlibPath} to {lIPCoresModelsimIni}",
+        style='blue',
     )
 
     # Prepare the area where to compile the simulation
@@ -300,7 +314,7 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
     shutil.copy(join(lSimlibPath, 'modelsim.ini'), lIPSimDir)
 
     # Compile
-    secho("Compiling ipcores simulation", fg='blue')
+    cprint("Compiling ipcores simulation", style='blue')
 
     with mentor.ModelSimBatch(echo=aToStdout, dryrun=lDryRun, cwd=lIPSimDir) as lSim:
         lSim('do compile.do')
@@ -323,16 +337,16 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
         raise click.ClickException("Simlib directory not found")
 
     lSimLibs = next(os.walk(lCoreSimDir))[1]
-    echo('Detected simulation libraries: ' + style(', '.join(lSimLibs), fg='blue'))
+    cprint(f"Detected simulation libraries: [blue]{lSimLibs}[/blue]")
 
     # add newly generated libraries to modelsim.ini
-    echo('Adding generated simulation libraries to modelsim.ini')
+    cprint('Adding generated simulation libraries to modelsim.ini')
     from configparser import RawConfigParser
 
     lIniParser = RawConfigParser()
     lIniParser.read(lIPCoresModelsimIni, DEFAULT_ENCODING)
     for lSimLib in lSimLibs:
-        echo(' - ' + lSimLib)
+        cprint(f" - {lSimLib}")
         lIniParser.set('Library', lSimLib, join(lCoreSimDir, lSimLib))
 
     lLibSearchPaths = (
@@ -357,13 +371,13 @@ def ipcores(env, aXilSimLibsPath, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
-def fli_eth(env, dev, ipbuspkg):
+def fli_eth(ictx, dev, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
 
     # -------------------------------------------------------------------------
-    if ipbuspkg not in env.sources:
+    if ipbuspkg not in ictx.sources:
         raise click.ClickException(
             "Package %s not found in source/. The FLI cannot be built." % ipbuspkg
         )
@@ -374,7 +388,7 @@ def fli_eth(env, dev, ipbuspkg):
     # os.environ['MTI_VCO_MODE']='64'
 
     lFliSrc = join(
-        env.srcdir,
+        ictx.srcdir,
         ipbuspkg,
         'components',
         'modelsim_fli',
@@ -397,13 +411,13 @@ def fli_eth(env, dev, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-def fli_udp(env, port, ipbuspkg):
+def fli_udp(ictx, port, ipbuspkg):
     """
     Build the Modelsim-ipbus foreign language interface
     """
 
     # -------------------------------------------------------------------------
-    if ipbuspkg not in env.sources:
+    if ipbuspkg not in ictx.sources:
         raise click.ClickException(
             "Package %s not found in source/. The FLI cannot be built." % ipbuspkg
         )
@@ -414,7 +428,7 @@ def fli_udp(env, port, ipbuspkg):
     # os.environ['MTI_VCO_MODE']='64'
 
     lFliSrc = join(
-        env.srcdir,
+        ictx.srcdir,
         ipbuspkg,
         'components',
         'modelsim_fli',
@@ -437,7 +451,7 @@ def fli_udp(env, port, ipbuspkg):
 
 
 # ------------------------------------------------------------------------------
-def genproject(env, aOptimise, aToScript, aToStdout):
+def genproject(ictx, aOptimise, aToScript, aToStdout):
     """
     Creates the modelsim project
 
@@ -457,15 +471,14 @@ def genproject(env, aOptimise, aToScript, aToStdout):
 
     # -------------------------------------------------------------------------
     # Must be in a build area
-    if env.currentproj.name is None:
+    if ictx.currentproj.name is None:
         raise click.ClickException(
             'Project area not defined. Move into a project area and try again.'
         )
 
-    if env.currentproj.settings['toolset'] != 'sim':
+    if ictx.currentproj.settings['toolset'] != 'sim':
         raise click.ClickException(
-            "Project area toolset mismatch. Expected 'sim', found '%s'"
-            % env.currentproj.settings['toolset']
+            f"Project area toolset mismatch. Expected 'sim', found '{ictx.currentproj.settings['toolset']}'"
         )
     # -------------------------------------------------------------------------
 
@@ -476,17 +489,17 @@ def genproject(env, aOptimise, aToScript, aToStdout):
         )
     # -------------------------------------------------------------------------
 
-    lDepFileParser = env.depParser
+    lDepFileParser = ictx.depParser
 
-    lSimLibrary = lDepFileParser.settings.get('sim.library', 'work')
+    lSimLibrary = lDepFileParser.settings.get('{_toolset}.library', 'work')
 
     # Ensure that no parsing errors are present
-    ensureNoParsingErrors(env.currentproj.name, lDepFileParser)
+    ensureNoParsingErrors(ictx.currentproj.name, lDepFileParser)
 
     # Ensure that all dependencies are resolved
-    ensureNoMissingFiles(env.currentproj.name, lDepFileParser)
+    ensureNoMissingFiles(ictx.currentproj.name, lDepFileParser)
 
-    lSimProjMaker = ModelSimGenerator(env.currentproj, lSimLibrary, kIPVivadoProjName, aOptimise)
+    lSimProjMaker = ModelSimGenerator(ictx.currentproj, lSimLibrary, kIPVivadoProjName, aOptimise)
 
     lDryRun = aToStdout or aToScript
 
@@ -503,11 +516,9 @@ def genproject(env, aOptimise, aToScript, aToStdout):
                 lDepFileParser.libs,
             )
     except sh.ErrorReturnCode as e:
-        secho(
-            'ERROR: Sim exit code: {}.\nCommand:\n\n   {}\n'.format(
-                e.exit_code, e.full_cmd
-            ),
-            fg='red',
+        console.log(
+            f'ERROR: Sim exit code: {e.exit_code}.\nCommand:\n\n   {e.full_cmd}\n',
+            style='red',
         )
         raise click.ClickException("Compilation failed")
 
@@ -516,17 +527,16 @@ def genproject(env, aOptimise, aToScript, aToStdout):
 
     # ----------------------------------------------------------
     # Create a wrapper to force default bindings at load time
-    lVsimWrapper = 'run_sim'
-    print(f"Writing modelsim wrapper '{lVsimWrapper}'")
+    cprint(f"Writing modelsim wrapper '{kVsimWrapper}'")
 
-    lVsimArgStr = f"{lDepFileParser.settings.get(f'sim.{lVsimWrapper}.design_units', '')}"
+    lVsimArgStr = f"{lDepFileParser.settings.get(f'{_toolset}.{kVsimWrapper}.design_units', '')}"
 
     lVsimOpts = collections.OrderedDict()
     lVsimOpts['MAC_ADDR'] = validateMacAddress(
-        env.currentproj.usersettings.get('ipbus.fli.mac_address', None)
+        ictx.currentproj.usersettings.get('ipbus.fli.mac_address', None)
     )
     lVsimOpts['IP_ADDR'] = validateIpAddress(
-        env.currentproj.usersettings.get('ipbus.fli.ip_address', None)
+        ictx.currentproj.usersettings.get('ipbus.fli.ip_address', None)
     )
 
     lVsimOptStr = ' '.join(
@@ -545,20 +555,20 @@ export MTI_VCO_MODE=64
 export MODELSIM_DATAPATH="mif/"
 {lVsimCmd} "$@"
     '''
-    with SmartOpen(lVsimWrapper) as lVsimSh:
+    with SmartOpen(kVsimWrapper) as lVsimSh:
         lVsimSh(lVsimBody)
 
     # Make it executable
-    os.chmod(lVsimWrapper, 0o755)
+    os.chmod(kVsimWrapper, 0o755)
 
-    print(f"Vsim wrapper script '{lVsimWrapper}' created")
+    print(f"Vsim wrapper script '{kVsimWrapper}' created")
     if lVsimCmd:
         print(f"   Command: '{lVsimCmd}'")
 
 
 # ------------------------------------------------------------------------------
-def virtualtap(env, dev, ip):
-    """VirtualTap
+def virtualtap(ictx, dev, ip):
+    """Create a virtual tap device
     """
 
     # -------------------------------------------------------------------------
@@ -604,9 +614,9 @@ def detectIPSimSrcs(projpath, ipcores):
     return lIPPaths
 
 # ------------------------------------------------------------------------------
-def mifs(env):
+def mifs(ictx):
 
-    srcs = env.depParser.commands['src']
+    srcs = ictx.depParser.commands['src']
 
     # Seek mif files in sources
     lPaths = []
@@ -618,22 +628,29 @@ def mifs(env):
     if lPaths:
         sh.mkdir('-p', 'mif')
         for p in lPaths:
-            echo('Copying {} to the project area'.format(p))
+            cprint(f"Copying {p} to the project area")
             sh.cp(p, 'mif/')
 
     # IPCores may generate mif files behinds the scenes
     lIPCores = [ f for f in findIPSrcs(srcs)]
-    # lWorkingDir = abspath(join(env.currentproj.path, 'top'))
+    # lWorkingDir = abspath(join(ictx.currentproj.path, 'top'))
 
-    lIPSrcs = detectIPSimSrcs(env.currentproj.path, lIPCores)
+    lIPSrcs = detectIPSimSrcs(ictx.currentproj.path, lIPCores)
 
     lMissingIPSimSrcs = [ k for k, v in lIPSrcs.items() if v is None]
     if lMissingIPSimSrcs:
-        raise click.ClickException('Failed to collect mifs. Simulation sources not found for cores: {}'.format(', '.join(lMissingIPSimSrcs)))
+        raise click.ClickException(f"Failed to collect mifs. Simulation sources not found for cores: {', '.join(lMissingIPSimSrcs)}")
 
     for c, d in lIPSrcs.items():
         for file in os.listdir(d):
             if file.endswith(".mif"):
                 p = os.path.join(d, file)
-                echo('Copying {} to the project area'.format(p))
+                cprint(f"Copying {p} to the project area")
                 sh.cp(p, '.')
+
+# ------------------------------------------------------------------------------
+def validate_settings(ictx):
+
+    validate(_schema, ictx.depParser.settings, _toolset)
+
+

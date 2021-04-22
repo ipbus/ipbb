@@ -21,11 +21,13 @@ from os.path import (
     isfile,
     isdir,
 )
+from ..console import cprint, console
 from ..tools.common import which, SmartOpen
-from .formatters import DepFormatter
-from ..utils import DirSentry, printDictTable, printAlienTable
-from click import echo, secho, style, confirm
-from texttable import Texttable
+from ..depparser import DepFormatter, dep_command_types
+from ..utils import DirSentry, printDictTable, printAlienTable, formatAlienTable
+from rich.table import Table, Column
+from rich.padding import Padding
+from rich.panel import Panel
 
 # ------------------------------------------------------------------------------
 def dep(ictx, proj):
@@ -58,8 +60,6 @@ def report(ictx, filters):
     lFilterFormatErrors = []
     lFieldNotFound = []
     lFilters = []
-
-    # print ( filters )
 
     for f in filters:
         m = lFilterFormat.match(f)
@@ -97,24 +97,22 @@ def report(ictx, filters):
     lParser = ictx.depParser
     lDepFmt = DepFormatter(lParser)
 
-    secho('* Variables', fg='blue')
-    # printDictTable(lParser.vars, aHeader=False)
-    printAlienTable(lParser.settings, aHeader=False)
+    t = formatAlienTable(lParser.settings, aHeader=False)
+    t.title = 'Variables'
+    t.title_style = 'blue'
+    cprint(t)
 
-    echo()
-    secho('* Dep-tree commands', fg='blue')
+    cprint()
+
+    lCmdsTable = Table.grid(Column('cmd_tables'))
 
     lPrepend = re.compile('(^|\n)')
     for k in lParser.commands:
-        echo('  + {0} ({1})'.format(k, len(lParser.commands[k])))
+
         if not lParser.commands[k]:
-            echo()
             continue
 
-        lCmdTable = Texttable(max_width=0)
-        lCmdTable.header(lCmdHeaders)
-        lCmdTable.set_deco(Texttable.HEADER | Texttable.BORDER)
-        lCmdTable.set_chars(['-', '|', '+', '-'])
+        lCmdTable = Table(*lCmdHeaders, title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
         for lCmd in lParser.commands[k]:
             lRow = [
                 relpath(lCmd.filepath, ictx.srcdir),
@@ -127,70 +125,103 @@ def report(ictx, filters):
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
                 continue
 
-            lCmdTable.add_row(lRow)
+            lCmdTable.add_row(*lRow)
 
-        echo(lPrepend.sub(r'\g<1>  ', lCmdTable.draw()))
-        echo()
 
-    secho('Resolved packages & components', fg='blue')
+        lCmdsTable.add_row(lCmdTable)
+        lCmdsTable.add_row('')
+
+    lCmdsTable.add_row("No entries: "+", ".join(f"[blue]{k}[/blue]" for k in lParser.commands if not lParser.commands[k]))
+    cprint(Panel.fit(lCmdsTable, title='[bold blue]dep tree commands[/bold blue]'))
+    cprint()
+    # cprint('Resolved packages & components', style='blue')
 
     lString = ''
 
-    # lString += '+----------------------------------+\n'
-    # lString += '|  Resolved packages & components  |\n'
-    # lString += '+----------------------------------+\n'
-    lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
-    lString += 'components:\n'
+    # lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
     lString += lDepFmt.drawComponents()
-    echo(lString+'\n')
+    cprint(Panel.fit(lString, title="[bold blue]Resolved packages & components[/bold blue]"))
+
+    lErrsTable = Table.grid(Column('error_tables'))
 
     if lParser.errors:
-        secho("Dep tree parsing error(s):", fg='red')
-        echo(lDepFmt.drawParsingErrors())
+        t = lDepFmt.drawParsingErrors()
+        t.title = "Dep tree parsing error(s)"
+        t.title_style = 'bold red'
+        t.title_justify = 'left'
+        lErrsTable.add_row(t)
 
     if lParser.unresolved:
         lString = ''
         if lParser.unresolvedPackages:
-            secho("Unresolved packages:", fg='red')
-            echo(lDepFmt.drawUnresolvedPackages())
-            echo()
-
+            t = lDepFmt.drawUnresolvedPackages()
+            t.title = "Unresolved packages"
+            t.title_style = 'bold red'
+            t.title_justify = 'left'
+            lErrsTable.add_row(t)
         # ------
         lCNF = lParser.unresolvedComponents
         if lCNF:
-            secho("Unresolved components:", fg='red')
-            echo(lDepFmt.drawUnresolvedComponents())
-            echo()
-
+            t = lDepFmt.drawUnresolvedComponents()
+            t.title = "Unresolved components"
+            t.title_style = 'bold red'
+            t.title_justify = 'left'
+            lErrsTable.add_row(t)
 
         # ------
 
         # ------
-        echo(lString)
+        cprint(lString)
 
     if lParser.unresolvedFiles:
-        secho("Unresolved files:", fg='red')
+        t = lDepFmt.drawUnresolvedFiles()
+        t.title = "Unresolved files"
+        t.title_style = 'bold red'
+        t.title_justify = 'left'
+        lErrsTable.add_row(t)
 
-        echo(lPrepend.sub(r'\g<1>  ', lDepFmt.drawUnresolvedFiles()))
+    cprint(Panel.fit(lErrsTable, title='[bold red]dep tree errors[/bold red]'))
+
 
 
 # ------------------------------------------------------------------------------
-def ls(ictx, group, output):
-    '''List project files by group
 
+def ls(ictx, group: str, output: str):
+    '''
+    List project files by group
+    
     - setup: Project setup scripts
     - src: Code files
-    - addrtab: Address tables 
-    - cgpfile: ?
+    - addrtab: Address tables
+    
+    :param      ictx:    The ictx
+    :type       ictx:    { type_description }
+    :param      group:   The group
+    :type       group:   str
+    :param      output:  The output
+    :type       output:  str
+    
+
+
+    :rtype:     None
     '''
 
     with SmartOpen(output) as lWriter:
-        for addrtab in ictx.depParser.commands[group]:
-            lWriter(addrtab.filepath)
+        for f in ictx.depParser.commands[group]:
+            lWriter(f.filepath)
 
 
 # ------------------------------------------------------------------------------
-def components(ictx, output):
+
+def components(ictx, output: str):
+    """
+    { function_description }
+
+    :param      ictx:    The ictx
+    :type       ictx:    { type_description }
+    :param      output:  The output
+    :type       output:  str
+    """
 
     with SmartOpen(output) as lWriter:
         for lPkt, lCmps in ictx.depParser.packages.items():
@@ -202,10 +233,7 @@ def components(ictx, output):
 
 # ------------------------------------------------------------------------------
 
-
 # ------------------------------------------------------------------------------
-
-
 @contextlib.contextmanager
 def set_env(**environ):
     """
@@ -232,7 +260,7 @@ def set_env(**environ):
 
 # ------------------------------------------------------------------------------
 # ----------------------------
-def hashAndUpdate0g(
+def hash_and_update0g(
     aFilePath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1
 ):
 
@@ -255,7 +283,7 @@ def hashAndUpdate0g(
 
 
 # ----------------------------
-def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
+def hash_and_update(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.sha1):
 
     # New instance of the selected algorithm
     lHash = aAlgo()
@@ -272,7 +300,7 @@ def hashAndUpdate(aPath, aChunkSize=0x10000, aUpdateHashes=None, aAlgo=hashlib.s
     elif isdir(aPath):
         for root, dirs, files in os.walk(aPath):
             for f in files:
-                hashAndUpdate(f, aChunkSize, aUpdateHashes=aUpdateHashes, aAlgo=aAlgo)
+                hash_and_update(f, aChunkSize, aUpdateHashes=aUpdateHashes, aAlgo=aAlgo)
 
     return lHash
 
@@ -310,7 +338,7 @@ def hash(ictx, output, verbose):
                 lWriter("# " + lGrp)
                 lWriter("#" + "-" * 79)
             for lCmd in lCmds:
-                lCmdHash = hashAndUpdate(
+                lCmdHash = hash_and_update(
                     lCmd.filepath, aUpdateHashes=[lProjHash, lGrpHash], aAlgo=lAlgo
                 ).hexdigest()
                 if verbose:
@@ -341,8 +369,31 @@ def hash(ictx, output, verbose):
 
 
 # ------------------------------------------------------------------------------
-def archive(ictx):
-    print('archive')
+def archive(ictx, tag):
+
+    import tarfile
+    def tarinfo_relpath(tarinfo):
+        # Note: the source dir leading '/' [1:] is removed because tarindo names don't have it
+        tarinfo.name = relpath(tarinfo.name, ictx.srcdir[1:])
+        return tarinfo
+
+    lTgzPath = '_'.join(
+        [ictx.currentproj.settings['name']]
+        + ([tag] if tag is not None else [])
+    ) + '_sources.tgz'
+
+    console.log("Creating tarball", style='blue')
+    with tarfile.open(lTgzPath, "w:gz") as tar:
+        for c in dep_command_types:
+            for f in ictx.depParser.commands[c]:
+                cprint(f"Adding {f.filepath}")
+                tar.add(f.filepath, filter=tarinfo_relpath)
+
+    console.log(
+        f"Source tarball '{lTgzPath}' successfully created.",
+        style='green',
+    )
+    # -------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------

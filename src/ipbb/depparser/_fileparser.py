@@ -4,11 +4,14 @@ import os
 import glob
 import copy
 import string
+import re
 
-from ._definitions import depfiletypes
+from ._definitions import dep_file_types, dep_command_types
 from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
 from ._cmdtypes import SrcCommand, IncludeCommand
+
+from ..console import cprint, console
 from ..tools.alien import AlienTree, AlienTemplate
 
 from collections import OrderedDict
@@ -74,6 +77,11 @@ class DepLineError(Exception):
     pass
 # -----------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
+class DepAssignmentError(Exception):
+    """Exception class for pre-parsing errors"""
+    pass
+# -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
 class State(object):
@@ -99,7 +107,7 @@ class DepFileParser(object):
     @staticmethod
     def forwardparsing(aDepFileName):
 
-        ftype = depfiletypes.get(splitext(aDepFileName)[1], None)
+        ftype = dep_file_types.get(splitext(aDepFileName)[1], None)
         if ftype is not None:
             return ftype['fwd']
         return True
@@ -126,7 +134,7 @@ class DepFileParser(object):
         self.libs = set()
         self.packages = OrderedDict()
 
-        self.commands = {c: [] for c in ['setup', 'util', 'src', 'hlssrc', 'addrtab', 'iprepo']}
+        self.commands = {c: [] for c in dep_command_types}
 
         self.unresolved = list()
         self.errors = list()
@@ -141,14 +149,7 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set the toolset
-        if self._toolset == 'vivado':
-            self.settings['toolset'] = 'Vivado'
-        elif self._toolset == 'vivadohls':
-            self.settings['toolset'] = 'VivadoHls'
-        elif self._toolset == 'sim':
-            self.settings['toolset'] = 'Modelsim'
-        else:
-            self.settings['toolset'] = 'other'
+        self.settings['toolset'] = self._toolset
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -228,35 +229,49 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _lineProcessAssignments(self, aLine):
+    def _lineProcessAssignments(self, aLine: str):
         # Process the assignment directive
+        
+        pattern = re.compile(r'^([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)*)?\s*=\s*(.*)$')
+        # group 1: settings name
+        # group 2: invalid setting name
+        # group 3: rest of the line
+        pattern = re.compile(r'^(?:([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)*)|([^=\n\s]*))\s*=\s*(.*)?$')
+
         if aLine[0] != "@":
             return aLine
 
-        if aLine.count(';'):
-            raise DepLineError("Semicolons (;) are not allowed")
+        lLine = aLine[1:].strip()
 
-        # Process the assignment directive
-        lTokens = aLine[1:].split("=")
-        if len(lTokens) != 2:
-            raise DepLineError("@ directives must be key=value pairs")
+        # Validate assignment structure
+        m = pattern.match(aLine[1:].strip())
 
-        lPar, lExpr = [i.strip() for i in lTokens]
+        if m is None:
+            raise DepAssignmentError(f"Assignment expression does not have the key = value form '{lLine}'")
+        elif not m.group(2) is None:
+            raise DepAssignmentError(f"Invalid variable name {m.group(2)}")
+        elif not m.group(3):
+            raise DepAssignmentError(f"Missing assignment value '(lLine'")
 
-        if lPar.strip() in self.settings:
-            print("Warning!", lPar.strip(
-            ), "already defined. Not redefining.")
+        lPar, lExpr = m.group(1), m.group(3)
+
+        # Validate expression
+        
+
+        if lPar in self.settings:
+            console.log(f"WARNING: '{lPar.strip()}' is already defined with value '{self.settings[lPar.strip()]}'. New value will not be applied ({lExpr}).", style='yellow')
         else:
+            lOldLock = self.settings.locked
+            self.settings.lock(True)
             try:
                 # exec(aLine[1:], None, self.settings)
-                lOldLock = self.settings.locked
-                self.settings.lock(True)
                 x = eval(lExpr, None, self.settings)
-                self.settings.lock(lOldLock)
-                self.settings[lPar] = x
-
             except Exception as lExc:
+                cprint(lExc)
                 raise DepLineError("VariableAssignmentError") from lExc
+            self.settings.lock(lOldLock)
+            self.settings[lPar] = x
+
         if self._verbosity > 1:
             print(self._state.tab, ':', aLine)
 
@@ -311,6 +326,13 @@ class DepFileParser(object):
         # Set package and component to current ones if not defined
         lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
         lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
+        if not aParsedCmd.component:
+            if lPackage == aCurPackage:
+                lComponent = aCurComponent
+            else:
+                lComponent = ""
+        else:
+            lComponent = lComponent
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------

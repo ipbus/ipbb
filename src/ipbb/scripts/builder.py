@@ -7,12 +7,11 @@ import sys
 import traceback
 from io import StringIO, BytesIO
 
-from texttable import Texttable
-from click import echo, style, secho
 
 from ..context import Context
-from ..cmds.formatters import DepFormatter
 
+from ..depparser import DepFormatter
+from ..console import cprint, console
 from .._version import __version__
 
 # ------------------------------------------------------------------------------
@@ -32,9 +31,9 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.pass_context
 @click.version_option()
 def climain(ctx, aExcStack):
-    env = ctx.obj
+    ictx = ctx.obj
 
-    env.printExceptionStack = aExcStack
+    ictx.printExceptionStack = aExcStack
 
 
 # ------------------------------------------------------------------------------
@@ -86,46 +85,44 @@ def _compose_cli():
     from ..cli import debug
 
     climain.add_command(debug.debug)
-# ------------------------------------------------------------------------------
-
 
 # ------------------------------------------------------------------------------
 def main():
     '''Discovers the env at startup'''
 
-    if sys.version_info[0:2] < (2, 7):
-        click.secho("Error: Python 2.7 is required to run IPBB", fg='red')
+    if sys.version_info[0:2] < (3, 6):
+        cprint("Error: Python 3.6 is required to run IPBB", style='red')
         raise SystemExit(-1)
 
     _compose_cli()
 
     obj = Context()
     try:
-        climain(obj=obj)
+        climain(obj=obj, show_default=True)
     except Exception as e:
-        from sys import version_info
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        lFirstFrame = traceback.extract_tb(exc_tb)[-1]
+        # from sys import version_info
+        # exc_type, exc_obj, exc_tb = sys.exc_info()
+        # lFirstFrame = traceback.extract_tb(exc_tb)[-1]
 
-        secho(
-            u"ERROR ('{}' exception caught): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
-                exc_type.__name__,
-                e,
-                lFirstFrame[0],
-                lFirstFrame[1],
-                lFirstFrame[2],
-                lFirstFrame[3],
-            ),
-            fg='red',
-        )
+        # cprint(
+        #     u"ERROR ('{}' exception caught): '{}'\n\nFile \"{}\", line {}, in {}\n   {}".format(
+        #         exc_type.__name__,
+        #         e,
+        #         lFirstFrame[0],
+        #         lFirstFrame[1],
+        #         lFirstFrame[2],
+        #         lFirstFrame[3],
+        #     ),
+        #     markup=False,
+        #     style='red',
+        # )
+
+        console.log("ERROR: exception caught!", style='red')
+        console.log(e, style='red')
 
         if obj.printExceptionStack:
-            lExc = (BytesIO() if (version_info[0] <= 2) else StringIO())
-            traceback.print_exc(file=lExc)
-            print("Exception in user code:")
-            print('-' * 60)
-            secho(lExc.getvalue(), fg='red')
-            print('-' * 60)
+            console.print_exception()
+
         raise SystemExit(-1)
 
 

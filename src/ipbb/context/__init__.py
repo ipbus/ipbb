@@ -1,14 +1,15 @@
 
 # Import click for ansi colors
 import yaml
-from click import echo, secho, style, confirm
+import cerberus
 
 from .. import utils
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
-from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoSetupFile
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
+from ..console import cprint
 
 
 # TODO:
@@ -16,6 +17,43 @@ from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, 
 # https://github.com/Grokzen/pykwalify
 # or
 # https://docs.python-cerberus.org/en/stable/install.html
+
+src_setup_schema = {
+    'reset': {
+        'type': 'list',
+        'schema': {
+            'type': 'string'
+        }
+    },
+    'init': {
+        'type': 'list',
+        'schema': {
+            'type': 'string'
+        }
+    },
+    'dependencies': {
+        'type': 'list',
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'name': {'type': 'string'},
+                'branch': {'type': 'string'},
+                'path': {'type': 'string'},
+                'type': {'type': 'string'},
+            }
+        }
+    },
+}
+
+proj_settings_schema = {
+    'name': {'type': 'string'},
+    'toolset': {'type': 'string', 'allowed': ['vivado', 'vivado_hls', 'sim']},
+    'topCmp': {'type': 'string'},
+    'topDep': {'type': 'string'},
+    'topPkg': {'type': 'string'},
+}
+
+
 # ------------------------------------------------------------------------------
 class FolderInfo(object):
     '''Utility class, attributes holder'''
@@ -63,37 +101,9 @@ class SourceInfo(FolderInfo):
         if not ss:
             return
 
-        import cerberus
-        schema = {
-            'reset': {
-                'type': 'list',
-                'schema': {
-                    'type': 'string'
-                }
-            },
-            'init': {
-                'type': 'list',
-                'schema': {
-                    'type': 'string'
-                }
-            },
-            'dependencies': {
-                'type': 'list',
-                'schema': {
-                    'type': 'dict',
-                    'schema': {
-                        'name': {'type': 'string'},
-                        'branch': {'type': 'string'},
-                        'path': {'type': 'string'},
-                        'type': {'type': 'string'},
-                    }
-                }
-            },
-        }
-
         vtor = cerberus.Validator()
 
-        x = vtor.validate(ss, schema)
+        x = vtor.validate(ss, src_setup_schema)
         print('Proj Doc Validated', x)
         print(vtor.errors)
 
@@ -180,17 +190,9 @@ class ProjectInfo(FolderInfo):
     # ------------------------------------------------------------------------------
     def validateSettings(self):
         import cerberus
-        schema = {
-            'name': {'type': 'string'},
-            'toolset': {'type': 'string', 'allowed': ['vivado', 'vivado_hls', 'sim']},
-            'topCmp': {'type': 'string'},
-            'topDep': {'type': 'string'},
-            'topPkg': {'type': 'string'},
-        }
-
         v = cerberus.Validator()
 
-        x = v.validate(self.settings, schema)
+        x = v.validate(self.settings, proj_settings_schema)
         print('Proj Doc Validated', x)
         print(v.errors)
 
@@ -288,7 +290,7 @@ class Context(object):
                 pass
 
             if self._depParser.errors:
-                secho('WARNING: dep parsing errors detected', fg='yellow')
+                cprint('WARNING: dep parsing errors detected', style='yellow')
         return self._depParser
 
 

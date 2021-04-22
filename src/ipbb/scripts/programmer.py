@@ -7,7 +7,7 @@ import tarfile
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath
 from click import echo, secho, style
-from ..utils import echoVivadoConsoleError
+from ..utils import logVivadoConsoleError
 from ..tools.common import which
 from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
 from .._version import __version__
@@ -102,7 +102,7 @@ def list(obj):
         lConnectedHwServer = v.connect(lHwServerURI)[0]
         lHwTargets = v.getHwTargets()
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
     if lVirtualCables:
@@ -261,7 +261,7 @@ def program(obj, deviceid, bitfile, probe, yes):
         v.closeHwTarget(lTarget)
 
     except VivadoConsoleError as lExc:
-        echoVivadoConsoleError(lExc)
+        logVivadoConsoleError(lExc)
         raise click.Abort()
 
 

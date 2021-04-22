@@ -15,8 +15,9 @@ class VivadoHlsProjectGenerator(object):
     reqsettings = {'device_name', 'device_package', 'device_speed'}
 
     # --------------------------------------------------------------
-    def __init__(self, aProjInfo):
+    def __init__(self, aProjInfo, aSolution):
         self.projInfo = aProjInfo
+        self.solName = aSolution
 
     # --------------------------------------------------------------
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aRootDir):
@@ -25,13 +26,12 @@ class VivadoHlsProjectGenerator(object):
         pathFinder = Pathmaker(aRootDir)
 
         if not self.reqsettings.issubset(aSettings.keys()):
-            raise RuntimeError("Missing required variables: {}".format(self.reqsettings.difference(aSettings)))
-        lXilinxPart = "{device_name}{device_package}{device_speed}".format(**aSettings)
+            raise RuntimeError(f"Missing required variables: {self.reqsettings.difference(aSettings)}")
+        lXilinxPart = f'{aSettings["device_name"]}{aSettings["device_package"]}{aSettings["device_speed"]}'
 
         # ----------------------------------------------------------
         write = aOutput
         
-        lWorkingDir = abspath(join(self.projInfo.path, self.projInfo.name))
         lTopEntity = aSettings.get('top_entity', kTopEntity)
 
 
@@ -42,43 +42,48 @@ class VivadoHlsProjectGenerator(object):
         write()
 
         write(
-            'open_project -reset {0} '.format(self.projInfo.name)
+            f'open_project -reset {self.projInfo.name} '
         )
 
         for setup in (c for c in aCommandList['setup'] if not c.finalize):
-            write('source {0}'.format(setup.filepath))
+            write(f'source {setup.filepath}')
 
         lHlsSrcs = aCommandList['hlssrc'] 
 
+        # Note to self: Hardcoding "vivado_hls" will lead to troubles
+        common_cflags = aSettings.get('vivado_hls.cflags', None)
+        common_csimflags = aSettings.get('vivado_hls.csimflags', None)
+
         for src in lHlsSrcs:
 
-
-            inc = [pathFinder.getPath(src.package, src.component, 'fw')]
+            inc = [pathFinder.getPath(src.package, src.component, 'hlssrc')] + ([pathFinder.getPath(src.package, src.component, 'hlstb')] if src.testbench else [])
             for p,c in src.includeComponents:
-                inc.append(pathFinder.getPath(p, c, 'fw'))
+                inc += [pathFinder.getPath(p, c, 'hlssrc')]
             lIncludes = ' '.join(['-I'+i for i in inc])
 
             opts = []
             if src.testbench:
                 opts += ['-tb']
 
-            if lIncludes or src.cflags:
-                opts += ['-cflags {{{}}}'.format(' '.join( (f for f in (lIncludes, src.cflags) if f)))]
+            cflags = (common_cflags, src.cflags, lIncludes)
+            if any(cflags):
+                opts += [f'-cflags {{{" ".join( (f for f in cflags if f) )}}}']
 
-            if src.csimflags:
-                opts += ['-csimflags {{{}}}'.format(src.csimflags)]
+            csimflags = (common_csimflags, src.cflags)
+            if any(csimflags):
+                opts += [f'-csimflags {{{" ".join( (f for f in csimflags if f) )}}}']
 
-            lCommand = 'add_files {} {}'.format(' '.join(opts), src.filepath)
+            lCommand = f'add_files {" ".join(opts)} {src.filepath}'
             write(lCommand)
 
 
-        write('open_solution -reset sol1')
-        write('set_part {{{0}}} -tool vivado'.format(lXilinxPart))
+        write(f'open_solution -reset {self.solName}')
+        write(f'set_part {{{lXilinxPart}}} -tool vivado')
 
-        write('set_top {}'.format(lTopEntity))
+        write(f'set_top {lTopEntity}')
 
         for setup in (c for c in aCommandList['setup'] if c.finalize):
-            write('source {0}'.format(setup.filepath))
+            write(f'source {setup.filepath}')
 
         write('close_project')
     # --------------------------------------------------------------

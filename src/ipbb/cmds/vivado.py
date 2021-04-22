@@ -342,7 +342,7 @@ def impl(env, aNumJobs, aStopOnTimingErr):
 
 
 # ------------------------------------------------------------------------------
-def resource_usage(env, aCell, aDepth, aFile):
+def resource_usage(env, aCell, aDepth, aFile, aSLR):
 
     lSessionId = 'usage'
 
@@ -352,12 +352,18 @@ def resource_usage(env, aCell, aDepth, aFile):
     # And that the Vivado env is up
     ensureVivado(env)
 
-    lCmd = 'report_utilization -hierarchical -hierarchical_depth {} -hierarchical_percentages'.format(aDepth)
+    lCmd = 'report_utilization '
+    if aSLR:
+        lCmd += ' -slr '
+    else:
+        lCmd += ' -hierarchical -hierarchical_depth {} -hierarchical_percentages'.format(aDepth)
     if aCell:
         lCmd += ' -cells ' + aCell
 
     if aFile:
         lCmd += ' -file ' + aFile
+
+
     try:
         with env.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, env.vivadoProjFile)

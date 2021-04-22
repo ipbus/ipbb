@@ -104,6 +104,7 @@ def impl(ictx, *args, **kwargs):
 @click.option('-c', '--cell', 'aCell', default=None, help="Submodule name")
 @click.option('-d', '--depth', 'aDepth', type=int, default=1, help="Hierarchy depth")
 @click.option('-f', '--file', 'aFile', type=click.Path(), default=None, help="Output file")
+@click.option('--slr', 'aSLR', is_flag=True, default=False, help="Report usage by SLR")
 @click.pass_obj
 @click.pass_context
 def resource_usage(ictx, *args, **kwargs):

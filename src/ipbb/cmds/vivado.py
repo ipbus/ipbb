@@ -365,7 +365,8 @@ def impl(ictx, aNumJobs, aStopOnTimingErr):
 
 
 # ------------------------------------------------------------------------------
-def resource_usage(ictx, aCell, aDepth, aFile):
+
+def resource_usage(ictx, aCell, aDepth, aFile, aSLR):
 
     lSessionId = 'usage'
 
@@ -375,12 +376,18 @@ def resource_usage(ictx, aCell, aDepth, aFile):
     # And that the Vivado ictx is up
     ensureVivado(ictx)
 
-    lCmd = 'report_utilization -hierarchical -hierarchical_depth {} -hierarchical_percentages'.format(aDepth)
+    lCmd = 'report_utilization '
+    if aSLR:
+        lCmd += ' -slr '
+    else:
+        lCmd += ' -hierarchical -hierarchical_depth {} -hierarchical_percentages'.format(aDepth)
     if aCell:
         lCmd += ' -cells ' + aCell
 
     if aFile:
         lCmd += ' -file ' + aFile
+
+
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, ictx.vivadoProjFile)

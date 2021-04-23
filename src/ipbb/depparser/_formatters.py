@@ -1,4 +1,5 @@
 from rich.table import Table, Column
+from rich.panel import Panel
 from os.path import (
     join,
     split,
@@ -23,7 +24,7 @@ class DepFormatter(object):
         if not aPkgs:
             return ''
 
-        return ' '.join(list(aPkgs))
+        return  Panel(' '.join(list(aPkgs)))
 
     def drawPackages(self):
         """
@@ -49,7 +50,7 @@ class DepFormatter(object):
                 lString += u'  ├──' + str(cmp) + '\n'
             lString += u'  └──' + str(lSortCmps[-1]) + '\n'
 
-        return lString[:-1]
+        return Panel.fit(lString[:-1])
 
     def drawComponents(self):
         """
@@ -165,4 +166,39 @@ class DepFormatter(object):
         #     return lOutTxt
 
         return grid
+
     # -----------------------------------------------------------------------------
+    def drawErrorsTable(self):
+        lErrsTable = Table.grid(Column('error_tables'))
+
+        if self.parser.errors:
+            t = self.drawParsingErrors()
+            t.title = "Dep tree parsing error(s)"
+            t.title_style = 'bold red'
+            t.title_justify = 'left'
+            lErrsTable.add_row(t)
+
+        if self.parser.unresolved:
+            if self.parser.unresolvedPackages:
+                t = self.drawUnresolvedPackages()
+                t.title = "[bold red]Unresolved packages[/bold red]"
+                lErrsTable.add_row(t)
+            # ------
+            lCNF = self.parser.unresolvedComponents
+            if lCNF:
+                t = self.drawUnresolvedComponents()
+                t.title = "[bold red]Unresolved components[/bold red]"
+                lErrsTable.add_row(t)
+
+
+        if self.parser.unresolvedFiles:
+            t = self.drawUnresolvedFiles()
+            t.title = "Unresolved files"
+            t.title_style = 'bold red'
+            t.title_justify = 'left'
+            lErrsTable.add_row(t)
+
+        return lErrsTable
+
+    def hasErrors(self):
+        return self.parser.errors or self.parser.unresolved or self.parser.unresolvedFiles

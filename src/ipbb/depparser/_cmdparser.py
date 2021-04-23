@@ -54,9 +54,14 @@ class UseInAction(argparse.Action):
 
         setattr(namespace, self.dest, tokens )
 
+# -----------------------------------------------------------------------------
+class DepSubCmdParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise DepCmdParserError(message)
 
 # -----------------------------------------------------------------------------
 class DepCmdParser(argparse.ArgumentParser):
+
     def error(self, message):
         raise DepCmdParserError(message)
 
@@ -67,7 +72,7 @@ class DepCmdParser(argparse.ArgumentParser):
         # Common options
         lCompArgOpts = dict(action=ComponentAction, default=(None, None))
 
-        parser_add = self.add_subparsers(dest='cmd', parser_class=argparse.ArgumentParser)
+        parser_add = self.add_subparsers(dest='cmd', parser_class=DepSubCmdParser)
 
         # Include sub-parser
         subp = parser_add.add_parser('include')

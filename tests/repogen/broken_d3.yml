@@ -7,9 +7,9 @@ top:
   - cmp: ""
     file: top_unres_pkg.d3
   - cmp: ""
-    file: top_err.d3
-  - cmp: ""
     file: top_unres_inc.d3
+  - cmp: ""
+    file: top_parse_err.d3
 files:
   firmware/cfg:
     settings.tcl: ""
@@ -33,10 +33,11 @@ files:
       src t0.vhd
       src t1.vhd
       include -c algo/frameworkd
-    top_err.d3: |
+    top_parse_err.d3: |
       setup settings.tcl
       src t0.vhd
       src t1.vhd
+      src
       srca t2.vhd t3_not_here.vhd
   firmware/hdl:
     t0.vhd: ""

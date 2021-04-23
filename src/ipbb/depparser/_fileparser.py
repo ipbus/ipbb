@@ -326,14 +326,17 @@ class DepFileParser(object):
         # --------------------------------------------------------------
         # Set package and component to current ones if not defined
         lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
-        lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
+        # lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
         if not aParsedCmd.component:
+            # case: -c not specified, current package and component
             if lPackage == aCurPackage:
                 lComponent = aCurComponent
+            # case: -c package:
             else:
                 lComponent = ""
         else:
-            lComponent = lComponent
+            # case -c package:component
+            lComponent = aParsedCmd.component
         # --------------------------------------------------------------
 
         # --------------------------------------------------------------
@@ -354,7 +357,12 @@ class DepFileParser(object):
                 # FIXME! This is confusing!
                 # It mixes the not match and multiple matches case!
                 lFileLists = []
-                lUnmatchedExprs = [self._pathMaker.getDefNames(aParsedCmd.cmd, lComponentName, 'braces')]
+                lUnmatchedExprs = [self._pathMaker.getPath(
+                    lPackage, lComponent, aParsedCmd.cmd, 
+                    self._pathMaker.getDefNames(aParsedCmd.cmd, lComponentName, 'braces'),
+                    cd=aParsedCmd.cd
+                    )
+                ]
         else:
             lFileLists, lUnmatchedExprs = self._pathMaker.globall(
                 lPackage, lComponent, aParsedCmd.cmd, 

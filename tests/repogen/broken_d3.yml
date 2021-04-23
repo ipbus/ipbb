@@ -8,6 +8,8 @@ top:
     file: top_unres_pkg.d3
   - cmp: ""
     file: top_err.d3
+  - cmp: ""
+    file: top_unres_inc.d3
 files:
   firmware/cfg:
     settings.tcl: ""
@@ -26,6 +28,11 @@ files:
       src t0.vhd
       src t1.vhd
       src -c not_a_pkg:not_a_cmp t3_not_here.vhd
+    top_unres_inc.d3: |
+      setup settings.tcl
+      src t0.vhd
+      src t1.vhd
+      include -c algo/frameworkd
     top_err.d3: |
       setup settings.tcl
       src t0.vhd

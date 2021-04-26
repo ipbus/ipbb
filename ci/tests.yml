@@ -27,6 +27,7 @@ depparser_venv_centos7_py3:
     - generate-ipbb-repo.py tests/repogen/settings.yml /tmp/
     - generate-ipbb-repo.py tests/repogen/abcd_d3.yml /tmp/
     - generate-ipbb-repo.py tests/repogen/broken_d3.yml /tmp/
+    - generate-ipbb-repo.py tests/repogen/pkgAB_issue_133.yml /tmp/
     - generate-ipbb-repo.py tests/repogen/hls_simple_d3.yml /tmp/
     - generate-ipbb-repo.py tests/repogen/hls_test_d3.yml /tmp/
 

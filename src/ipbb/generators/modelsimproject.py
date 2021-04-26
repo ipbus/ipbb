@@ -59,18 +59,19 @@ class ModelSimGenerator(object):
                     join(lIPProjDir, self.ipProjName + '.srcs', 'sources_1', 'ip'))
 
                 # ----------------------------------------------------------
-                for lDir in ['', 'sim']:
-                    for lExt in ['vhd', 'v']:
-                        lPathToIp = join(
-                            lIpPath, lName, lDir, lName + '.' + lExt)
-                        if not exists(join(lPathToIp)):
-                            continue
+                for lGenDir in ['src', 'gen']:
+                    for lSimDir in ['', 'sim']:
+                        for lExt in ['vhd', 'v']:
+                            lPathToIp = abspath(join(
+                                lIPProjDir, f'{self.ipProjName}.{lGenDir}', 'sources_1', 'ip', lName, lSimDir, f'{lName}.{lExt}'))
+                            if not exists(join(lPathToIp)):
+                                continue
 
-                        file = lPathToIp
-                        break
-                    # File found, stop here
-                    if file is not None:
-                        break
+                            file = lPathToIp
+                            break
+                        # File found, stop here
+                        if file is not None:
+                            break
                 # ----------------------------------------------------------
 
                 if file is None:

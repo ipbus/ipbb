@@ -136,51 +136,12 @@ def report(ictx, filters):
     cprint()
     # cprint('Resolved packages & components', style='blue')
 
-    lString = ''
+    lCmpPanel = lDepFmt.drawComponents()
+    lCmpPanel.title = "[bold blue]Resolved packages & components[/bold blue]"
+    cprint(lCmpPanel)
 
-    # lString += 'packages: ' + lDepFmt.drawPackages() + '\n'
-    lString += lDepFmt.drawComponents()
-    cprint(Panel.fit(lString, title="[bold blue]Resolved packages & components[/bold blue]"))
-
-    lErrsTable = Table.grid(Column('error_tables'))
-
-    if lParser.errors:
-        t = lDepFmt.drawParsingErrors()
-        t.title = "Dep tree parsing error(s)"
-        t.title_style = 'bold red'
-        t.title_justify = 'left'
-        lErrsTable.add_row(t)
-
-    if lParser.unresolved:
-        lString = ''
-        if lParser.unresolvedPackages:
-            t = lDepFmt.drawUnresolvedPackages()
-            t.title = "Unresolved packages"
-            t.title_style = 'bold red'
-            t.title_justify = 'left'
-            lErrsTable.add_row(t)
-        # ------
-        lCNF = lParser.unresolvedComponents
-        if lCNF:
-            t = lDepFmt.drawUnresolvedComponents()
-            t.title = "Unresolved components"
-            t.title_style = 'bold red'
-            t.title_justify = 'left'
-            lErrsTable.add_row(t)
-
-        # ------
-
-        # ------
-        cprint(lString)
-
-    if lParser.unresolvedFiles:
-        t = lDepFmt.drawUnresolvedFiles()
-        t.title = "Unresolved files"
-        t.title_style = 'bold red'
-        t.title_justify = 'left'
-        lErrsTable.add_row(t)
-
-    cprint(Panel.fit(lErrsTable, title='[bold red]dep tree errors[/bold red]'))
+    if lDepFmt.hasErrors():
+        cprint(Panel.fit(lDepFmt.drawErrorsTable(), title='[bold red]dep tree errors[/bold red]'))
 
 
 

@@ -13,6 +13,7 @@ from shutil import rmtree
 from ipbb.depparser import DepFileParser, DepFormatter
 from ipbb.depparser import Pathmaker
 from ipbb.console import cprint, console
+from rich.table import Table, Column
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
@@ -71,6 +72,8 @@ def cli(repofile, dest):
 
         df = DepFormatter(dp)
         cprint(Panel.fit(df.drawSummary()))
+
+        cprint(Panel.fit(df.drawErrorsTable(), title='[bold red]dep tree errors[/bold red]'))
 
 
 def main():

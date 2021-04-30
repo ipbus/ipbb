@@ -7,7 +7,7 @@ files:
     top.d3: |
       setup settings.tcl
       src t0.vhd
-      src t1.vhd
+      src --simflags="-warning 1594" t1.vhd
       include defs.d3
       ? var_A == True ? src t2.vhd
       src t3.vhd

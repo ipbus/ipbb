@@ -64,15 +64,17 @@ class SrcCommand(Command):
         vhdl2008   (bool): toggles the vhdl 2008 syntax for .vhd files
         useinsynth (bool): use this files in synth
         useinsim   (bool): use this files in sim
+        simflags   (str):  flags to be passed to Modelsim/Questasim
     """
     # --------------------------------------------------------------
-    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aUseInSynth, aUseInSim):
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aUseInSynth, aUseInSim, aSimflags):
         super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
         self.lib = aLib
         self.vhdl2008 = aVhdl2008
         self.useInSynth = aUseInSynth
         self.useInSim = aUseInSim
+        self.simflags = aSimflags
 
     # --------------------------------------------------------------
     def flags(self):
@@ -88,7 +90,7 @@ class SrcCommand(Command):
 
     # --------------------------------------------------------------
     def __eq__(self, other):
-        return (self.filepath == other.filepath) and (self.lib == other.lib)
+        return (self.filepath == other.filepath) and (self.lib == other.lib) and (self.simflags == other.simflags)
 
     __hash__ = object.__hash__
 
@@ -119,7 +121,7 @@ class HlsSrcCommand(Command):
             lFlags.append('tb')
 
         return lFlags
-        
+
     def extra(self):
         if not self.includeComponents:
             return None

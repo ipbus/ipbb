@@ -47,7 +47,7 @@ class UseInAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
 
         tokens = values.split(',')
-        
+
         lInvalid = [t for t in tokens if t not in self._choices]
         if lInvalid:
             raise ValueError('Invalid source types '+','.join(lInvalid))
@@ -100,6 +100,7 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('--cd')
         subp.add_argument('--vhdl2008', action='store_true')
         subp.add_argument('-u', '--usein', action=UseInAction)
+        subp.add_argument('--simflags')
         subp.add_argument('file', nargs='+')
 
         # Source sub-parser
@@ -128,7 +129,7 @@ class DepCmdParser(argparse.ArgumentParser):
 
         self.callbacks = {
             'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
-            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, 'synth' in a.usein, 'sim' in a.usein),
+            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, 'synth' in a.usein, 'sim' in a.usein, a.simflags),
             'hlssrc'  : lambda a : HlsSrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.cflags, a.csimflags, a.tb, a.include_comp),
             'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
             'addrtab' : lambda a : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),
@@ -146,4 +147,3 @@ class DepCmdParser(argparse.ArgumentParser):
         return self.callbacks[cmd](args)
 
 # -----------------------------------------------------------------------------
-

@@ -95,7 +95,7 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
         # ------------------------------------------------------------------------------
         cprint(
             'The following decoders have changed and must be updated:\n'
-            + '\n'.join([f" * [blue]{d}[/blue]" for d in UpdatedDecoders])
+            + '\n'.join([f" * [blue]{d}[/blue]" for d in lUpdatedDecoders])
             + '\n'
         )
         if aCheckUpToDate:

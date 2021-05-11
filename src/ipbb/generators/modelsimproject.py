@@ -98,6 +98,11 @@ class ModelSimGenerator(object):
             else:
                 print(f'# IGNORING unknown source file type in Modelsim build: {src.filepath}')
                 continue
+
+            # ----------------------------------------------------------
+
+            if src.simflags:
+                cmd = f'{cmd} {src.simflags}'
             # ----------------------------------------------------------
 
             lib = src.lib if src.lib else self.simLibrary

@@ -30,6 +30,7 @@ Mention the minimal requirements for a component (`firmware` subdirectory with c
   - `-l`/`--lib`: Add the hdl file to a library
   - `--vhdl2008`: Use the 2008 vhdl standard for this file
   - `-u`/`--usein` (`synth`,`sim`): Declae the file as synth or sim-only file
+  - `--simflags`: Pass flags to Modelsim/Questasim
 
 * `addrtab`: Add an address table file
   - `-t`/`--toplevel`: Top-level address table
@@ -45,7 +46,7 @@ Mention the minimal requirements for a component (`firmware` subdirectory with c
 
 ## `dep` vs `d3` files
 
-The two file types supported by `ipbb`, `dep` and `d3` (dep-tree), are identical in content, but differ by the order with witch *dep* commands are parsed. 
+The two file types supported by `ipbb`, `dep` and `d3` (dep-tree), are identical in content, but differ by the order with witch *dep* commands are parsed.
 
 `dep` files commands are read from bottom to top and, within the same line, file paths from right to left  Such difference is historical. With this approach the top-level VHDL entity appears at the top of the top dep files, reflecting the file order in the tools (ModelSIM and Vivado). The choice of using a reverse parsing order (dependant entries at the top) has proven counter-intuitive, being inverse of the the ordering used in software context.
 (Additionally, while commands follow the inverse ordering, variables are processed in forward order :facepalm:)

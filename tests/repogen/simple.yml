@@ -11,6 +11,7 @@ files:
       ? var_A == True ? src t2.vhd
       src t3.vhd
       src sim_only.vhd -u sim
+      src sim_only2.vhd -u sim --simflags="-warning 1594"
       src synth_only.vhd -u synth
     defs.dep: |
       @var_A=False
@@ -24,5 +25,5 @@ files:
     d1.vhd: ""
     d2.vhd: ""
     sim_only.vhd: "# Only used in simulation"
+    sim_only2.vhd: "# Only used in simulation"
     synth_only.vhd: "# Only used in synhesis"
-

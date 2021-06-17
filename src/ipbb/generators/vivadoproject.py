@@ -72,10 +72,10 @@ class VivadoProjectGenerator(object):
             f'create_project {self.projInfo.name} {lWorkingDir} -part {lXilinxPart} -force'
         )
 
-        # if 'board_part' in aSettings:
-        #     write('set_property -name "board_part" -value "{board_part}" -objects [current_project]'.format(**aSettings))
-        # if 'dsa_board_id' in aSettings:
-        #     write('set_property -name "dsa.board_id" -value "{dsa_board_id}" -objects [current_project]'.format(**aSettings))
+        if 'board_part' in aSettings:
+            write(f'set_property -name "board_part" -value "{aSettings["board_part"]}" -objects [current_project]')
+        if 'dsa_board_id' in aSettings:
+            write(f'set_property -name "dsa.board_id" -value "{aSettings["dsa_board_id"]}" -objects [current_project]')
 
 
         # Add ip repositories to the project variable
@@ -122,6 +122,15 @@ class VivadoProjectGenerator(object):
 
                 lXciBasenames.append(lName)
                 # lXciTargetFiles.append(lTargetFile)
+
+            # elif lExt in ('.bd'):
+            #     c = f'import_files -norecurse -fileset {self.fileset(src)} $files'
+            #     f = src.filepath
+            # #     import_files -norecurse ${core_dir}/${BD_FILE}
+            # #     set WRAPPER_FILE [make_wrapper -files [get_files $BD_FILE] -top]
+            # #     add_files -norecurse $WRAPPER_FILE
+            # # }
+
             else:
 
                 c = f'add_files -norecurse -fileset {self.fileset(src)} $files'

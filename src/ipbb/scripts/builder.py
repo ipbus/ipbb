@@ -12,7 +12,7 @@ from ..context import Context
 
 from ..depparser import DepFormatter
 from ..console import cprint, console
-from .._version import __version__
+from .. import __version__
 
 # ------------------------------------------------------------------------------
 # Add -h as default help option

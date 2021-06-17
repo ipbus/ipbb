@@ -1,4 +1,4 @@
-from ._version import __version__
+__version__ = '1.0.0.dev21_i'
 
 from . import cli
 from . import tools

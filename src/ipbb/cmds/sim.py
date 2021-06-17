@@ -60,7 +60,11 @@ _schema.update({
     _toolset : {
         'schema': {
             'library' : {'type': 'string'},
-            kVsimWrapper : {'type': 'string'},
+            kVsimWrapper : {
+                'schema': {
+                    'design_units': {'type': 'string'},
+                }
+            }
         }
     }
 })

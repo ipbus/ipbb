@@ -1,8 +1,5 @@
 from setuptools import setup, find_packages
 
-# Retrieve the current version
-exec(open('src/ipbb/_version.py').read())
-
 # Retrieve the list of requirements
 with open('requirements.txt') as f:
     # Strip leading and trailing spaces
@@ -13,19 +10,25 @@ with open('requirements.txt') as f:
 
 
 setup(
-    name='ipbb',
-    version=__version__,
-    author='Alessandro Thea',
-    author_email='alessandro.thea@stfc.ac.uk',
-    url='https://github.com/ipbus/ipbb',
-    packages=find_packages('src'),
-    package_dir={'': 'src'},
-    include_package_data=True,
-    python_requires='>=3',
-    install_requires=requirements,
-    entry_points='''
-        [console_scripts]
-        ipbb=ipbb.scripts.builder:main
-        ipb-prog=ipbb.scripts.programmer:main
-    ''',
+    install_requires=[
+        "Cerberus==1.3.2",
+        "click==7.1.2",
+        "click-didyoumean==0.0.3",
+        "configparser==5.0.2",
+        "future==0.18.2",
+        "ipaddress==1.0.23",
+        "ipdb==0.13.7",
+        "ipython==7.16.1",
+        "pexpect==4.8.0",
+        "psutil==5.8.0",
+        "pytest==6.2.2",
+        "PyYAML==5.4.1",
+        "rich==10.1.0",
+        "sh==1.14.1",
+        "vsg==3.0.0",
+    ],
+    extras_require={"develop": [
+        "ipdb",
+        "ipython"
+    ]},
 )

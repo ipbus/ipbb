@@ -40,7 +40,7 @@ class DepFormatter(object):
 
     def _drawComponents(self, aPkgs):
         if not aPkgs:
-            return ''
+            return Panel.fit('')
 
         lString = ''
         for pkg in sorted(aPkgs):

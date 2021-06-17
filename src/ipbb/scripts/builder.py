@@ -2,7 +2,6 @@
 import click
 import click_didyoumean
 
-import ipbb
 import sys
 import traceback
 from io import StringIO, BytesIO

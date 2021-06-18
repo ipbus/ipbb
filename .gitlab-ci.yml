@@ -10,7 +10,7 @@ variables:
   IPBUS_DOCKER_REGISTRY: "gitlab-registry.cern.ch/ipbus/ipbus-docker"
   GITHUB_REPO_API_URL: "https://api.github.com/repos/ipbus/ipbb"
   LANG: "en_US.UTF-8"
-
+  DOCKER_IMAGE_TAG: "2021-05-07__uhal2.8.0"
 include:
   - local: '/ci/github-notifications.yml'
   - local: '/ci/setup.yml'

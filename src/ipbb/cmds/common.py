@@ -11,7 +11,7 @@ from os.path import join, split, exists, abspath, splitext, relpath, basename
 from ..console import cprint, console
 from ..defaults import kProjAreaFile, kProjUserFile
 from ..utils import DirSentry, formatDictTable
-from ..tools.common import which
+from ..utils import which
 
 
 # ------------------------------------------------------------------------------

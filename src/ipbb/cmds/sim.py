@@ -17,7 +17,7 @@ from .schema import project_schema, validate
 
 from ..console import cprint, console
 from ..tools import xilinx, mentor
-from ..tools.common import DEFAULT_ENCODING
+from ..utils import DEFAULT_ENCODING
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 
 # Elements
@@ -43,7 +43,7 @@ from ..utils import (
     validateIpAddress,
     validateMacAddress,
 )
-from ..tools.common import which, mkdir, SmartOpen
+from ..utils import which, mkdir, SmartOpen
 
 # DepParser imports
 from ..generators.ipcoressim import IPCoresSimGenerator

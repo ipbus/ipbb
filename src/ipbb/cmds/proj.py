@@ -7,7 +7,7 @@ import subprocess
 
 # Elements
 from ..console import cprint, console
-from ..tools.common import SmartOpen
+from ..utils import SmartOpen
 from ..defaults import kProjAreaFile, kProjDir, kTopDep
 from ..context import ProjectInfo
 from ..utils import DirSentry, raiseError, validateComponent, findFirstParentDir

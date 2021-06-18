@@ -22,7 +22,7 @@ from os.path import (
     isdir,
 )
 from ..console import cprint, console
-from ..tools.common import which, SmartOpen
+from ..utils import which, SmartOpen
 from ..depparser import DepFormatter, dep_command_types
 from ..utils import DirSentry, printDictTable, printAlienTable, formatAlienTable
 from rich.table import Table, Column

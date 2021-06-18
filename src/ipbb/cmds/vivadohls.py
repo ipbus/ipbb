@@ -13,7 +13,7 @@ from copy import deepcopy
 from .schema import project_schema, validate
 
 from ..console import cprint, console
-from ..tools.common import which, SmartOpen, mkdir
+from ..utils import which, SmartOpen, mkdir
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 from ..defaults import kTopEntity
 from ..generators.vivadohlsproject import VivadoHlsProjectGenerator

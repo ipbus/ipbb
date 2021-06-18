@@ -5,7 +5,7 @@ import os
 import subprocess
 
 # Elements
-from ..tools.common import SmartOpen
+from ..utils import SmartOpen
 # from . import kProjAreaFile, kProjDir, ProjectInfo
 # from ..cli.utils import DirSentry, raiseError, validateComponent
 from ..utils import validateComponent

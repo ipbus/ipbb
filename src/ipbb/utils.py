@@ -15,6 +15,10 @@ from .tools.alien import AlienBranch
 from .console import cprint, console
 from .depparser import DepFormatter
 
+from locale import getpreferredencoding
+
+DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
+
 # ------------------------------------------------------------------------------
 class DirSentry:
     """
@@ -37,6 +41,71 @@ class DirSentry:
     def __exit__(self, type, value, traceback):
         os.chdir(self._lOldDir)
 # ------------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+class SmartOpen(object):
+
+    # -------------------------------------------
+    def __init__(self, aTarget):
+        if isinstance(aTarget, str):
+            self.target = open(aTarget, 'w')
+        elif aTarget is None:
+            self.target = sys.stdout
+        else:
+            self.target = aTarget
+
+    # -------------------------------------------
+    @property
+    def path(self):
+        if self.target is not sys.stdout:
+            return self.target.name
+        else:
+            return None
+
+    # -------------------------------------------
+    def __enter__(self):
+        return self
+
+    # -------------------------------------------
+    def __exit__(self, type, value, traceback):
+        if self.target is not sys.stdout:
+            self.target.close()
+
+    # -------------------------------------------
+    def __call__(self, *strings):
+        self.target.write(' '.join(strings))
+        self.target.write("\n")
+        self.target.flush()
+
+    # -------------------------------------------
+
+
+# ------------------------------------------------------------------------------
+# Helper function equivalent to which in posix systems
+def which(aExecutable):
+    '''Searches for exectable il $PATH'''
+    lSearchPaths = (
+        os.environ["PATH"].split(os.pathsep)
+        if aExecutable[0] != os.sep
+        else [os.path.dirname(aExecutable)]
+    )
+    for lPath in lSearchPaths:
+        if not os.access(os.path.join(lPath, aExecutable), os.X_OK):
+            continue
+        return os.path.normpath(os.path.join(lPath, aExecutable))
+    return None
+
+
+# ------------------------------------------------------------------------------
+def mkdir(path, mode=0o777):
+    try:
+        os.makedirs(path, mode)
+    except OSError:
+        if os.path.exists(path) and os.path.isdir(path):
+            return
+        raise
+
 
 
 # ------------------------------------------------------------------------------

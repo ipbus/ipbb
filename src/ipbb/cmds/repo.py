@@ -13,7 +13,7 @@ from os.path import join, split, exists, splitext, dirname, basename, abspath
 from ..console import cprint
 from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
 from ..depparser import Pathmaker, DepFormatter, dep_command_types
-from ..tools.common import mkdir
+from ..utils import mkdir
 from ..utils import DirSentry, findFileInParents, raiseError, formatDictTable
 from .proj import info as proj_info
 from urllib.parse import urlparse

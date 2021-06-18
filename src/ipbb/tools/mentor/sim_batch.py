@@ -4,7 +4,7 @@ import sh
 import sys
 
 from os.path import join, split, exists, splitext, basename
-from ..common import which
+from ...utils import which
 from .sim_common import autodetect, ModelSimNotFoundError, _vsim, _vcom
 
 # -----------------------------------------------------------------------------

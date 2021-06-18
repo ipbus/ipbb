@@ -3,7 +3,8 @@ import re
 import sh
 
 
-from ..common import which, OutputFormatter
+from ...utils import which
+from ..common import OutputFormatter
 from ..termui import *
 
 # ------------------------------------------------

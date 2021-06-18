@@ -15,10 +15,9 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from ..common import which
+from ...utils import which, DEFAULT_ENCODING
 # from ..termui import *
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
-from ..common import DEFAULT_ENCODING
 from .vivado_common import VivadoNotFoundError, autodetect, VivadoOutputFormatter, _parseversion
 
 # ------------------------------------------------

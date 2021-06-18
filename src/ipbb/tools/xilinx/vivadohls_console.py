@@ -15,10 +15,10 @@ import psutil
 # Elements
 from os.path import join, split, exists, splitext, basename
 from click import style
-from ..common import which, OutputFormatter
+from ...utils import which, DEFAULT_ENCODING
+from ..common import OutputFormatter
 from ..termui import *
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
-from ..common import DEFAULT_ENCODING
 
 kHLSLogDebug = False
 

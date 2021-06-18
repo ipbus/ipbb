@@ -1,3 +1,4 @@
+# NOTE TO SELF: Merge with tools/common.py
 
 import os
 import ipaddress

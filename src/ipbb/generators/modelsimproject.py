@@ -59,6 +59,7 @@ class ModelSimGenerator(object):
                     join(lIPProjDir, self.ipProjName + '.srcs', 'sources_1', 'ip'))
 
                 # ----------------------------------------------------------
+                # TOFIX: Duplicate of cmds.sim.detect_ip_sim_srcs
                 for lGenDir in ['src', 'gen']:
                     for lSimDir in ['', 'sim']:
                         for lExt in ['vhd', 'v']:

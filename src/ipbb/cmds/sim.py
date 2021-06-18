@@ -598,22 +598,24 @@ sudo chmod a+rw /dev/net/tun
         sh.chmod('a+rw', '/dev/net/tun', _out=sys.stdout)
 
 
-def detectIPSimSrcs(projpath, ipcores):
-    lSrcDir = abspath(join(projpath, kIPVivadoProjName, kIPVivadoProjName + '.srcs'))
+# ------------------------------------------------------------------------------
+def detect_ip_sim_srcs(projpath, projname, ipcores):
 
     lIPPaths = {}
-    for lIP in ipcores:
+    lIPProjDir = abspath(join(projpath, projname))
+    for lGenDir in ['src', 'gen']:
+        for lIP in ipcores:
 
-        lIPPaths[lIP] = None
-        for lSubDir in ['', 'sim']:
-            # Hack required. The Vivado generated hdl files sometimes
-            # have 'sim' in their path, sometimes don't
-            p = abspath(
-                join(lSrcDir, 'sources_1', 'ip', lSubDir, lIP))
+            lIPPaths[lIP] = None
+            for lSimDir in ['', 'sim']:
+                # Hack required. The Vivado generated hdl files sometimes
+                # have 'sim' in their path, sometimes don't
+                p = abspath(
+                    join(lIPProjDir, f'{projname}.{lGenDir}', 'sources_1', 'ip', lSimDir, lIP))
 
-            if exists(p):
-                lIPPaths[lIP] = p
-                break
+                if exists(p):
+                    lIPPaths[lIP] = p
+                    break
 
     return lIPPaths
 
@@ -635,11 +637,9 @@ def mifs(ictx):
             cprint(f"Copying {p} to the project area")
             sh.cp(p, 'mif/')
 
-    # IPCores may generate mif files behinds the scenes
     lIPCores = [ f for f in findIPSrcs(srcs)]
-    # lWorkingDir = abspath(join(ictx.currentproj.path, 'top'))
 
-    lIPSrcs = detectIPSimSrcs(ictx.currentproj.path, lIPCores)
+    lIPSrcs = detect_ip_sim_srcs(ictx.currentproj.path, lIPCores)
 
     lMissingIPSimSrcs = [ k for k, v in lIPSrcs.items() if v is None]
     if lMissingIPSimSrcs:

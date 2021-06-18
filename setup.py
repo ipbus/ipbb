@@ -17,8 +17,6 @@ setup(
         "configparser==5.0.2",
         "future==0.18.2",
         "ipaddress==1.0.23",
-        "ipdb==0.13.7",
-        "ipython==7.16.1",
         "pexpect==4.8.0",
         "psutil==5.8.0",
         "pytest==6.2.2",

@@ -5,25 +5,28 @@ IPBB_ROOT=$(cd $(dirname ${SH_SOURCE}) && pwd)
 source $IPBB_ROOT/venv/scripts/common_ipbb_venv.sh
 
 #--------------------------
-opts=$(getopt -o r -- "$@")
+opts=$(getopt -o 'rd' -l 'reset,develop' -- "$@")
 [ $? -eq 0 ] || { 
     echo "${SH_SOURCE}: Incorrect options provided"
     return
 }
 
 RESET_VENV=false
+IPBB_EXTRAS_DEPS=""
 eval set -- "$opts"
 while true; do
     case "$1" in
-    -r)
-        RESET_VENV=true
-        ;;
-    --)
-        shift
-        break
-        ;;
+        (-r|--reset)
+            RESET_VENV=true
+            shift;;
+        (-d|--develop)
+            IPBB_EXTRAS=develop
+            shift;;
+        (--)
+            shift
+            break
+            ;;
     esac
-    shift
 done
 #--------------------------
 
@@ -46,7 +49,7 @@ fi
 
 # Build the virtual environment
 if [ ! -d "${IPBB_VENV}" ] ; then
-   $IPBB_ROOT/venv/scripts/setup_ipbb_venv.sh
+   $IPBB_ROOT/venv/scripts/setup_ipbb_venv.sh ${IPBB_EXTRAS_DEPS}
 fi
 
 if [ -z ${VIRTUAL_ENV+X} ] ; then
@@ -78,5 +81,8 @@ elif [[ "$IAM" == "zsh" ]]; then
   eval "$(_IPBB_COMPLETE=source_zsh ipbb)"
   eval "$(_IPB_PROG_COMPLETE=source_zsh ipb-prog)"  
 fi
+
+unset RESET_VENV
+unset IPBB_EXTRAS_DEPS
 
 alias reset-ipbb-env='reset_ipbb_venv.sh; deactivate'

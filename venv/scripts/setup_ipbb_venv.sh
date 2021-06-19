@@ -12,6 +12,15 @@ fi
 }
 # -----------------------------------------------------------------------------
 
+if [ "$#" -eq 1 ]; then
+    IPBB_EXTRAS_DEPS=$1
+elif [ "$#" -gt 1 ]; then
+    echo "Illegal number of parameters"
+    return 255
+fi
+
+
+
 # Bash/Zsh independent way of determining the source path
 SH_SOURCE=${BASH_SOURCE[0]:-${(%):-%x}}
 HERE=$(cd $(dirname ${SH_SOURCE}) && pwd)
@@ -59,7 +68,9 @@ else
 
     echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 
-    pip install ${IPBB_PIP_INSTALLOPT} --no-cache-dir --editable ${IPBB_ROOT}
+    PIP_CMD="pip install ${IPBB_PIP_INSTALLOPT} --no-cache-dir --editable file://${IPBB_ROOT}${IPBB_EXTRAS_DEPS+[${IPBB_EXTRAS_DEPS}]}"
+    echo -e "Executing '${PIP_CMD}'"
+    ${PIP_CMD}
 
     echo -e "${COL_GREEN}Setup completed${COL_NULL}"
     deactivate

@@ -2,7 +2,6 @@
 import click
 import click_didyoumean
 
-import ipbb
 import sys
 import traceback
 from io import StringIO, BytesIO
@@ -12,7 +11,7 @@ from ..context import Context
 
 from ..depparser import DepFormatter
 from ..console import cprint, console
-from .._version import __version__
+from .. import __version__
 
 # ------------------------------------------------------------------------------
 # Add -h as default help option

@@ -6,7 +6,7 @@
 
 setup_centos7_py3_venv:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:${DOCKER_IMAGE_TAG}
   script:
     - source env.sh
     - ipbb --version
@@ -20,7 +20,7 @@ setup_centos7_py3_venv:
 
 setup_centos7_py3_sys:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:dev-ipbb-v1__uhal2.7.5
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos7:${DOCKER_IMAGE_TAG}
   script:
     - sudo python3 -m pip install .
     - ipbb --version
@@ -28,7 +28,7 @@ setup_centos7_py3_sys:
 
 setup_centos8_py3_venv:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:${DOCKER_IMAGE_TAG}
   script:
     - source env.sh
     - ipbb --version
@@ -36,7 +36,7 @@ setup_centos8_py3_venv:
 
 setup_centos8_py3_sys:
   extends: .template_setup
-  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:dev-ipbb-v1__uhal2.7.5
+  image: ${IPBUS_DOCKER_REGISTRY}/ipbb-dev-centos8:${DOCKER_IMAGE_TAG}
   script:
     - sudo python3 -m pip install .
     - ipbb --version

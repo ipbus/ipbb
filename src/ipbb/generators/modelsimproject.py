@@ -3,8 +3,12 @@ import os
 
 from os.path import join, split, exists, splitext, abspath
 from ..utils import SmartOpen
+from .ipcoressim import find_ip_sim_src
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 
 
 class ModelSimGenerator(object):
@@ -52,32 +56,10 @@ class ModelSimGenerator(object):
             if lExt == '.xco':
                 file = abspath(join(lPath, lName + '.vhd'))
             elif lExt in ('.xci', '.xcix'):
-                # Hack required. The Vivado generated hdl files sometimes
-                # have 'sim' in their path, sometimes don't
-                file = None
-                lIpPath = abspath(
-                    join(lIPProjDir, self.ipProjName + '.srcs', 'sources_1', 'ip'))
-
-                # ----------------------------------------------------------
-                # TOFIX: Duplicate of cmds.sim.detect_ip_sim_srcs
-                for lGenDir in ['src', 'gen']:
-                    for lSimDir in ['', 'sim']:
-                        for lExt in ['vhd', 'v']:
-                            lPathToIp = abspath(join(
-                                lIPProjDir, f'{self.ipProjName}.{lGenDir}', 'sources_1', 'ip', lName, lSimDir, f'{lName}.{lExt}'))
-                            if not exists(join(lPathToIp)):
-                                continue
-
-                            file = lPathToIp
-                            break
-                        # File found, stop here
-                        if file is not None:
-                            break
-                # ----------------------------------------------------------
-
-                if file is None:
-                    raise IOError(
-                        'No simulation source found for core \'' + lBasename + '\'')
+                if find_ip_sim_src(self.projInfo.path, self.ipProjName, lName, 'file') == None:
+                    raise FileNotFoundError(
+                        'No simulation source found for core \'' + lBasename + '\''
+                        )
                 # ----------------------------------------------------------
 
                 # And stop here w/o including the file to the source list.

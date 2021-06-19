@@ -19,7 +19,9 @@ from ..console import cprint, console
 from ..tools import xilinx, mentor
 from ..utils import DEFAULT_ENCODING
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
-
+from ..utils import which, mkdir, SmartOpen
+# Tools imports
+from ..utils import DirSentry, ensureNoMissingFiles, logVivadoConsoleError, getClickRootName, validateIpAddress, validateMacAddress
 # Elements
 from os.path import (
     join,
@@ -32,21 +34,9 @@ from os.path import (
     abspath,
     expandvars,
 )
-# from click import echo, secho, style, confirm
 
-# Tools imports
-from ..utils import (
-    DirSentry,
-    ensureNoMissingFiles,
-    logVivadoConsoleError,
-    getClickRootName,
-    validateIpAddress,
-    validateMacAddress,
-)
-from ..utils import which, mkdir, SmartOpen
-
-# DepParser imports
-from ..generators.ipcoressim import IPCoresSimGenerator
+# Generators imports
+from ..generators.ipcoressim import IPCoresSimGenerator, find_ip_sim_src
 from ..generators.modelsimproject import ModelSimGenerator
 
 # Constants
@@ -104,7 +94,7 @@ def simlibPath(ictx, aBasePath):
 
 
 # ------------------------------------------------------------------------------
-def findIPSrcs( srcs ):
+def find_ip_src( srcs ):
     return [
         split(name)[1]
         for name, ext in (
@@ -261,7 +251,7 @@ def ipcores(ictx, aXilSimLibsPath, aToScript, aToStdout):
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(ictx.currentproj.name, lDepFileParser)
 
-    lIPCores = findIPSrcs(lDepFileParser.commands["src"])
+    lIPCores = find_ip_src(lDepFileParser.commands["src"])
 
     if not lIPCores:
         cprint("WARNING: No ipcore files detected in this project", style='yellow')
@@ -631,19 +621,20 @@ def mifs(ictx):
             continue
         lPaths.append(c.filepath)
 
+    # This is ancient....
     if lPaths:
         sh.mkdir('-p', 'mif')
         for p in lPaths:
             cprint(f"Copying {p} to the project area")
             sh.cp(p, 'mif/')
 
-    lIPCores = [ f for f in findIPSrcs(srcs)]
+    lIPCores = [ f for f in find_ip_src(srcs)]
 
-    lIPSrcs = detect_ip_sim_srcs(ictx.currentproj.path, lIPCores)
+    lIPSrcs = { ip: find_ip_sim_src(ictx.currentproj.path, kIPVivadoProjName, ip, "dir") for ip in lIPCores}
 
     lMissingIPSimSrcs = [ k for k, v in lIPSrcs.items() if v is None]
     if lMissingIPSimSrcs:
-        raise click.ClickException(f"Failed to collect mifs. Simulation sources not found for cores: {', '.join(lMissingIPSimSrcs)}")
+        raise click.ClickException(f"Failed to collect mifs. Simulation sources not found for ip cores: {', '.join(lMissingIPSimSrcs)}")
 
     for c, d in lIPSrcs.items():
         for file in os.listdir(d):

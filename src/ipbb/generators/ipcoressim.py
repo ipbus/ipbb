@@ -2,9 +2,42 @@
 import time
 import os
 import shutil
-from os.path import abspath, join, split, splitext
+from os.path import abspath, join, split, splitext, exists
 
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+def find_ip_sim_src(projpath: str, projname: str, ipname: str, mode: str = 'file'):
+    """Utility function to 
+    
+    Args:
+        projpath (str): Path of the ipbb project
+        projname (str): Name of the Vivado project
+        ipname (str): Name of the ip path to search
+    
+    Returns:
+        TYPE: Description
+    """
+    ip_proj_dir = [projpath, projname]
+
+    # base ipcores simulation directories list generator
+    dir_list_gen = ( ip_proj_dir + [f'{projname}.{gen_dir}', 'sources_1', 'ip', ipname] for gen_dir in ('src', 'gen') )
+    # file path generator
+    file_list_gen = ( d+[sim_dir, f"{ipname}.{ext}"] for d in dir_list_gen for sim_dir in ('', 'sim') for ext in ('vhd', 'v') )
+
+    if mode == "dir":
+        path_list = dir_list_gen
+    elif mode == "file":
+        path_list = file_list_gen
+    else:
+        raise ValueError(f'Invalid mode argument value: {mode}')
+
+    for pl in path_list:
+        p = abspath(join(*pl))
+        if exists(p):
+            return p
+
+    return None
+
 class IPCoresSimGenerator(object):
 
     reqsettings = {'device_name', 'device_package', 'device_speed'}
@@ -39,7 +72,6 @@ class IPCoresSimGenerator(object):
 
         write('set_property "default_lib" "xil_defaultlib" [current_project]')
         write('set_property "simulator_language" "Mixed" [current_project]')
-        write('set_property "source_mgmt_mode" "DisplayOnly" [current_project]')
         write('set_property "target_language" "VHDL" [current_project]')
 
         write(f'set_property target_simulator {self.simulator} [current_project]')

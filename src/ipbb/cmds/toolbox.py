@@ -146,7 +146,7 @@ def vhdl_beautify(env, component, path):
     import tempfile
     import shutil
     import sys
-    from ..tools.common import which
+    from ..utils import which
 
     if not which('emacs'):
         raise click.ClickException(

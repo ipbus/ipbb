@@ -8,7 +8,7 @@ import tarfile
 from os.path import join, split, exists, basename, abspath, splitext, relpath
 from click import echo, secho, style
 from ..utils import logVivadoConsoleError
-from ..tools.common import which
+from ..utils import which
 from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
 from .._version import __version__
 

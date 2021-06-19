@@ -21,7 +21,7 @@ from .schema import project_schema, validate
 from .dep import hash
 
 from ..console import cprint, console
-from ..tools.common import which, SmartOpen, mkdir
+from ..utils import which, SmartOpen, mkdir
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 
 from ..generators.vivadoproject import VivadoProjectGenerator

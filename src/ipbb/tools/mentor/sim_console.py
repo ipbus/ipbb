@@ -7,9 +7,8 @@ import collections
 import atexit
 import logging
 
-from ..common import which
+from ...utils import which, DEFAULT_ENCODING
 from ..tcl_console import consolectxmanager, TCLConsoleSnoozer
-from ..common import DEFAULT_ENCODING
 from .sim_common import autodetect, ModelSimNotFoundError, ModelSimOutputFormatter, _vsim, _vcom
 
 # ------------------------------------------------------------------

@@ -20,7 +20,7 @@ def find_ip_sim_src(projpath: str, projname: str, ipname: str, mode: str = 'file
     ip_proj_dir = [projpath, projname]
 
     # base ipcores simulation directories list generator
-    dir_list_gen = ( ip_proj_dir + [f'{projname}.{gen_dir}', 'sources_1', 'ip', ipname] for gen_dir in ('src', 'gen') )
+    dir_list_gen = ( ip_proj_dir + [f'{projname}.{gen_dir}', 'sources_1', 'ip', ipname] for gen_dir in ('srcs', 'gen') )
     # file path generator
     file_list_gen = ( d+[sim_dir, f"{ipname}.{ext}"] for d in dir_list_gen for sim_dir in ('', 'sim') for ext in ('vhd', 'v') )
 

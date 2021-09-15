@@ -132,13 +132,15 @@ def report(ictx, filters):
         lCmdsTable.add_row('')
 
     lCmdsTable.add_row("No entries: "+", ".join(f"[blue]{k}[/blue]" for k in lParser.commands if not lParser.commands[k]))
-    cprint(Panel.fit(lCmdsTable, title='[bold blue]dep tree commands[/bold blue]'))
+    cprint(Panel.fit(lCmdsTable, title='[bold blue]dep files tree[/bold blue]'))
     cprint()
     cprint('Resolved packages & components', style='blue')
 
     lCmpPanel = lDepFmt.drawComponents()
     # lCmpPanel.title = "[bold blue]Resolved packages & components[/bold blue]"
     cprint(lCmpPanel)
+
+    cprint(Panel.fit(lDepFmt.drawDepfileTree(), title='[bold blue]dep tree commands[/bold blue]'))
 
     if lDepFmt.hasErrors():
         cprint(Panel.fit(lDepFmt.drawErrorsTable(), title='[bold red]dep tree errors[/bold red]'))

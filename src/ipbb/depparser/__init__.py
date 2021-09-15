@@ -1,5 +1,5 @@
 
-from ._fileparser import DepFileParser, DepFormatter, dep_file_types
+from ._fileparser import DepFileParser, dep_file_types
 from ._pathmaker import Pathmaker
 from ._definitions import *
 from ._formatters import *

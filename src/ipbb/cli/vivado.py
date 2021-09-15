@@ -52,7 +52,7 @@ vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 # ------------------------------------------------------------------------------
 @vivado.command('generate-project', short_help='Assemble the project from sources.')
-@click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=False)
+@click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=True)
 @click.option('-1', '--single', 'aOptimise', is_flag=True, default=True, help="Disable project creation optimization. If present sources are added one at a time.")
 @click.option('-s', '--to-script', 'aToScript', default=None, help="Write Vivado tcl script to file and exit (dry run).")
 @click.option('-o', '--to-stdout', 'aToStdout', is_flag=True, help="Print Vivado tcl commands to screen and exit (dry run).")

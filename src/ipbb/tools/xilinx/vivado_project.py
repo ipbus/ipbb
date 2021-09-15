@@ -128,7 +128,7 @@ class VivadoProject(object):
         for lRun in sorted(lRuns):
 
             lValues = (
-                    self.console('get_property {0} [get_runs {1}]'.format(p, lRun))[0]
+                    self.console(f'get_property {p} [get_runs {lRun}]')[0]
                     for p in lProps
                 )
             lInfos[lRun] = OrderedDict(zip(lProps, lValues))

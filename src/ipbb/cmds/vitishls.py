@@ -56,12 +56,14 @@ def ensureVitisHLS(ictx):
             f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
-    if not any([which('vitis_hls'), which('vivado_hls')]) :
+    execs = [ x for x in ['vitis_hls', 'vivado_hls'] if which(x)]
+    if not any(execs) :
         # if 'XILINX_VIVADO' not in os.ictxiron:
         raise click.ClickException(
             "Vivado not found. Please source the Vivado environment before continuing."
         )
 
+    return execs[0]
 
 # ------------------------------------------------------------------------------
 def vitishls(ictx, proj, verbosity):
@@ -87,7 +89,7 @@ def vitishls(ictx, proj, verbosity):
     ictx.vitishls_solution = ictx.depParser.settings.get(f'{_toolset}.solution', 'sol1')
     
     # Check if vivado is available
-    ensureVitisHLS(ictx)
+    ictx.vitishsl_exec = ensureVitisHLS(ictx)
 
 # ------------------------------------------------------------------------------
 def genproject(ictx, aToScript, aToStdout):
@@ -110,7 +112,7 @@ def genproject(ictx, aToScript, aToStdout):
 
     try:
         with (
-            VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) if not lDryRun
+            VitisHLSSession(executable=ictx.vitishsl_exec, sid=lSessionId, echo=ictx.vivadoHlsEcho) if not lDryRun
             else SmartOpen(lScriptPath)
         ) as lConsole:
 
@@ -145,7 +147,7 @@ def csynth(ictx):
     lSessionId = 'csynth'
 
     try:
-        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(executable=ictx.vitishsl_exec, sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
@@ -170,7 +172,7 @@ def csim(ictx):
     lSessionId = 'csim'
 
     try:
-        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(executable=ictx.vitishsl_exec, sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
@@ -194,7 +196,7 @@ def cosim(ictx):
     lSessionId = 'cosim'
 
     try:
-        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(executable=ictx.vitishsl_exec, sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
@@ -252,7 +254,7 @@ def export_ip(ictx, to_component):
     # -- Export the HSL code as a Xilinx IP catalog
     console.log("Exporting IP catalog", style="blue")
     try:
-        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(executable=ictx.vitishsl_exec, sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')

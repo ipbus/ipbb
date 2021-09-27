@@ -53,7 +53,7 @@ Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
 
 
 # ------------------------------------------------
-def autodetecthls(executables: list=['vitis_hls', 'vitis_hls']) -> tuple:
+def autodetecthls(executables: list=['vitis_hls', 'vivado_hls']) -> tuple:
     """
     Args:
         executable (str, optional): hls executable name
@@ -91,7 +91,7 @@ class VitisHLSOutputFormatter(OutputFormatter):
         super().__init__(prefix, sep, quiet)
 
         self.pendingchars = ''
-        self.skiplines = [r'\r\x1b[12C\r']
+        self.skiplines = [u'\r\x1b[12C\r', u'\r\x1b[11C\r']
 
     def write(self, message):
         """Writes formatted message

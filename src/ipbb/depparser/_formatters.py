@@ -24,7 +24,7 @@ class DepFormatter(object):
 
     def drawDepfileTree(self):
         t = Tree(self.parser.depfile.name)
-        self._bbb(self.parser.depfile, t)
+        self._drawLeaves(self.parser.depfile, t)
         return t
 
 

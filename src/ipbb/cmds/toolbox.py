@@ -198,7 +198,7 @@ def vhdl_beautify(env, component, path):
 
         shutil.copy(f, dirname(lTmpVHDLPath))
 
-        cprint('Processing vhdl file ' + style(f, style="cyan"))
+        cprint(f"Processing vhdl file [cyan]{f}[/cyan]")
         sh.emacs('--batch', '-q', '--eval', '(setq load-path (cons (expand-file-name "%s") load-path))' % lVHDLModePath, lTmpVHDLPath, '--eval', '(setq vhdl-basic-offset 2)', '-f', 'vhdl-beautify-buffer', _err=sys.stderr)
 
         diff = sh.colordiff if which('colordiff') else sh.diff

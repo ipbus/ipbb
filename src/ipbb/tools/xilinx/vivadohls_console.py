@@ -14,7 +14,6 @@ import psutil
 
 # Elements
 from os.path import join, split, exists, splitext, basename
-from click import style
 from ...utils import which, DEFAULT_ENCODING
 from ..common import OutputFormatter
 from ..termui import *
@@ -24,7 +23,7 @@ kHLSLogDebug = False
 
 
 # ------------------------------------------------
-class VivadoHLSNotFoundError(Exception):
+class VitisHLSNotFoundError(Exception):
 
     def __init__(self, message):
         # Call the base class constructor with the parameters it needs
@@ -47,14 +46,14 @@ Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
     m = lVerRe.search(str(verstr))
 
     if m is None:
-        raise VivadoHLSNotFoundError("Failed to detect VivadoHLS variant")
+        raise VitisHLSNotFoundError("Failed to detect VitisHLS variant")
 
     return m.groups()
 # ------------------------------------------------
 
 
 # ------------------------------------------------
-def autodetecthls(executable: str='vivado_hls') -> tuple:
+def autodetecthls(executables: list=['vivado_hls', 'vitis_hls']) -> tuple:
     """
     Args:
         executable (str, optional): hls executable name
@@ -63,13 +62,13 @@ def autodetecthls(executable: str='vivado_hls') -> tuple:
         tuple: HLS version
     
     Raises:
-        VivadoHLSNotFoundError: Description
+        VitisHLSNotFoundError: Description
     
     """
 
-
-    if not which(executable):
-        raise VivadoHLSNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
+    execs = [ which(exe) for exe in executables ]
+    if not any(execs):
+        raise VitisHLSNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
 
     lExe = sh.Command(executable)
     lVerStr = lExe('-version')
@@ -78,7 +77,7 @@ def autodetecthls(executable: str='vivado_hls') -> tuple:
 
 
 # -------------------------------------------------------------------------
-class VivadoHLSOutputFormatter(OutputFormatter):
+class VitisHLSOutputFormatter(OutputFormatter):
     """Formatter for Vivado command line output
     
     Arguments:
@@ -163,7 +162,7 @@ class VivadoHLSOutputFormatter(OutputFormatter):
 
 
 # -------------------------------------------------------------------------
-class VivadoHLSConsoleError(Exception):
+class VitisHLSConsoleError(Exception):
     """Exception raised for errors in the input.
     
     Attributes:
@@ -183,7 +182,7 @@ class VivadoHLSConsoleError(Exception):
 # -------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------
-class VivadoHLSConsole(object):
+class VitisHLSConsole(object):
     """Class to interface to Vivado TCL console
     
     Attributes:
@@ -232,7 +231,7 @@ class VivadoHLSConsole(object):
     def __init__(self, executable='vivado_hls', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None ):
         """
         Args:
-            sessionid (str): Name of the VivadoHLS session
+            sessionid (str): Name of the VitisHLS session
             echo (bool): Switch to enable echo messages
             echoprefix (str): Prefix to echo message
             executable (str): Executable name
@@ -242,14 +241,14 @@ class VivadoHLSConsole(object):
         super().__init__()
 
         # Set up logger first
-        self._log = logging.getLogger('VivadoHLS')
-        self._log.debug('Starting VivadoHLS')
+        self._log = logging.getLogger('VitisHLS')
+        self._log.debug('Starting VitisHLS')
 
         self._stopOnCWarnings = stopOnCWarnings
         # define what executable to run
         self._executable = executable
         if not which(self._executable):
-            raise VivadoHLSNotFoundError(self._executable + " not found in PATH. Have you sourced VivadoHLS\'s setup script?")
+            raise VitisHLSNotFoundError(self._executable + " not found in PATH. Have you sourced VitisHLS\'s setup script?")
 
         # Define the prompt to use
         if prompt is None:
@@ -259,11 +258,11 @@ class VivadoHLSConsole(object):
             self._prompt = prompt
 
         # Set up the output formatter
-        self._out = VivadoHLSOutputFormatter(
+        self._out = VitisHLSOutputFormatter(
             sid, quiet=(not echo)
         )
 
-        self._out.write('\n' + '- Starting VivadoHLS -'+'-' * 40 + '\n')
+        self._out.write('\n' + '- Starting VitisHLS -'+'-' * 40 + '\n')
         self._out.quiet = (not showbanner)
        
         loglabel = loglabel if loglabel else sid
@@ -292,7 +291,7 @@ class VivadoHLSConsole(object):
         # Extract version infomation
         self._variant, self._version = _parseversion(''.join(startupstr[0]))
         self._out.quiet = (not echo)
-        self._log.debug('VivadoHLS up and running')
+        self._log.debug('VitisHLS up and running')
         self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
 
         # Create a process descriptor
@@ -394,7 +393,7 @@ class VivadoHLSConsole(object):
                 break
             elif lIndex == 2:
                 lTimeoutCounts += 1
-                print ("VivadoHLSConsole >> Time since last command: {0}s".format(
+                print ("VitisHLSConsole >> Time since last command: {0}s".format(
                     lTimeoutCounts * self._process.timeout))
             # ----------------------------------------------------------
 
@@ -416,7 +415,7 @@ class VivadoHLSConsole(object):
 
         # Return immediately of already dead
         if not hasattr(self, '_process') or not self._process.isalive():
-            self._log.debug('VivadoHLS has already been stopped')
+            self._log.debug('VitisHLS has already been stopped')
             # try:
             #   # I am being pedantic here, in case, for any reason, it wasn't done yet
             #   self.__instances.remove(self)
@@ -424,14 +423,14 @@ class VivadoHLSConsole(object):
             #   pass
             return
 
-        self._log.debug('Shutting VivadoHLS down')
+        self._log.debug('Shutting VitisHLS down')
         try:
             self.__send('quit')
         except pexpect.ExceptionPexpect:
             pass
 
         # Write one last newline
-        self._out.write('- Terminating VivadoHLS (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
+        self._out.write('- Terminating VitisHLS (pid {}) -'.format(self._process.pid)+'-' * 40 + '\n')
         # Just in case
         self._process.terminate(True)
 
@@ -460,7 +459,7 @@ class VivadoHLSConsole(object):
         lBuffer, lErrors, lCriticalWarnings = self.__expectPrompt(aMaxLen)
 
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
-            raise VivadoHLSConsoleError(aCmd, lErrors, lCriticalWarnings)
+            raise VitisHLSConsoleError(aCmd, lErrors, lCriticalWarnings)
 
         return tuple(lBuffer)
 
@@ -488,12 +487,12 @@ class VivadoHLSConsole(object):
 
 # -------------------------------------------------------------------------
 @consolectxmanager
-class VivadoHLSSession(VivadoHLSConsole):
+class VitisHLSSession(VitisHLSConsole):
     pass
 
-VivadoHLSSnoozer = TCLConsoleSnoozer
+VitisHLSSnoozer = TCLConsoleSnoozer
 
 @atexit.register
 def __goodbye():
-    VivadoHLSConsole.killAllInstances()
+    VitisHLSConsole.killAllInstances()
 # -------------------------------------------------------------------------

@@ -56,10 +56,10 @@ def ensureVivadoHLS(ictx):
             f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
-    if not which('vivado_hls'):
+    if not any([which('vivado_hls'), which('vitis_hls')]) :
         # if 'XILINX_VIVADO' not in os.ictxiron:
         raise click.ClickException(
-            "Vivado not found. Please source the Vivado ictxironment before continuing."
+            "Vivado not found. Please source the Vivado environment before continuing."
         )
 
 

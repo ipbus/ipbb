@@ -73,10 +73,10 @@ def _compose_cli():
     sim.sim.add_command(common.user_config)
     climain.add_command(sim.sim)
 
-    from ..cli import vivadohls
+    from ..cli import vitishls
 
-    vivadohls.vivadohls.add_command(common.cleanup)
-    climain.add_command(vivadohls.vivadohls)
+    vitishls.vitishls.add_command(common.cleanup)
+    climain.add_command(vitishls.vitishls)
 
     from ..cli import ipbus
     climain.add_command(ipbus.ipbus)

@@ -28,14 +28,14 @@ class DepFormatter(object):
         return t
 
 
-    def _bbb(self, depfile, tree):
+    def _drawLeaves(self, depfile, tree):
         for c in depfile.children:
             branch = tree.add(
                 f"📄 {c.name}" 
-                + (f"[red]errors: {len(c.errors)}[/red]" if c.errors else "") 
-                + (f"[red]unresolved: {len(c.unresolved)}[/red]" if c.unresolved else "")
+                + (f" [red]errors: {len(c.errors)}[/red]" if c.errors else "") 
+                + (f" [red]unresolved: {len(c.unresolved)}[/red]" if c.unresolved else "")
             )
-            self._bbb(c, branch)
+            self._drawLeaves(c, branch)
 
     def _drawPackages(self, aPkgs):
         if not aPkgs:

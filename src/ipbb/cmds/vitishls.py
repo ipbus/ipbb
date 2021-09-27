@@ -16,9 +16,9 @@ from ..console import cprint, console
 from ..utils import which, SmartOpen, mkdir
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 from ..defaults import kTopEntity
-from ..generators.vivadohlsproject import VivadoHlsProjectGenerator
+from ..generators.vitishlsproject import VitisHLSProjectGenerator
 from ..generators.hlsiprepoxci import HLSIpRepoXciGenerator
-from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError, VivadoSession, VivadoConsoleError
+from ..tools.xilinx import VitisHLSSession, VitisHLSConsoleError, VivadoSession, VivadoConsoleError
 
 
 # @device_generation = "UltraScalePlus"
@@ -28,11 +28,11 @@ from ..tools.xilinx import VivadoHLSSession, VivadoHLSConsoleError, VivadoSessio
 # @boardname = "serenity-dc-ku15p"
 
 # @top_entity = "add7"
-# @vivado_hls.solution = "mysol"
-# @vivado_hls.vendor = "cern_cms"
-# @vivado_hls.library = "emp_hls_examples"
-# @vivado_hls.version = "1.1"
-_toolset='vivado_hls'
+# @vitis_hls.solution = "mysol"
+# @vitis_hls.vendor = "cern_cms"
+# @vitis_hls.library = "emp_hls_examples"
+# @vitis_hls.version = "1.1"
+_toolset='vitis_hls'
 _schema = deepcopy(project_schema)
 _schema.update({
     _toolset: {
@@ -49,14 +49,14 @@ _schema.update({
 })
 
 # ------------------------------------------------------------------------------
-def ensureVivadoHLS(ictx):
+def ensureVitisHLS(ictx):
 
     if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
             f"Work area toolset mismatch. Expected {_toolset}, found '{ictx.currentproj.settings['toolset']}'"
         )
 
-    if not any([which('vivado_hls'), which('vitis_hls')]) :
+    if not any([which('vitis_hls'), which('vivado_hls')]) :
         # if 'XILINX_VIVADO' not in os.ictxiron:
         raise click.ClickException(
             "Vivado not found. Please source the Vivado environment before continuing."
@@ -64,7 +64,7 @@ def ensureVivadoHLS(ictx):
 
 
 # ------------------------------------------------------------------------------
-def vivadohls(ictx, proj, verbosity):
+def vitishls(ictx, proj, verbosity):
     '''Vivado command group'''
 
     ictx.vivadoHlsEcho = (verbosity == 'all')
@@ -82,12 +82,12 @@ def vivadohls(ictx, proj, verbosity):
 
     validate(_schema, ictx.depParser.settings, _toolset)
 
-    ictx.vivadohls_proj_path = join(ictx.currentproj.path, ictx.currentproj.name)
-    ictx.vivadohls_prod_path = join(ictx.currentproj.path, 'ip')
-    ictx.vivadohls_solution = ictx.depParser.settings.get(f'{_toolset}.solution', 'sol1')
+    ictx.vitishls_proj_path = join(ictx.currentproj.path, ictx.currentproj.name)
+    ictx.vitishls_prod_path = join(ictx.currentproj.path, 'ip')
+    ictx.vitishls_solution = ictx.depParser.settings.get(f'{_toolset}.solution', 'sol1')
     
     # Check if vivado is available
-    ensureVivadoHLS(ictx)
+    ensureVitisHLS(ictx)
 
 # ------------------------------------------------------------------------------
 def genproject(ictx, aToScript, aToStdout):
@@ -103,14 +103,14 @@ def genproject(ictx, aToScript, aToStdout):
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(ictx.currentproj.name, lDepFileParser)
 
-    lVivadoMaker = VivadoHlsProjectGenerator(ictx.currentproj, ictx.vivadohls_solution)
+    lVivadoMaker = VitisHLSProjectGenerator(ictx.currentproj, ictx.vitishls_solution)
 
     lDryRun = aToScript or aToStdout
     lScriptPath = aToScript if not aToStdout else None
 
     try:
         with (
-            VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) if not lDryRun
+            VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) if not lDryRun
             else SmartOpen(lScriptPath)
         ) as lConsole:
 
@@ -122,13 +122,13 @@ def genproject(ictx, aToScript, aToStdout):
                 lDepFileParser.rootdir,
             )
 
-    except VivadoHLSConsoleError as lExc:
+    except VitisHLSConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
-        secho(
-            "Error caught while generating Vivado TCL commands:\n" + "\n".join(lExc),
-            fg='red',
+        console.log(
+            f"Error caught while generating Vivado TCL commands {lExc}",
+            style='red',
         )
         raise click.Abort()
 
@@ -145,15 +145,15 @@ def csynth(ictx):
     lSessionId = 'csynth'
 
     try:
-        with VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
-            lConsole(f'open_solution {ictx.vivadohls_solution}')
+            lConsole(f'open_solution {ictx.vitishls_solution}')
             lConsole('csynth_design')
 # 
 
-    except VivadoHLSConsoleError as lExc:
+    except VitisHLSConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
@@ -170,15 +170,15 @@ def csim(ictx):
     lSessionId = 'csim'
 
     try:
-        with VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
-            lConsole(f'open_solution {ictx.vivadohls_solution}')
+            lConsole(f'open_solution {ictx.vitishls_solution}')
             lConsole('csim_design')
 # 
 
-    except VivadoHLSConsoleError as lExc:
+    except VitisHLSConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
@@ -194,15 +194,15 @@ def cosim(ictx):
     lSessionId = 'cosim'
 
     try:
-        with VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
-            lConsole(f'open_solution {ictx.vivadohls_solution}')
+            lConsole(f'open_solution {ictx.vitishls_solution}')
             lConsole('cosim_design')
 # 
 
-    except VivadoHLSConsoleError as lExc:
+    except VitisHLSConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
@@ -246,20 +246,20 @@ def export_ip(ictx, to_component):
     lIPVersion = lHLSSettings['version']
     lIpRepoName = f"{lIPVendor.replace('.', '_')}_{lIPLib.replace('.', '_')}_{lIPName}_{lIPVersion.replace('.', '_')}"
 
-    # Check if vivado_hls is accessible
-    ensureVivadoHLS(ictx)
+    # Check if vitis_hls is accessible
+    ensureVitisHLS(ictx)
 
     # -- Export the HSL code as a Xilinx IP catalog
     console.log("Exporting IP catalog", style="blue")
     try:
-        with VivadoHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
+        with VitisHLSSession(sid=lSessionId, echo=ictx.vivadoHlsEcho) as lConsole:
 
             # Open the project
             lConsole(f'open_project {ictx.currentproj.name}')
-            lConsole(f'open_solution {ictx.vivadohls_solution}')
+            lConsole(f'open_solution {ictx.vitishls_solution}')
             lConsole(f'export_design -format ip_catalog -ipname {lIPName} -vendor {lHLSSettings["vendor"]} -library {lHLSSettings["library"]} -version "{lHLSSettings["version"]}"')
 
-    except VivadoHLSConsoleError as lExc:
+    except VitisHLSConsoleError as lExc:
         logVivadoConsoleError(lExc)
         raise click.Abort()
     except RuntimeError as lExc:
@@ -268,7 +268,7 @@ def export_ip(ictx, to_component):
         raise click.Abort()
 
 
-    lIPCatalogDir = join(ictx.currentproj.name, ictx.vivadohls_solution, 'impl', 'ip')
+    lIPCatalogDir = join(ictx.currentproj.name, ictx.vitishls_solution, 'impl', 'ip')
     zips = glob.glob(join(lIPCatalogDir, "*.zip"))
 
     if len(zips) == 0:
@@ -278,11 +278,11 @@ def export_ip(ictx, to_component):
     lIPCatalogExportPath = zips.pop()
     lIPCatalogName = basename(lIPCatalogExportPath)
     lIPCatalogRoot, _ = splitext(lIPCatalogName)
-    lIPCatalogZip = join(ictx.vivadohls_prod_path, lIPCatalogName)
+    lIPCatalogZip = join(ictx.vitishls_prod_path, lIPCatalogName)
     lXciModName = f"{lIPLib}_{lIPName}"
 
     # -- Generate an XCI file for the IP
-    mkdir(ictx.vivadohls_prod_path)
+    mkdir(ictx.vitishls_prod_path)
     shutil.copy(lIPCatalogExportPath, lIPCatalogZip)
 
     console.log(f"{ictx.currentproj.name}: HLS IP catalog exported to {lIPCatalogZip}", style='green')
@@ -300,7 +300,7 @@ def export_ip(ictx, to_component):
     #         if len(ip_vlnv_list) > 1:
     #             raise RuntimeError(f"Found more than 1 core in ip catalog! {', '.join(ip_vlnv_list)}")
     #         vlnv = ip_vlnv_list[0]
-    #         lVivadoConsole(f'create_ip -vlnv {vlnv} -module_name {lXciModName} -dir {ictx.vivadohls_prod_path}')
+    #         lVivadoConsole(f'create_ip -vlnv {vlnv} -module_name {lXciModName} -dir {ictx.vitishls_prod_path}')
     #         lVivadoConsole('report_ip_status')
 
     # except VivadoConsoleError as lExc:
@@ -311,7 +311,7 @@ def export_ip(ictx, to_component):
     #     console.print(lExc)
     #     raise click.Abort()
 
-    lXciGen = HLSIpRepoXciGenerator(lIPCatalogDir, lXciModName, ictx.vivadohls_prod_path)
+    lXciGen = HLSIpRepoXciGenerator(lIPCatalogDir, lXciModName, ictx.vitishls_prod_path)
 
     try:
         with VivadoSession(sid=lSessionId) as lVivadoConsole:
@@ -346,7 +346,7 @@ def export_ip(ictx, to_component):
         zipObj.extractall(lIPRepoDest)
     console.log(f"{lIPCatalogName} unzipped into {lIPRepoDest}")
 
-    shutil.copy(join(ictx.vivadohls_prod_path, lXciModName, f'{lXciModName}.xci'), lIPDest)
+    shutil.copy(join(ictx.vitishls_prod_path, lXciModName, f'{lXciModName}.xci'), lIPDest)
     console.log(f"{lXciModName}.xci copied to {lIPDest}")
     console.log(f"{ictx.currentproj.name}: Export completed successfully.", style='green')
 

@@ -39,21 +39,21 @@ SW Build 2405991 on Thu Dec  6 23:36:41 MST 2018
 IP Build 2404404 on Fri Dec  7 01:43:56 MST 2018
 Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
     """
-    lVerExpr = r'(Vivado\(TM\)[\s\w]*)\s-.*v(\d+\.\d)'
+    lVerExpr = r'((?:Vivado\(TM\)|Vitis)[\s\w]*)\s-.*v(\d+\.\d)'
 
     lVerRe = re.compile(lVerExpr, flags=re.IGNORECASE)
 
     m = lVerRe.search(str(verstr))
 
     if m is None:
-        raise VitisHLSNotFoundError("Failed to detect VitisHLS variant")
+        raise VitisHLSNotFoundError("Failed to detect VitisHLS/VitisHLS variant")
 
     return m.groups()
 # ------------------------------------------------
 
 
 # ------------------------------------------------
-def autodetecthls(executables: list=['vivado_hls', 'vitis_hls']) -> tuple:
+def autodetecthls(executables: list=['vitis_hls', 'vitis_hls']) -> tuple:
     """
     Args:
         executable (str, optional): hls executable name
@@ -66,11 +66,11 @@ def autodetecthls(executables: list=['vivado_hls', 'vitis_hls']) -> tuple:
     
     """
 
-    execs = [ which(exe) for exe in executables ]
-    if not any(execs):
-        raise VitisHLSNotFoundError("%s not found in PATH. Have you sourced Vivado\'s setup script?" % executable)
+    execs = [ exe for exe in ( which(x) for x in executables ) if exe ]
+    if not any( execs ):
+        raise VitisHLSNotFoundError(f"None of {', '.join(executables)} not found in PATH. Have you sourced Vivado\'s setup script?" )
 
-    lExe = sh.Command(executable)
+    lExe = sh.Command(execs[0])
     lVerStr = lExe('-version')
     return _parseversion(lVerStr)
 # ------------------------------------------------
@@ -196,11 +196,21 @@ class VitisHLSConsole(object):
     __reError = re.compile(r'^ERROR:')
     __reCriticalWarning = re.compile(r'^CRITICAL WARNING:')
     __instances = set()
+    __nameMap = {
+        'vitis_hls': 'VitisHLS',
+        'vivado_hls': 'VivadoHLS',
+    }
     __promptMap = {
+        'vitis_hls': re.compile(r'\x1b\[2K\r\rvitis_hls>\s'),
         'vivado_hls': re.compile(r'\x1b\[2K\r\rvivado_hls>\s'),
     }
     __newlines = [u'\r\n']
-    __cmdSentAck = '\r\x1b[12C\r'
+    # __cmdSentAckMap = '\r\x1b[12C\r'
+
+    __cmdSentAckMap = {
+        'vitis_hls': u'\r\x1b[11C\r',
+        'vivado_hls': u'\r\x1b[12C\r',
+    }
 
     # --------------------------------------------------------------
     @classmethod
@@ -228,7 +238,7 @@ class VitisHLSConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, executable='vivado_hls', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None ):
+    def __init__(self, executable='vitis_hls', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None ):
         """
         Args:
             sessionid (str): Name of the VitisHLS session
@@ -239,10 +249,12 @@ class VitisHLSConsole(object):
             stopOnCWarnings (bool): Stop on Critical Warnings
         """
         super().__init__()
+        self._execname = self.__nameMap[executable]
+        self._cmdSentAck = self.__cmdSentAckMap[executable]
 
         # Set up logger first
-        self._log = logging.getLogger('VitisHLS')
-        self._log.debug('Starting VitisHLS')
+        self._log = logging.getLogger(self._execname)
+        self._log.debug(f'Starting {self._execname}')
 
         self._stopOnCWarnings = stopOnCWarnings
         # define what executable to run
@@ -262,7 +274,7 @@ class VitisHLSConsole(object):
             sid, quiet=(not echo)
         )
 
-        self._out.write('\n' + '- Starting VitisHLS -'+'-' * 40 + '\n')
+        self._out.write('\n' + f'- Starting {self._execname} -'+'-' * 40 + '\n')
         self._out.quiet = (not showbanner)
        
         loglabel = loglabel if loglabel else sid
@@ -291,8 +303,8 @@ class VitisHLSConsole(object):
         # Extract version infomation
         self._variant, self._version = _parseversion(''.join(startupstr[0]))
         self._out.quiet = (not echo)
-        self._log.debug('VitisHLS up and running')
-        self._out.write('\n' + '- Started {} {} -'.format(self.variant, self.version)+'-' * 40 + '\n')
+        self._log.debug(f'{self._execname} up and running')
+        self._out.write('\n' + '- Started {self.variant} {self.version} -'+'-' * 40 + '\n')
 
         # Create a process descriptor
         self._processinfo = psutil.Process(self._process.pid)
@@ -325,7 +337,7 @@ class VitisHLSConsole(object):
         Hard check: First line of output must match the injected command
         """
         lRcvd = aBefore
-        lXpctd = self.__cmdSentAck
+        lXpctd = self._cmdSentAck
         # if kHLSLogDebug:
         #     print(kYellow+'send ack>> '+kReset+repr(aBefore))
         if lRcvd != lXpctd:

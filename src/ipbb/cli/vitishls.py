@@ -8,7 +8,7 @@ from ._utils import completeComponent
 # import types
 
 # ------------------------------------------------------------------------------
-@click.group('vivado-hls', short_help='Set up, syntesize, implement VivadoHLS projects.', chain=True)
+@click.group('vitis-hls', short_help='Set up, syntesize, implement VitisHLS projects.', chain=True)
 @click.option('-p', '--proj', default=None, help="Selected project, if not current")
 @click.option('-v', '--verbosity', type=click.Choice(['all', 'warnings-only', 'none']), default='all', help="Silence vivado messages")
 @click.pass_obj

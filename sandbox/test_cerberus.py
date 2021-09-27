@@ -5,7 +5,7 @@ import yaml
 
 schema_proj = {
     'name': {'type': 'string'},
-    'toolset': {'type': 'string', 'allowed': ['vivado', 'vivado_hls', 'sim']},
+    'toolset': {'type': 'string', 'allowed': ['vivado', 'vitis_hls', 'sim']},
     'topCmp': {'type': 'string'},
     'topDep': {'type': 'string'},
     'topPkg': {'type': 'string'},

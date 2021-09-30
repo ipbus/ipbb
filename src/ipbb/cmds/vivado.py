@@ -79,20 +79,20 @@ def ensureVivadoProjPath(aProjPath: str):
         raise click.ClickException("Vivado project %s does not exist" % aProjPath)
 
 # ------------------------------------------------------------------------------
-def vivado(ictx, proj, verbosity, cmdlist):
+def vivado(ictx, proj, loglevel, cmdlist):
     '''Vivado command group
     
     Args:
         ctx (click.Context): Command context
         ictx (ipbb.Context): Context object
         proj (str): Project name
-        verbosity (str): Verbosity level
+        loglevel (str): Verbosity level
     
     Raises:
         click.ClickException: Undefined project area
     '''
 
-    ictx.vivadoEcho = (verbosity == 'all')
+    # ictx.vivadoEcho = 
 
     # lProj = proj if proj is not None else ictx.currentproj.name
     if proj is not None:
@@ -117,7 +117,7 @@ def vivado(ictx, proj, verbosity, cmdlist):
     ictx.vivadoProdPath = join(ictx.currentproj.path, 'products')
     ictx.vivadoProdFileBase = join(ictx.vivadoProdPath, ictx.currentproj.name)
 
-    ictx.vivadoSessions = VivadoSessionManager(keep=lKeep, loglabel=lLogLabel)
+    ictx.vivadoSessions = VivadoSessionManager(keep=lKeep, echo=(loglevel != 'none'), loglabel=lLogLabel, loglevel=loglevel)
 
     ensureVivado(ictx)
 

@@ -41,7 +41,7 @@ def analyze(string, start, end, prompt):
 def test_tclconsole(cmd, args, prompt):
     if not find_executable(cmd):
         print('Command', cmd, 'not found. Skipping.')
-    vh = pexpect.spawn(cmd, args, echo=True, timeout=10)
+    vh = pexpect.spawn(cmd, args, echo=True, timeout=10, encoding='utf-8')
     vh.expect(prompt)
     print('-- banner --')
     print (repr(vh.before)+'\n')
@@ -60,7 +60,7 @@ def test_tclconsole(cmd, args, prompt):
     print(repr(vh.before)+'\n')
 
     print('-- output -- ')
-    print(vh.before+'\n')
+    print(repr(vh.before)+'\n')
 
     analyze(vh.before, mrk_start, mrk_end, prompt)
 
@@ -70,9 +70,11 @@ def test_tclconsole(cmd, args, prompt):
 # print('- Vivado -'+'-'*40)
 # test_tclconsole('vivado',['-mode','tcl'], u'Vivado%\s')
 
-print('- Questa -'+'-'*40)
-test_tclconsole('vsim',['-c'], u'QuestaSim>\s\rQuestaSim>\s')
+# print('- Questa -'+'-'*40)
+# test_tclconsole('vsim',['-c'], u'QuestaSim>\s\rQuestaSim>\s')
+
+# print('- Vivado HLS -'+'-'*40)
+# test_tclconsole('vitis_hls', ['-i'], u'vitis_hls>\s')
 
 print('- Vivado HLS -'+'-'*40)
 test_tclconsole('vivado_hls', ['-i'], u'vivado_hls>\s')
-

@@ -1,5 +1,7 @@
 from rich.table import Table, Column
 from rich.panel import Panel
+from rich.tree import Tree
+
 from os.path import (
     join,
     split,
@@ -19,6 +21,21 @@ class DepFormatter(object):
     def __init__(self, parser):
         super().__init__()
         self.parser = parser
+
+    def drawDepfileTree(self):
+        t = Tree(self.parser.depfile.name)
+        self._drawLeaves(self.parser.depfile, t)
+        return t
+
+
+    def _drawLeaves(self, depfile, tree):
+        for c in depfile.children:
+            branch = tree.add(
+                f"📄 {c.name}" 
+                + (f" [red]errors: {len(c.errors)}[/red]" if c.errors else "") 
+                + (f" [red]unresolved: {len(c.unresolved)}[/red]" if c.unresolved else "")
+            )
+            self._drawLeaves(c, branch)
 
     def _drawPackages(self, aPkgs):
         if not aPkgs:

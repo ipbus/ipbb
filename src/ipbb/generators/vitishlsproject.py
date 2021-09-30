@@ -7,9 +7,9 @@ from ..depparser import Pathmaker
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext, dirname
 
-class VivadoHlsProjectGenerator(object):
+class VitisHLSProjectGenerator(object):
     """
-    docstring for VivadoHlsProjectGenerator
+    docstring for VitisHLSProjectGenerator
     """
 
     reqsettings = {'device_name', 'device_package', 'device_speed'}
@@ -50,9 +50,9 @@ class VivadoHlsProjectGenerator(object):
 
         lHlsSrcs = aCommandList['hlssrc'] 
 
-        # Note to self: Hardcoding "vivado_hls" will lead to troubles
-        common_cflags = aSettings.get('vivado_hls.cflags', None)
-        common_csimflags = aSettings.get('vivado_hls.csimflags', None)
+        # Note to self: Hardcoding "vitis_hls" will lead to troubles
+        common_cflags = aSettings.get('vitis_hls.cflags', None)
+        common_csimflags = aSettings.get('vitis_hls.csimflags', None)
 
         for src in lHlsSrcs:
 
@@ -78,7 +78,7 @@ class VivadoHlsProjectGenerator(object):
 
 
         write(f'open_solution -reset {self.solName}')
-        write(f'set_part {{{lXilinxPart}}} -tool vivado')
+        write(f'set_part {{{lXilinxPart}}}')
 
         write(f'set_top {lTopEntity}')
 

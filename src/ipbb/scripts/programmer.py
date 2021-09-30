@@ -10,7 +10,7 @@ from click import echo, secho, style
 from ..utils import logVivadoConsoleError
 from ..utils import which
 from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
-from .._version import __version__
+from .. import __version__
 
 
 class ProgEnvironment(object):

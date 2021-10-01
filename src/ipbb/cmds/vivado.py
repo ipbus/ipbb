@@ -45,6 +45,9 @@ _memCfgKinds = {
     'mcs': 'mcsfile_options'
 }
 
+_svfSettingName = 'svf_jtagchain_devices'
+
+
 # ------------------------------------------------------------------------------
 def ensureVivado(ictx):
     """Utility function guaranteeing the correct Vivado environment.
@@ -433,6 +436,84 @@ def bitfile(ictx):
 
 
 # ------------------------------------------------------------------------------
+def _svffile(ictx):
+    '''Create a Serial Vector Format (SVF) file
+    
+    Requires the JTAG chain to be specific in the depfile: vivado.svf_jtagchain_devices
+    '''
+    lSessionId = 'svffile'
+
+    # Check that the project exists
+    ensureVivadoProjPath(ictx.vivadoProjFile)
+
+    lProjName = ictx.currentproj.name
+    lDepFileParser = ictx.depParser
+    lBaseName = ictx.vivadoProdFileBase
+
+    # Return early if SVF settings not found
+    if ('vivado' not in lDepFileParser.settings) or _svfSettingName not in lDepFileParser.settings['vivado']:
+        cprint('No SVF settings found in this project. Exiting.', style='yellow')
+        return
+
+    lDevicesBefore = lDepFileParser.settings['vivado'][_svfSettingName][0]
+    lDevicesAfter = lDepFileParser.settings['vivado'][_svfSettingName][1]
+
+    lBitPath = lBaseName + '.bit'
+    if not exists(lBitPath):
+        raise click.ClickException("Bitfile does not exist. Can't create SVF file.")
+
+    # Check that that the Vivado ictx is up
+    ensureVivado(ictx)
+
+    # First few TCL commands: Open HW server and create an SVF target
+    lTclCommands = [
+        'open_hw',
+        'connect_hw_server',
+        'delete_hw_target -quiet [get_hw_devices -quiet */ipbb_svf_target]',
+        'create_hw_target ipbb_svf_target',
+        'open_hw_target [get_hw_targets */ipbb_svf_target]'
+    ]
+
+    # 2nd set of TCL commands: Declare the JTAG chain
+    for x in lDevicesBefore:
+        lTclCommands.append('create_hw_device ' + x)
+
+    lXilinxPart = f'{lDepFileParser.settings["device_name"]}{lDepFileParser.settings["device_package"]}{lDepFileParser.settings["device_speed"]}'
+    lTclCommands.append(f'set DEVICE [create_hw_device -part {lXilinxPart}]')
+
+    for x in lDevicesAfter:
+        lTclCommands.append('create_hw_device ' + x)
+
+    # Last set of TCL commands: Convert the bitstream to the SVF file (by programming the dummy SVF target)
+    lSVFPath = lBaseName + '.svf'
+    lTclCommands += [
+        f'set_property PROGRAM.FILE {lBitPath} $DEVICE',
+        'set_param xicom.config_chunk_size 0',
+        #'set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]',
+        f'program_hw_devices $DEVICE',
+        f'write_hw_svf {lSVFPath}',
+        'close_hw_target'
+    ]
+
+    # Execute the TCL commands
+    try:
+        with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
+
+            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            for c in lTclCommands:
+                lConsole(c)
+
+    except VivadoConsoleError as lExc:
+        logVivadoConsoleError(lExc)
+        raise click.Abort()
+
+    console.log(
+        f"{ictx.currentproj.name}: SVF file successfully written.",
+        style='green'
+    )
+
+
+# ------------------------------------------------------------------------------
 def debugprobes(ictx):
     '''Generate (optional) debug-probes files (used for ILAs and VIO controls).'''
 
@@ -468,6 +549,7 @@ def debugprobes(ictx):
         f"{ictx.currentproj.name}: Debug probes file successfully written.",
         style='green'
     )
+
 
 # ------------------------------------------------------------------------------
 def memcfg(ictx):
@@ -655,12 +737,23 @@ def package(ictx, aTag):
     lDepFileParser = ictx.depParser
     lTopEntity = lDepFileParser.settings.get('top_entity', kTopEntity)
 
+    # Create bitfile if missing
     lBaseName = ictx.vivadoProdFileBase
     lBitPath  = lBaseName + '.bit'
     if not exists(lBitPath):
         cprint('Bitfile does not exist. Starting a build ...', style='yellow')
         bitfile(ictx)
 
+    # Create SVF file if requested
+    try:
+        lVivadoCfg = lDepFileParser.settings['vivado']
+        lSVFPath = lBaseName + '.svf'
+        if (_svfSettingName in lVivadoCfg) and (not exists(lSVFPath)):
+            _svffile(ictx)
+    except KeyError as e:
+        lSVFPath = None
+
+    # Create configuration memory files if requested and missing
     try:
         lVivadoCfg = lDepFileParser.settings['vivado']
         lActiveMemCfgs = [k for k,o in _memCfgKinds.items() if o in lVivadoCfg]
@@ -715,6 +808,10 @@ def package(ictx, aTag):
     # Copy bitfile, memcfg, and address table into the packaging area
     console.log("Collecting bitfile", style='blue')
     sh.cp('-av', lBitPath, lPkgSrcPath, _out=sys.stdout)
+
+    if lSVFPath is not None:
+        console.log("Collecting SVF file {}".format(lSVFPath), style='blue')
+        sh.cp('-av', lSVFPath, lPkgSrcPath, _out=sys.stdout)
 
     for f in lMemCfgFiles:
         console.log("Collecting memcfg {}".format(f), style='blue')

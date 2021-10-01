@@ -14,7 +14,6 @@ def check_vivado_env():
         RuntimeError: Description
     """
     print(os.environ['XILINX_VIVADO'])
-    # raise RuntimeError('SSSS')
 
 
 def test_autodetect(check_vivado_env):

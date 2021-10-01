@@ -120,7 +120,7 @@ class VivadoConsole(object):
     # --------------------------------------------------------------
 
     # --------------------------------------------------------------
-    def __init__(self, executable='vivado', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None):
+    def __init__(self, executable='vivado', prompt=None, stopOnCWarnings=False, echo=True, showbanner=False, sid=None, loglabel=None, loglevel='all'):
         """
         Args:
             executable (str): Executable name
@@ -128,8 +128,8 @@ class VivadoConsole(object):
             stopOnCWarnings (bool): Stop on Critical Warnings
             echo (bool): Switch to enable echo messages
             showbanner (bool, optional): Show Vivado startup banner
-            echoprefix (str): Prefix to echo message
-            loglabel (None, optional): Description
+            sid (str): Session id
+            loglabel (None, optional): log files name
         
         Raises:
             VivadoNotFoundError: Description
@@ -156,7 +156,7 @@ class VivadoConsole(object):
 
         # Set up the output formatter
         self._out = VivadoOutputFormatter(
-            sid, quiet=(not echo)
+            sid, loglevel=loglevel
         )
 
         self._out.write('\n' + '- Starting Vivado -'+'-' * 40 + '\n')
@@ -437,7 +437,7 @@ class VivadoSessionManager(object):
     Attributes:
         persistent (TYPE): Description
     """
-    def __init__(self, keep=False, echo=True, loglabel=None):
+    def __init__(self, keep=False, echo=True, loglabel=None, loglevel='all'):
         """Constructor
         
         Args:
@@ -447,6 +447,7 @@ class VivadoSessionManager(object):
         self._keep = keep
         self._echo = echo
         self._loglabel = loglabel
+        self._loglevel = loglevel
         if self._keep:
             self._console = None
 
@@ -458,11 +459,11 @@ class VivadoSessionManager(object):
 
         if self._keep:
             if not self._console:
-                self._console = VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo)
+                self._console = VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo, loglevel=self._loglevel)
             self._console.sessionid = sid
             return self._console
         else:
-            return VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo)
+            return VivadoConsole(sid=sid, loglabel=self._loglabel, echo=self._echo, loglevel=self._loglevel)
 
 
     def getctx(self, sid):

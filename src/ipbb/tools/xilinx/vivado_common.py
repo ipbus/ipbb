@@ -65,11 +65,30 @@ class VivadoOutputFormatter(OutputFormatter):
     Arguments:
         prefix (string): String to prepend to each line of output
     """
-    def __init__(self, prefix=None, sep=' | ', quiet=False):
-        super().__init__(prefix, sep, quiet)
+    __log_all   = 0
+    __log_info  = 10
+    __log_warn  = 20
+    __log_cwarn = 25
+    __log_error = 30
+    __log_fatal = 40
+    __log_none  = 50
+
+    __log_levels = {
+        'all': __log_all,
+        'info': __log_info,
+        'warn': __log_warn,
+        'cwarn': __log_cwarn,
+        'error': __log_error,
+        'fatal': __log_fatal,
+        'none': __log_none,
+    }
+
+    def __init__(self, prefix=None, sep=' | ', loglevel='all'):
+        super().__init__(prefix, sep, loglevel == 'none')
 
         self.pendingchars = ''
         self.skiplines = ['\r\x1b[12C\r']
+        self.loglevel = self.__log_levels[loglevel]
 
     def write(self, message):
         """Writes formatted message
@@ -105,17 +124,43 @@ class VivadoOutputFormatter(OutputFormatter):
             if lLine in self.skiplines:
                 continue
 
-            lColor = None
-            if lLine.startswith('INFO:'):
-                lColor = kBlue
-            elif lLine.startswith('WARNING:'):
-                lColor = kYellow
-            elif lLine.startswith('CRITICAL WARNING:'):
-                lColor = kOrange
-            elif lLine.startswith('ERROR:'):
-                lColor = kRed
-            elif self.quiet:
+            if self.quiet:
                 continue
+
+            if self.loglevel == self.__log_none:
+                continue
+            
+            lColor = None
+
+            if lLine.startswith('INFO:'):
+                if self.loglevel <= self.__log_info:
+                    lColor = kBlue
+                else:
+                    continue
+            elif lLine.startswith('WARNING:'):
+                if self.loglevel <= self.__log_warn:
+                    lColor = kYellow                
+                else:
+                    continue
+            elif lLine.startswith('CRITICAL WARNING:'):
+                if self.loglevel <= self.__log_cwarn:
+                    lColor = kOrange
+                else:
+                    continue
+            elif lLine.startswith('ERROR:'):
+                if self.loglevel <= self.__log_fatal:
+                    lColor = kRed
+                else:
+                    continue
+            elif lLine.startswith('FATAL:'):
+                if self.loglevel <= self.__log_fatal:
+                    lColor = kMagenta
+                else:
+                    continue
+            else:
+                if self.loglevel >= self.__log_info:
+                    continue
+
 
             if lColor is not None:
                 lLine = lColor + lLine + kReset

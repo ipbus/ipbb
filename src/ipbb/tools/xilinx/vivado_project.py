@@ -102,7 +102,7 @@ class VivadoProject(object):
             self.console('reset_run {}'.format(r))
 
     # ------------------------------------------------------------------------------
-    def readRunInfo(self, aProps=None):
+    def read_run_info(self, aProps=None):
         """Reads 
         
         Args:

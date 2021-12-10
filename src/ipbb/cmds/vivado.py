@@ -253,11 +253,11 @@ def synth(ictx, aNumJobs, aUpdateInt):
                     f"IP run {run} found in running state. Resetting.",
                     style='yellow',
                 )
-                lConsole('reset_run {}'.format(run))
+                lConsole(f'reset_run {run}')
 
             # Reset and launch synth_1
-            lConsole('reset_run {}'.format(lSynthRun))
-            lConsole('launch_runs {} {}'.format(lSynthRun, ' '.join(lArgs)))
+            lConsole(f'reset_run {lSynthRun}')
+            lConsole(f'launch_runs {lSynthRun} {" ".join(lArgs)}')
 
             # Monitor OOC and synth run progress
             if not aUpdateInt:
@@ -274,7 +274,7 @@ def synth(ictx, aNumJobs, aUpdateInt):
                     # Reset all OOC synthesis which might are stuck in a running state
                     lPendingOOCRuns = [
                         k for k, v in lOOCRunProps.items()
-                        if not v['STATUS'].startswith('synth_design Complete!')
+                        if ( not v['STATUS'].startswith('synth_design Complete!') and not v['STATUS'].startswith('Not started') )
                     ]
 
                     if lPendingOOCRuns:
@@ -288,13 +288,13 @@ def synth(ictx, aNumJobs, aUpdateInt):
 
                     lRunsInError = [ k for k, v in lRunProps.items() if v['STATUS'] == 'synth_design ERROR']
                     if lRunsInError:
-                        raise RuntimeError("Detected runs in ERROR {}. Exiting".format(', '.join(lRunsInError)))
+                        raise RuntimeError(f"Detected runs in ERROR {', '.join(lRunsInError)}. Exiting")
 
                     # Synthesis finished, get out of there
                     if lRunProps['synth_1']['PROGRESS'] == '100%':
                         break
 
-                    lConsole('wait_on_run synth_1 -timeout {}'.format(aUpdateInt))
+                    lConsole(f'wait_on_run synth_1 -timeout {aUpdateInt}')
 
     except VivadoConsoleError as lExc:
         logVivadoConsoleError(lExc)

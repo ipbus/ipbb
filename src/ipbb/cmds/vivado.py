@@ -149,7 +149,7 @@ def genproject(ictx, aEnableIPCache, aOptimise, aToScript, aToStdout):
     # Generation of extra scripts
     ##
     # Pre-synthesys script
-    lPresynthScriptGen = VivadoPresynthScriptGenerator(ictx.currentproj, ictx.srcdir, ictx.sources);
+    lPresynthScriptGen = VivadoPresynthScriptGenerator(ictx.currentproj, ictx.srcdir, ictx.depParser.packages);
     lPresynthScriptPath = abspath(join(ictx.currentproj.path, 'set_generics_presynth.tcl'))
     try:
         with SmartOpen( lPresynthScriptPath if not aToStdout else None) as lConsole:

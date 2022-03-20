@@ -8,6 +8,7 @@ from string import Template as tmpl
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectGenerator(object):
     """
@@ -43,10 +44,11 @@ class VivadoProjectGenerator(object):
     reqsettings = {'device_name', 'device_package', 'device_speed'}
 
     # --------------------------------------------------------------
-    def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True):
-        self.projInfo = aProjInfo
-        self.ipCachePath = aIPCachePath
+    def __init__(self, aProjInfo, aIPCachePath=None, aTurbo=True, aPresynthScriptPath=None):
+        self.proj_info = aProjInfo
+        self.ip_cache_path = aIPCachePath
         self.turbo = aTurbo
+        self.presynth_script_path = aPresynthScriptPath
 
     # --------------------------------------------------------------
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
@@ -58,7 +60,7 @@ class VivadoProjectGenerator(object):
         # ----------------------------------------------------------
         write = aOutput
 
-        lWorkingDir = abspath(join(self.projInfo.path, self.projInfo.name))
+        lWorkingDir = abspath(join(self.proj_info.path, self.proj_info.name))
         lTopEntity = aSettings.get('top_entity', kTopEntity)
 
         lSimTopEntity = aSettings.get('vivado.sim_top_entity', None)
@@ -69,7 +71,7 @@ class VivadoProjectGenerator(object):
         write()
 
         write(
-            f'create_project {self.projInfo.name} {lWorkingDir} -part {lXilinxPart} -force'
+            f'create_project {self.proj_info.name} {lWorkingDir} -part {lXilinxPart} -force'
         )
 
         if 'board_part' in aSettings:
@@ -162,12 +164,23 @@ class VivadoProjectGenerator(object):
             for c, f in lSrcCommandGroups.items():
                 write(tmpl(c).substitute(files=' '.join(f)))
 
+
+        ########################################################################
+        ########################################################################
+        if self.presynth_script_path:
+
+            write(f'add_files -norecurse -fileset utils_1 {self.presynth_script_path}')
+            write(f'set_property STEPS.SYNTH_DESIGN.TCL.PRE "{self.presynth_script_path}" [get_runs synth_1]')
+        ########################################################################
+        ########################################################################
+
+
         write(f'set_property top {lTopEntity} [get_filesets sources_1]')
         if lSimTopEntity:
             write(f'set_property top {lSimTopEntity} [get_filesets sim_1]')
 
-        if self.ipCachePath:
-            write(f'config_ip_cache -import_from_project -use_cache_location {abspath(self.ipCachePath)}')
+        if self.ip_cache_path:
+            write(f'config_ip_cache -import_from_project -use_cache_location {abspath(self.ip_cache_path)}')
 
         for i in lXciBasenames:
             write(f'upgrade_ip [get_ips {i}]')

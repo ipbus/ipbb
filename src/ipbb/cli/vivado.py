@@ -7,10 +7,10 @@ import importlib
 
 # ------------------------------------------------------------------------------
 @click.group('vivado', short_help='Set up, syntesize, implement Vivado projects.', chain=True)
-@click.option('-p', '--proj', default=None, help="Selected project, if not current")
+# @click.option('-p', '--proj', default=None, help="Selected project, if not current")
 @click.option('-l', '--loglevel', type=click.Choice(['all', 'info', 'warn', 'cwarn', 'error', 'fatal', 'none']), default='all', help="Silence vivado messages")
 @click.pass_obj
-def vivado(ictx, proj, loglevel):
+def vivado(ictx, loglevel):
     '''Vivado command group
     
     \b
@@ -26,10 +26,10 @@ def vivado(ictx, proj, loglevel):
 # ------------------------------------------------------------------------------
 @vivado.resultcallback()
 @click.pass_obj
-def process_vivado(ictx, subcommands, proj, loglevel):
+def process_vivado(ictx, subcommands, loglevel):
 
     from ..cmds.vivado import vivado
-    vivado(ictx, proj, loglevel, (name for name,_,_,_ in subcommands))
+    vivado(ictx, loglevel, (name for name,_,_,_ in subcommands))
 
     # Executed the chained commands
     for name, cmd, args, kwargs in subcommands:

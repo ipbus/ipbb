@@ -168,11 +168,15 @@ def cd(ictx, projname, aVerbose):
             'Requested work area not found. Available areas: %s' % ', '.join(lProjects)
         )
 
-    with DirSentry(join(ictx.projdir, projname)) as lSentry:
-        ictx._autodetect()
+    # with DirSentry(join(ictx.projdir, projname)) as lSentry:
+    #     ictx._autodetect()
 
     os.chdir(join(ictx.projdir, projname))
-    if aVerbose:
-        cprint("New current directory %s" % os.getcwd())
+    ictx._wd = os.getcwd()
+    ictx._autodetect()
+
+    # if aVerbose:
+    cprint(f"New current directory {os.getcwd()}")
+    cprint(ictx.currentproj.name)
 
 

@@ -82,7 +82,7 @@ def ensure_vivado_project_path(aProjPath: str):
         raise click.ClickException("Vivado project %s does not exist" % aProjPath)
 
 # ------------------------------------------------------------------------------
-def vivado(ictx, proj, loglevel, cmdlist):
+def vivado(ictx, loglevel, cmdlist):
     '''Vivado command group
     
     Args:
@@ -95,14 +95,12 @@ def vivado(ictx, proj, loglevel, cmdlist):
         click.ClickException: Undefined project area
     '''
 
-    # ictx.vivadoEcho = 
 
-    # lProj = proj if proj is not None else ictx.currentproj.name
-    if proj is not None:
-        # Change directory before executing subcommand
-        from .proj import cd
+    # if proj is not None:
+    #     # Change directory before executing subcommand
+    #     from .proj import cd
 
-        cd(ictx, projname=proj, aVerbose=False)
+    #     cd(ictx, projname=proj, aVerbose=False)
 
     if ictx.currentproj.name is None:
         raise click.ClickException(

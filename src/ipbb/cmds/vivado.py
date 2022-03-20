@@ -25,6 +25,7 @@ from ..utils import which, SmartOpen, mkdir
 from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
 
 from ..generators.vivadoproject import VivadoProjectGenerator
+from ..generators.presynth_metadata import VivadoPresynthScriptGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
 from ..defaults import kTopEntity
 
@@ -135,14 +136,44 @@ def genproject(ictx, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = ictx.depParser
 
+    ##
+    # Pre-generation checks
+    ##
     # Ensure that no parsing errors are present
     ensureNoParsingErrors(ictx.currentproj.name, lDepFileParser)
 
     # Ensure that all dependencies are resolved
     ensureNoMissingFiles(ictx.currentproj.name, lDepFileParser)
 
+    ##
+    # Generation of extra scripts
+    ##
+    # Pre-synthesys script
+    lPresynthScriptGen = VivadoPresynthScriptGenerator(ictx.currentproj, ictx.srcdir, ictx.sources);
+    lPresynthScriptPath = abspath(join(ictx.currentproj.path, 'set_generics_presynth.tcl'))
+    try:
+        with SmartOpen( lPresynthScriptPath if not aToStdout else None) as lConsole:
+            lPresynthScriptGen.write(
+                lConsole,
+                lDepFileParser.settings,
+                lDepFileParser.packages,
+                lDepFileParser.commands,
+                lDepFileParser.libs,
+            )
+    except RuntimeError as lExc:
+        cprint(
+            "Error caught while generating Vivado TCL pre-synth script:",
+            style='red'
+        )
+        cprint(lExc)
+        raise click.Abort()
+
+    ##
+    # Vivado project generation
+    ##
+
     lVivadoIPCache = join(ictx.work.path, 'var', 'vivado-ip-cache') if aEnableIPCache else None
-    lVivadoGen = VivadoProjectGenerator(ictx.currentproj, lVivadoIPCache, aOptimise)
+    lVivadoGen = VivadoProjectGenerator(ictx.currentproj, lVivadoIPCache, aOptimise, lPresynthScriptPath)
 
     if aToScript or aToStdout:
         # Dry run

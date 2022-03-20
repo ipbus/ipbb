@@ -5,9 +5,9 @@ class VivadoPresynthScriptGenerator:
 
     # --------------------------------------------------------------
     def __init__(self, aProjInfo, aSourceAreaPath, aRepoList):
-        self.projInfo = aProjInfo
-        self.srcAreaPath = aSourceAreaPath
-        self.repoList = aRepoList
+        self.proj_info = aProjInfo
+        self.src_area_path = aSourceAreaPath
+        self.repo_list = aRepoList
 
     # --------------------------------------------------------------
     def write(self, aOutput, aSettings, aComponentPaths, aCommandList, aLibs):
@@ -41,12 +41,12 @@ class VivadoPresynthScriptGenerator:
             set GENERIC_VALUES "UNIX_TIME=32\'h$UNIX_TIME"
 
             set ORIG_PWD [pwd]
-            set GIT_REPOS_NAME {160 * len(self.repoList)}'h
-            set GIT_REPOS_REF {160 * len(self.repoList)}'h
-            set GIT_REPOS_SHA {28 * len(self.repoList)}'h
-            set GIT_REPOS_CLEAN {len(self.repoList)}'b
+            set GIT_REPOS_NAME {160 * len(self.repo_list)}'h
+            set GIT_REPOS_REF {160 * len(self.repo_list)}'h
+            set GIT_REPOS_SHA {28 * len(self.repo_list)}'h
+            set GIT_REPOS_CLEAN {len(self.repo_list)}'b
 
-            foreach libName {{{' '.join(self.repoList)}}} {{
+            foreach libName {{{' '.join(self.repo_list)}}} {{
               puts "SOURCE AREA: $libName"
               set varPrefix [string toupper $libName]
               puts varPrefix=$varPrefix
@@ -56,7 +56,7 @@ class VivadoPresynthScriptGenerator:
               puts "UTF-8-encoded name: $hex"
               append GIT_REPOS_NAME [format %-040s [string range $hex 0 39]]
 
-              cd {relpath(self.srcAreaPath, self.projInfo.path)}/$libName
+              cd {relpath(self.src_area_path, self.proj_info.path)}/$libName
               puts "pwd=[pwd]"
 
               set GIT_REF [exec git rev-parse --abbrev-ref HEAD]

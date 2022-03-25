@@ -534,7 +534,7 @@ def debugprobes(ictx):
     lWriteDebugProbesCmd = 'write_debug_probes -force {}'.format(ictx.vivadoProdFileBase+'.ltx')
 
     try:
-        with ictx.vivadoSessions.get(lSessionId) as lConsole:
+        with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
             lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
             lProject.open_run('impl_1')
             lConsole(lWriteDebugProbesCmd)

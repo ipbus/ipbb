@@ -31,7 +31,7 @@ class DepFormatter(object):
     def _drawLeaves(self, depfile, tree):
         for c in depfile.children:
             branch = tree.add(
-                f"📄 {c.name}" 
+                f"📝 {c.name}" 
                 + (f" [red]errors: {len(c.errors)}[/red]" if c.errors else "") 
                 + (f" [red]unresolved: {len(c.unresolved)}[/red]" if c.unresolved else "")
             )
@@ -61,11 +61,11 @@ class DepFormatter(object):
 
         lString = ''
         for pkg in sorted(aPkgs):
-            lString += '+ %s (%d)\n' % (pkg, len(aPkgs[pkg]))
+            lString += '📦 %s (%d)\n' % (pkg, len(aPkgs[pkg]))
             lSortCmps = sorted(aPkgs[pkg])
             for cmp in lSortCmps[:-1]:
-                lString += u'  ├──' + str(cmp) + '\n'
-            lString += u'  └──' + str(lSortCmps[-1]) + '\n'
+                lString += u'  ├─ ' + str(cmp) + '\n'
+            lString += u'  └─ ' + str(lSortCmps[-1]) + '\n'
 
         return Panel.fit(lString[:-1])
 

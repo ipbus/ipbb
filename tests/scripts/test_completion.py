@@ -13,7 +13,7 @@ def main():
     '''Discovers the env at startup'''
 
     if sys.version_info[0:2] < (2, 7):
-        click.secho("Error: Python 2.7 is required to run IPBB", fg='red')
+        click.secho("Error: Python 3 is required to run IPBB", fg='red')
         raise SystemExit(-1)
 
     _compose_cli()

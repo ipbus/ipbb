@@ -87,11 +87,11 @@ def check_depfile(env, verbose, toolset, component, depfile):
                 string += '    > ' + str(cmp) + '\n'
         cprint(string)
 
-    if lParser.unresolvedPackages:
+    if lParser.unresolved_packages:
         cprint('Missing packages:', style='red')
-        cprint(str(list(lParser.unresolvedPackages)))
+        cprint(str(list(lParser.unresolved_packages)))
 
-    lCNF = lParser.unresolvedComponents
+    lCNF = lParser.unresolved_components
     if lCNF:
         cprint('Missing components:', style='red')
         string = ''
@@ -103,7 +103,7 @@ def check_depfile(env, verbose, toolset, component, depfile):
                 string += '  > ' + str(cmp) + '\n'
         cprint(string)
 
-    lFNF = lParser.unresolvedFiles
+    lFNF = lParser.unresolved_files
     if lFNF:
         cprint('Missing files:', style='red')
 
@@ -122,7 +122,7 @@ def check_depfile(env, verbose, toolset, component, depfile):
                     )
         cprint(Padding.indent(lFNFTable, 4))
 
-    if lParser.unresolvedPackages or lParser.unresolvedComponents or lParser.unresolvedFiles:
+    if lParser.unresolved_packages or lParser.unresolved_components or lParser.unresolved_files:
         raise click.ClickException(
             f"Cannot find 1 or more files referenced by depfile {lPathMaker.getPath(lPackage, lComponent, 'include', depfile)}"                
         )

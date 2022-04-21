@@ -92,14 +92,14 @@ def info(ictx, verbose):
     lDepFmt = DepFormatter(lParser)
 
     if lParser.errors:
-        t = lDepFmt.drawParsingErrors()
+        t = lDepFmt.draw_parsing_errors()
         t.title = "Dep tree parsing error(s)"
         t.title_style = 'red'
         cprint(t)
         
         cprint()
 
-    t = lDepFmt.drawDeptreeCommandsSummary()
+    t = lDepFmt.draw_deptree_commands_summary()
     t.title = "Dependecy tree elements"
     t.title_style = 'blue'
     cprint(t)
@@ -107,7 +107,7 @@ def info(ictx, verbose):
     cprint()
 
     if  lParser.unresolved:
-        t = lDepFmt.drawUnresolvedSummary()
+        t = lDepFmt.draw_unresolved_summary()
         t.title = "Unresolved item(s)"
         t.title_style = 'red'
         cprint(t)

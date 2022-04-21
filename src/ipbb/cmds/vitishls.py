@@ -25,7 +25,7 @@ from ..tools.xilinx import VitisHLSSession, VitisHLSConsoleError, VivadoSession,
 # @device_name = "xcku15p"
 # @device_package = "-ffva1760"
 # @device_speed = "-2-e"
-# @boardname = "serenity-dc-ku15p"
+# @board_name = "serenity-dc-ku15p"
 
 # @top_entity = "add7"
 # @vitis_hls.solution = "mysol"

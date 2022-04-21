@@ -8,6 +8,7 @@ from string import Template as tmpl
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectGenerator(object):
     """

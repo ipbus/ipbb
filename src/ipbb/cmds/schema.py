@@ -7,8 +7,9 @@ project_schema = {
     'device_name': {'type': 'string', 'required': True},
     'device_speed': {'type': 'string', 'required': True},
     'device_package': {'type': 'string', 'required': True},
-    'boardname': {'type': 'string'},
+    'board_name': {'type': 'string'},
     'top_entity': {'type': 'string'},
+    'lib_map': {'type': 'dict'},
 }
 
 def validate(schema, settings, toolset):

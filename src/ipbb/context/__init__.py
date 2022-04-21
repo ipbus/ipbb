@@ -219,7 +219,7 @@ class Context(object):
 
     # ------------------------------------------------------------------------------
     def _clear(self):
-        self._depParser = None
+        self._dep_parser = None
 
         self.work = FolderInfo()
         self.work.path = None
@@ -265,7 +265,7 @@ class Context(object):
     project configuration: {currentproj.settings}
     user settings: {currentproj.usersettings}
     pathMaker: {pathMaker}
-    parser: {_depParser}
+    parser: {_dep_parser}
     }})'''.format(
                 **(self.__dict__)
             )
@@ -274,24 +274,24 @@ class Context(object):
     # -----------------------------------------------------------------------------
     @property
     def depParser(self):
-        if self._depParser is None:
+        if self._dep_parser is None:
 
             from ..depparser import DepFileParser
 
-            self._depParser = DepFileParser(
+            self._dep_parser = DepFileParser(
                 self.currentproj.settings['toolset'],
                 self.pathMaker,
                 aVerbosity=self._verbosity,
             )
 
             try:
-                self._depParser.parse( self.currentproj.settings['topPkg'], self.currentproj.settings['topCmp'], self.currentproj.settings['topDep'],)
+                self._dep_parser.parse( self.currentproj.settings['topPkg'], self.currentproj.settings['topCmp'], self.currentproj.settings['topDep'],)
             except OSError:
                 pass
 
-            if self._depParser.errors:
+            if self._dep_parser.errors:
                 cprint('WARNING: dep parsing errors detected', style='yellow')
-        return self._depParser
+        return self._dep_parser
 
 
     # -----------------------------------------------------------------------------

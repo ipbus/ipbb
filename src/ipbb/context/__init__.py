@@ -34,6 +34,9 @@ src_repo_schema = {
             'type': 'string'
         }
     },
+    'deptree': {
+        'type': 'dict'
+    }
 }
 
 proj_settings_schema = {
@@ -102,6 +105,8 @@ class SourceInfo(FolderInfo):
         with open(self.repo_settings_path, 'r') as f:
             self._repo_settings = yaml.safe_load(f)
 
+        self.validate_repo_settings()
+
     # ------------------------------------------------------------------------------
     def validate_repo_settings(self):
 
@@ -109,11 +114,11 @@ class SourceInfo(FolderInfo):
         if not ss:
             return
 
-        vtor = cerberus.Validator()
+        vtor = cerberus.Validator(src_repo_schema)
 
-        x = vtor.validate(ss, src_repo_schema)
-        print('SourceInfo Validated', x)
-        print(vtor.errors)
+        val = vtor.validate(ss)
+        cprint('SourceInfo Validated', val)
+        cprint(vtor.errors)
 
 
 # ------------------------------------------------------------------------------
@@ -159,11 +164,11 @@ class ProjectInfo(FolderInfo):
             )
 
         self.name = basename(self.path)
-        self.loadSettings()
-        self.loadUserSettings()
+        self.load_settings()
+        self.load_user_settings()
 
     # ------------------------------------------------------------------------------
-    def loadSettings(self):
+    def load_settings(self):
         if not exists(self.filepath):
             return
 
@@ -174,7 +179,7 @@ class ProjectInfo(FolderInfo):
             self.settings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
-    def loadUserSettings(self):
+    def load_user_settings(self):
         if not exists(self.userfilepath):
             return
 
@@ -182,21 +187,21 @@ class ProjectInfo(FolderInfo):
             self.usersettings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
-    def saveSettings(self, jsonindent=2):
+    def save_settings(self, jsonindent=2):
         if not self.settings:
             return
         with open(self.filepath, 'w') as f:
             yaml.safe_dump(self.settings, f, indent=jsonindent, default_flow_style=False)
 
     # ------------------------------------------------------------------------------
-    def saveUserSettings(self, jsonindent=2):
+    def save_user_settings(self, jsonindent=2):
         if not self.usersettings:
             return
         with open(self.userfilepath, 'w') as f:
             yaml.safe_dump(self.usersettings, f, indent=jsonindent, default_flow_style=False)
 
     # ------------------------------------------------------------------------------
-    def validateSettings(self):
+    def validate_settings(self):
         import cerberus
         v = cerberus.Validator()
 

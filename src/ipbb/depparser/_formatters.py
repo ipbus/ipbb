@@ -23,6 +23,10 @@ class DepFormatter(object):
         self.parser = parser
 
     def draw_depfile_tree(self):
+
+        if not self.parser.depfile:
+            return "[red]Top depfile not found[/red]"
+
         t = Tree(self.parser.depfile.name)
         self._drawLeaves(self.parser.depfile, t)
         return t

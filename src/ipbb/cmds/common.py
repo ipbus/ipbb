@@ -45,11 +45,11 @@ def user_config(ictx, aList, aAdd, aUnset):
     if aAdd:
         lKey, lValue = aAdd
         ictx.currentproj.usersettings[lKey] = lValue
-        ictx.currentproj.saveUserSettings()
+        ictx.currentproj.save_user_settings()
 
     if aUnset:
         del ictx.currentproj.usersettings[aUnset]
-        ictx.currentproj.saveUserSettings()
+        ictx.currentproj.save_user_settings()
 
     if ictx.currentproj.usersettings:
         cprint(formatDictTable(ictx.currentproj.usersettings))

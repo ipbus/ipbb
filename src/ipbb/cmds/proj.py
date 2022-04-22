@@ -132,7 +132,7 @@ def create(ictx, toolset, projname, component, topdep):
         'topDep': lTopDep,
         'name': projname,
     }
-    pi.saveSettings()
+    pi.save_settings()
 
     console.log(f"{toolset.capitalize()} project area '{projname}' created", style='green')
 

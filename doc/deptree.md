@@ -67,7 +67,7 @@ Describe the use of variables in relation to the script makers and as a way to s
 * `device_speed` (`str`): FPGA speed grade
 * `device_generation` (`str`): FPGA generation e.g. Ultrascale/UltrascalePlus
 * `board_name` (`str`): Name of the board
-* `pkg2lib_map` (`dict( str: str)`):  package to library mapping for hdl files (exprimental)
+* `package_to_lib_mapping` (`dict( str: str)`):  package to library mapping for hdl files (exprimental)
 
 ### Vivado
 

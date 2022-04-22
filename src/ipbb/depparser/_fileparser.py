@@ -562,7 +562,7 @@ class DepFileParser(object):
         def deep_get(dictionary, keys, default=None):
             return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
 
-        pkg_lib_map = self.settings.get('pkg2lib_map', None)
+        pkg_lib_map = self.settings.get('package_to_lib_mapping', None)
 
         for k,cmds in self.commands.items():
             for c in cmds:

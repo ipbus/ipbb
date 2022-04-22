@@ -9,7 +9,7 @@ project_schema = {
     'device_package': {'type': 'string', 'required': True},
     'board_name': {'type': 'string'},
     'top_entity': {'type': 'string'},
-    'pkg2lib_map': {'type': 'dict'},
+    'package_to_lib_mapping': {'type': 'dict'},
 }
 
 def validate(schema, settings, toolset):

@@ -6,6 +6,7 @@ import copy
 import string
 import re
 import shlex
+import cerberus
 
 from ._definitions import dep_file_types, dep_command_types
 from ._pathmaker import Pathmaker
@@ -18,6 +19,11 @@ from ..tools.alien import AlienTree, AlienTemplate
 from collections import OrderedDict
 from os.path import exists, splitext, sep
 
+
+repo_defaults_schema = {
+    'vhdl_standard': { 'type': 'string', 'allowed': ['vhdl2008', 'vhdl1987'] },
+    'default_library': { 'type': 'string' },
+}
 
 # -----------------------------------------------------------------------------
 def _copy_update_command(aCmd, aFilePath, aPkg, aCmp):
@@ -72,6 +78,13 @@ class DepFile(object):
                 yield sf
 
 
+
+# -----------------------------------------------------------------------------
+class InvalidDepDefaults(Exception):
+    """Exception class for pre-parsing errors"""
+    pass
+# -----------------------------------------------------------------------------
+#
 # -----------------------------------------------------------------------------
 class DepLineError(Exception):
     """Exception class for pre-parsing errors"""
@@ -117,8 +130,39 @@ class DepFileParser(object):
     def rootdir(self):
         return self._pathMaker._rootdir
 
+    @staticmethod
+    def repo_settings_to_defaults(repo_settings):
+
+        vtor = cerberus.Validator(repo_defaults_schema)
+        errors = {}
+
+        pkg_defaults = {}
+        for pkg,settings in repo_settings.items():
+
+            if not vtor.validate(settings):
+                errors[pkg] = vtor.errors
+
+            src_cmd = {}
+            if 'vhdl_standard' in settings:
+                src_cmd['vhdl2008'] = settings['vhdl_standard'] == 'vhdl2008'
+            if 'default_library' in settings:
+                src_cmd['lib'] = settings['default_library']
+            pkg_defaults[pkg] = {'src': src_cmd }
+
+
+        if errors:
+            cprint(f"ERROR: Repository settings validation failed", style='red')
+            cprint(f"   Detected errors: {errors}", style='red')
+            cprint(f"   Settings: {repo_settings}", style='red')
+            raise InvalidDepDefaults(f"Project settings validation failed: {errors}")
+
+
+        return pkg_defaults
+
+
+
     # -----------------------------------------------------------------------------
-    def __init__(self, aToolSet, aPathmaker, aPkgDefaults={}, aVerbosity=0):
+    def __init__(self, aToolSet, aPathmaker, aRepoSettings={}, aVerbosity=0):
         # --------------------------------------------------------------
         # Member variables
         self._toolset = aToolSet
@@ -141,7 +185,7 @@ class DepFileParser(object):
         self.errors = list()
         # --------------------------------------------------------------
 
-        self.pkg_defaults = aPkgDefaults
+        self.pkg_defaults = self.repo_settings_to_defaults(aRepoSettings)
 
         # --------------------------------------------------------------
         # Set the toolset
@@ -316,20 +360,6 @@ class DepFileParser(object):
 # -------------------------------------------------------------------------
     def _resolve_paths(self, aParsedCmd, aCurComponent, aParentDep):
 
-        # --------------------------------------------------------------
-        # Set package and component to current ones if not defined
-        # lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
-        # # lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
-        # if not aParsedCmd.component:
-        #     # case: -c not specified, current package and component
-        #     if lPackage == aCurPackage:
-        #         lComponent = aCurComponent
-        #     # case: -c package:
-        #     else:
-        #         lComponent = ""
-        # else:
-        #     # case -c package:component
-        #     lComponent = aParsedCmd.component
         # --------------------------------------------------------------
         lPackage = aParsedCmd.package
         lComponent = aParsedCmd.component
@@ -518,34 +548,19 @@ class DepFileParser(object):
         Remove duplicates from command and package list
         """
 
-        # ToCheck: can we use OrderedDict.fromkeys?
         self.commands = { k:list(OrderedDict.fromkeys(v)) for k,v in self.commands.items() }
-        # for i in self.commands:
-        #     ordered_command_set = list()
-        #     for j in self.commands[i]:
-        #         if j not in ordered_command_set:
-        #             ordered_command_set.append(j)
-        #     self.commands[i] = ordered_command_set
 
         # If we are exiting the top-level, uniquify the component list
         for p in self.packages:
             self.packages[p] = list(OrderedDict.fromkeys(self.packages[p])) 
-            # lTemp = list()
-            # lAdded = set()
-            # for lCmp in self.packages[lPkg]:
-            #     if lCmp not in lAdded:
-            #         lTemp.append(lCmp)
-            #         lAdded.add(lCmp)
-            # self.packages[lPkg] = lTemp
 
 
-
+    # -------------------------------------------------------------------------
     def _apply_defaults(self):
 
         from functools import reduce
         def deep_get(dictionary, keys, default=None):
             return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
-
 
         pkg_lib_map = self.settings.get('pkg2lib_map', None)
 
@@ -553,8 +568,6 @@ class DepFileParser(object):
             for c in cmds:
                 if isinstance(c, SrcCommand) and c.lib is None and not pkg_lib_map is None:
                         c.lib = pkg_lib_map.get(c.package, None)
-
-
 
   
     # -------------------------------------------------------------------------

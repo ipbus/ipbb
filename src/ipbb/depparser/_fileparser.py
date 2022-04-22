@@ -175,6 +175,7 @@ class DepFileParser(object):
         self._depregistry = OrderedDict()
 
         # Results
+        self.depfile = None
         self.settings = AlienTree()
         self.libs = set()
         self.packages = OrderedDict()
@@ -183,19 +184,18 @@ class DepFileParser(object):
 
         self.unresolved = list()
         self.errors = list()
-        # --------------------------------------------------------------
 
+        # --------------------------------------------------------------
         self.pkg_defaults = self.repo_settings_to_defaults(aRepoSettings)
 
         # --------------------------------------------------------------
         # Set the toolset
         self.settings['toolset'] = self._toolset
-        # --------------------------------------------------------------
 
         # --------------------------------------------------------------
         # Set up the parser
         self.cmdparser = DepCmdParser(self.pkg_defaults)
-        # --------------------------------------------------------------
+
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------

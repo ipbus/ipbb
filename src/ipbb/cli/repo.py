@@ -118,9 +118,9 @@ def srcs_reset(env, pkg):
     
     PKG : Name of the package to run the sequence of.
     '''
-    from ..cmds.repo import _repoInit, _repoReset
-    _repoReset(env, pkg)
-    _repoInit(env, pkg)
+    from ..cmds.repo import _repo_init, _repo_reset
+    _repo_reset(env, pkg)
+    _repo_init(env, pkg)
 
 # ------------------------------------------------------------------------------
 @srcs.command('create-component', short_help="Create the skeleton of a new component.")

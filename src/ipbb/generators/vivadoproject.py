@@ -8,6 +8,7 @@ from string import Template as tmpl
 from ..defaults import kTopEntity
 from os.path import abspath, join, split, splitext
 
+
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class VivadoProjectGenerator(object):
     """
@@ -15,11 +16,11 @@ class VivadoProjectGenerator(object):
         filesets (obj:`dict`): extension-to-fileset association
     """
 
-    filetypes = {
-        'ip' : ('.xci', '.xcix'),
-        'constr' : ('.xdc', '.tcl'),
-        'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem', '.mif'),
-    }
+    # filetypes = {
+    #     'ip' : ('.xci', '.xcix'),
+    #     'constr' : ('.xdc', '.tcl'),
+    #     'design' : ('.vhd', '.vhdl', '.v', '.sv', '.xci', '.xcix', '.ngc', '.edn', '.edf', '.mem', '.mif'),
+    # }
 
     @staticmethod
     def fileset(aSrcCmd):
@@ -32,7 +33,7 @@ class VivadoProjectGenerator(object):
         elif lExt in ('.xdc', '.tcl'):
             lFileSet = 'constrs_1'
 
-        elif lExt in ('.vhd', '.vhdl', '.v', '.sv', '.ngc', '.edn', '.edf', '.mem', '.mif'):
+        elif lExt in ('.vhd', '.vhdl', '.v', '.vh', '.sv', '.ngc', '.edn', '.edf', '.mem', '.mif'):
             if aSrcCmd.useInSynth:
                 lFileSet = 'sources_1'
             elif aSrcCmd.useInSim:
@@ -92,7 +93,7 @@ class VivadoProjectGenerator(object):
         for setup in (c for c in aCommandList['setup'] if not c.finalize):
             write(f'source {setup.filepath}')
 
-        lXciBasenames = []
+        lIPNames = []
 
         lSrcs = aCommandList['src']
 
@@ -120,7 +121,7 @@ class VivadoProjectGenerator(object):
 
                 lCommands += [(c, f)]
 
-                lXciBasenames.append(lName)
+                lIPNames.append(lName)
                 # lXciTargetFiles.append(lTargetFile)
 
             # elif lExt in ('.bd'):
@@ -169,11 +170,10 @@ class VivadoProjectGenerator(object):
         if self.ipCachePath:
             write(f'config_ip_cache -import_from_project -use_cache_location {abspath(self.ipCachePath)}')
 
-        for i in lXciBasenames:
+        for i in lIPNames:
             write(f'upgrade_ip [get_ips {i}]')
-        # for i in lXciTargetFiles:
-            # write('create_ip_run [get_files {0}]'.format(i))
-        for i in lXciBasenames:
+
+        for i in lIPNames:
             write(f'delete_ip_run [get_ips {i}]')
             write(f'generate_target all [get_ips {i}]')
             write(f'create_ip_run [get_ips {i}]')

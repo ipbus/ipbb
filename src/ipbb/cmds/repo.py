@@ -11,7 +11,7 @@ import yaml
 from os.path import join, split, exists, splitext, dirname, basename, abspath
 
 from ..console import cprint
-from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoSetupFile
+from ..defaults import kSourceDir, kProjDir, kWorkAreaFile, kRepoFile
 from ..depparser import Pathmaker, DepFormatter, dep_command_types
 from ..utils import mkdir
 from ..utils import DirSentry, findFileInParents, raiseError, formatDictTable
@@ -92,14 +92,14 @@ def info(ictx, verbose):
     lDepFmt = DepFormatter(lParser)
 
     if lParser.errors:
-        t = lDepFmt.drawParsingErrors()
+        t = lDepFmt.draw_parsing_errors()
         t.title = "Dep tree parsing error(s)"
         t.title_style = 'red'
         cprint(t)
         
         cprint()
 
-    t = lDepFmt.drawDeptreeCommandsSummary()
+    t = lDepFmt.draw_deptree_commands_summary()
     t.title = "Dependecy tree elements"
     t.title_style = 'blue'
     cprint(t)
@@ -107,7 +107,7 @@ def info(ictx, verbose):
     cprint()
 
     if  lParser.unresolved:
-        t = lDepFmt.drawUnresolvedSummary()
+        t = lDepFmt.draw_unresolved_summary()
         t.title = "Unresolved item(s)"
         t.title_style = 'red'
         cprint(t)
@@ -123,36 +123,37 @@ def add(ictx):
     # Must be in a build area
     if ictx.work.path is None:
         raise click.ClickException('Build area root directory not found')
-    # -------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-def _repoInit(ictx, dest):
+def _repo_init(ictx, repo):
 
-    if dest not in ictx.sources:
-        cprint('Source package {} not found'.format(dest), style='red')
+    if repo not in ictx.sources:
+        cprint('Source package {} not found'.format(repo), style='red')
         cprint('Available repositories:')
         for lPkg in ictx.sources:
             cprint(' - ' + lPkg)
 
-        raiseError("Source package {} not found".format(dest))
+        raiseError("Source package {} not found".format(repo))
 
-    setupPath = join(ictx.srcdir, dest, kRepoSetupFile)
-    if not exists(setupPath):
-        cprint('No repository setup file found in {}. Skipping'.format(dest), style='blue')
-        return
-    cprint('Setting up {}'.format(dest), style='blue')
+    repo_settings = ictx.sources_info[repo].repo_settings
+    # _load_repo_settings(srcdir, repo)
+    # repo_file_path = join(srcdir, repo, kRepoFile)
+    # if not exists(repo_file_path):
+    #     cprint('No repository setup file found in {}. Skipping'.format(repo), style='blue')
+    #     return
+    # cprint('Setting up {}'.format(repo), style='blue')
 
-    setupCfg = None
-    with open(setupPath, 'r') as f:
-        setupCfg = yaml.safe_load(f)
+    # repo_settings = None
+    # with open(repo_file_path, 'r') as f:
+    #     repo_settings = yaml.safe_load(f)
 
-    setupCfg = setupCfg.get('init', None)
-    if setupCfg is None:
+    init_settings = repo_settings.get('init', None)
+    if init_settings is None:
         cprint("No init configuration file. Skipping.")
         return
 
-    cmds = [ l.split() for l in setupCfg ]
+    cmds = [ l.split() for l in init_settings ]
 
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
@@ -161,9 +162,9 @@ def _repoInit(ictx, dest):
         for i, cmd in missingCmds:
             cprint(' - {} (line {})'.format(cmd, i))
 
-        raiseError("Setup commands not found".format(dest))
+        raiseError("Setup commands not found".format(repo))
 
-    with sh.pushd(join(ictx.srcdir, dest)):
+    with sh.pushd(join(ictx.srcdir, repo)):
         # TODO: add error handling
         # Show the list of commands
         # In green the commands executed successfully
@@ -174,32 +175,34 @@ def _repoInit(ictx, dest):
             sh.Command(cmd[0])(*cmd[1:], _out=sys.stdout)
 
 # ------------------------------------------------------------------------------
-def _repoReset(ictx, dest):
+def _repo_reset(ictx, repo):
 
-    if dest not in ictx.sources:
-        cprint('Source package {} not found'.format(dest), style='red')
+    if repo not in ictx.sources:
+        cprint('Source package {} not found'.format(repo), style='red')
         cprint('Available repositories:')
         for lPkg in ictx.sources:
             cprint(' - ' + lPkg)
 
-        raiseError("Source package {} not found".format(dest))
+        raiseError("Source package {} not found".format(repo))
 
-    setupPath = join(ictx.srcdir, dest, kRepoSetupFile)
-    if not exists(setupPath):
-        cprint('No repository setup file found in {}. Skipping'.format(dest), style='blue')
-        return
-    cprint('Resetting up {}'.format(dest), style='blue')
+    repo_settings = ictx.sources_info[repo].repo_settings
 
-    setupCfg = None
-    with open(setupPath, 'r') as f:
-        setupCfg = yaml.safe_load(f)
+    # repo_file_path = join(ictx.srcdir, repo, kRepoFile)
+    # if not exists(repo_file_path):
+    #     cprint('No repository setup file found in {}. Skipping'.format(repo), style='blue')
+    #     return
+    # cprint('Resetting up {}'.format(repo), style='blue')
 
-    setupCfg = setupCfg.get('reset', None)
-    if setupCfg is None:
+    # repo_settings = None
+    # with open(repo_file_path, 'r') as f:
+    #     repo_settings = yaml.safe_load(f)
+
+    reset_settings = repo_settings.get('reset', None)
+    if reset_settings is None:
         cprint("No reset configuration file. Skipping.")
         return
 
-    cmds = [ l.split() for l in setupCfg ]
+    cmds = [ l.split() for l in reset_settings ]
 
     # ensure that all commands exist
     missingCmds = [(i, cmd) for i, cmd in enumerate(cmds) if not sh.which(cmd[0])]
@@ -208,9 +211,9 @@ def _repoReset(ictx, dest):
         for i, cmd in missingCmds:
             cprint(' - {} (line {})'.format(cmd, i))
 
-        raiseError("Setup commands not found".format(dest))
+        raiseError("Setup commands not found".format(repo))
 
-    with sh.pushd(join(ictx.srcdir, dest)):
+    with sh.pushd(join(ictx.srcdir, repo)):
         # TODO: add error handling
         # Show the list of commands
         # In green the commands executed successfully
@@ -313,7 +316,7 @@ def git(ictx, repo, branch, revision, dest):
         style='green',
     )
 
-    _repoInit(ictx, lRepoName)
+    _repo_init(ictx, lRepoName)
 
 
 # ------------------------------------------------------------------------------
@@ -386,7 +389,7 @@ def svn(ictx, repo, dest, rev, dryrun, sparse):
             if not dryrun:
                 sh.svn(*lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoInit(ictx, lRepoName)
+    _repo_init(ictx, lRepoName)
 
     # -------------------------------------------------------------------------
 
@@ -455,7 +458,7 @@ def tar(ictx, repo, dest, strip):
         lArgs = ['xvz'] + lOptArgs
         sh.tar(sh.curl('-L', repo), *lArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
 
-    _repoInit(ictx, lRepoName)
+    _repo_init(ictx, lRepoName)
 
 
 # ------------------------------------------------------------------------------

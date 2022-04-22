@@ -71,9 +71,9 @@ def cli(repofile, dest):
         cprint(dp.unresolved)
 
         df = DepFormatter(dp)
-        cprint(Panel.fit(df.drawSummary()))
+        cprint(Panel.fit(df.draw_summary()))
 
-        cprint(Panel.fit(df.drawErrorsTable(), title='[bold red]dep tree errors[/bold red]'))
+        cprint(Panel.fit(df.draw_error_table(), title='[bold red]dep tree errors[/bold red]'))
 
 
 def main():

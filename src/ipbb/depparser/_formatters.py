@@ -17,12 +17,12 @@ from ._definitions import dep_command_types
 
 
 class DepFormatter(object):
-    """docstring for DepFormatter"""
+    """Helper class to format simplify and standardize the representation of deptree data"""
     def __init__(self, parser):
         super().__init__()
         self.parser = parser
 
-    def drawDepfileTree(self):
+    def draw_depfile_tree(self):
         t = Tree(self.parser.depfile.name)
         self._drawLeaves(self.parser.depfile, t)
         return t
@@ -37,23 +37,23 @@ class DepFormatter(object):
             )
             self._drawLeaves(c, branch)
 
-    def _drawPackages(self, aPkgs):
+    def _draw_packages(self, aPkgs):
         if not aPkgs:
             return ''
 
         return  Panel(' '.join(list(aPkgs)))
 
-    def drawPackages(self):
+    def draw_packages(self):
         """
         Draws the list of packages
         """
-        return self._drawPackages(self.parser.packages)
+        return self._draw_packages(self.parser.packages)
 
-    def drawUnresolvedPackages(self):
+    def draw_unresolved_packages(self):
         """
         Draws the list of unresolved packages
         """
-        return self._drawPackages(self.parser.unresolvedPackages)
+        return self._draw_packages(self.parser.unresolved_packages)
 
     def _drawComponents(self, aPkgs):
         if not aPkgs:
@@ -69,19 +69,19 @@ class DepFormatter(object):
 
         return Panel.fit(lString[:-1])
 
-    def drawComponents(self):
+    def draw_components(self):
         """
         Draws the component tree
         """
         return self._drawComponents(self.parser.packages)
 
-    def drawUnresolvedComponents(self):
+    def draw_unresolved_components(self):
         """
         Draws the unresolved component tree
         """
-        return self._drawComponents(self.parser.unresolvedComponents)
+        return self._drawComponents(self.parser.unresolved_components)
 
-    def drawDeptreeCommandsSummary(self):
+    def draw_deptree_commands_summary(self):
         """
         Draws a deptree commands summary table.
         
@@ -92,7 +92,7 @@ class DepFormatter(object):
         return lDepTable
 
 
-    def drawUnresolvedSummary(self):
+    def draw_unresolved_summary(self):
         """
         Draws a summary table of the unresolved files by category
         """
@@ -102,17 +102,17 @@ class DepFormatter(object):
 
         lUnresolved = Table("packages", "components", "paths")
         lUnresolved.add_row(
-            str(len(lParser.unresolvedPackages)),
-            str(len(lParser.unresolvedComponents)),
-            str(len(lParser.unresolvedPaths)),
+            str(len(lParser.unresolved_packages)),
+            str(len(lParser.unresolved_components)),
+            str(len(lParser.unresolved_paths)),
         )
         return lUnresolved
 
-    def drawUnresolvedFiles(self):
+    def draw_unresolved_files(self):
         """
         Draws the table of unresolved files
         """
-        lFNF = self.parser.unresolvedFiles
+        lFNF = self.parser.unresolved_files
         if not lFNF:
             return ""
 
@@ -134,7 +134,7 @@ class DepFormatter(object):
                     )
         return lFNFTable
 
-    def drawParsingErrors(self):
+    def draw_parsing_errors(self):
         """
         Draws a text table detailing parsing errors.
         
@@ -157,59 +157,59 @@ class DepFormatter(object):
         return lErrTable
 
     # -----------------------------------------------------------------------------
-    def drawSummary(self):
+    def draw_summary(self):
 
         grid = Table.grid(expand=True)
         grid.add_column()
         grid.add_row("[bold]Groups[/]")
-        grid.add_row(self.drawDeptreeCommandsSummary())
+        grid.add_row(self.draw_deptree_commands_summary())
         grid.add_row("")
         grid.add_row("[bold]Packages[/]")
-        grid.add_row(self.drawPackages())
+        grid.add_row(self.draw_packages())
         grid.add_row("")
         if self.parser.unresolved:
             grid.add_row("[bold]Unresolved[/]")
-            grid.add_row(self.drawUnresolvedSummary())
+            grid.add_row(self.draw_unresolved_summary())
 
         # Switch to using tables
         # lOutTxt = ''
-        # lOutTxt += self.drawDeptreeCommandsSummary()
+        # lOutTxt += self.draw_deptree_commands_summary()
 
         # lOutTxt += '\n'
-        # lOutTxt += self.drawPackages()
+        # lOutTxt += self.draw_packages()
 
         # if self.parser.unresolved:
-        #     lOutTxt += self.drawUnresolvedSummary()
+        #     lOutTxt += self.draw_unresolved_summary()
         #     return lOutTxt
 
         return grid
 
     # -----------------------------------------------------------------------------
-    def drawErrorsTable(self):
+    def draw_error_table(self):
         lErrsTable = Table.grid(Column('error_tables'))
 
         if self.parser.errors:
-            t = self.drawParsingErrors()
+            t = self.draw_parsing_errors()
             t.title = "Dep tree parsing error(s)"
             t.title_style = 'bold red'
             t.title_justify = 'left'
             lErrsTable.add_row(t)
 
         if self.parser.unresolved:
-            if self.parser.unresolvedPackages:
-                t = self.drawUnresolvedPackages()
+            if self.parser.unresolved_packages:
+                t = self.draw_unresolved_packages()
                 t.title = "[bold red]Unresolved packages[/bold red]"
                 lErrsTable.add_row(t)
             # ------
-            lCNF = self.parser.unresolvedComponents
+            lCNF = self.parser.unresolved_components
             if lCNF:
-                t = self.drawUnresolvedComponents()
+                t = self.draw_unresolved_components()
                 t.title = "[bold red]Unresolved components[/bold red]"
                 lErrsTable.add_row(t)
 
 
-        if self.parser.unresolvedFiles:
-            t = self.drawUnresolvedFiles()
+        if self.parser.unresolved_files:
+            t = self.draw_unresolved_files()
             t.title = "Unresolved files"
             t.title_style = 'bold red'
             t.title_justify = 'left'
@@ -218,4 +218,4 @@ class DepFormatter(object):
         return lErrsTable
 
     def hasErrors(self):
-        return self.parser.errors or self.parser.unresolved or self.parser.unresolvedFiles
+        return self.parser.errors or self.parser.unresolved or self.parser.unresolved_files

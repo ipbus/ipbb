@@ -15,7 +15,8 @@ Mention the minimal requirements for a component (`firmware` subdirectory with c
  * `firmware/`
    * `hdl/`
    * `cfg/`
-   * `ucf/`
+   * `cgn/`
+   * `ucf/` or `xdc/`
 
  * `software/`
 
@@ -28,7 +29,7 @@ Mention the minimal requirements for a component (`firmware` subdirectory with c
 
 * `src`: Add a source or constraint file
   - `-l`/`--lib`: Associate the hdl file to a library
-  - `--vhdl2008`: Use the 2008 vhdl standard for this file
+  - `--vhdl2008`: Use the 2008 vhdl standard for this file (vhdl only)
   - `-u`/`--usein` (`synth`,`sim`): Declae the file as synth or sim-only file
   - `--simflags`: Pass flags to Modelsim/Questasim
 
@@ -57,6 +58,27 @@ In this approach the top-level VHDL entity appears at the top of the top dep fil
 ## Variables
 
 Describe the use of variables in relation to the script makers and as a way to selectively include sources.
+
+### Common
+
+* `top_entity` (`str`): Name of the top entity
+* `device_name` (`str`): Device name (FPGA)
+* `device_package` (`str`): FPGA package
+* `device_speed` (`str`): FPGA speed grade
+* `device_generation` (`str`): FPGA generation e.g. Ultrascale/UltrascalePlus
+* `board_name` (`str`): Name of the board
+* `pkg2lib_map` (`dict( str: str)`):  package to library mapping for hdl files (exprimental)
+
+### Vivado
+
+* `vivado.sim_top_entity` (`str`): Name of simulation top-entity in vivado
+* `vivado.binfile_options` (`str`): Bin file generation specific options
+* `vivado.mcsfile_options` (`str`): MCS file generation specific options
+* `vivado.svf_jtagchain_devices` (): 
+
+### VitisHLS
+
+### Simulation (Questa/Modelsim)
 
 ## Conditional statements
 

@@ -54,7 +54,7 @@ def dep(ictx, proj):
 def report(ictx, filters):
     '''Summarise the dependency tree of the current project'''
 
-    lCmdHeaders = ['path', 'flags', 'package', 'component', 'lib']
+    lCmdHeaders = ['path', 'flags', 'package', 'component']
 
     lFilterFormat = re.compile('([^=]*)=(.*)')
     lFilterFormatErrors = []
@@ -111,16 +111,14 @@ def report(ictx, filters):
 
         if not lParser.commands[k]:
             continue
-
-        lCmdTable = Table(*lCmdHeaders, title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
+        lCmdTable = Table(*(lCmdHeaders + (['lib'] if k == 'src' else [])), title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
         for lCmd in lParser.commands[k]:
             lRow = [
                 relpath(lCmd.filepath, ictx.srcdir),
                 ','.join(lCmd.flags()),
                 lCmd.package,
                 lCmd.component,
-                lCmd.lib if lCmd.cmd == 'src' else '',
-            ]
+            ] + ( [lCmd.lib] if k == 'src' else [])
 
             if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
                 continue
@@ -136,14 +134,14 @@ def report(ictx, filters):
     cprint()
     cprint('Resolved packages & components', style='blue')
 
-    lCmpPanel = lDepFmt.drawComponents()
+    lCmpPanel = lDepFmt.draw_components()
     # lCmpPanel.title = "[bold blue]Resolved packages & components[/bold blue]"
     cprint(lCmpPanel)
 
-    cprint(Panel.fit(lDepFmt.drawDepfileTree(), title='[bold blue]dep tree commands[/bold blue]'))
+    cprint(Panel.fit(lDepFmt.draw_depfile_tree(), title='[bold blue]dep tree commands[/bold blue]'))
 
     if lDepFmt.hasErrors():
-        cprint(Panel.fit(lDepFmt.drawErrorsTable(), title='[bold red]dep tree errors[/bold red]'))
+        cprint(Panel.fit(lDepFmt.draw_error_table(), title='[bold red]dep tree errors[/bold red]'))
 
 
 

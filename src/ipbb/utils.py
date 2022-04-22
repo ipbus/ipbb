@@ -202,7 +202,7 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser) -> NoReturn:
         len(aDepFileParser.errors),
         ("" if len(aDepFileParser.errors) == 1 else "s"),
     ), style='red')
-    cprint(fmt.drawParsingErrors(), style='red')
+    cprint(fmt.draw_parsing_errors(), style='red')
 
     raise Abort()
 
@@ -224,7 +224,7 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
         len(aDepFileParser.unresolved),
         ("" if len(aDepFileParser.unresolved) == 1 else "s"),
     ), style='red')
-    cprint(fmt.drawUnresolvedFiles(), style='red')
+    cprint(fmt.draw_unresolved_files(), style='red')
 
     cprint("")
     if not Confirm.ask("Do you want to continue anyway?"):

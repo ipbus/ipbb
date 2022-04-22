@@ -8,8 +8,11 @@ from .. import utils
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
-from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoFile, kDeprecatesSetupFile
 from ..console import cprint
+
+from rich.panel import Panel
+from rich.style import Style
 
 
 # TODO:
@@ -18,7 +21,7 @@ from ..console import cprint
 # or
 # https://docs.python-cerberus.org/en/stable/install.html
 
-src_setup_schema = {
+src_repo_schema = {
     'reset': {
         'type': 'list',
         'schema': {
@@ -29,18 +32,6 @@ src_setup_schema = {
         'type': 'list',
         'schema': {
             'type': 'string'
-        }
-    },
-    'dependencies': {
-        'type': 'list',
-        'schema': {
-            'type': 'dict',
-            'schema': {
-                'name': {'type': 'string'},
-                'branch': {'type': 'string'},
-                'path': {'type': 'string'},
-                'type': {'type': 'string'},
-            }
         }
     },
 }
@@ -63,48 +54,65 @@ class FolderInfo(object):
 # ------------------------------------------------------------------------------
 class SourceInfo(FolderInfo):
     """Helper Class to contain source repository settings"""
-    def __init__(self, aPath):
+    def __init__(self, aName, aPath):
         super(SourceInfo, self).__init__()
 
-        self._setupsettings = None
 
+        self._repo_settings = None
+
+        self.name = aName
         self.path = aPath
 
     # ------------------------------------------------------------------------------
     @property
-    def setuppath(self):
-        if self.path is None:
-            return ""
-        return join(self.path, kRepoSetupFile)
+    def deprecated_setup_settings_path(self):
+        return join(self.path, kDeprecatesSetupFile)
 
     # ------------------------------------------------------------------------------
     @property
-    def setupsettings(self):
-        if self._setupsettings is None:
-            self.loadSetup()
+    def repo_settings_path(self):
+        if self.path is None:
+            return ""
+        return join(self.path, kRepoFile)
 
-        return self._setupsettings
-
-    # ------------------------------------------------------------------------------
-    def loadSetup(self):
-        if not exists(self.setuppath):
-            self._setupsettings = {}
-            return
-
-        with open(self.setuppath, 'r') as f:
-            self._setupsettings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
-    def validateSetup(self):
+    @property
+    def repo_settings(self):
+        if self._repo_settings is None:
+            self.load_repo_settings()
 
-        ss = self.setupsettings
+        return self._repo_settings
+
+    # ------------------------------------------------------------------------------
+    def load_repo_settings(self):
+
+        repo_settings_path = self.repo_settings_path
+
+        # Check if repo_setting exists
+        if not exists(repo_settings_path):
+            # Check if the old setup file exists
+            repo_settings_path = self.deprecated_setup_settings_path
+            if exists(repo_settings_path):
+                cprint(Panel(f"\n[yellow]{self.name}: '{kDeprecatesSetupFile}' is deprecated. Use {kRepoFile} instead[/yellow]\n", title="[yellow]DEPRECATION WARNING[/yellow]", style=Style(color="yellow", italic=True)))
+            else:
+                self._repo_settings = {}
+                return
+
+        with open(self.repo_settings_path, 'r') as f:
+            self._repo_settings = yaml.safe_load(f)
+
+    # ------------------------------------------------------------------------------
+    def validate_repo_settings(self):
+
+        ss = self.repo_settings
         if not ss:
             return
 
         vtor = cerberus.Validator()
 
-        x = vtor.validate(ss, src_setup_schema)
-        print('Proj Doc Validated', x)
+        x = vtor.validate(ss, src_repo_schema)
+        print('SourceInfo Validated', x)
         print(vtor.errors)
 
 
@@ -219,13 +227,12 @@ class Context(object):
 
     # ------------------------------------------------------------------------------
     def _clear(self):
-        self._depParser = None
+        self._dep_parser = None
 
         self.work = FolderInfo()
         self.work.path = None
         self.work.cfgFile = None
 
-        # self.srcinfo = {}
         self.currentproj = ProjectInfo()
 
         self.pathMaker = None
@@ -265,7 +272,7 @@ class Context(object):
     project configuration: {currentproj.settings}
     user settings: {currentproj.usersettings}
     pathMaker: {pathMaker}
-    parser: {_depParser}
+    parser: {_dep_parser}
     }})'''.format(
                 **(self.__dict__)
             )
@@ -274,24 +281,27 @@ class Context(object):
     # -----------------------------------------------------------------------------
     @property
     def depParser(self):
-        if self._depParser is None:
+        if self._dep_parser is None:
 
             from ..depparser import DepFileParser
 
-            self._depParser = DepFileParser(
+            # Collect package-level deptree defaults
+            deptree_defaults = { k:v.repo_settings.get('deptree', {}) for k,v in self.sources_info.items() }
+            self._dep_parser = DepFileParser(
                 self.currentproj.settings['toolset'],
                 self.pathMaker,
-                aVerbosity=self._verbosity,
+                deptree_defaults,
+                self._verbosity,
             )
 
             try:
-                self._depParser.parse( self.currentproj.settings['topPkg'], self.currentproj.settings['topCmp'], self.currentproj.settings['topDep'],)
+                self._dep_parser.parse( self.currentproj.settings['topPkg'], self.currentproj.settings['topCmp'], self.currentproj.settings['topDep'],)
             except OSError:
                 pass
 
-            if self._depParser.errors:
+            if self._dep_parser.errors:
                 cprint('WARNING: dep parsing errors detected', style='yellow')
-        return self._depParser
+        return self._dep_parser
 
 
     # -----------------------------------------------------------------------------
@@ -320,7 +330,7 @@ class Context(object):
 
     # -----------------------------------------------------------------------------
     @property
-    def srcinfo(self):
-        return {src: SourceInfo(join(self.srcdir, src)) for src in self.sources }
+    def sources_info(self):
+        return {src: SourceInfo(src, join(self.srcdir, src)) for src in self.sources }
 
 # -----------------------------------------------------------------------------

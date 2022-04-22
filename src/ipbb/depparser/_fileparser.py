@@ -20,7 +20,7 @@ from os.path import exists, splitext, sep
 
 
 # -----------------------------------------------------------------------------
-def _copyUpdateCommand(aCmd, aFilePath, aPkg, aCmp):
+def _copy_update_command(aCmd, aFilePath, aPkg, aCmp):
     """
     Utility function to update parsed commands
     """
@@ -106,7 +106,7 @@ class DepFileParser(object):
     """
     # -----------------------------------------------------------------------------
     @staticmethod
-    def forwardparsing(aDepFileName):
+    def forward_parsing(aDepFileName):
 
         ftype = dep_file_types.get(splitext(aDepFileName)[1], None)
         if ftype is not None:
@@ -118,7 +118,7 @@ class DepFileParser(object):
         return self._pathMaker._rootdir
 
     # -----------------------------------------------------------------------------
-    def __init__(self, aToolSet, aPathmaker, aVariables={}, aVerbosity=0):
+    def __init__(self, aToolSet, aPathmaker, aPkgDefaults={}, aVerbosity=0):
         # --------------------------------------------------------------
         # Member variables
         self._toolset = aToolSet
@@ -141,12 +141,7 @@ class DepFileParser(object):
         self.errors = list()
         # --------------------------------------------------------------
 
-        # --------------------------------------------------------------
-        # Add to or override the Script Variables with user commandline
-        for lArgs in aVariables:
-            lKey, lVal = lArgs.split('=')
-            self.settings[lKey] = lVal
-        # --------------------------------------------------------------
+        self.pkg_defaults = aPkgDefaults
 
         # --------------------------------------------------------------
         # Set the toolset
@@ -155,15 +150,13 @@ class DepFileParser(object):
 
         # --------------------------------------------------------------
         # Set up the parser
-        parser = DepCmdParser(usage=argparse.SUPPRESS)
-
-        self.parseLine = parser.parseLine
+        self.cmdparser = DepCmdParser(self.pkg_defaults)
         # --------------------------------------------------------------
     # -----------------------------------------------------------------------------
 
     # -----------------------------------------------------------------------------
     @property
-    def unresolvedPaths(self):
+    def unresolved_paths(self):
         lNotFound = set()
 
         for lPathExpr, aCmd, lPackage, lComponent, lDepFilePath, lDepPackage, lDepComponent in self.unresolved:
@@ -174,7 +167,7 @@ class DepFileParser(object):
 
     # -------------------------------------------------------------------------
     @property
-    def unresolvedPackages(self):
+    def unresolved_packages(self):
         lNotFound = set()
 
         for lPathExpr, lCmd, lPackage, lComponent, lDepPackage, lDepComponent, lDepFilePath in self.unresolved:
@@ -186,7 +179,7 @@ class DepFileParser(object):
 
     # -------------------------------------------------------------------------
     @property
-    def unresolvedComponents(self):
+    def unresolved_components(self):
         lNotFound = OrderedDict()
 
         for lPathExpr, lCmd, lPackage, lComponent, lDepPackage, lDepComponent, lDepFilePath in self.unresolved:
@@ -199,7 +192,7 @@ class DepFileParser(object):
 
     # -----------------------------------------------------------------------------
     @property
-    def unresolvedFiles(self):
+    def unresolved_files(self):
         lNotFound = OrderedDict()
         for lPathExpr, lCmd, lPackage, lComponent, lDepPackage, lDepComponent, lDepFilePath in self.unresolved:
             lNotFound.setdefault(
@@ -216,7 +209,7 @@ class DepFileParser(object):
         return lNotFound
 
     # -------------------------------------------------------------------------
-    def _lineDropComments(self, aLine):
+    def _line_drop_Comments(self, aLine):
         '''Drop blank lines and comments
         '''
         lLine = aLine.strip()
@@ -230,7 +223,7 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _lineProcessAssignments(self, aLine: str):
+    def _line_process_assignments(self, aLine: str):
         # Process the assignment directive
         
         pattern = re.compile(r'^([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)*)?\s*=\s*(.*)$')
@@ -280,7 +273,7 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _lineProcessConditional(self, aLine):
+    def _line_process_conditional(self, aLine):
         if aLine[0] != "?":
             return aLine
 
@@ -312,7 +305,7 @@ class DepFileParser(object):
         return aLine
 
     # -------------------------------------------------------------------------
-    def _lineReplaceVars(self, aLine):
+    def _line_replace_vars(self, aLine):
         try:
             lLine = AlienTemplate(aLine).substitute(self.settings)
         except RuntimeError as lExc:
@@ -321,24 +314,25 @@ class DepFileParser(object):
         return lLine
 
 # -------------------------------------------------------------------------
-    def _resolvePaths(self, aParsedCmd, aDepFilePath, aCurPackage, aCurComponent, aParentDep):
+    def _resolve_paths(self, aParsedCmd, aCurComponent, aParentDep):
 
         # --------------------------------------------------------------
         # Set package and component to current ones if not defined
-        lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
-        # lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
-        if not aParsedCmd.component:
-            # case: -c not specified, current package and component
-            if lPackage == aCurPackage:
-                lComponent = aCurComponent
-            # case: -c package:
-            else:
-                lComponent = ""
-        else:
-            # case -c package:component
-            lComponent = aParsedCmd.component
+        # lPackage = aParsedCmd.package if aParsedCmd.package else aCurPackage
+        # # lComponent = aParsedCmd.component if aParsedCmd.component else aCurComponent
+        # if not aParsedCmd.component:
+        #     # case: -c not specified, current package and component
+        #     if lPackage == aCurPackage:
+        #         lComponent = aCurComponent
+        #     # case: -c package:
+        #     else:
+        #         lComponent = ""
+        # else:
+        #     # case -c package:component
+        #     lComponent = aParsedCmd.component
         # --------------------------------------------------------------
-
+        lPackage = aParsedCmd.package
+        lComponent = aParsedCmd.component
         # --------------------------------------------------------------
         # Set the target file expression, whether specified explicitly
         # or not
@@ -382,10 +376,10 @@ class DepFileParser(object):
                     print(self._state.tab, ' ',
                           aParsedCmd.cmd, lFile, lFilePath)
                 # --------------------------------------------------------------
-                cmd = _copyUpdateCommand(aParsedCmd, lFilePath, lPackage, lComponent)
+                cmd = _copy_update_command(aParsedCmd, lFilePath, lPackage, lComponent)
                 # If an include command, parse the sub-dep files
                 if aParsedCmd.cmd == "include":
-                    cmd.depfile = self._parseFile(lPackage, lComponent, lFile, aParentDep)
+                    cmd.depfile = self._parse_file(lPackage, lComponent, lFile, aParentDep)
                 lEntries.append(cmd)
 
 
@@ -393,7 +387,7 @@ class DepFileParser(object):
         # --------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-    def _parseFile(self, aPackage, aComponent, aDepFileName, aParentDep):
+    def _parse_file(self, aPackage, aComponent, aDepFileName, aParentDep):
         """
         Private method implementing depfile parsing
         Used for recursion
@@ -414,7 +408,7 @@ class DepFileParser(object):
             print('>' * self._state.depth, 'Parsing',
                   aPackage, aComponent, aDepFileName)
 
-        # This shouldn't be needed, already covered by the 
+        # This shouldn't be needed, case already covered elsewhere
         if not exists(lDepFilePath):
             self.unresolved.append(
                 (lDepFilePath, 'include', aPackage, aComponent, '__top__', '__top__', '__top__'))
@@ -433,22 +427,22 @@ class DepFileParser(object):
                 # Pre-processing
                 try:
                     # Sanitize/drop comments
-                    lLine = self._lineDropComments(lLine)
+                    lLine = self._line_drop_Comments(lLine)
                     if not lLine:
                         continue
 
                     # Process variable assignment directives
-                    lLine = self._lineProcessAssignments(lLine)
+                    lLine = self._line_process_assignments(lLine)
                     if not lLine:
                         continue
 
                     # Process conditional directives
-                    lLine = self._lineProcessConditional(lLine)
+                    lLine = self._line_process_conditional(lLine)
                     if not lLine:
                         continue
 
                     # Replace variables
-                    lLine = self._lineReplaceVars(lLine)
+                    lLine = self._line_replace_vars(lLine)
 
                 except DepLineError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
@@ -457,7 +451,7 @@ class DepFileParser(object):
                 # --------------------------------------------------------------
                 # Parse the line using arg_parse
                 try:
-                    lParsedCmd = self.parseLine(shlex.split(lLine))
+                    lParsedCmd = self.cmdparser.parse_line(shlex.split(lLine), current_package=aPackage, current_component=aComponent)
                 except DepCmdParserError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
@@ -466,7 +460,7 @@ class DepFileParser(object):
                     print(self._state.tab, '- Parsed line', vars(lParsedCmd))
 
                 # --------------------------------------------------------------
-                lEntries, (lUnresolvedExpr, lParsedPackage, lParsedComponent) = self._resolvePaths(lParsedCmd, lDepFilePath, aPackage, aComponent, lCurrentFile)
+                lEntries, (lUnresolvedExpr, lParsedPackage, lParsedComponent) = self._resolve_paths(lParsedCmd, lDepFilePath, lCurrentFile)
                 lCurrentFile.entries += lEntries
                 if lParsedCmd.cmd == 'include':
                     for inc in lEntries:
@@ -481,7 +475,7 @@ class DepFileParser(object):
                 if self._verbosity > 1:
                     print(self._state.tab, '  -- Entries of', aDepFileName, ':', lEntries)
 
-        if not self.forwardparsing(aDepFileName):
+        if not self.forward_parsing(aDepFileName):
             lCurrentFile.entries.reverse()
 
         if self._verbosity > 1:
@@ -495,24 +489,10 @@ class DepFileParser(object):
         return lCurrentFile
 
     # -------------------------------------------------------------------------
-    def parse(self, aPackage, aComponent, aDepFileName):
-
-        # TODO: create a reset method
-        self._state = State()
-
-        # Do the parsing here
-        self.depfile = self._parseFile(aPackage, aComponent, aDepFileName, None)
-
-        # Lock the config variables tree
-        self.settings.lock(True)
-        # --------------------------------------------------------------
-        # If we are exiting the top-level, uniquify the commands list, keeping
-        # the order as defined in Dave's origianl voodoo
-        if self._state.depth != 0:
-            raise RuntimeError("Something went wrong")
-        self._state = None
-
-        # Collect summary information
+    def _gather_summary_info(self):
+        """
+        Gather DepTree summart information"
+        """
         for lCmd in self.depfile.itercmd():
             if self._verbosity > 0:
                 print (lCmd)
@@ -522,126 +502,93 @@ class DepFileParser(object):
             if isinstance(lCmd, SrcCommand) and lCmd.lib is not None:
                 self.libs.add(lCmd.lib)
 
-        # Gather unresolved files and errors
+    # -------------------------------------------------------------------------
+    def _gather_unresolved_and_errors(self):
+        """
+        Gather unresolved files and errors
+        """
+
         for dp, f in self._depregistry.items():
             self.errors.extend(f.errors)
             self.unresolved.extend(f.unresolved)
 
-        for i in self.commands:
-            lTemp = list()
-            for j in self.commands[i]:
-                if j not in lTemp:
-                    lTemp.append(j)
-            self.commands[i] = lTemp
+    # -------------------------------------------------------------------------
+    def _remove_duplicates(self):
+        """
+        Remove duplicates from command and package list
+        """
+
+        # ToCheck: can we use OrderedDict.fromkeys?
+        self.commands = { k:list(OrderedDict.fromkeys(v)) for k,v in self.commands.items() }
+        # for i in self.commands:
+        #     ordered_command_set = list()
+        #     for j in self.commands[i]:
+        #         if j not in ordered_command_set:
+        #             ordered_command_set.append(j)
+        #     self.commands[i] = ordered_command_set
 
         # If we are exiting the top-level, uniquify the component list
-        for lPkg in self.packages:
-            lTemp = list()
-            lAdded = set()
-            for lCmp in self.packages[lPkg]:
-                if lCmp not in lAdded:
-                    lTemp.append(lCmp)
-                    lAdded.add(lCmp)
-            self.packages[lPkg] = lTemp
+        for p in self.packages:
+            self.packages[p] = list(OrderedDict.fromkeys(self.packages[p])) 
+            # lTemp = list()
+            # lAdded = set()
+            # for lCmp in self.packages[lPkg]:
+            #     if lCmp not in lAdded:
+            #         lTemp.append(lCmp)
+            #         lAdded.add(lCmp)
+            # self.packages[lPkg] = lTemp
+
+
+
+    def _apply_defaults(self):
+
+        from functools import reduce
+        def deep_get(dictionary, keys, default=None):
+            return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
+
+
+        pkg_lib_map = self.settings.get('pkg2lib_map', None)
+
+        for k,cmds in self.commands.items():
+            for c in cmds:
+                if isinstance(c, SrcCommand) and c.lib is None and not pkg_lib_map is None:
+                        c.lib = pkg_lib_map.get(c.package, None)
+
+
+
+  
+    # -------------------------------------------------------------------------
+    def parse(self, aPackage, aComponent, aDepFileName):
+
+        # TODO: create a reset method
+        self._state = State()
+
+        # Do the parsing here
+        self.depfile = self._parse_file(aPackage, aComponent, aDepFileName, None)
+
+        # Lock the config variables tree
+        self.settings.lock(True)
+        # --------------------------------------------------------------
+        # If we are exiting the top-level, uniquify the commands list, keeping
+        # the order as defined in Dave's origianl voodoo
+        if self._state.depth != 0:
+            raise RuntimeError(f"Something went wrong while parsing {aPackage}:{aComponent} {aDepFileName}")
+        self._state = None
+
+
+        # Post parsing
+        self._gather_summary_info()
+
+        self._gather_unresolved_and_errors()
+
+        # Uniquify
+        self._remove_duplicates()
+
+        # Apply default settings
+        self._apply_defaults()
+
+
+
         # --------------------------------------------------------------
 
     # -------------------------------------------------------------------------
-
-
-# class DepFormatter(object):
-#     """docstring for DepFormatter"""
-#     def __init__(self, aParser):
-#         super().__init__()
-#         self.parser = aParser
-
-#     # -----------------------------------------------------------------------------
-#     def reportCommands(self):
-#         lPrsr = self.parser
-#         lOutTxt = ''
-#         lOutTxt += 'Commands\n'
-#         lOutTxt += '--------\n'
-#         for k in lPrsr.commands:
-#             lOutTxt += '+ %s (%d)\n' % (k, len(lPrsr.commands[k]))
-#             for lCmd in lPrsr.commands[k]:
-#                 lOutTxt += '  * ' + str(lCmd) + '\n'
-#         return lOutTxt
-
-#     # -----------------------------------------------------------------------------
-#     def reportPackages(self):
-#         lPrsr = self.parser
-#         lOutTxt = ''
-#         lOutTxt += 'Resolved packages & components\n'
-#         lOutTxt += '------------------------------\n'
-#         lOutTxt += 'packages: ' + ', '.join(lPrsr.packages.keys()) + '\n'
-#         lOutTxt += 'components:\n'
-#         for pkg in sorted(lPrsr.packages):
-#             lOutTxt += '+ %s (%d)\n' % (pkg, len(lPrsr.packages[pkg]))
-#             for cmp in sorted(lPrsr.packages[pkg]):
-#                 lOutTxt += '  > ' + str(cmp if cmp else '<root>') + '\n'
-#         return lOutTxt
-
-#     # -----------------------------------------------------------------------------
-#     def reportUnresolved(self):
-#         lPrsr = self.parser
-#         lOutTxt = ''
-#         lOutTxt += 'Missing packages, components & files\n'
-#         lOutTxt += '------------------------------------\n'
-
-#         lUPkgs = lPrsr.unresolvedPackages
-#         if lUPkgs:
-#             lOutTxt += 'packages: ' + \
-#                 str(list(self.lUPkgs)) + '\n'
-
-#         lUCmp = lPrsr.unresolvedComponents
-#         if lUCmp:
-#             lOutTxt += 'components: \n'
-
-#             for pkg in sorted(lUCmp):
-#                 lOutTxt += '+ %s (%d)\n' % (pkg, len(lUCmp[pkg]))
-
-#                 for cmp in sorted(lUCmp[pkg]):
-#                     lOutTxt += '  > ' + str(cmp) + '\n'
-
-#         lUFl = lPrsr.unresolvedFiles
-#         if lUFl:
-#             lOutTxt += 'files:\n'
-
-#             for pkg in sorted(lUFl):
-#                 lCmps = lUFl[pkg]
-#                 lOutTxt += '+ %s (%d components)\n' % (pkg, len(lCmps))
-
-#                 for cmp in sorted(lCmps):
-#                     lFiles = lCmps[cmp]
-#                     lOutTxt += '  + %s (%d files)\n' % (cmp, len(lFiles))
-
-#                     lCmpPath = lPrsr._pathMaker.getPath(pkg, cmp)
-#                     for lFile in sorted(lFiles):
-#                         lSrcs = lFiles[lFile]
-#                         lOutTxt += '    + %s\n' % os.path.relpath(
-#                             lFile, lCmpPath)
-#                         lOutTxt += '      | included by %d dep file(s)\n' % len(
-#                             lSrcs)
-
-#                         for lSrc in lSrcs:
-#                             lOutTxt += '      \\ - %s\n' % os.path.relpath(
-#                                 lSrc, lPrsr.rootdir)
-#                         lOutTxt += '\n'
-#         return lOutTxt
-
-#     # -----------------------------------------------------------------------------
-#     def summary(self):
-
-#         lOutTxt = ''
-#         lOutTxt += self.reportCommands()
-
-#         lOutTxt += '\n'
-#         lOutTxt += self.reportPackages()
-
-#         if self.parser.unresolved:
-#             lOutTxt += '\n'
-#             lOutTxt += self.reportUnresolved()
-#             return lOutTxt
-
-#         return lOutTxt
-#     # -----------------------------------------------------------------------------
-

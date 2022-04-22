@@ -1,6 +1,20 @@
 
+import cerberus
 import argparse
 from ._cmdtypes import Command, IncludeCommand, SrcCommand, HlsSrcCommand, SetupCommand, AddrtabCommand
+from ..console import cprint, console
+
+
+
+cmds_defaults_schema = {
+    "src": {
+        'type': 'dict',
+        'schema': {
+            'vhdl2008': { 'type': 'boolean' },
+            'lib': { 'type': 'string' },
+        }
+    }    
+}
 
 # -----------------------------------------------------------------------------
 class ComponentAction(argparse.Action):
@@ -65,11 +79,24 @@ class DepCmdParser(argparse.ArgumentParser):
     def error(self, message):
         raise DepCmdParserError(message)
 
+
+    def validate_defaults(self):
+        lValidator = cerberus.Validator(cmds_defaults_schema, allow_unknown=True)
+        for pkg,defs in self.package_defaults.items():
+            if not lValidator.validate(defs):
+                cprint(f"ERROR: {pkg} repository settings validation failed", style='red')
+                cprint(f"   Detected errors: {lValidator.errors}", style='red')
+                cprint(f"   Settings: {defs}", style='red')
+                raise RuntimeError(f"Package repo settings validation failed: {lValidator.errors}")
+
     # ---------------------------------
     def __init__(self, package_defaults : dict = {}):
         super().__init__(usage=argparse.SUPPRESS)
 
         self.package_defaults = package_defaults
+
+        self.validate_defaults()
+
         # Common options
         lCompArgOpts = dict(action=ComponentAction, default=(None, None))
 

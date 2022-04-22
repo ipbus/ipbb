@@ -2,7 +2,7 @@
 kWorkAreaFile = '.ipbb_work.yml'
 kProjAreaFile = '.ipbb_proj.yml'
 kProjUserFile = '.ipbb_user.yml'
-kRepoFile = '.ipbb_repo.yml'
+kRepoFile = 'ipbb_repo_settings.yml'
 kDeprecatesSetupFile = '.ipbb_setup.yml'
 kSourceDir = 'src'
 kProjDir = 'proj'

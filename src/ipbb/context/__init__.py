@@ -8,8 +8,11 @@ from .. import utils
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
-from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoFile
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoFile, kDeprecatesSetupFile
 from ..console import cprint
+
+from rich.panel import Panel
+from rich.style import Style
 
 
 # TODO:
@@ -51,19 +54,27 @@ class FolderInfo(object):
 # ------------------------------------------------------------------------------
 class SourceInfo(FolderInfo):
     """Helper Class to contain source repository settings"""
-    def __init__(self, aPath):
+    def __init__(self, aName, aPath):
         super(SourceInfo, self).__init__()
+
 
         self._repo_settings = None
 
+        self.name = aName
         self.path = aPath
 
     # ------------------------------------------------------------------------------
     @property
-    def repofile_path(self):
+    def deprecated_setup_settings_path(self):
+        return join(self.path, kDeprecatesSetupFile)
+
+    # ------------------------------------------------------------------------------
+    @property
+    def repo_settings_path(self):
         if self.path is None:
             return ""
         return join(self.path, kRepoFile)
+
 
     # ------------------------------------------------------------------------------
     @property
@@ -75,11 +86,20 @@ class SourceInfo(FolderInfo):
 
     # ------------------------------------------------------------------------------
     def load_repo_settings(self):
-        if not exists(self.repofile_path):
-            self._repo_settings = {}
-            return
 
-        with open(self.repofile_path, 'r') as f:
+        repo_settings_path = self.repo_settings_path
+
+        # Check if repo_setting exists
+        if not exists(repo_settings_path):
+            # Check if the old setup file exists
+            repo_settings_path = self.deprecated_setup_settings_path
+            if exists(repo_settings_path):
+                cprint(Panel(f"\n[yellow]{self.name}: '{kDeprecatesSetupFile}' is deprecated. Use {kRepoFile} instead[/yellow]\n", title="[yellow]DEPRECATION WARNING[/yellow]", style=Style(color="yellow", italic=True)))
+            else:
+                self._repo_settings = {}
+                return
+
+        with open(self.repo_settings_path, 'r') as f:
             self._repo_settings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
@@ -311,6 +331,6 @@ class Context(object):
     # -----------------------------------------------------------------------------
     @property
     def sources_info(self):
-        return {src: SourceInfo(join(self.srcdir, src)) for src in self.sources }
+        return {src: SourceInfo(src, join(self.srcdir, src)) for src in self.sources }
 
 # -----------------------------------------------------------------------------

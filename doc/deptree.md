@@ -61,19 +61,20 @@ Describe the use of variables in relation to the script makers and as a way to s
 
 ### Common
 
-* `top_entity`: Name of the top entity
-* `device_name`: Device name (FPGA)
-* `device_package`: FPGA package
-* `device_speed`: FPGA speed grade
-* `device_generation`: FPGA generation e.g. Ultrascale/UltrascalePlus
-* `board_name`: Name of the board
+* `top_entity` (`str`): Name of the top entity
+* `device_name` (`str`): Device name (FPGA)
+* `device_package` (`str`): FPGA package
+* `device_speed` (`str`): FPGA speed grade
+* `device_generation` (`str`): FPGA generation e.g. Ultrascale/UltrascalePlus
+* `board_name` (`str`): Name of the board
+* `pkg2lib_map` (`dict( str: str)`):  package to library mapping for hdl files (exprimental)
 
 ### Vivado
 
-* `vivado.sim_top_entity`
-* `vivado.binfile_options`
-* `vivado.mcsfile_options`
-* `vivado.svf_jtagchain_devices`
+* `vivado.sim_top_entity` (`str`): Name of simulation top-entity in vivado
+* `vivado.binfile_options` (`str`): Bin file generation specific options
+* `vivado.mcsfile_options` (`str`): MCS file generation specific options
+* `vivado.svf_jtagchain_devices` (): 
 
 ### VitisHLS
 

@@ -17,12 +17,12 @@ from ._definitions import dep_command_types
 
 
 class DepFormatter(object):
-    """docstring for DepFormatter"""
+    """Helper class to format simplify and standardize the representation of deptree data"""
     def __init__(self, parser):
         super().__init__()
         self.parser = parser
 
-    def drawDepfileTree(self):
+    def draw_depfile_tree(self):
         t = Tree(self.parser.depfile.name)
         self._drawLeaves(self.parser.depfile, t)
         return t

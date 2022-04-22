@@ -8,7 +8,7 @@ def test_cmdparser_include():
 
     cp = DepCmdParser()
 
-    args = cp.parseLine("include -c a:b --cd ../aaa afile.vhd".split())
+    args = cp.parse_line("include -c a:b --cd ../aaa afile.vhd".split())
     assert type(args) == IncludeCommand
     assert args.flags() == []
     assert args.extra() == None
@@ -22,7 +22,7 @@ def test_cmdparser_setup():
 
     cp = DepCmdParser()
 
-    args = cp.parseLine("setup -c a:b -f --cd ../aaa afile.vhd".split())
+    args = cp.parse_line("setup -c a:b -f --cd ../aaa afile.vhd".split())
     assert type(args) == SetupCommand
     assert args.flags() == ['finalise']
     assert args.extra() == None

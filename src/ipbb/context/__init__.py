@@ -8,7 +8,7 @@ from .. import utils
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
-from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir
+from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoFile
 from ..console import cprint
 
 
@@ -18,7 +18,7 @@ from ..console import cprint
 # or
 # https://docs.python-cerberus.org/en/stable/install.html
 
-src_setup_schema = {
+src_repo_schema = {
     'reset': {
         'type': 'list',
         'schema': {
@@ -29,18 +29,6 @@ src_setup_schema = {
         'type': 'list',
         'schema': {
             'type': 'string'
-        }
-    },
-    'dependencies': {
-        'type': 'list',
-        'schema': {
-            'type': 'dict',
-            'schema': {
-                'name': {'type': 'string'},
-                'branch': {'type': 'string'},
-                'path': {'type': 'string'},
-                'type': {'type': 'string'},
-            }
         }
     },
 }
@@ -66,45 +54,45 @@ class SourceInfo(FolderInfo):
     def __init__(self, aPath):
         super(SourceInfo, self).__init__()
 
-        self._setupsettings = None
+        self._repo_settings = None
 
         self.path = aPath
 
     # ------------------------------------------------------------------------------
     @property
-    def setuppath(self):
+    def repofile_path(self):
         if self.path is None:
             return ""
-        return join(self.path, kRepoSetupFile)
+        return join(self.path, kRepoFile)
 
     # ------------------------------------------------------------------------------
     @property
-    def setupsettings(self):
-        if self._setupsettings is None:
-            self.loadSetup()
+    def repo_settings(self):
+        if self._repo_settings is None:
+            self.load_repo_settings()
 
-        return self._setupsettings
+        return self._repo_settings
 
     # ------------------------------------------------------------------------------
-    def loadSetup(self):
-        if not exists(self.setuppath):
-            self._setupsettings = {}
+    def load_repo_settings(self):
+        if not exists(self.repofile_path):
+            self._repo_settings = {}
             return
 
-        with open(self.setuppath, 'r') as f:
-            self._setupsettings = yaml.safe_load(f)
+        with open(self.repofile_path, 'r') as f:
+            self._repo_settings = yaml.safe_load(f)
 
     # ------------------------------------------------------------------------------
-    def validateSetup(self):
+    def validate_repo_settings(self):
 
-        ss = self.setupsettings
+        ss = self.repo_settings
         if not ss:
             return
 
         vtor = cerberus.Validator()
 
-        x = vtor.validate(ss, src_setup_schema)
-        print('Proj Doc Validated', x)
+        x = vtor.validate(ss, src_repo_schema)
+        print('SourceInfo Validated', x)
         print(vtor.errors)
 
 
@@ -225,7 +213,6 @@ class Context(object):
         self.work.path = None
         self.work.cfgFile = None
 
-        # self.srcinfo = {}
         self.currentproj = ProjectInfo()
 
         self.pathMaker = None
@@ -278,10 +265,13 @@ class Context(object):
 
             from ..depparser import DepFileParser
 
+            # Collect package-level deptree defaults
+            deptree_defaults = { k:v.repo_settings.get('deptree', {}) for k,v in self.sources_info.items() }
             self._dep_parser = DepFileParser(
                 self.currentproj.settings['toolset'],
                 self.pathMaker,
-                aVerbosity=self._verbosity,
+                deptree_defaults,
+                self._verbosity,
             )
 
             try:
@@ -320,7 +310,7 @@ class Context(object):
 
     # -----------------------------------------------------------------------------
     @property
-    def srcinfo(self):
+    def sources_info(self):
         return {src: SourceInfo(join(self.srcdir, src)) for src in self.sources }
 
 # -----------------------------------------------------------------------------

@@ -138,7 +138,7 @@ def report(ictx, filters):
     # lCmpPanel.title = "[bold blue]Resolved packages & components[/bold blue]"
     cprint(lCmpPanel)
 
-    cprint(Panel.fit(lDepFmt.drawDepfileTree(), title='[bold blue]dep tree commands[/bold blue]'))
+    cprint(Panel.fit(lDepFmt.draw_depfile_tree(), title='[bold blue]dep tree commands[/bold blue]'))
 
     if lDepFmt.hasErrors():
         cprint(Panel.fit(lDepFmt.draw_error_table(), title='[bold red]dep tree errors[/bold red]'))

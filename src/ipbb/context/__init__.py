@@ -117,8 +117,8 @@ class SourceInfo(FolderInfo):
         vtor = cerberus.Validator(src_repo_schema)
 
         val = vtor.validate(ss)
-        cprint('SourceInfo Validated', val)
-        cprint(vtor.errors)
+        if not val:
+            cprint(vtor.errors)
 
 
 # ------------------------------------------------------------------------------

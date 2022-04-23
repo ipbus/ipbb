@@ -25,6 +25,7 @@ from ..console import cprint, console
 from ..utils import which, SmartOpen
 from ..depparser import DepFormatter, dep_command_types
 from ..utils import DirSentry, printDictTable, printAlienTable, formatAlienTable
+from .schema import project_schema, validate_schema
 from rich.table import Table, Column
 from rich.padding import Padding
 from rich.panel import Panel
@@ -39,6 +40,7 @@ def dep(ictx, proj):
         from .proj import cd
 
         cd(ictx, lProj, False)
+        validate_schema(project_schema, ictx.depParser.settings)
         return
     else:
         if ictx.currentproj.name is None:

@@ -105,18 +105,6 @@ def mkdir(path, mode=0o777):
 
 
 # ------------------------------------------------------------------------------
-def raiseError(aMessage):
-    """
-    Print the error message to screen in bright red and a ClickException error
-    """
-
-    cprint("\nERROR: " + aMessage + "\n", style='red')
-    raise ClickException("Command aborted.")
-
-# ------------------------------------------------------------------------------
-
-
-# ------------------------------------------------------------------------------
 def findFirstParentDir(aDirPath, aParentDir='/'):
     if not aDirPath.startswith(aParentDir):
         raise RuntimeError("{} is not a parent folder of {}".format(aParentDir, aDirPath))

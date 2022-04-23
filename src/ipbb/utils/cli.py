@@ -5,7 +5,7 @@ import sys
 import re
 
 from click import get_current_context, ClickException, Abort, BadParameter
-from os.path import join, split,
+from os.path import join, split
 from typing import NoReturn
 
 # from ..tools.alien import AlienBranch
@@ -13,7 +13,26 @@ from typing import NoReturn
 # from ..depparser import DepFormatter
 
 # ------------------------------------------------------------------------------
-def validateComponent(ctx, param, value):
+def getClickRootName() -> str:
+    """
+    Returns the name of the root context
+    """
+    return get_current_context().find_root().info_name
+
+# ------------------------------------------------------------------------------
+def raiseError(aMessage: str):
+    """
+    Print the error message to screen in bright red and a ClickException error
+    """
+
+    cprint("\nERROR: " + aMessage + "\n", style='red')
+    raise ClickException("Command aborted.")
+
+# ------------------------------------------------------------------------------
+def validateComponent(ctx, param: str, value: str) -> tuple:
+    """
+    Validate package/component syntax
+    """
     lTopSeps = value.count(':')
     lPathSeps = value.count(os.path.sep)
     # Validate the format
@@ -21,11 +40,13 @@ def validateComponent(ctx, param, value):
         raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)
 
     return tuple(value.split(':'))
-# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
-def validateMultiplePackageOrComponents(ctx, param, value):
+def validateMultiplePackageOrComponents(ctx, param: str, value: str ) -> tuple:
+    """
+    Validate a sequence of package/component strings
+    """
     pocs = []
     for v in value:
         lSeparators = v.count(':')
@@ -36,18 +57,22 @@ def validateMultiplePackageOrComponents(ctx, param, value):
         pocs.append(tuple(v.split(':')))
 
     return tuple(pocs)
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-def validateOptionalComponent(ctx, param, value):
+def validateOptionalComponent(ctx, param: str, value: str) -> tuple:
+    """
+    Validate package/components allowing for None values
+    """
     if value is None:
         return None
     
     return validateComponent(ctx, param, value)
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-def validateIpAddress(value):
+def validateIpAddress(value) -> str :
+    """
+    Validate ip address strings
+    """
     if value is None:
         return
 
@@ -64,7 +89,10 @@ def validateIpAddress(value):
 
 
 # ------------------------------------------------------------------------------
-def validateMacAddress(value):
+def validateMacAddress(value) -> str:
+    """
+    Validate mac address strings
+    """
 
     if value is None:
         return
@@ -77,6 +105,5 @@ def validateMacAddress(value):
     return 'X"{}"'.format(lHexMac)
 
 
-# ------------------------------------------------------------------------------
-def getClickRootName():
-    return get_current_context().find_root().info_name
+
+

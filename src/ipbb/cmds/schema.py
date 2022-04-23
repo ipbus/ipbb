@@ -1,5 +1,6 @@
 import cerberus
 from ..console import cprint, console
+from ..utils import error_notice
 
 project_schema = {
     'toolset': {'type': 'string', 'allowed': ['sim', 'vivado', 'vitis_hls'], 'required': True},
@@ -12,11 +13,14 @@ project_schema = {
     'package_to_lib_mapping': {'type': 'dict'},
 }
 
-def validate(schema, settings, toolset):
+#------------------------------------------------------------------------------
+def validate_schema(schema, settings):
 
     lValidator = cerberus.Validator(schema, allow_unknown=True)
     if not lValidator.validate(settings.dict()):
-        cprint(f"ERROR: Project settings validation failed", style='red')
-        cprint(f"   Detected errors: {lValidator.errors}", style='red')
-        cprint(f"   Settings: {settings.dict()}", style='red')
+        error_notice(f"""Project settings validation failed
+               Detected errors: {lValidator.errors}
+               Settings: {settings.dict()}
+               """)
+
         raise RuntimeError(f"Project settings validation failed: {lValidator.errors}")

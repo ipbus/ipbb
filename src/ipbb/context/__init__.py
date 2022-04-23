@@ -9,10 +9,7 @@ from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname
 
 from ..defaults import kWorkAreaFile, kProjAreaFile, kProjUserFile, kSourceDir, kProjDir, kRepoFile, kDeprecatesSetupFile
-from ..console import cprint
-
-from rich.panel import Panel
-from rich.style import Style
+from ..utils.printing import deprecation_warning, error_notice
 
 
 # TODO:
@@ -97,7 +94,7 @@ class SourceInfo(FolderInfo):
             # Check if the old setup file exists
             repo_settings_path = self.deprecated_setup_settings_path
             if exists(repo_settings_path):
-                cprint(Panel(f"\n[yellow]{self.name}: '{kDeprecatesSetupFile}' is deprecated. Use {kRepoFile} instead[/yellow]\n", title="[yellow]DEPRECATION WARNING[/yellow]", style=Style(color="yellow", italic=True)))
+                deprecation_warning(f"{self.name}: '{kDeprecatesSetupFile}' is deprecated. Use {kRepoFile} instead[/yellow]\n")
             else:
                 self._repo_settings = {}
                 return
@@ -116,9 +113,15 @@ class SourceInfo(FolderInfo):
 
         vtor = cerberus.Validator(src_repo_schema)
 
-        val = vtor.validate(ss)
-        if not val:
-            cprint(vtor.errors)
+        if not vtor.validate(ss):
+            error_notice(f"""Source repo settings validation failed
+    Detected errors: 
+       {vtor.errors}
+    in settings of {self.name}:
+       {ss}
+    """)
+            raise RuntimeError(f"Repository settings validation failed: {vtor.errors}")
+
 
 
 # ------------------------------------------------------------------------------

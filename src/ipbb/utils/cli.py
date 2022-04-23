@@ -5,7 +5,7 @@ import sys
 import re
 
 from click import get_current_context, ClickException, Abort, BadParameter
-from os.path import join, split
+from os.path import join, split, sep
 from typing import NoReturn
 
 # from ..tools.alien import AlienBranch
@@ -34,7 +34,7 @@ def validateComponent(ctx, param: str, value: str) -> tuple:
     Validate package/component syntax
     """
     lTopSeps = value.count(':')
-    lPathSeps = value.count(os.path.sep)
+    lPathSeps = value.count(sep)
     # Validate the format
     if not ((lTopSeps == 1) or (lTopSeps == 0 and lPathSeps == 0)):
         raise BadParameter('Malformed component name : %s. Expected <package>:<component>' % value)

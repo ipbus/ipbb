@@ -13,7 +13,7 @@ from copy import deepcopy
 from rich.table import Table
 from rich.prompt import Confirm
 
-from .schema import project_schema, validate
+from .schema import project_schema, validate_schema
 
 from ..console import cprint, console
 from ..tools import xilinx, mentor
@@ -59,9 +59,15 @@ _schema.update({
     }
 })
 
+# ------------------------------------------------------------------------------
+def validate_settings(ictx):
+
+    validate_schema(_schema, ictx.depParser.settings)
+
+
 
 # ------------------------------------------------------------------------------
-def ensureModelsim(ictx):
+def ensure_modelsim(ictx):
     '''Utility function ensuring that the simulation environment is correctly setup'''
 
     if ictx.currentproj.settings['toolset'] != _toolset:
@@ -119,9 +125,9 @@ def sim(ictx, proj):
             'Project area not defined. Move into a project area and try again.'
         )
 
-    validate(_schema, ictx.depParser.settings, _toolset)
+    validate_schema(ictx)
 
-    ensureModelsim(ictx)
+    ensure_modelsim(ictx)
 
 
 # ------------------------------------------------------------------------------
@@ -642,10 +648,5 @@ def mifs(ictx):
                 p = os.path.join(d, file)
                 cprint(f"Copying {p} to the project area")
                 sh.cp(p, '.')
-
-# ------------------------------------------------------------------------------
-def validate_settings(ictx):
-
-    validate(_schema, ictx.depParser.settings, _toolset)
 
 

@@ -70,12 +70,12 @@ class ModelSimGenerator(object):
             # ----------------------------------------------------------
 
             # ----------------------------------------------------------
-            if splitext(file)[1] in ['.vhd', '.vhdl']:
+            if lExt in ('.vhd', '.vhdl'):
                 if src.vhdl2008:
                     cmd = 'vcom -2008'
                 else:
                     cmd = 'vcom'
-            elif splitext(file)[1] == '.v':
+            elif lExt == '.v':
                 cmd = 'vlog'
 
             else:

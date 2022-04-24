@@ -10,7 +10,7 @@ import sh
 from os.path import join, split, exists, splitext, abspath, basename
 from copy import deepcopy
 
-from .schema import project_schema, validate
+from .schema import project_schema, validate_schema
 
 from ..console import cprint, console
 from ..utils import which, SmartOpen, mkdir
@@ -48,8 +48,14 @@ _schema.update({
     }
 })
 
+
 # ------------------------------------------------------------------------------
-def ensureVitisHLS(ictx):
+def validate_settings(ictx):
+
+    validate_schema(_schema, ictx.depParser.settings)
+
+# ------------------------------------------------------------------------------
+def ensure_vitishls(ictx):
 
     if ictx.currentproj.settings['toolset'] != _toolset:
         raise click.ClickException(
@@ -82,14 +88,14 @@ def vitishls(ictx, proj, verbosity):
             'Project area not defined. Move to a project area and try again'
         )
 
-    validate(_schema, ictx.depParser.settings, _toolset)
+    validate_settings(ictx)
 
     ictx.vitishls_proj_path = join(ictx.currentproj.path, ictx.currentproj.name)
     ictx.vitishls_prod_path = join(ictx.currentproj.path, 'ip')
     ictx.vitishls_solution = ictx.depParser.settings.get(f'{_toolset}.solution', 'sol1')
     
     # Check if vivado is available
-    ictx.vitishsl_exec = ensureVitisHLS(ictx)
+    ictx.vitishsl_exec = ensure_vitishls(ictx)
 
 # ------------------------------------------------------------------------------
 def genproject(ictx, aToScript, aToStdout):
@@ -249,7 +255,7 @@ def export_ip(ictx, to_component):
     lIpRepoName = f"{lIPVendor.replace('.', '_')}_{lIPLib.replace('.', '_')}_{lIPName}_{lIPVersion.replace('.', '_')}"
 
     # Check if vitis_hls is accessible
-    ensureVitisHLS(ictx)
+    ensure_vitishls(ictx)
 
     # -- Export the HSL code as a Xilinx IP catalog
     console.log("Exporting IP catalog", style="blue")
@@ -352,9 +358,4 @@ def export_ip(ictx, to_component):
     console.log(f"{lXciModName}.xci copied to {lIPDest}")
     console.log(f"{ictx.currentproj.name}: Export completed successfully.", style='green')
 
-
-# ------------------------------------------------------------------------------
-def validate_settings(ictx):
-
-    validate(_schema, ictx.depParser.settings, _toolset)
    

@@ -17,7 +17,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from rich.table import Table
 
-from .schema import project_schema, validate
+from .schema import project_schema, validate_schema
 from .dep import hash
 
 from ..console import cprint, console
@@ -46,6 +46,14 @@ _memCfgKinds = {
 }
 
 _svfSettingName = 'svf_jtagchain_devices'
+
+
+
+# ------------------------------------------------------------------------------
+def validate_settings(ictx):
+
+    validate_schema(_schema, ictx.depParser.settings)
+
 
 
 # ------------------------------------------------------------------------------
@@ -107,7 +115,7 @@ def vivado(ictx, loglevel, cmdlist):
             'Project area not defined. Move to a project area and try again'
         )
     
-    validate(_schema, ictx.depParser.settings, _toolset)
+    validate_settings(ictx)
 
     lKeep = True
     lLogLabel = None if not lKeep else '_'.join( cmdlist )
@@ -897,9 +905,3 @@ def ipy(ictx):
     import IPython
 
     IPython.embed()
-
-# ------------------------------------------------------------------------------
-def validate_settings(ictx):
-
-    validate(_schema, ictx.depParser.settings, _toolset)
-

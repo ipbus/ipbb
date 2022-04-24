@@ -138,7 +138,7 @@ class VivadoProjectGenerator(object):
                 f = src.filepath
                 lCommands += [(c, f)]
 
-                if src.vhdl2008:
+                if lExt in ('.vhd', '.vhdl') and src.vhdl2008 :
                     c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
                     f = src.filepath
                     lCommands += [(c, f)]

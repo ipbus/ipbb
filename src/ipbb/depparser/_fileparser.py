@@ -15,6 +15,7 @@ from ._cmdtypes import SrcCommand, IncludeCommand
 
 from ..console import cprint, console
 from ..tools.alien import AlienTree, AlienTemplate
+from ..utils import error_notice
 
 from collections import OrderedDict
 from os.path import exists, splitext, sep
@@ -151,9 +152,12 @@ class DepFileParser(object):
 
 
         if errors:
-            cprint(f"ERROR: Repository settings validation failed", style='red')
-            cprint(f"   Detected errors: {errors}", style='red')
-            cprint(f"   Settings: {repo_settings}", style='red')
+            error_notice(f"""Repository settings validation failed
+    Detected errors: 
+        {errors}
+    Settings: 
+        {repo_settings}
+""")
             raise InvalidDepDefaults(f"Project settings validation failed: {errors}")
 
 

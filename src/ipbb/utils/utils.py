@@ -13,6 +13,8 @@ from typing import NoReturn
 
 from locale import getpreferredencoding
 
+from ..console import cprint, console
+
 DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
 
 # ------------------------------------------------------------------------------

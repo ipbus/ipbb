@@ -4,6 +4,7 @@ import yaml
 import cerberus
 
 from .. import utils
+from ..console import cprint
 
 from os import walk, getcwd
 from os.path import join, split, exists, splitext, basename, dirname

@@ -14,6 +14,7 @@ from typing import NoReturn
 from locale import getpreferredencoding
 
 from ..console import cprint, console
+from ..depparser import DepFormatter
 
 DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
 

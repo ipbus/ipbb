@@ -13,6 +13,8 @@ from typing import NoReturn
 
 from locale import getpreferredencoding
 
+from ..console import cprint, console
+
 DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
 
 # ------------------------------------------------------------------------------
@@ -177,6 +179,8 @@ def ensureNoParsingErrors(aCurrentProj, aDepFileParser) -> NoReturn:
     Raises:
         Abort: Description
     """
+    from ..depparser import DepFormatter
+
     if not aDepFileParser.errors:
         return
 

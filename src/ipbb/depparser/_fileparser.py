@@ -15,7 +15,7 @@ from ._cmdtypes import SrcCommand, IncludeCommand
 
 from ..console import cprint, console
 from ..tools.alien import AlienTree, AlienTemplate
-from ..utils import error_notice
+from ..utils.printing import error_notice
 
 from collections import OrderedDict
 from os.path import exists, splitext, sep

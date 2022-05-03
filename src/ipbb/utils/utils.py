@@ -203,6 +203,8 @@ def ensureNoMissingFiles(aCurrentProj, aDepFileParser):
     If detected, ask the user for confirmation to continue
     """
 
+    from ..depparser import DepFormatter
+
     if not aDepFileParser.unresolved:
         return
 

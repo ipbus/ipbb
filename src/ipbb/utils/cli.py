@@ -8,9 +8,7 @@ from click import get_current_context, ClickException, Abort, BadParameter
 from os.path import join, split, sep
 from typing import NoReturn
 
-# from ..tools.alien import AlienBranch
-# from ..console import cprint, console
-# from ..depparser import DepFormatter
+from ..console import cprint, console
 
 # ------------------------------------------------------------------------------
 def getClickRootName() -> str:

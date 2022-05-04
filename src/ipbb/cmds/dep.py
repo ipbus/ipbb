@@ -40,7 +40,10 @@ def dep(ictx, proj):
         from .proj import cd
 
         cd(ictx, lProj, False)
-        validate_schema(project_schema, ictx.depParser.settings)
+        try:
+           validate_schema(project_schema, ictx.depParser.settings)
+        except:
+            pass
         return
     else:
         if ictx.currentproj.name is None:

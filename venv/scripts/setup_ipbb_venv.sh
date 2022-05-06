@@ -64,7 +64,7 @@ else
 
     # upgrade pip to the latest greatest version
     pip install ${IPBB_PIP_INSTALLOPT} pip 
-    pip install ${IPBB_PIP_INSTALLOPT} setuptools virtualenv pur
+    pip install ${IPBB_PIP_INSTALLOPT} setuptools virtualenv pur==5.4.1
 
     echo -e "${COL_BLUE}Installing ipbb...${COL_NULL}"
 

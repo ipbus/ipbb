@@ -80,6 +80,9 @@ Describe the use of variables in relation to the script makers and as a way to s
 
 ### Simulation (Questa/Modelsim)
 
+* `sim.library` (`str`): Override default library for this project
+* `sim.run_sim.design_units` (`string`): Space-separated list of desing units automatically loaded by `run_sim`
+
 ## Conditional statements
 
 Describe the use of conditional statements to (defined by `?`)

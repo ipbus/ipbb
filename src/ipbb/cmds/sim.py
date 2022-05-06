@@ -125,7 +125,8 @@ def sim(ictx, proj):
             'Project area not defined. Move into a project area and try again.'
         )
 
-    validate_settings(ictx)
+    validate_settings
+    (ictx)
 
     ensure_modelsim(ictx)
 
@@ -491,7 +492,7 @@ def genproject(ictx, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = ictx.depParser
 
-    lSimLibrary = lDepFileParser.settings.get('{_toolset}.library', 'work')
+    lSimLibrary = lDepFileParser.settings.get(f'{_toolset}.library', 'work')
 
     # Ensure that no parsing errors are present
     ensureNoParsingErrors(ictx.currentproj.name, lDepFileParser)

@@ -92,6 +92,9 @@ class IPCoresSimGenerator(object):
                     lXCIs.append( (lName, lBasename) )
 
         if lXCIs:
+            # Turn 'WARNING: [Coretcl 2-1042] No IP was identified for
+            # upgrade.' into INFO messags.
+            write(f'set_msg_config -id {{Coretcl 2-1042}} -new_severity {{INFO}}')
             lIPs, lIPFiles = zip(*lXCIs)
             write(f'upgrade_ip [get_ips {" ".join(lIPs)}]')
 

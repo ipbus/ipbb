@@ -170,6 +170,10 @@ class VivadoProjectGenerator(object):
         if self.ipCachePath:
             write(f'config_ip_cache -import_from_project -use_cache_location {abspath(self.ipCachePath)}')
 
+        # Turn 'WARNING: [Coretcl 2-1042] No IP was identified for
+        # upgrade.' into INFO messags.
+        write(f'set_msg_config -id {{Coretcl 2-1042}} -new_severity {{INFO}}')
+
         for i in lIPNames:
             write(f'upgrade_ip [get_ips {i}]')
 

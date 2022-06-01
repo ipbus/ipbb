@@ -95,12 +95,12 @@ class SourceInfo(FolderInfo):
             # Check if the old setup file exists
             repo_settings_path = self.deprecated_setup_settings_path
             if exists(repo_settings_path):
-                deprecation_warning(f"{self.name}: '{kDeprecatesSetupFile}' is deprecated. Use {kRepoFile} instead[/yellow]\n")
+                deprecation_warning(f"{self.name}: '{kDeprecatesSetupFile}' is deprecated. Use {kRepoFile} instead")
             else:
                 self._repo_settings = {}
                 return
 
-        with open(self.repo_settings_path, 'r') as f:
+        with open(repo_settings_path, 'r') as f:
             self._repo_settings = yaml.safe_load(f)
 
         self.validate_repo_settings()

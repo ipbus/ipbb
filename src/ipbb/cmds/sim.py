@@ -125,8 +125,7 @@ def sim(ictx, proj):
             'Project area not defined. Move into a project area and try again.'
         )
 
-    validate_settings
-    (ictx)
+    validate_settings(ictx)
 
     ensure_modelsim(ictx)
 

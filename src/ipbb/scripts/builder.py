@@ -15,7 +15,7 @@ from .. import __version__
 
 # ------------------------------------------------------------------------------
 # Add -h as default help option
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'], show_default=True)
 # ------------------------------------------------------------------------------
 
 

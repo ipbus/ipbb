@@ -12,7 +12,7 @@ import re
 import cerberus
 
 # Elements
-from os.path import join, split, exists, splitext, abspath, basename
+from os.path import join, split, exists, splitext, abspath, basename, getmtime
 from collections import OrderedDict
 from copy import deepcopy
 from rich.table import Table
@@ -22,7 +22,7 @@ from .dep import hash
 
 from ..console import cprint, console
 from ..utils import which, SmartOpen, mkdir
-from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError
+from ..utils import ensureNoParsingErrors, ensureNoMissingFiles, logVivadoConsoleError, warning_notice
 
 from ..generators.vivadoproject import VivadoProjectGenerator
 from ..tools.xilinx import VivadoSession, VivadoSessionManager, VivadoConsoleError, VivadoSnoozer, VivadoProject
@@ -46,6 +46,10 @@ _memCfgKinds = {
 }
 
 _svfSettingName = 'svf_jtagchain_devices'
+
+
+_rum_synth = 'synth_1'
+_rum_impl = 'impl_1'
 
 
 
@@ -125,6 +129,8 @@ def vivado(ictx, loglevel, cmdlist):
     ictx.vivadoProjFile = join(ictx.vivadoProjPath, ictx.currentproj.name +'.xpr')
     ictx.vivadoProdPath = join(ictx.currentproj.path, 'products')
     ictx.vivadoProdFileBase = join(ictx.vivadoProdPath, ictx.currentproj.name)
+    ictx.vivado_synth_dir = join(ictx.vivadoProjPath, f'{ictx.currentproj.name}', _rum_synth)
+    ictx.vivado_impl_dir = join(ictx.vivadoProjPath, f'{ictx.currentproj.name}.runs', _rum_impl)
 
     ictx.vivadoSessions = VivadoSessionManager(keep=lKeep, echo=(loglevel != 'none'), loglabel=lLogLabel, loglevel=loglevel)
 
@@ -284,13 +290,13 @@ def synth(ictx, aNumJobs, aUpdateInt):
                     ]
 
                     if lPendingOOCRuns:
-                        cprint(makeRunsTable(lOOCRunProps), style='light_sky_blue1')
+                        cprint(make_runs_table(lOOCRunProps), style='light_sky_blue1')
                     else:
                         cprint(f"OOC runs: {len(lOOCRunProps)} completed.", style='light_sky_blue1')
 
                     lSynthProps = { k: v for k, v in lRunProps.items() if k == lSynthRun }
 
-                    cprint(makeRunsTable(lSynthProps), style='light_sky_blue1')
+                    cprint(make_runs_table(lSynthProps), style='light_sky_blue1')
 
                     lRunsInError = [ k for k, v in lRunProps.items() if v['STATUS'] == 'synth_design ERROR']
                     if lRunsInError:
@@ -352,10 +358,10 @@ def impl(ictx, aNumJobs, aStopOnTimingErr):
             lConsole.changeMsgSeverity(lStopOn, "ERROR")
 
             for c in (
-                    'reset_run impl_1',
-                    'launch_runs impl_1'
+                    f'reset_run {_rum_impl}',
+                    f'launch_runs {_rum_impl}'
                     + (' -jobs {}'.format(aNumJobs) if aNumJobs is not None else ''),
-                    'wait_on_run impl_1',
+                    f'wait_on_run {_rum_impl}',
                 ):
                 lConsole(c)
 
@@ -643,7 +649,7 @@ def read_run_info(aConsole, aProps=None):
     return lInfos
 
 # ------------------------------------------------------------------------------
-def makeRunsTable(aInfos, title=None):
+def make_runs_table(aInfos, title=None):
     lSummary = Table("Run", *list(next(iter(aInfos.values()))), title=title)
     if not aInfos:
         return lSummary
@@ -688,9 +694,9 @@ def status(ictx):
         logVivadoConsoleError(lExc)
         raise click.Abort()
 
-    lOocTable = makeRunsTable({ k: v for k, v in lInfos.items() if lOOCRegex.match(k)}, title="Out of context runs")
+    lOocTable = make_runs_table({ k: v for k, v in lInfos.items() if lOOCRegex.match(k)}, title="Out of context runs")
     cprint(lOocTable)
-    lDesignRuns = makeRunsTable({ k: v for k, v in lInfos.items() if lRunRegex.match(k)}, title="Design runs")
+    lDesignRuns = make_runs_table({ k: v for k, v in lInfos.items() if lRunRegex.match(k)}, title="Design runs")
     cprint(lDesignRuns)
 # ------------------------------------------------------------------------------
 
@@ -729,9 +735,18 @@ def reset(ictx):
 
 # ------------------------------------------------------------------------------
 def package(ictx, aTag):
-    '''Package bitfile with address table and file list
-
     '''
+    Package bitfile with address table and file list
+        Generate the bitfile if it doesn't exist
+    '''
+
+    def get_max_mtime_in_dir(path):
+        root, _, files = next(iter( os.walk(path)))
+
+        # from datetime import datetime
+        # for f in files:
+        #     cprint(f"{join(root, f)} {datetime.fromtimestamp(getmtime(join(root, f)))}")
+        return max(os.path.getmtime(join(root, f)) for f in files)
 
     ensure_vivado(ictx)
 
@@ -746,8 +761,15 @@ def package(ictx, aTag):
     # Create bitfile if missing
     lBaseName = ictx.vivadoProdFileBase
     lBitPath  = lBaseName + '.bit'
+    gen_bitfile = False
     if not exists(lBitPath):
-        cprint('Bitfile does not exist. Starting a build ...', style='yellow')
+        cprint("Bitfile does not exist. Starting a build ...", style='yellow')
+        gen_bitfile = True
+    elif get_max_mtime_in_dir(ictx.vivado_impl_dir) > getmtime(lBitPath):
+        cprint(f"Bitfile exists but it's older than the content of {_rum_impl}. Rebuilding ...", style='yellow')
+        gen_bitfile = True
+
+    if gen_bitfile:
         bitfile(ictx)
 
     # Create SVF file if requested

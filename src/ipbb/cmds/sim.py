@@ -491,7 +491,7 @@ def genproject(ictx, aOptimise, aToScript, aToStdout):
 
     lDepFileParser = ictx.depParser
 
-    lSimLibrary = lDepFileParser.settings.get('{_toolset}.library', 'work')
+    lSimLibrary = lDepFileParser.settings.get(f'{_toolset}.library', 'work')
 
     # Ensure that no parsing errors are present
     ensureNoParsingErrors(ictx.currentproj.name, lDepFileParser)

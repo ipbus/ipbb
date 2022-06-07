@@ -41,20 +41,25 @@ def formatAlienTable(aBranch, aHeader=True, aSort=True, aFmtr=str):
 
 
 # ------------------------------------------------------------------------------
-def print_notification_panel(message: str, title: str, color: str):
+def notice_panel(message: str, title: str, color: str):
 
-    cprint(Panel(f"\n{message}\n", title=title, style=Style(color=color, italic=True)))
+    cprint(Panel(f"{message}", title=title, style=Style(color=color, italic=True)))
 
 # ------------------------------------------------------------------------------
 def deprecation_warning( message: str ):
 
-    print_notification_panel(f"{message}", title="DEPRECATION WARNING", color="yellow")
+    notice_panel(f"{message}", title="DEPRECATION WARNING", color="yellow")
 
+
+# ------------------------------------------------------------------------------
+def warning_notice( message: str ):
+
+    notice_panel(f"{message}", title="WARNING", color="yellow")
 
 # ------------------------------------------------------------------------------
 def error_notice( message: str ):
 
-    print_notification_panel(f"{message}", title="ERROR", color="red")
+    notice_panel(f"{message}", title="ERROR", color="red")
 
 if __name__ == '__main__':
     deprecation_warning("Deprecation warning example")

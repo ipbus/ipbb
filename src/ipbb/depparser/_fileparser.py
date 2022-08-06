@@ -54,6 +54,11 @@ class DepFile(object):
         self.unresolved = list()
         self.children = list()
 
+
+    def full_path(self):
+        pathmaker = Pathmaker('', 1)
+        return pathmaker.getPath('', self.cmp, 'include', self.name)
+
     # -----------------------------------------------------------------------------
     def __str__(self):
         pathmaker = Pathmaker('', 1)
@@ -257,7 +262,7 @@ class DepFileParser(object):
         return lNotFound
 
     # -------------------------------------------------------------------------
-    def _line_drop_Comments(self, aLine):
+    def _line_drop_Comments(self, aLine: str, aInfo):
         '''Drop blank lines and comments
         '''
         lLine = aLine.strip()
@@ -271,7 +276,7 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _line_process_assignments(self, aLine: str):
+    def _line_process_assignments(self, aLine: str, aInfo):
         # Process the assignment directive
         
         pattern = re.compile(r'^([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)*)?\s*=\s*(.*)$')
@@ -301,7 +306,7 @@ class DepFileParser(object):
         
 
         if lPar in self.settings:
-            console.log(f"WARNING: '{lPar.strip()}' is already defined with value '{self.settings[lPar.strip()]}'. New value will not be applied ({lExpr}).", style='yellow')
+            console.log(f"WARNING: {aInfo[0]}:{aInfo[1]}\n'{lPar.strip()}' is already defined with value '{self.settings[lPar.strip()]}'. New value will not be applied ({lExpr}).", style='yellow')
         else:
             lOldLock = self.settings.locked
             self.settings.lock(True)
@@ -321,7 +326,7 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _line_process_conditional(self, aLine):
+    def _line_process_conditional(self, aLine, aInfo):
         if aLine[0] != "?":
             return aLine
 
@@ -353,7 +358,7 @@ class DepFileParser(object):
         return aLine
 
     # -------------------------------------------------------------------------
-    def _line_replace_vars(self, aLine):
+    def _line_replace_vars(self, aLine, aInfo):
         try:
             lLine = AlienTemplate(aLine).substitute(self.settings)
         except RuntimeError as lExc:
@@ -457,26 +462,28 @@ class DepFileParser(object):
         with open(lDepFilePath) as lDepFile:
             for lLineNr, lLine in enumerate(lDepFile):
 
+                lInfo = (lCurrentFile.full_path(), lLineNr)
+
                 # --------------------------------------------------------------
                 # Pre-processing
                 try:
                     # Sanitize/drop comments
-                    lLine = self._line_drop_Comments(lLine)
+                    lLine = self._line_drop_Comments(lLine, lInfo)
                     if not lLine:
                         continue
 
                     # Process variable assignment directives
-                    lLine = self._line_process_assignments(lLine)
+                    lLine = self._line_process_assignments(lLine, lInfo)
                     if not lLine:
                         continue
 
                     # Process conditional directives
-                    lLine = self._line_process_conditional(lLine)
+                    lLine = self._line_process_conditional(lLine, lInfo)
                     if not lLine:
                         continue
 
                     # Replace variables
-                    lLine = self._line_replace_vars(lLine)
+                    lLine = self._line_replace_vars(lLine, lInfo)
 
                 except DepLineError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))

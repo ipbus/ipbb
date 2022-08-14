@@ -926,4 +926,4 @@ def ipy(ictx):
     lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
     import IPython
 
-    IPython.embed()
+    IPython.embed(colors="neutral")

@@ -225,7 +225,7 @@ def _repo_reset(ictx, repo):
 
 
 # ------------------------------------------------------------------------------
-def git(ictx, repo, branch, revision, dest):
+def git(ictx, repo, branch_or_tag, revision, dest):
     '''Add a git repository to the source area'''
 
     cprint('Adding git repository [blue]{}[/blue]'.format(repo))
@@ -242,43 +242,44 @@ def git(ictx, repo, branch, revision, dest):
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
-    if branch is not None:
-        lLsRemote = sh.git('ls-remote', '-h', '-t', repo, branch)
-        lRemoteRefs = [
-            line.strip().split('\t') for line in lLsRemote.split('\n') if line
+    if branch_or_tag is not None:
+
+        lLsRemoveTags =  sh.git('ls-remote', '-h', '-t', repo, f'refs/tags/{branch_or_tag}')
+        lRemoteTagRefs = [
+            line.strip().split('\t') for line in lLsRemoveTags.split('\n') if line
         ]
 
-        # Handle unexpected cases
-        # No references
+        lLsRemoveBranches =  sh.git('ls-remote', '-h', '-t', repo, f'refs/heads/{branch_or_tag}')
+        lRemoteHeadRefs = [
+            line.strip().split('\t') for line in lLsRemoveBranches.split('\n') if line
+        ]
+
+
+        lRemoteRefs = lRemoteTagRefs+lRemoteHeadRefs;
         if not lRemoteRefs:
             raise click.ClickException(
-                'No references matching \'{}\' found'.format(branch)
+                'No references matching \'{}\' found'.format(branch_or_tag)
             )
-        # Multiple references
         elif len(lRemoteRefs) > 1:
-            cprint(lRemoteRefs)
+            # cprint(lRemoteRefs)
+            for h,r in lRemoteRefs:
+                cprint(f"- {r}: {h}")
             raise click.ClickException(
-                'Found {} references matching \'{}\''.format(len(lRemoteRefs), branch)
+                'Found {} references matching \'{}\''.format(len(lRemoteRefs), branch_or_tag)
             )
+
+        if lRemoteTagRefs:
+            lRefKind = 'tag'
+        elif lRemoteHeadRefs:
+            lRefKind = 'branch'
+
 
         lRef, lRefName = lRemoteRefs[0]
-
-        # It's either a branch (i.e. head)
-        if lRefName.startswith('refs/heads/'):
-            lRefKind = 'branch'
-        # Or a tag
-        elif lRefName.startswith('refs/tags/'):
-            lRefKind = 'tag'
-        # Or something alien
-        else:
-            raise click.ClickException(
-                '{} is neither a branch nor a tag: {}'.format(len(branch), lRefName)
-            )
 
         # All good, go ahead with cloning
         cprint(
             "{} [blue]{}[/blue] resolved as reference {}".format(
-                lRefKind.capitalize(), branch, lRefName
+                lRefKind.capitalize(), branch_or_tag, lRefName
             )
         )
 
@@ -292,10 +293,10 @@ def git(ictx, repo, branch, revision, dest):
     # NOTE: The mutual exclusivity of checking out a branch and
     # checkout out a revision should have been handled at the CLI
     # option handling stage.
-    if branch is not None:
+    if branch_or_tag is not None:
 
-        cprint('Checking out branch/tag [blue]{}[/blue]'.format(branch))
-        sh.git('checkout', branch, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+        cprint(f'Checking out branch/tag [blue]{branch_or_tag}[/blue]')
+        sh.git('checkout', branch_or_tag, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
 
     elif revision is not None:
         cprint('Checking out revision [blue]{}[/blue]'.format(revision))

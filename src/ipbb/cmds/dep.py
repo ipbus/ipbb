@@ -98,54 +98,56 @@ def report(ictx, filters):
         )
 
 
-    # return
-    lParser = ictx.depParser
-    lDepFmt = DepFormatter(lParser)
+    with console.pager(styles=True):
 
-    t = formatAlienTable(lParser.settings, aHeader=False)
-    t.title = 'Variables'
-    t.title_style = 'blue'
-    cprint(t)
+        # return
+        lParser = ictx.depParser
+        lDepFmt = DepFormatter(lParser)
 
-    cprint()
+        t = formatAlienTable(lParser.settings, aHeader=False)
+        t.title = 'Variables'
+        t.title_style = 'blue'
+        cprint(t)
 
-    lCmdsTable = Table.grid(Column('cmd_tables'))
+        cprint()
 
-    lPrepend = re.compile('(^|\n)')
-    for k in lParser.commands:
+        lCmdsTable = Table.grid(Column('cmd_tables'))
 
-        if not lParser.commands[k]:
-            continue
-        lCmdTable = Table(*(lCmdHeaders + (['lib'] if k == 'src' else [])), title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
-        for lCmd in lParser.commands[k]:
-            lRow = [
-                relpath(lCmd.filepath, ictx.srcdir),
-                ','.join(lCmd.flags()),
-                lCmd.package,
-                lCmd.component,
-            ] + ( [lCmd.lib] if k == 'src' else [])
+        lPrepend = re.compile('(^|\n)')
+        for k in lParser.commands:
 
-            if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
+            if not lParser.commands[k]:
                 continue
+            lCmdTable = Table(*(lCmdHeaders + (['lib'] if k == 'src' else [])), title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
+            for lCmd in lParser.commands[k]:
+                lRow = [
+                    relpath(lCmd.filepath, ictx.srcdir),
+                    ','.join(lCmd.flags()),
+                    lCmd.package,
+                    lCmd.component,
+                ] + ( [lCmd.lib] if k == 'src' else [])
 
-            lCmdTable.add_row(*lRow)
+                if lFilters and not all([rxp.match(lRow[i]) for i, rxp in lFilters]):
+                    continue
+
+                lCmdTable.add_row(*lRow)
 
 
-        lCmdsTable.add_row(lCmdTable)
-        lCmdsTable.add_row('')
+            lCmdsTable.add_row(lCmdTable)
+            lCmdsTable.add_row('')
 
-    lCmdsTable.add_row("No entries: "+", ".join(f"[blue]{k}[/blue]" for k in lParser.commands if not lParser.commands[k]))
-    cprint(Panel.fit(lCmdsTable, title='[bold blue]dep files tree[/bold blue]'))
-    cprint()
-    cprint('Resolved packages & components', style='blue')
+        lCmdsTable.add_row("No entries: "+", ".join(f"[blue]{k}[/blue]" for k in lParser.commands if not lParser.commands[k]))
+        cprint(Panel.fit(lCmdsTable, title='[bold blue]dep files tree[/bold blue]'))
+        cprint()
+        cprint('Resolved packages & components', style='blue')
 
-    lCmpPanel = lDepFmt.draw_components()
-    cprint(lCmpPanel)
+        lCmpPanel = lDepFmt.draw_components()
+        cprint(lCmpPanel)
 
-    cprint(Panel.fit(lDepFmt.draw_depfile_tree(), title='[bold blue]dep tree structure[/bold blue]'))
+        cprint(Panel.fit(lDepFmt.draw_depfile_tree(), title='[bold blue]dep tree structure[/bold blue]'))
 
-    if lDepFmt.hasErrors():
-        cprint(Panel.fit(lDepFmt.draw_error_table(), title='[bold red]dep tree errors[/bold red]'))
+        if lDepFmt.hasErrors():
+            cprint(Panel.fit(lDepFmt.draw_error_table(), title='[bold red]dep tree errors[/bold red]'))
 
 
 

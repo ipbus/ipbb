@@ -82,8 +82,11 @@ def _compose_cli():
     climain.add_command(ipbus.ipbus)
 
     from ..cli import debug
-
     climain.add_command(debug.debug)
+
+    # from ..cli import vunit
+    # climain.add_command(vunit.vunit)
+
 
 # ------------------------------------------------------------------------------
 def main():

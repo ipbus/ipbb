@@ -24,16 +24,16 @@ class VivadoProjectGenerator(object):
 
     @staticmethod
     def fileset(aSrcCmd):
-        lName, lExt = splitext(aSrcCmd.filepath)
+        name, ext = splitext(aSrcCmd.filepath)
 
         lFileSet = None
-        if lExt in ('.xci', '.xcix'):
+        if ext in ('.xci', '.xcix'):
             lFileSet = 'sources_1'
 
-        elif lExt in ('.xdc', '.tcl'):
+        elif ext in ('.xdc', '.tcl'):
             lFileSet = 'constrs_1'
 
-        elif lExt in ('.vhd', '.vhdl', '.v', '.vh', '.sv', '.ngc', '.edn', '.edf', '.mem', '.mif'):
+        elif ext in ('.vhd', '.vhdl', '.v', '.vh', '.sv', '.ngc', '.edn', '.edf', '.mem', '.mif'):
             if aSrcCmd.useInSynth:
                 lFileSet = 'sources_1'
             elif aSrcCmd.useInSim:
@@ -98,7 +98,7 @@ class VivadoProjectGenerator(object):
         lSrcs = aCommandList['src']
 
         # Grouping commands here, where the order matters only for constraint files
-        lSrcCommandGroups = collections.OrderedDict()
+        lSrcCommandGroups = {}
 
         for src in lSrcs:
             #
@@ -108,23 +108,24 @@ class VivadoProjectGenerator(object):
             #
 
             # Extract path tokens
-            _, lBasename = split(src.filepath)
-            lName, lExt = splitext(lBasename)
+            _, basename = split(src.filepath)
+            name, ext = splitext(basename)
 
             # local list of commands
             lCommands = []
 
-            if lExt in ('.xci', '.xcix'):
+            if ext in ('.xci', '.xcix'):
 
+                t = 'ip'
                 c = f'import_files -norecurse -fileset {self.fileset(src)} $files'
                 f = src.filepath
 
-                lCommands += [(c, f)]
+                lCommands += [(t, c, f)]
 
-                lIPNames.append(lName)
+                lIPNames.append(name)
                 # lXciTargetFiles.append(lTargetFile)
 
-            # elif lExt in ('.bd'):
+            # elif ext in ('.bd'):
             #     c = f'import_files -norecurse -fileset {self.fileset(src)} $files'
             #     f = src.filepath
             # #     import_files -norecurse ${core_dir}/${BD_FILE}
@@ -134,34 +135,47 @@ class VivadoProjectGenerator(object):
 
             else:
 
+                t = 'add'
                 c = f'add_files -norecurse -fileset {self.fileset(src)} $files'
                 f = src.filepath
-                lCommands += [(c, f)]
+                lCommands += [(t, c, f)]
 
-                if lExt in ('.vhd', '.vhdl') and src.vhdl2008 :
+                if ext in ('.vhd', '.vhdl') and src.vhdl2008 :
+                    t = 'prop'
                     c = 'set_property FILE_TYPE {VHDL 2008} [get_files {$files}]'
                     f = src.filepath
-                    lCommands += [(c, f)]
+                    lCommands += [(t, c, f)]
 
-                if lExt == '.tcl':
+                if ext == '.tcl':
+                    t = 'prop'
                     c = 'set_property USED_IN implementation [get_files {$files}]'
                     f = src.filepath
-                    lCommands += [(c, f)]
+                    lCommands += [(t, c, f)]
 
                 if src.lib:
+                    t = 'prop'
                     c = f'set_property library {src.lib} [ get_files {{$files}} ]'
                     f = src.filepath
-                    lCommands += [(c, f)]
+                    lCommands += [(t, c, f)]
 
-            for c, f in lCommands:
+            for t, c, f in lCommands:
+                # turbo mode: group commands together
+                defdict = collections.OrderedDict()
                 if self.turbo:
-                    lSrcCommandGroups.setdefault(c, []).append(f)
+                    lSrcCommandGroups.setdefault(t, defdict).setdefault(c,[]).append(f)
+                
+                # single mode: execute immediately
                 else:
                     write(tmpl(c).substitute(files=f))
 
+
         if self.turbo:
-            for c, f in lSrcCommandGroups.items():
-                write(tmpl(c).substitute(files=' '.join(f)))
+            cmd_types = ['ip', 'add', 'prop']
+            if not set(lSrcCommandGroups.keys()).issubset(cmd_types):
+                raise RuntimeError(f"Command group mismatch {' '.join(lSrcCommandGroups.keys())}")
+            for t in cmd_types:
+                for c, f in lSrcCommandGroups[t].items():
+                    write(tmpl(c).substitute(files=' '.join(f)))
 
         write(f'set_property top {lTopEntity} [get_filesets sources_1]')
         if lSimTopEntity:

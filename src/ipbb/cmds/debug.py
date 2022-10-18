@@ -33,7 +33,7 @@ def ipy(ctx, ictx):
 
     import IPython
 
-    IPython.embed()
+    IPython.embed(colors="neutral")
 
 
 # ------------------------------------------------------------------------------

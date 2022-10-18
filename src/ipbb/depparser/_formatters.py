@@ -22,24 +22,51 @@ class DepFormatter(object):
         super().__init__()
         self.parser = parser
 
-    def draw_depfile_tree(self):
 
+    @staticmethod
+    def _format_leaf(depfile) -> str:
+        return (
+            f"📝 {depfile.name}", 
+            f"{depfile.pkg}",
+            f"{depfile.cmp}",
+            f"{len(depfile.errors)}" if depfile.errors else "",
+            f"{len(depfile.unresolved)}" if depfile.unresolved else ""
+            )
+
+    @staticmethod
+    def _draw_leaves(depfile, tree: Tree, attrs:  Table):
+        for c in depfile.children:
+            label, pkg, comp, errs, unres = DepFormatter._format_leaf(c)
+            
+            branch = tree.add(label)
+            attrs.add_row(pkg, comp, errs, unres)
+
+            DepFormatter._draw_leaves(c, branch, attrs)
+
+    def draw_depfile_tree(self) -> Tree:
         if not self.parser.depfile:
             return "[red]Top depfile not found[/red]"
 
-        t = Tree(self.parser.depfile.name)
-        self._drawLeaves(self.parser.depfile, t)
-        return t
+        attrs = Table(box=None, show_header=False)
+        attrs.add_column('pkg', style='cyan', justify="right", no_wrap=True)
+        attrs.add_column('comp', style='cyan', no_wrap=True)
+        attrs.add_column('errors', style='red', no_wrap=True)
+        attrs.add_column('unresolved', style='red', no_wrap=True)
 
+        # root node
+        label, pkg, comp, errs, unres = DepFormatter._format_leaf(self.parser.depfile)
+        tree = Tree(label)
+        attrs.add_row(pkg, comp, errs, unres)
 
-    def _drawLeaves(self, depfile, tree):
-        for c in depfile.children:
-            branch = tree.add(
-                f"📝 {c.name}" 
-                + (f" [red]errors: {len(c.errors)}[/red]" if c.errors else "") 
-                + (f" [red]unresolved: {len(c.unresolved)}[/red]" if c.unresolved else "")
-            )
-            self._drawLeaves(c, branch)
+        # draw branches and leaves
+        self._draw_leaves(self.parser.depfile, tree, attrs)
+
+        grid = Table.grid(expand=True)
+        grid.add_column()
+        grid.add_column()
+        grid.add_row(tree, attrs)
+
+        return grid
 
     def _draw_packages(self, aPkgs):
         if not aPkgs:

@@ -40,6 +40,7 @@ fi
 
 export LANG="en_US.utf8"
 export LC_ALL="en_US.utf8"
+espoer PAGER="less -rR"
 
 
 if [ ${RESET_VENV} = true ]; then

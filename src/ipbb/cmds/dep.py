@@ -21,6 +21,8 @@ from os.path import (
     isfile,
     isdir,
 )
+
+from contextlib import suppress
 from ..console import cprint, console
 from ..utils import which, SmartOpen
 from ..depparser import DepFormatter, dep_command_types
@@ -56,7 +58,7 @@ def dep(ictx, proj):
 
 
 # ------------------------------------------------------------------------------
-def report(ictx, filters):
+def report(ictx, pager, filters):
     '''Summarise the dependency tree of the current project'''
 
     lCmdHeaders = ['path', 'flags', 'package', 'component']
@@ -98,11 +100,10 @@ def report(ictx, filters):
         )
 
 
-    with console.pager(styles=True):
-
+    with console.pager(styles=True) if pager else suppress():
         # return
         lParser = ictx.depParser
-        lDepFmt = DepFormatter(lParser)
+        lDepFmt = DepFormatter(lParser) 
 
         t = formatAlienTable(lParser.settings, aHeader=False)
         t.title = 'Variables'

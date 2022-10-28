@@ -8,6 +8,8 @@ import re
 import shlex
 import cerberus
 
+from typing import Tuple
+
 from ._definitions import dep_file_types, dep_command_types
 from ._pathmaker import Pathmaker
 from ._cmdparser import ComponentAction, DepCmdParser, DepCmdParserError
@@ -20,6 +22,7 @@ from ..utils.printing import error_notice
 from collections import OrderedDict
 from os.path import exists, splitext, sep
 
+DepInfo = Tuple[str, int]
 
 repo_defaults_schema = {
     'vhdl_standard': { 'type': 'string', 'allowed': ['vhdl2008', 'vhdl1987'] },
@@ -262,7 +265,7 @@ class DepFileParser(object):
         return lNotFound
 
     # -------------------------------------------------------------------------
-    def _line_drop_Comments(self, aLine: str, aInfo):
+    def _line_drop_Comments(self, aLine: str, aInfo: DepInfo):
         '''Drop blank lines and comments
         '''
         lLine = aLine.strip()
@@ -276,7 +279,7 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _line_process_assignments(self, aLine: str, aInfo):
+    def _line_process_assignments(self, aLine: str, aInfo: DepInfo):
         # Process the assignment directive
         
         pattern = re.compile(r'^([a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)*)?\s*=\s*(.*)$')
@@ -326,7 +329,7 @@ class DepFileParser(object):
         return
 
     # -------------------------------------------------------------------------
-    def _line_process_conditional(self, aLine, aInfo):
+    def _line_process_conditional(self, aLine: str, aInfo: DepInfo):
         if aLine[0] != "?":
             return aLine
 
@@ -358,7 +361,7 @@ class DepFileParser(object):
         return aLine
 
     # -------------------------------------------------------------------------
-    def _line_replace_vars(self, aLine, aInfo):
+    def _line_replace_vars(self, aLine: str, aInfo: DepInfo):
         try:
             lLine = AlienTemplate(aLine).substitute(self.settings)
         except RuntimeError as lExc:
@@ -462,28 +465,28 @@ class DepFileParser(object):
         with open(lDepFilePath) as lDepFile:
             for lLineNr, lLine in enumerate(lDepFile):
 
-                lInfo = (lCurrentFile.full_path(), lLineNr)
+                lDepInfo = (lCurrentFile.full_path(), lLineNr)
 
                 # --------------------------------------------------------------
                 # Pre-processing
                 try:
                     # Sanitize/drop comments
-                    lLine = self._line_drop_Comments(lLine, lInfo)
+                    lLine = self._line_drop_Comments(lLine, lDepInfo)
                     if not lLine:
                         continue
 
                     # Process variable assignment directives
-                    lLine = self._line_process_assignments(lLine, lInfo)
+                    lLine = self._line_process_assignments(lLine, lDepInfo)
                     if not lLine:
                         continue
 
                     # Process conditional directives
-                    lLine = self._line_process_conditional(lLine, lInfo)
+                    lLine = self._line_process_conditional(lLine, lDepInfo)
                     if not lLine:
                         continue
 
                     # Replace variables
-                    lLine = self._line_replace_vars(lLine, lInfo)
+                    lLine = self._line_replace_vars(lLine, lDepInfo)
 
                 except DepLineError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))

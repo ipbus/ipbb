@@ -31,8 +31,8 @@ def test_no_assign(dep_parser):
 
 # -----------------------------------------------------------------------------
 def test_assign(dep_parser):
-    dep_info = ("dummy", 0)
 
+    dep_info = ("dummy", 0)
     assert dep_parser._line_process_assignments('@ a = "a_value"', dep_info) == None
     assert dep_parser.settings['a'] == 'a_value'
     assert dep_parser._line_process_assignments('@ c = a', dep_info) == None
@@ -46,30 +46,39 @@ def test_assign(dep_parser):
 
 # -----------------------------------------------------------------------------
 def test_assign_invalid_expr(dep_parser):
+
+    dep_info = ("dummy", 0)
     with pytest.raises(DepAssignmentError):
         dep_parser._line_process_assignments('@ hello world', dep_info)
 
 
 # -----------------------------------------------------------------------------
 def test_assign_no_parname(dep_parser):
+
+    dep_info = ("dummy", 0)
     with pytest.raises(DepAssignmentError):
         dep_parser._line_process_assignments('@ = s', dep_info)
 
 
 # -----------------------------------------------------------------------------
 def test_assign_no_value(dep_parser):
+
+    dep_info = ("dummy", 0)
     with pytest.raises(DepAssignmentError):
         dep_parser._line_process_assignments('@ x =', dep_info)
 
 
 # -----------------------------------------------------------------------------
 def test_assign_invalid_parname(dep_parser):
+
+    dep_info = ("dummy", 0)
     with pytest.raises(DepAssignmentError):
         dep_parser._line_process_assignments('@ 2_not_good = 0', dep_info)
 
 
 # -----------------------------------------------------------------------------
 def test_assign_invalid_value(dep_parser):
-
+    
+    dep_info = ("dummy", 0)
     dep_parser._line_process_assignments('@ a = print(3)', dep_info)
 

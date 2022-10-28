@@ -20,11 +20,12 @@ def dep(ictx, proj):
 # ------------------------------------------------------------------------------
 @dep.command()
 @click.pass_obj
+@click.option('-p', '--pager', 'pager', help='Enable pager.', is_flag=True)
 @click.option('-f', '--filter', 'filters', help='Select dep entries with regexes.', multiple=True)
-def report(ictx, filters):
+def report(ictx, pager, filters):
     '''Summarise the dependency tree of the current project'''
     from ..cmds.dep import report
-    report(ictx, filters)
+    report(ictx, pager, filters)
 
 
 # ------------------------------------------------------------------------------

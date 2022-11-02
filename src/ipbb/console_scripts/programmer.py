@@ -6,7 +6,9 @@ import tempfile
 import tarfile
 
 from os.path import join, split, exists, basename, abspath, splitext, relpath
-from click import echo, secho, style
+# from click import echo, secho, style
+from rich.text import Text
+from ..console import cprint, console
 from ..utils import logVivadoConsoleError
 from ..utils import which
 from ..tools.xilinx import VivadoHWServer, VivadoConsoleError
@@ -44,10 +46,14 @@ def autodetectVivadoVariant():
 #     context_settings=CONTEXT_SETTINGS
 # )
 @click.group(cls=click_didyoumean.DYMGroup, context_settings=CONTEXT_SETTINGS)
+@click.option('-e', '--exception-stack', 'aExcStack', is_flag=True, help="Display full exception stack")
 @click.pass_context
 @click.version_option()
-def cli(ctx):
-    ctx.obj = ProgEnvironment()
+def cli(ctx, aExcStack):
+    ictx = ctx.obj
+
+    ictx.printExceptionStack = aExcStack
+
 
 
 # ------------------------------------------------------------------------------
@@ -92,12 +98,12 @@ def list(obj):
         )
 
     # Build vivado interface
-    echo('Starting ' + lVivado + '...')
+    cprint(f"Starting {lVivado}...")
     try:
         v = VivadoHWServer(executable=lVivado, echo=lVerbosity)
-        echo('... done')
+        cprint("... done")
 
-        echo("Looking for targets")
+        cprint("Looking for targets")
         v.openHw()
         lConnectedHwServer = v.connect(lHwServerURI)[0]
         lHwTargets = v.getHwTargets()
@@ -123,7 +129,7 @@ def list(obj):
             lHwTargets += [lVCTarget]
 
     for target in lHwTargets:
-        echo("- target " + style(target, fg='blue'))
+        cprint(f"- target [blue]{traget}[/blue]")
 
         try:
             v.openHwTarget(target)
@@ -133,7 +139,7 @@ def list(obj):
 
         hw_devices = v.getHwDevices()
         for device in hw_devices:
-            echo("  + " + style(device, fg='green'))
+            cprint(f"  + [green]{device}[/green]")
 
         v.closeHwTarget(target)
 
@@ -184,7 +190,7 @@ def program(obj, deviceid, bitfile, probe, yes):
                 )
 
             lTF.extract(lBitFiles[0], lTmpDir)
-        secho('Extracting {} from {} to {}'.format(lBitFiles[0], bitfile, lTmpDir), fg='green')
+        cprint(f"Extracting {lBitFiles[0]} from {bitfile} to {lTmpDir}", style='green')
         bitfile = join(lTmpDir, lBitFiles[0])
 
     lHwServerURI = obj.options['vivado.hw_server']
@@ -196,36 +202,35 @@ def program(obj, deviceid, bitfile, probe, yes):
             "Vivado not found. Please source the Vivado environment before continuing."
         )
 
-    echo('Starting {}...'.format(lVivado))
+    cprint(f"Starting {lVivado}...")
     try:
         v = VivadoHWServer(executable=lVivado, echo=lVerbosity, stopOnCWarnings=False)
-        echo('... done')
+        cprint("... done")
         v.openHw()
         v.connect(lHwServerURI)
         hw_targets = v.getHwTargets()
 
-        echo('Found targets: ' + style('{}'.format(', '.join(hw_targets)), fg='blue'))
+        cprint(f"Found targets: [blue]{', '.join(hw_targets)}[/blue]")
 
         lMatchingTargets = [t for t in hw_targets if target in t]
         if len(lMatchingTargets) == 0:
             raise RuntimeError(
-                'Target %s not found. Targets available %s: '
-                % (target, ', '.join(hw_targets))
+                f"Target {target} not found. Targets available: {', '.join(hw_targets)}"
             )
 
         if len(lMatchingTargets) > 1:
             raise RuntimeError(
-                'Multiple targets matching %s found. Prease refine your selection. Targets available %s: '
-                % (target, ', '.join(hw_targets))
+                f"Multiple targets matching {target} found. Prease refine your selection. Targets available: {', '.join(hw_targets)}"
             )
 
         lTarget = lMatchingTargets[0]
 
-        echo('Selected target: ' + style('{}'.format(lMatchingTargets[0]), fg='blue'))
+        cprint(f"Selected target: [blue]{lMatchingTargets[0]}[/blue]")
         v.openHwTarget(lTarget)
 
         lHWDevices = v.getHwDevices()
-        echo('Found devices: ' + style('{}'.format(', '.join(lHWDevices)), fg='blue'))
+        cprint(f"Found devices: [blue]{', '.join(lHWDevices)}[/blue]")
+        # echo('Found devices: ' + style('{}'.format(', '.join(lHWDevices)), fg='blue'))
 
         if device is None:
             if len(lHWDevices) == 1:
@@ -243,21 +248,14 @@ def program(obj, deviceid, bitfile, probe, yes):
             )
 
         if yes or click.confirm(
-            style(
-                "Bitfile {0} will be loaded on {1}.\nDo you want to continue?".format(
-                    bitfile, lTarget
-                ),
-                fg='yellow',
-            )
+            Text(f"Bitfile {bitfile} will be loaded on {lTarget}.\nDo you want to continue?", style='yellow')
         ):
-            echo("Programming {}".format(lTarget))
+            cprint(f"Programming {lTarget}")
             v.programDevice(device, bitfile, probe)
-            echo("Done.")
-            secho(
-                "{} successfully programmed on {}".format(bitfile, lTarget), fg='green'
-            )
+            cprint("Done.")
+            cprint(f"{bitfile} successfully programmed on {lTarget}", style='green')
         else:
-            secho('Programming aborted.', fg='yellow')
+            cprint(f"Programming aborted.", style='yellow')
         v.closeHwTarget(lTarget)
 
     except VivadoConsoleError as lExc:
@@ -267,19 +265,15 @@ def program(obj, deviceid, bitfile, probe, yes):
 
 def main():
     '''Discovers the env at startup'''
-    try:
-        cli()
-    except Exception as e:
-        hline = '-' * 80
-        echo()
-        secho(hline, fg='red')
-        secho("FATAL ERROR: Caught '" + type(e).__name__ + "' exception:", fg='red')
-        secho(e.message, fg='red')
-        secho(hline, fg='red')
-        import StringIO
+    obj = ProgEnvironment()
 
-        lTrace = StringIO.StringIO()
-        traceback.print_exc(file=lTrace)
-        print(lTrace.getvalue())
-        # Do something with lTrace
+    try:
+        cli(obj=obj, show_default=True)
+    except Exception as e:
+        cprint("ERROR: exception caught!", style='red')
+        cprint(e, style='red')
+
+        if obj.printExceptionStack:
+            console.print_exception()
+
         raise SystemExit(-1)

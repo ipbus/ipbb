@@ -15,7 +15,7 @@ install_requires += [
         "psutil==5.9.0",
         "pytest==7.0.1",
         "PyYAML==6.0",
-        "rich==12.4.4",
+        "rich==12.6.0",
         "sh==1.14.2",
         # "vsg==3.10.0",
         "vunit-hdl==4.6.0",

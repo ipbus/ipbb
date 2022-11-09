@@ -129,7 +129,7 @@ def list(obj):
             lHwTargets += [lVCTarget]
 
     for target in lHwTargets:
-        cprint(f"- target [blue]{traget}[/blue]")
+        cprint(f"- target [blue]{target}[/blue]")
 
         try:
             v.openHwTarget(target)

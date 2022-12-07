@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 
-if sys.version_info <= (3,7):
+if sys.version_info <= (4,0):
     install_requires = ["click==7.1.2"]
 else:
     install_requires = ["click==8.1.3"]

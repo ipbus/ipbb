@@ -72,8 +72,6 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
             except sh.ErrorReturnCode as e:
                 cprint(f"[red]{lDecoder}[/red]")
                 cprint(escape(e.stdout.decode()), highlight=False)
-                import IPython
-                IPython.embed()
                 lUpdatedDecoders.append((lDecoder, lTarget))
 
         if lErrors:

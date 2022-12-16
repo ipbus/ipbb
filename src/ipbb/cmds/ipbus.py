@@ -5,6 +5,7 @@ import sys
 import click
 
 from rich.prompt import Confirm
+from rich.markup import escape
 
 from os.path import join, split, exists, abspath, splitext, relpath, basename
 from ..console import cprint, console
@@ -69,6 +70,10 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
             try:
                 diff('-u', '-I', '^-- START automatically', lTarget, lDecoder)
             except sh.ErrorReturnCode as e:
+                cprint(f"[red]{lDecoder}[/red]")
+                cprint(escape(e.stdout.decode()), highlight=False)
+                import IPython
+                IPython.embed()
                 lUpdatedDecoders.append((lDecoder, lTarget))
 
         if lErrors:
@@ -95,7 +100,7 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
         # ------------------------------------------------------------------------------
         cprint(
             'The following decoders have changed and must be updated:\n'
-            + '\n'.join([f" * [blue]{d}[/blue]" for d in lUpdatedDecoders])
+            + '\n'.join([f" - [red]{d}[/red]" for d,t in lUpdatedDecoders])
             + '\n'
         )
         if aCheckUpToDate:

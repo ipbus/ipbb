@@ -174,7 +174,7 @@ class VivadoProjectGenerator(object):
             if not set(lSrcCommandGroups.keys()).issubset(cmd_types):
                 raise RuntimeError(f"Command group mismatch {' '.join(lSrcCommandGroups.keys())}")
             for t in cmd_types:
-                for c, f in lSrcCommandGroups[t].items():
+                for c, f in lSrcCommandGroups.get(t,{}).items():
                     write(tmpl(c).substitute(files=' '.join(f)))
 
         write(f'set_property top {lTopEntity} [get_filesets sources_1]')

@@ -185,7 +185,7 @@ class VivadoProjectGenerator(object):
                 and 8 <= float(redhat_support_product_version) < 9
             for t in cmd_types:
                 if t in lSrcCommandGroups:
-                    for c, f in lSrcCommandGroups[t].items():
+                    for c, f in lSrcCommandGroups.get(t, {}).items():
                         files = ' '.join(f)
                         if not need_workaround:
                             write(tmpl(c).substitute(files=files))

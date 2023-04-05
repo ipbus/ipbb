@@ -382,7 +382,7 @@ class VivadoConsole(object):
             aSeverity (str): Target severity
         """
         lIds = aIds if isinstance(aIds, list) else [aIds]
-        for c in ('set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, aSeverity) for i in lIds):
+        for c in ('reset_msg_config -id {{{}}} -default_severity; set_msg_config -id {{{}}} -new_severity {{{}}}'.format(i, i, aSeverity) for i in lIds):
             self.execute(c)
 
 

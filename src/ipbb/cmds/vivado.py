@@ -16,6 +16,7 @@ from os.path import join, split, exists, splitext, abspath, basename, getmtime
 from collections import OrderedDict
 from copy import deepcopy
 from rich.table import Table
+from rich.markup import escape
 
 from .schema import project_schema, validate_schema
 from .dep import hash
@@ -48,14 +49,15 @@ _memCfgKinds = {
 _svfSettingName = 'svf_jtagchain_devices'
 
 
-_rum_synth = 'synth_1'
-_rum_impl = 'impl_1'
+_rum_synth_subdir = 'synth_1'
+_rum_impl_subdir = 'impl_1'
+_sources_subdir = 'sources_1'
+
 
 
 
 # ------------------------------------------------------------------------------
 def validate_settings(ictx):
-
     validate_schema(_schema, ictx.depParser.settings)
 
 
@@ -79,6 +81,17 @@ def ensure_vivado(ictx):
         raise click.ClickException(
             "Vivado not found. Please source the Vivado environment before continuing."
         )
+
+
+# ------------------------------------------------------------------------------
+def find_ip_src( srcs ):
+    ips = {}
+    for src in srcs:
+        name, ext = splitext(src.filepath)
+        if ext not in ('.xci', '.xcix'):
+            continue
+        ips[split(name)[1]] = src.filepath
+    return ips
 
 # ------------------------------------------------------------------------------
 def ensure_vivado_project_path(aProjPath: str):
@@ -125,12 +138,14 @@ def vivado(ictx, loglevel, cmdlist):
     lLogLabel = None if not lKeep else '_'.join( cmdlist )
 
     # Command-specific ictx variables
-    ictx.vivadoProjPath = join(ictx.currentproj.path, ictx.currentproj.name)
-    ictx.vivadoProjFile = join(ictx.vivadoProjPath, ictx.currentproj.name +'.xpr')
-    ictx.vivadoProdPath = join(ictx.currentproj.path, 'products')
-    ictx.vivadoProdFileBase = join(ictx.vivadoProdPath, ictx.currentproj.name)
-    ictx.vivado_synth_dir = join(ictx.vivadoProjPath, f'{ictx.currentproj.name}', _rum_synth)
-    ictx.vivado_impl_dir = join(ictx.vivadoProjPath, f'{ictx.currentproj.name}.runs', _rum_impl)
+    ictx.vivado_proj_path = join(ictx.currentproj.path, ictx.currentproj.name)
+    ictx.vivado_proj_file = join(ictx.vivado_proj_path, f'{ictx.currentproj.name}.xpr')
+    ictx.vivado_prod_path = join(ictx.currentproj.path, 'products')
+    ictx.vivado_prod_file_base = join(ictx.vivado_prod_path, ictx.currentproj.name)
+    ictx.vivado_srcs_dir = join(ictx.vivado_proj_path, f'{ictx.currentproj.name}.srcs')
+    ictx.vivado_ipsrcs_dir = join(ictx.vivado_srcs_dir, _sources_subdir, 'ip')
+    ictx.vivado_synth_dir = join(ictx.vivado_proj_path, f'{ictx.currentproj.name}', _rum_synth_subdir)
+    ictx.vivado_impl_dir = join(ictx.vivado_proj_path, f'{ictx.currentproj.name}.runs', _rum_impl_subdir)
 
     ictx.vivadoSessions = VivadoSessionManager(keep=lKeep, echo=(loglevel != 'none'), loglabel=lLogLabel, loglevel=loglevel)
 
@@ -193,6 +208,43 @@ def genproject(ictx, aEnableIPCache, aOptimise, aToScript, aToStdout):
 
 
 # ------------------------------------------------------------------------------
+def checkips(ictx):
+
+    lDepFileParser = ictx.depParser
+
+    ips = find_ip_src(lDepFileParser.commands['src'])
+    cprint(ips)
+
+    _, ip_proj_paths, _ = next(iter(os.walk(ictx.vivado_ipsrcs_dir)))
+    
+    comm_ips = set(ip_proj_paths).intersection(ips)
+    cprint(f'IPs both in sources and project : {tuple(comm_ips)}')
+    cprint(f'IPs only in proj    : {tuple(set(ip_proj_paths)-comm_ips)}')
+    cprint(f'IPs only in sources : {tuple(set(ips)-comm_ips)}')
+
+    to_update = []
+    for ip in comm_ips:
+        src_path = ips[ip]
+        fpath = join(ictx.vivado_ipsrcs_dir, ip, split(src_path)[1])
+        cprint(exists(fpath), fpath, src_path)
+
+        diff = sh.colordiff if which('colordiff') else sh.diff
+
+
+        try:
+            diff('-u', '-I', '"gen_directory":', '-I', '"OUTPUTDIR":', src_path, fpath)
+        except sh.ErrorReturnCode as e:
+            cprint(f"[red]{fpath}[/red]")
+            cprint(escape(e.stdout.decode()), highlight=False)
+            # lUpdatedDecoders.append((lDecoder, lTarget))
+            to_update += [(fpath, src_path)]
+
+    for fpath, src_path in to_update:
+        cprint(f"cp {fpath} {src_path}")
+
+
+
+# ------------------------------------------------------------------------------
 def checksyntax(ictx):
 
     lSessionId = 'chk-syn'
@@ -200,7 +252,7 @@ def checksyntax(ictx):
     lStopOn = ['HDL 9-806', 'HDL 9-69', 'HDL 9-3136', 'HDL 9-1752' ]  # Syntax errors  # Type not declared # object not declared # found 0 definitions of operator...
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
@@ -208,7 +260,7 @@ def checksyntax(ictx):
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
             # Open the project
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
 
             # Change message severity to ERROR for the isses we're interested in
             lConsole.changeMsgSeverity(lStopOn, 'ERROR')
@@ -232,7 +284,7 @@ def synth(ictx, aNumJobs, aUpdateInt):
     lSessionId = 'synth'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
@@ -248,7 +300,7 @@ def synth(ictx, aNumJobs, aUpdateInt):
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
             # Open the project
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
 
             with VivadoSnoozer(lConsole):
                 lRunProps = { k: v for k, v in read_run_info(lConsole).items() if lOOCRegex.match(k) }
@@ -338,7 +390,7 @@ def impl(ictx, aNumJobs, aStopOnTimingErr):
     lSessionId = 'impl'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
@@ -352,16 +404,16 @@ def impl(ictx, aNumJobs, aStopOnTimingErr):
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
 
             # Open the project
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
 
             # Change message severity to ERROR for the isses we're interested in
             lConsole.changeMsgSeverity(lStopOn, "ERROR")
 
             for c in (
-                    f'reset_run {_rum_impl}',
-                    f'launch_runs {_rum_impl}'
+                    f'reset_run {_rum_impl_subdir}',
+                    f'launch_runs {_rum_impl_subdir}'
                     + (' -jobs {}'.format(aNumJobs) if aNumJobs is not None else ''),
-                    f'wait_on_run {_rum_impl}',
+                    f'wait_on_run {_rum_impl_subdir}',
                 ):
                 lConsole(c)
 
@@ -385,7 +437,7 @@ def resource_usage(ictx, aCell, aDepth, aFile, aSLR):
     lSessionId = 'usage'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
@@ -404,7 +456,7 @@ def resource_usage(ictx, aCell, aDepth, aFile, aSLR):
 
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
             for c in (
                     'open_run impl_1',
                     lCmd
@@ -422,18 +474,18 @@ def bitfile(ictx):
     lSessionId = 'bitfile'
 
     # Check
-    if not exists(ictx.vivadoProjFile):
-        raise click.ClickException("Vivado project %s does not exist" % ictx.vivadoProjFile)
+    if not exists(ictx.vivado_proj_file):
+        raise click.ClickException("Vivado project %s does not exist" % ictx.vivado_proj_file)
 
     ensure_vivado(ictx)
 
-    mkdir(ictx.vivadoProdPath)
-    lWriteBitStreamCmd = 'write_bitstream -force {}'.format(ictx.vivadoProdFileBase+'.bit')
+    mkdir(ictx.vivado_prod_path)
+    lWriteBitStreamCmd = 'write_bitstream -force {}'.format(ictx.vivado_prod_file_base+'.bit')
 
 
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
             lProject.open_run('impl_1')
             lConsole(lWriteBitStreamCmd)
 
@@ -456,11 +508,11 @@ def _svffile(ictx):
     lSessionId = 'svffile'
 
     # Check that the project exists
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     lProjName = ictx.currentproj.name
     lDepFileParser = ictx.depParser
-    lBaseName = ictx.vivadoProdFileBase
+    lBaseName = ictx.vivado_prod_file_base
 
     # Return early if SVF settings not found
     if ('vivado' not in lDepFileParser.settings) or _svfSettingName not in lDepFileParser.settings['vivado']:
@@ -511,7 +563,7 @@ def _svffile(ictx):
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
 
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
             for c in lTclCommands:
                 lConsole(c)
 
@@ -532,11 +584,11 @@ def debugprobes(ictx):
     lSessionId = 'dbg-prb'
 
     # Check that the project exists.
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     lProjName = ictx.currentproj.name
     lDepFileParser = ictx.depParser
-    lBaseName = ictx.vivadoProdFileBase
+    lBaseName = ictx.vivado_prod_file_base
 
     lBitPath = lBaseName + '.bit'
     if not exists(lBitPath):
@@ -545,11 +597,11 @@ def debugprobes(ictx):
     # And that the Vivado ictx is up.
     ensure_vivado(ictx)
 
-    lWriteDebugProbesCmd = 'write_debug_probes -force {}'.format(ictx.vivadoProdFileBase+'.ltx')
+    lWriteDebugProbesCmd = 'write_debug_probes -force {}'.format(ictx.vivado_prod_file_base+'.ltx')
 
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
             lProject.open_run('impl_1')
             lConsole(lWriteDebugProbesCmd)
 
@@ -577,13 +629,13 @@ def memcfg(ictx):
     lSessionId = 'memcfg'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
 
 
     lProjName = ictx.currentproj.name
     lDepFileParser = ictx.depParser
-    lBaseName = ictx.vivadoProdFileBase
+    lBaseName = ictx.vivado_prod_file_base
 
     if 'vivado' not in lDepFileParser.settings:
         cprint('No memcfg settings found in this project. Exiting.', style='yellow')
@@ -609,7 +661,7 @@ def memcfg(ictx):
         try:
             with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
 
-                lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+                lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
                 lConsole(
                     f'write_cfgmem -force -format {k} {lMemCmdOptions} -loadbit {{up 0x00000000 "{lBitPath}" }} -file "{lMemPath}"'
                 )
@@ -666,7 +718,7 @@ def status(ictx):
     lSessionId = 'status'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
@@ -687,7 +739,7 @@ def status(ictx):
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
             with VivadoSnoozer(lConsole):
-                lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+                lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
                 lInfos = lProject.read_run_info(lProps)
 
     except VivadoConsoleError as lExc:
@@ -708,14 +760,14 @@ def reset(ictx):
     lSessionId = 'reset'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
 
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
             for c in (
                     'reset_run synth_1',
                     'reset_run impl_1'
@@ -750,7 +802,7 @@ def package(ictx, aTag):
 
     ensure_vivado(ictx)
 
-    if not exists(ictx.vivadoProjFile):
+    if not exists(ictx.vivado_proj_file):
         cprint('Vivado project does not exist. Creating the project...', style='yellow')
         genproject(ictx, True, True, None, False)
 
@@ -759,14 +811,14 @@ def package(ictx, aTag):
     lTopEntity = lDepFileParser.settings.get('top_entity', kTopEntity)
 
     # Create bitfile if missing
-    lBaseName = ictx.vivadoProdFileBase
+    lBaseName = ictx.vivado_prod_file_base
     lBitPath  = lBaseName + '.bit'
     gen_bitfile = False
     if not exists(lBitPath):
         cprint("Bitfile does not exist. Starting a build ...", style='yellow')
         gen_bitfile = True
     elif get_max_mtime_in_dir(ictx.vivado_impl_dir) > getmtime(lBitPath):
-        cprint(f"Bitfile exists but it's older than the content of {_rum_impl}. Rebuilding ...", style='yellow')
+        cprint(f"Bitfile exists but it's older than the content of {_rum_impl_subdir}. Rebuilding ...", style='yellow')
         gen_bitfile = True
 
     if gen_bitfile:
@@ -892,14 +944,14 @@ def archive(ictx):
     lSessionId = 'archive'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
 
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
-            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
             lConsole('archive_project {} -force'.format(
                     join(ictx.currentproj.path, ictx.currentproj.settings['name']+'.xpr.zip')
                 )
@@ -917,13 +969,13 @@ def ipy(ictx):
     lSessionId = 'ipy'
 
     # Check that the project exists 
-    ensure_vivado_project_path(ictx.vivadoProjFile)
+    ensure_vivado_project_path(ictx.vivado_proj_file)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
 
     lConsole = ictx.vivadoSessions._getconsole(lSessionId)
-    lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+    lProject = VivadoProject(lConsole, ictx.vivado_proj_file)
     import IPython
 
     IPython.embed(colors="neutral")

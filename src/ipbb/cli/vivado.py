@@ -49,7 +49,6 @@ def vivado_get_command_aliases(self, ctx, cmd_name):
 vivado.get_command = types.MethodType(vivado_get_command_aliases, vivado)
 
 
-
 # ------------------------------------------------------------------------------
 @vivado.command('generate-project', short_help='Assemble the project from sources.')
 @click.option('--enable-ip-cache/--disable-ip-cache', 'aEnableIPCache', default=True)
@@ -63,9 +62,18 @@ def genproject(ictx, *args, **kwargs):
     from ..cmds.vivado import genproject
     return (ictx.command.name, genproject, args, kwargs)
 
+# ------------------------------------------------------------------------------
+@vivado.command('check-ips', short_help='Check the ip status.')
+@click.pass_obj
+@click.pass_context
+def checkips(ictx, *args, **kwargs):
+    """Run Vivado ips check on current project
+    """
+    from ..cmds.vivado import checkips
+    return (ictx.command.name, checkips, args, kwargs)
 
 # ------------------------------------------------------------------------------
-@vivado.command('check-syntax', short_help='Run the elaboration step on the current project.')
+@vivado.command('check-syntax', short_help='Run syntax check on the current project.')
 @click.pass_obj
 @click.pass_context
 def checksyntax(ictx, *args, **kwargs):

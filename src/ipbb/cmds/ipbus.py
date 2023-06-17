@@ -43,6 +43,7 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
     with DirSentry(join(ictx.currentproj.path, lDecodersDir)):
         for lAddr in ictx.depParser.commands['addrtab']:
             cprint(f"Processing [blue]{basename(lAddr.filepath)}[/blue]")
+            
             # Interested in top-level address tables only
             if not lAddr.toplevel:
                 cprint(

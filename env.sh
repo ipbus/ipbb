@@ -64,6 +64,9 @@ if [ -z ${VIRTUAL_ENV+X} ] ; then
         echo -e "${COL_RED}       Delete ${IPBB_VENV} and source env.sh again.${COL_NULL}"
         return
     fi
+else
+    echo -e "${COL_YELLOW}ERROR: already in a virtual environment. Please quit the environment and try again.${COL_NULL}"
+    return -1
 fi
 
 # add tests/bin to PATH

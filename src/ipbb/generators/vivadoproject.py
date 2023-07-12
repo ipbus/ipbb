@@ -27,7 +27,7 @@ class VivadoProjectGenerator(object):
         name, ext = splitext(aSrcCmd.filepath)
 
         lFileSet = None
-        if ext in ('.xci', '.xcix'):
+        if ext in ('.xci', '.xcix', '.coe' ):
             lFileSet = 'sources_1'
 
         elif ext in ('.xdc', '.tcl'):
@@ -114,7 +114,7 @@ class VivadoProjectGenerator(object):
             # local list of commands
             lCommands = []
 
-            if ext in ('.xci', '.xcix'):
+            if ext in ('.xci', '.xcix' , '.coe'):
 
                 t = 'ip'
                 c = f'import_files -norecurse -fileset {self.fileset(src)} $files'

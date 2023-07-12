@@ -27,7 +27,7 @@ class VivadoProjectGenerator(object):
         name, ext = splitext(aSrcCmd.filepath)
 
         lFileSet = None
-        if ext in ('.xci', '.xcix'):
+        if ext in ('.xci', '.xcix', '.coe' ):
             lFileSet = 'sources_1'
 
         elif ext in ('.xdc', '.tcl'):
@@ -114,7 +114,7 @@ class VivadoProjectGenerator(object):
             # local list of commands
             lCommands = []
 
-            if ext in ('.xci', '.xcix'):
+            if ext in ('.xci', '.xcix' , '.coe'):
 
                 t = 'ip'
                 c = f'import_files -norecurse -fileset {self.fileset(src)} $files'
@@ -174,7 +174,7 @@ class VivadoProjectGenerator(object):
             if not set(lSrcCommandGroups.keys()).issubset(cmd_types):
                 raise RuntimeError(f"Command group mismatch {' '.join(lSrcCommandGroups.keys())}")
             for t in cmd_types:
-                for c, f in lSrcCommandGroups[t].items():
+                for c, f in lSrcCommandGroups.get(t,{}).items():
                     write(tmpl(c).substitute(files=' '.join(f)))
 
         write(f'set_property top {lTopEntity} [get_filesets sources_1]')

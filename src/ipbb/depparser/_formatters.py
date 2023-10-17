@@ -147,7 +147,11 @@ class DepFormatter(object):
         if not lFNF:
             return ""
 
-        lFNFTable = Table('path expression', 'package', 'component', 'included by')
+        lFNFTable = Table()
+        lFNFTable.add_column('path expression', overflow='fold')
+        lFNFTable.add_column('package', overflow='fold') 
+        lFNFTable.add_column('component', overflow='fold')
+        lFNFTable.add_column('included by', overflow='fold')
         # lFNFTable.set_deco(Texttable.HEADER | Texttable.BORDER)
 
         for pkg in sorted(lFNF):

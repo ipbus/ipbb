@@ -107,7 +107,9 @@ def check_depfile(env, verbose, toolset, component, depfile):
     if lFNF:
         cprint('Missing files:', style='red')
 
-        lFNFTable = Table('path', 'included by')
+        lFNFTable = Table()
+        lFNFTable.add_column('path', overflow='fold')
+        lFNFTable.add_column('included by', overflow='fold')
         for pkg in sorted(lFNF):
             lCmps = lFNF[pkg]
             for cmp in sorted(lCmps):

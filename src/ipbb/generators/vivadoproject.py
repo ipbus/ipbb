@@ -3,6 +3,7 @@ import time
 import os
 import collections
 import copy
+import textwrap
 
 from string import Template as tmpl
 from ..defaults import kTopEntity
@@ -176,7 +177,22 @@ class VivadoProjectGenerator(object):
             for t in cmd_types:
                 if t in lSrcCommandGroups:
                     for c, f in lSrcCommandGroups[t].items():
-                        write(tmpl(c).substitute(files=' '.join(f)))
+                        # NOTE: For some reason, pexpect.sendline() in
+                        # the Vivado console implementation hangs when
+                        # the commands sent are too long. The exact
+                        # limit is not clear, but empiric checks seem
+                        # to indicate that 33k characters is too
+                        # long. Therefore long commands (i.e., longer
+                        # than a somewhat arbitrary length) are split
+                        # up into multiple commands.
+                        MAX_FILES_LEN = 8192
+                        files = ' '.join(f)
+                        files_split = textwrap.wrap(files,
+                                                    MAX_FILES_LEN,
+                                                    break_long_words=False,
+                                                    break_on_hyphens=False)
+                        for tmp_files in files_split:
+                            write(tmpl(c).substitute(files=tmp_files))
 
         write(f'set_property top {lTopEntity} [get_filesets sources_1]')
         if lSimTopEntity:

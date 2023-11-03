@@ -185,7 +185,7 @@ class VivadoProjectGenerator(object):
                 if t in lSrcCommandGroups:
                     for c, f in lSrcCommandGroups[t].items():
                         files = ' '.join(f)
-                        if not need_work_around:
+                        if not need_workaround:
                             write(tmpl(c).substitute(files=files))
                         else:
                             # For some reason, pexpect.sendline() in

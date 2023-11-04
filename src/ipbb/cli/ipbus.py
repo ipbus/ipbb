@@ -21,12 +21,13 @@ def ipbus(env):
 )
 @click.option('-c', '--check-up-to-date', 'aCheckUpToDate', is_flag=True, help='Checks for out-of-date or missing decoders. Returns error if any of the two are found.')
 @click.option('-f', '--force', 'aForce', is_flag=True, help='Force an update of the address decodes without asking for confirmation.')
+@click.option('-t', '--template', 'aTemplate', type=click.Path(), help='Path to IPbus address decoder VHDL template.')
 @click.pass_obj
-def gendecoders(env, aCheckUpToDate, aForce):
+def gendecoders(env, aCheckUpToDate, aForce, aTemplate):
     """Generates the ipbus address decoder modules
     
     Args:
         env (`obj`): Click context
     """
     from ..cmds.ipbus import gendecoders
-    gendecoders(env, aCheckUpToDate, aForce)
+    gendecoders(env, aCheckUpToDate, aForce, aTemplate)

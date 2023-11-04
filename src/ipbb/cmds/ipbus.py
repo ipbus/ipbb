@@ -19,7 +19,7 @@ def ipbus(ictx):
     pass
 
 # ------------------------------------------------------------------------------
-def gendecoders(ictx, aCheckUpToDate, aForce):
+def gendecoders(ictx, aCheckUpToDate, aForce, aTemplate):
 
     lDecodersDir = 'decoders'
 
@@ -39,6 +39,7 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
 
     lUpdatedDecoders = []
     lGen = sh.Command(which(lGenScript))
+    lTemplateArg = f"--template={aTemplate}" if aTemplate else None
     lErrors = {}
     with DirSentry(join(ictx.currentproj.path, lDecodersDir)):
         for lAddr in ictx.depParser.commands['addrtab']:
@@ -53,7 +54,7 @@ def gendecoders(ictx, aCheckUpToDate, aForce):
 
             # Generate a new decoder file
             try:
-                lGen(basename(lAddr.filepath), _out=sys.stdout, _err=sys.stderr, _tee=True)
+                lGen(basename(lAddr.filepath), lTemplateArg, _out=sys.stdout, _err=sys.stderr, _tee=True)
             except Exception as lExc:
                 cprint(f"Failed to generate decoder for {basename(lAddr.filepath)}", style='red')
                 lErrors[lAddr] = lExc

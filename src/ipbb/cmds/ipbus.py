@@ -7,7 +7,7 @@ import click
 from rich.prompt import Confirm
 from rich.markup import escape
 
-from os.path import join, split, exists, abspath, splitext, relpath, basename
+from os.path import join, split, exists, abspath, splitext, relpath, basename, dirname
 from ..console import cprint, console
 from ..defaults import kProjAreaFile, kProjUserFile
 from ..utils import which, DEFAULT_ENCODING
@@ -61,8 +61,11 @@ def gendecoders(ictx, aCheckUpToDate, aForce, aTemplate):
                 continue
 
             lDecoder = f'ipbus_decode_{splitext(basename(lAddr.filepath))[0]}.vhd'
+            lAddrTabDirName = ictx.pathMaker.fpaths['addrtab']
+            lAddrPathPieces = dirname(lAddr.filepath).split(os.path.sep)
+            lIndex = lAddrPathPieces.index(lAddrTabDirName)
             lTarget = ictx.pathMaker.getPath(
-                lAddr.package, lAddr.component, 'src', lDecoder
+                lAddr.package, lAddr.component, 'src', lDecoder, os.path.join("", *lAddrPathPieces[lIndex+1:])
             )
 
             diff = sh.colordiff if which('colordiff') else sh.diff

@@ -1,5 +1,8 @@
 # NOTE TO SELF: Merge with tools/common.py
 
+import csv
+import pathlib
+import platform
 import os
 import ipaddress
 import sys
@@ -16,6 +19,26 @@ from locale import getpreferredencoding
 from ..console import cprint, console
 
 DEFAULT_ENCODING = getpreferredencoding() or "UTF-8"
+
+# ------------------------------------------------------------------------------
+def read_os_release():
+    """Check OS, and on Linux return a dictionary with /etc/os-release info
+
+    On any platform other than Linux, None is returned.
+
+    """
+
+    res = None
+    if platform.system() == 'Linux':
+        in_file_name = pathlib.Path("/etc/os-release")
+        with open(in_file_name) as in_stream:
+            non_empty_lines = (l for l in in_stream if not l.isspace())
+            reader = csv.reader(non_empty_lines, delimiter="=")
+            res = dict(reader)
+
+    return res
+# ------------------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------------
 class DirSentry:

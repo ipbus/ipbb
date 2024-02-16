@@ -180,7 +180,7 @@ class VivadoProjectGenerator(object):
             # we apply a work-around.
             os_info = read_os_release()
             need_workaround = os_info \
-                and (os_info['PLATFORM_ID'] == 'platform:el8')
+                and (os_info.get('REDHAT_SUPPORT_PRODUCT_VERSION', None) == '8')
             for t in cmd_types:
                 if t in lSrcCommandGroups:
                     for c, f in lSrcCommandGroups[t].items():

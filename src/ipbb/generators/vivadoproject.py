@@ -179,8 +179,10 @@ class VivadoProjectGenerator(object):
             # systems that hangs on long commands. For those platforms
             # we apply a work-around.
             os_info = read_os_release()
-            need_workaround = os_info \
-                and (os_info['PLATFORM_ID'] == 'platform:el8')
+            redhat_support_product_version = os_info \
+                and os_info.get('REDHAT_SUPPORT_PRODUCT_VERSION', None)
+            need_workaround = redhat_support_product_version \
+                and 8 <= float(redhat_support_product_version) < 9
             for t in cmd_types:
                 if t in lSrcCommandGroups:
                     for c, f in lSrcCommandGroups[t].items():

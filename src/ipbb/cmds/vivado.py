@@ -221,7 +221,7 @@ def checksyntax(ictx):
         raise click.Abort()
 
     console.log(
-        "\n{}: Synthax check completed successfully.\n".format(ictx.currentproj.name),
+        "\n{}: Syntax check completed successfully.\n".format(ictx.currentproj.name),
         style='green',
     )
 

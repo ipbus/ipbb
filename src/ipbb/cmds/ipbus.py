@@ -112,6 +112,10 @@ def gendecoders(ictx, aCheckUpToDate, aForce, aTemplate):
             return
 
         for lDecoder, lTarget in lUpdatedDecoders:
+            try:
+                os.makedirs(os.path.dirname(lTarget))
+            except FileExistsError:
+                pass
             cprint(sh.cp('-av', lDecoder, lTarget))
 
         console.log(

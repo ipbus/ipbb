@@ -73,6 +73,8 @@ class ModelSimGenerator(object):
             if lExt in ('.vhd', '.vhdl'):
                 if src.vhdl2008:
                     cmd = 'vcom -2008'
+                if src.vhdl2019:
+                    cmd = 'vcom -2019'
                 else:
                     cmd = 'vcom'
             elif lExt == '.v':

@@ -30,6 +30,7 @@ Mention the minimal requirements for a component (`firmware` subdirectory with c
 * `src`: Add a source or constraint file
   - `-l`/`--lib`: Associate the hdl file to a library
   - `--vhdl2008`: Use the 2008 vhdl standard for this file (vhdl only)
+  - `--vhdl2019`: Use the 2019 vhdl standard for this file (vhdl only)
   - `-u`/`--usein` (`synth`,`sim`): Declae the file as synth or sim-only file
   - `--simflags`: Pass flags to Modelsim/Questasim
 

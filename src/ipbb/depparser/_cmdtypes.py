@@ -65,16 +65,18 @@ class SrcCommand(Command):
         component  (str):  component withon 'Package' the target belongs to
         lib        (str):  library the file will be added to
         vhdl2008   (bool): toggles the vhdl 2008 syntax for .vhd files
+        vhdl2019   (bool): toggles the vhdl 2019 syntax for .vhd files
         useinsynth (bool): use this files in synth
         useinsim   (bool): use this files in sim
         simflags   (str):  flags to be passed to Modelsim/Questasim
     """
     # --------------------------------------------------------------
-    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aUseInSynth, aUseInSim, aSimflags):
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aVhdl2019, aUseInSynth, aUseInSim, aSimflags):
         super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
         self.lib = aLib
         self.vhdl2008 = aVhdl2008
+        self.vhdl2019 = aVhdl2019
         self.useInSynth = aUseInSynth
         self.useInSim = aUseInSim
         self.simflags = aSimflags
@@ -84,6 +86,8 @@ class SrcCommand(Command):
         lFlags = []
         if self.vhdl2008:
             lFlags.append('vhdl2008')
+        if self.vhdl2019:
+            lFlags.append('vhdl2019')
         if self.useInSynth:
             lFlags.append('synth')
         if self.useInSim:

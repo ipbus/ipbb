@@ -25,7 +25,7 @@ from os.path import exists, splitext, sep
 DepInfo = Tuple[str, int]
 
 repo_defaults_schema = {
-    'vhdl_standard': { 'type': 'string', 'allowed': ['vhdl2008', 'vhdl1987'] },
+    'vhdl_standard': { 'type': 'string', 'allowed': ['vhdl2019', 'vhdl2008', 'vhdl1987'] },
     'default_library': { 'type': 'string' },
 }
 

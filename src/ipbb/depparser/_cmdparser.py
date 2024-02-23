@@ -11,6 +11,7 @@ cmds_defaults_schema = {
         'type': 'dict',
         'schema': {
             'vhdl2008': { 'type': 'boolean' },
+            'vhdl2019': { 'type': 'boolean' },
             'lib': { 'type': 'string' },
         }
     }    
@@ -126,7 +127,9 @@ class DepCmdParser(argparse.ArgumentParser):
         subp.add_argument('-c', '--component', **lCompArgOpts)
         subp.add_argument('-l', '--lib')
         subp.add_argument('--cd')
-        subp.add_argument('--vhdl2008', action='store_true', default=None)
+        vhdl_std_group = subp.add_mutually_exclusive_group()
+        vhdl_std_group.add_argument('--vhdl2008', action='store_true', default=None)
+        vhdl_std_group.add_argument('--vhdl2019', action='store_true', default=None)
         subp.add_argument('-u', '--usein', action=UseInAction)
         subp.add_argument('--simflags')
         subp.add_argument('file', nargs='+')
@@ -157,7 +160,7 @@ class DepCmdParser(argparse.ArgumentParser):
 
         self.creators = {
             'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
-            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, 'synth' in a.usein, 'sim' in a.usein, a.simflags),
+            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, a.vhdl2019, 'synth' in a.usein, 'sim' in a.usein, a.simflags),
             'hlssrc'  : lambda a : HlsSrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.cflags, a.csimflags, a.tb, a.include_comp),
             'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
             'addrtab' : lambda a  : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),

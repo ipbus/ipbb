@@ -225,7 +225,7 @@ def _repo_reset(ictx, repo):
 
 
 # ------------------------------------------------------------------------------
-def git(ictx, repo, branch_or_tag, revision, dest):
+def git(ictx, repo, branch_or_tag, revision, dest, depth):
     '''Add a git repository to the source area'''
 
     cprint('Adding git repository [blue]{}[/blue]'.format(repo))
@@ -283,24 +283,29 @@ def git(ictx, repo, branch_or_tag, revision, dest):
             )
         )
 
-    lArgs = ['clone', repo]
+    lCloneArgs = ['clone', repo]
 
     if dest is not None:
-        lArgs += [dest]
+        lCloneArgs += [dest]
 
-    sh.git(*lArgs, _out=sys.stdout, _cwd=ictx.srcdir)
+    if depth is not None:
+        lCloneArgs += [f'--depth={depth}']
 
     # NOTE: The mutual exclusivity of checking out a branch and
     # checkout out a revision should have been handled at the CLI
     # option handling stage.
     if branch_or_tag is not None:
-
-        cprint(f'Checking out branch/tag [blue]{branch_or_tag}[/blue]')
-        sh.git('checkout', branch_or_tag, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+        cprint(f'Cloning branch/tag [blue]{branch_or_tag}[/blue]')
+        sh.git(*lCloneArgs, f'--branch={branch_or_tag}', _out=sys.stdout, _cwd=ictx.srcdir)
 
     elif revision is not None:
+        sh.git(*lCloneArgs, _out=sys.stdout, _cwd=ictx.srcdir)
         cprint('Checking out revision [blue]{}[/blue]'.format(revision))
         try:
+            lFetchArgs = ['fetch', 'origin', revision, '-q']
+            if depth is not None:
+                lFetchArgs += [f'--depth={depth}']
+            sh.git(*lFetchArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
             sh.git('checkout', revision, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
         except Exception as err:
             # NOTE: The assumption here is that the failed checkout

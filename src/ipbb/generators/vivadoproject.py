@@ -148,9 +148,9 @@ class VivadoProjectGenerator(object):
                     f = src.filepath
                     lCommands += [(t, c, f)]
 
-                if ext == '.tcl':
+                if ext in ['.tcl', '.xdc']:
                     t = 'prop'
-                    c = 'set_property USED_IN implementation [get_files {$files}]'
+                    c = f'set_property USED_IN {{{" ".join(src.useFor)}}} [get_files {{$files}}]'
                     f = src.filepath
                     lCommands += [(t, c, f)]
 

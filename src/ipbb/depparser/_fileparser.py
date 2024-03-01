@@ -499,6 +499,9 @@ class DepFileParser(object):
                 except DepCmdParserError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
                     continue
+                except Exception as lExc:
+                    lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))
+                    continue
 
                 if self._verbosity > 1:
                     print(self._state.tab, '- Parsed line', vars(lParsedCmd))

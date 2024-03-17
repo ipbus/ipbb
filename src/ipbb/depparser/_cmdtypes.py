@@ -62,16 +62,17 @@ class SrcCommand(Command):
         cmd        (str):  command directive
         filepath   (str):  absolute, normalised path to the command target.
         package    (str):  package the target belongs to.
-        component  (str):  component withon 'Package' the target belongs to
+        component  (str):  component within 'Package' the target belongs to
         lib        (str):  library the file will be added to
         vhdl2008   (bool): toggles the vhdl 2008 syntax for .vhd files
         vhdl2019   (bool): toggles the vhdl 2019 syntax for .vhd files
-        useinsynth (bool): use this files in synth
-        useinsim   (bool): use this files in sim
+        useinsynth (bool): use this file in synth
+        useinsim   (bool): use this file in sim
+        usefor     (str):  use specification for constraint files
         simflags   (str):  flags to be passed to Modelsim/Questasim
     """
     # --------------------------------------------------------------
-    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aVhdl2019, aUseInSynth, aUseInSim, aSimflags):
+    def __init__(self, aCmd, aFilePath, aPackage, aComponent, aCd, aLib, aVhdl2008, aVhdl2019, aUseInSynth, aUseInSim, aUseFor, aSimflags):
         super().__init__(aCmd, aFilePath, aPackage, aComponent, aCd)
 
         self.lib = aLib
@@ -79,6 +80,7 @@ class SrcCommand(Command):
         self.vhdl2019 = aVhdl2019
         self.useInSynth = aUseInSynth
         self.useInSim = aUseInSim
+        self.useFor = aUseFor
         self.simflags = aSimflags
 
     # --------------------------------------------------------------
@@ -97,7 +99,7 @@ class SrcCommand(Command):
 
     # --------------------------------------------------------------
     def __eq__(self, other):
-        return (self.filepath == other.filepath) and (self.lib == other.lib) and (self.simflags == other.simflags)
+        return (self.filepath == other.filepath) and (self.lib == other.lib) and (self.simflags == other.simflags) and (self.useFor == other.useFor)
 
     # --------------------------------------------------------------
     def __hash__(self):

@@ -70,6 +70,25 @@ class UseInAction(argparse.Action):
         setattr(namespace, self.dest, tokens )
 
 # -----------------------------------------------------------------------------
+class UseForAction(argparse.Action):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # NOTE: These strings match the accepted values for the
+        # 'set_property used_in xxx' Vivado TCL command.
+        self._choices = ['synthesis', 'simulation', 'implementation']
+        self.default = ['synthesis', 'implementation']
+
+    def __call__(self, parser, namespace, values, option_string=None):
+
+        tokens = values.split(',')
+
+        lInvalid = [t for t in tokens if t not in self._choices]
+        if lInvalid:
+            raise ValueError('Invalid source types '+','.join(lInvalid))
+
+        setattr(namespace, self.dest, tokens )
+
+# -----------------------------------------------------------------------------
 class DepSubCmdParser(argparse.ArgumentParser):
     def error(self, message):
         raise DepCmdParserError(message)
@@ -131,6 +150,7 @@ class DepCmdParser(argparse.ArgumentParser):
         vhdl_std_group.add_argument('--vhdl2008', action='store_true', default=None)
         vhdl_std_group.add_argument('--vhdl2019', action='store_true', default=None)
         subp.add_argument('-u', '--usein', action=UseInAction)
+        subp.add_argument('-f', '--usefor', action=UseForAction)
         subp.add_argument('--simflags')
         subp.add_argument('file', nargs='+')
 
@@ -160,7 +180,7 @@ class DepCmdParser(argparse.ArgumentParser):
 
         self.creators = {
             'include' : lambda a : IncludeCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd),
-            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, a.vhdl2019, 'synth' in a.usein, 'sim' in a.usein, a.simflags),
+            'src'     : lambda a : SrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.lib, a.vhdl2008, a.vhdl2019, 'synth' in a.usein, 'sim' in a.usein, a.usefor, a.simflags),
             'hlssrc'  : lambda a : HlsSrcCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.cflags, a.csimflags, a.tb, a.include_comp),
             'setup'   : lambda a : SetupCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.finalise),
             'addrtab' : lambda a  : AddrtabCommand(a.cmd, a.file, a.component[0], a.component[1], a.cd, a.toplevel),
@@ -211,4 +231,5 @@ class DepCmdParser(argparse.ArgumentParser):
         return self.creators[cmd](args)
 
 # -----------------------------------------------------------------------------
-# 
+#
+

@@ -2,6 +2,7 @@
 # Modules
 import click
 import os
+import pathlib
 import subprocess
 import sh
 import sys
@@ -468,7 +469,7 @@ def tar(ictx, repo, dest, strip):
 
 
 # ------------------------------------------------------------------------------
-def symlink(ictx, path):
+def symlink(ictx, path, absolute):
 
     lRepoName = basename(path)
     lRepoLocalPath = join(ictx.srcdir, lRepoName)
@@ -476,11 +477,22 @@ def symlink(ictx, path):
     if exists(lRepoLocalPath):
         raise click.ClickException('Repository already exists \'%s\'' % lRepoLocalPath)
 
+    lPathToCheck = \
+        pathlib.Path(abspath(path)) if absolute \
+        else pathlib.Path(ictx.srcdir)/path
+
+    if not lPathToCheck.exists():
+        raise click.ClickException('Target path \'%s\' does not exist' % lPathToCheck)
+
+    lPathToCreate = \
+        lPathToCheck if absolute \
+        else path
+
     cprint(
-        'Adding symlink [blue]{}[/blue] to [blue]{}[/blue]'.format(path, lRepoName)
+        'Adding symlink [blue]{}[/blue] to [blue]{}[/blue]'.format(lPathToCreate, lRepoName)
     )
 
-    sh.ln('-s', abspath(path), _cwd=ictx.srcdir )
+    sh.ln('-s', lPathToCreate, _cwd=ictx.srcdir )
 
 
 # ------------------------------------------------------------------------------

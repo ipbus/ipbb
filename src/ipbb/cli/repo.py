@@ -92,12 +92,16 @@ def tar(env, repo, dest, strip):
 
 # ------------------------------------------------------------------------------
 @add.command('symlink', short_help="Add new source as symlink.")
-@click.argument('path', type=click.Path(exists=True))
+@click.argument('path', type=click.Path(exists=False))
+@click.option('--absolute/--relative',
+             'absolute',
+              default=True,
+              help='Create a link to the absolute/relative target path')
 @click.pass_obj
-def symlink(env, path):
-    '''Add a tarball-ed package to the source area'''
+def symlink(env, path, absolute):
+    '''Add a symlink to the source area'''
     from ..cmds.repo import symlink
-    symlink(env, path)
+    symlink(env, path, absolute)
 
 
 # ------------------------------------------------------------------------------

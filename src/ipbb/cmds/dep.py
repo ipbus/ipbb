@@ -149,6 +149,7 @@ def report(ictx, pager, filters):
 
         if lDepFmt.hasErrors():
             cprint(Panel.fit(lDepFmt.draw_error_table(), title='[bold red]dep tree errors[/bold red]'))
+            raise click.ClickException("Detected errors in dep tree")
 
 
 

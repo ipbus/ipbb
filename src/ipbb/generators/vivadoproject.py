@@ -175,37 +175,30 @@ class VivadoProjectGenerator(object):
             cmd_types = ['ip', 'add', 'prop']
             if not set(lSrcCommandGroups.keys()).issubset(cmd_types):
                 raise RuntimeError(f"Command group mismatch {' '.join(lSrcCommandGroups.keys())}")
-            # There seems to be a terminal problem on RHEL 8-based
-            # systems that hangs on long commands. For those platforms
-            # we apply a work-around.
+            # There seems to be a terminal problem, which mainly
+            # manifests itself on RHEL 8-based systems, that hangs on
+            # long commands. For those platforms we apply a
+            # work-around.
             os_info = read_os_release()
-            redhat_support_product_version = os_info \
-                and os_info.get('REDHAT_SUPPORT_PRODUCT_VERSION', None)
-            need_workaround = redhat_support_product_version \
-                and 8 <= float(redhat_support_product_version) < 9
             for t in cmd_types:
                 if t in lSrcCommandGroups:
                     for c, f in lSrcCommandGroups.get(t, {}).items():
                         files = ' '.join(f)
-                        if not need_workaround:
-                            write(tmpl(c).substitute(files=files))
-                        else:
-                            # For some reason, pexpect.sendline() in
-                            # the Vivado console implementation hangs
-                            # when the commands sent are too long. The
-                            # exact limit is not clear, but empiric
-                            # checks seem to indicate that 33k
-                            # characters is too long. Therefore long
-                            # commands (i.e., longer than a somewhat
-                            # arbitrary length) are split up into
-                            # multiple commands.
-                            MAX_FILES_LEN = 8192
-                            files_split = textwrap.wrap(files,
-                                                        MAX_FILES_LEN,
-                                                        break_long_words=False,
-                                                        break_on_hyphens=False)
-                            for tmp_files in files_split:
-                                write(tmpl(c).substitute(files=tmp_files))
+                        # For some reason, pexpect.sendline() in the
+                        # Vivado console implementation hangs when the
+                        # commands sent are too long. The exact limit
+                        # is not clear, but empiric checks seem to
+                        # indicate that 33k characters is too
+                        # long. Therefore long commands (i.e., longer
+                        # than a somewhat arbitrary length) are split
+                        # up into multiple commands.
+                        MAX_FILES_LEN = 8192
+                        files_split = textwrap.wrap(files,
+                                                    MAX_FILES_LEN,
+                                                    break_long_words=False,
+                                                    break_on_hyphens=False)
+                        for tmp_files in files_split:
+                            write(tmpl(c).substitute(files=tmp_files))
 
         write(f'set_property top {lTopEntity} [get_filesets sources_1]')
         if lSimTopEntity:

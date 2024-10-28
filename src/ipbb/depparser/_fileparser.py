@@ -489,11 +489,6 @@ class DepFileParser(object):
                     if not lLine:
                         continue
 
-                    # Process variable assignment directives
-                    lLine = self._line_process_assignments(lLine, lDepInfo)
-                    if not lLine:
-                        continue
-
                     # Process conditional directives
                     lLine = self._line_process_conditional(lLine, lDepInfo)
                     if not lLine:
@@ -501,6 +496,11 @@ class DepFileParser(object):
 
                     # Replace variables
                     lLine = self._line_replace_vars(lLine, lDepInfo)
+
+                    # Process variable assignment directives
+                    lLine = self._line_process_assignments(lLine, lDepInfo)
+                    if not lLine:
+                        continue
 
                 except DepLineError as lExc:
                     lCurrentFile.errors.append((aPackage, aComponent, aDepFileName, lDepFilePath, lLineNr, lLine, lExc))

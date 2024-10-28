@@ -554,14 +554,15 @@ class DepFileParser(object):
         """
         Gather DepTree summart information"
         """
-        for lCmd in self.depfile.itercmd():
-            if self._verbosity > 0:
-                print (lCmd)
-            self.commands[lCmd.cmd].append(lCmd)
-            self.packages.setdefault(
-                lCmd.package, []).append(lCmd.component)
-            if isinstance(lCmd, SrcCommand) and lCmd.lib is not None:
-                self.libs.add(lCmd.lib)
+        if self.depfile:
+            for lCmd in self.depfile.itercmd():
+                if self._verbosity > 0:
+                    print (lCmd)
+                self.commands[lCmd.cmd].append(lCmd)
+                self.packages.setdefault(
+                    lCmd.package, []).append(lCmd.component)
+                if isinstance(lCmd, SrcCommand) and lCmd.lib is not None:
+                    self.libs.add(lCmd.lib)
 
     # -------------------------------------------------------------------------
     def _gather_unresolved_and_errors(self):
@@ -608,7 +609,12 @@ class DepFileParser(object):
         self._state = State()
 
         # Do the parsing here
-        self.depfile = self._parse_file(aPackage, aComponent, aDepFileName, None)
+        try:
+            self.depfile = self._parse_file(aPackage, aComponent, aDepFileName, None)
+        finally:
+            # Post parsing
+            self._gather_summary_info()
+            self._gather_unresolved_and_errors()
 
         # Lock the config variables tree
         self.settings.lock(True)
@@ -618,12 +624,6 @@ class DepFileParser(object):
         if self._state.depth != 0:
             raise RuntimeError(f"Something went wrong while parsing {aPackage}:{aComponent} {aDepFileName}")
         self._state = None
-
-
-        # Post parsing
-        self._gather_summary_info()
-
-        self._gather_unresolved_and_errors()
 
         # Uniquify
         self._remove_duplicates()

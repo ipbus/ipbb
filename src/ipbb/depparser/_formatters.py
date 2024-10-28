@@ -45,7 +45,7 @@ class DepFormatter(object):
 
     def draw_depfile_tree(self) -> Tree:
         if not self.parser.depfile:
-            return "[red]Top depfile not found[/red]"
+            return "[red]Top depfile not found (or not parsed successfully)[/red]"
 
         attrs = Table(box=None, show_header=False)
         attrs.add_column('pkg', style='cyan', justify="right", no_wrap=True)

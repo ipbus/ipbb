@@ -364,7 +364,7 @@ class DepFileParser(object):
     def _line_replace_vars(self, aLine: str, aInfo: DepInfo):
         try:
             lLine = AlienTemplate(aLine).substitute(self.settings)
-        except RuntimeError as lExc:
+        except Exception as lExc:
             raise DepLineError("Template substitution failed") from lExc
 
         return lLine

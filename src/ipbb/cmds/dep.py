@@ -119,7 +119,13 @@ def report(ictx, pager, filters):
 
             if not lParser.commands[k]:
                 continue
-            lCmdTable = Table(*(lCmdHeaders + (['lib'] if k == 'src' else [])), title=f'{k} ({len(lParser.commands[k])})', title_style='blue', title_justify='left', expand=True)
+            lColumnHeaders = (lCmdHeaders + (['lib'] if k == 'src' else []))
+            lColumns = (Column(header=i, overflow='fold') for i in lColumnHeaders)
+            lCmdTable = Table(*lColumns,
+                              title=f'{k} ({len(lParser.commands[k])})',
+                              title_style='blue',
+                              title_justify='left',
+                              expand=True)
             for lCmd in lParser.commands[k]:
                 lRow = [
                     relpath(lCmd.filepath, ictx.srcdir),

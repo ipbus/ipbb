@@ -77,6 +77,7 @@ def checksyntax(ictx, *args, **kwargs):
 
 # ------------------------------------------------------------------------------
 @vivado.command('simulate', short_help='Run behavioral simulation on the current project.')
+@click.option('--generic-top', 'aGenericTop', default="", help="Specify values for top-level generics, using the xelab -generic_top syntax.")
 @click.pass_obj
 @click.pass_context
 def checksyntax(ctx, *args, **kwargs):

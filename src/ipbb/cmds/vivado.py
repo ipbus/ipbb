@@ -240,7 +240,7 @@ def checksyntax(ictx):
     )
 
 # ------------------------------------------------------------------------------
-def runsimulation(ictx):
+def runsimulation(ictx, aGenericTop):
 
     lSessionId = 'run-sim'
 
@@ -262,6 +262,7 @@ def runsimulation(ictx):
 
             # Execute the behavioral simulation
             lConsole('set_property target_simulator "XSim" [current_project]')
+            lConsole(f"set_property generic {{{aGenericTop}}} [get_filesets sim_1]")
             sim_output = lConsole('launch_simulation -mode "behavioral"', aMaxLen=None)
 
     except VivadoConsoleError as lExc:

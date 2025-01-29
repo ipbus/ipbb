@@ -269,6 +269,10 @@ def runsimulation(ictx, aGenericTop):
         logVivadoConsoleError(lExc)
         raise click.Abort()
 
+    # Reset the 'generic' property. Otherwise this becomes permanently
+    # part of the Vivado project, and this is not what we want.
+    lConsole('set_property generic {} [get_filesets sim_1]')
+
     # Now dig through the simulation log for failures.
     # This assumes that simulation issues are reported using the VHDL
     # 'report "XXX" severity failure'.

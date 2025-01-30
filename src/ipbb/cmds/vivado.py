@@ -20,6 +20,7 @@ from rich.table import Table
 
 from .schema import project_schema, validate_schema
 from .dep import hash
+from .proj import cd
 
 from ..console import cprint, console
 from ..utils import which, SmartOpen, mkdir
@@ -922,6 +923,11 @@ def package(ictx, aTag):
     lDebugProbesPath = lBaseName + '.ltx'
     if not os.path.exists(lDebugProbesPath):
         lDebugProbesPath = None
+
+    # Change directory to the project directory, to ensure that even
+    # when 'ipbb vivado package' is called from elsewhere, the
+    # products end up in the usual place.
+    cd(ictx, ictx.currentproj.name, False)
 
     lPkgPath = 'package'
     lPkgSrcPath = join(lPkgPath, 'src')

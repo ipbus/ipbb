@@ -126,6 +126,22 @@ def resource_usage(ictx, *args, **kwargs):
 
 
 # ------------------------------------------------------------------------------
+@vivado.command('slack-histogram', short_help="Slack histogram")
+@click.option('-c', '--cell', 'aCell', default=None, help="Submodule name")
+@click.option('-f', '--file', 'aFile', type=click.Path(), default=None, help="Output file")
+@click.option('--details', 'aDetails', is_flag=True, default=False, help="Provide path-by-path slack detail")
+@click.option('--num-bins', 'aNumBins', type=int, default=None, help="Number of bins")
+@click.option('--slack-less-than', 'aSlackMax', type=float, default=None, help="Slack upper limit (ns)")
+@click.option('--slack-greater-than', 'aSlackMin', type=float, default=None, help="Slack lower limit (ns)")
+@click.pass_obj
+@click.pass_context
+def resource_usage(ictx, *args, **kwargs):
+    '''Create a slack histogram'''
+    from ..cmds.vivado import slack_histogram
+    return (ictx.command.name, slack_histogram, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
 @vivado.command('bitfile', short_help="Generate the bitfile.")
 @click.pass_obj
 @click.pass_context

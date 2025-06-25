@@ -443,18 +443,17 @@ def impl(ictx, aNumJobs, aStopOnTimingErr):
 
 
 # ------------------------------------------------------------------------------
-
 def resource_usage(ictx, aCell, aDepth, aFile, aSLR):
 
     lSessionId = 'usage'
 
-    # Check that the project exists 
+    # Check that the project exists.
     ensure_vivado_project_path(ictx.vivadoProjFile)
 
     # And that the Vivado ictx is up
     ensure_vivado(ictx)
 
-    lCmd = 'report_utilization '
+    lCmd = 'report_utilization'
     if aSLR:
         lCmd += ' -slr '
     else:
@@ -465,6 +464,49 @@ def resource_usage(ictx, aCell, aDepth, aFile, aSLR):
     if aFile:
         lCmd += ' -file ' + aFile
 
+    try:
+        with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            for c in (
+                    'open_run impl_1',
+                    lCmd
+                ):
+                lConsole(c)
+    except VivadoConsoleError as lExc:
+        logVivadoConsoleError(lExc)
+        raise click.Abort()
+
+
+# ------------------------------------------------------------------------------
+def slack_histogram(ictx, aCell, aFile, aDetails, aNumBins, aSlackMax, aSlackMin):
+
+    lSessionId = 'slack'
+
+    # Check that the project exists.
+    ensure_vivado_project_path(ictx.vivadoProjFile)
+
+    # And that the Vivado ictx is up
+    ensure_vivado(ictx)
+
+    lCmd = "create_slack_histogram"
+    lCmd += " -significant_digits 3"
+    if aCell:
+        lCmd += f" -cells {aCell}"
+
+    if aFile:
+        lCmd += f" -file {aFile}"
+
+    if aDetails:
+        lCmd += " -details"
+
+    if aNumBins:
+        lCmd += f" -num_bins {aNumBins}"
+
+    if aSlackMax:
+        lCmd += f" -slack_less_than {aSlackMax}"
+
+    if aSlackMin:
+        lCmd += f" -slack_greater_than {aSlackMin}"
 
     try:
         with ictx.vivadoSessions.getctx(lSessionId) as lConsole:

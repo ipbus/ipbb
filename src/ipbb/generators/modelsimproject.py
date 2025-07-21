@@ -71,12 +71,13 @@ class ModelSimGenerator(object):
 
             # ----------------------------------------------------------
             if lExt in ('.vhd', '.vhdl'):
+                cmd_base = 'vcom -autoorder'
                 if src.vhdl2008:
-                    cmd = 'vcom -2008'
+                    cmd = f'{cmd_base} -2008'
                 elif src.vhdl2019:
-                    cmd = 'vcom -2019'
+                    cmd = f'{cmd_base} -2019'
                 else:
-                    cmd = 'vcom'
+                    cmd = cmd_base
             elif lExt == '.v':
                 cmd = 'vlog'
 

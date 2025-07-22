@@ -1004,6 +1004,7 @@ def package(ictx, aTag):
             'build host': socket.gethostname().replace('.', '_'),
             'time': time.strftime("%a, %d %b %Y %H:%M:%S +0000"),
             'md5': lHash.hexdigest(),
+            'variables': dict(lDepFileParser.settings),
         }
     )
 

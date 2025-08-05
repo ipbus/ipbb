@@ -7,7 +7,6 @@ import sh
 import shutil
 import getpass
 import collections
-import cerberus
 
 from copy import deepcopy
 from rich.table import Table

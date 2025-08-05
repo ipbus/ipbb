@@ -3,7 +3,6 @@
 import click
 import glob
 import shutil
-import cerberus
 import sh
 
 # Elements

@@ -10,7 +10,6 @@ import shutil
 import socket
 import yaml
 import re
-import cerberus
 
 # Elements
 from os.path import join, split, exists, splitext, abspath, basename, getmtime

@@ -29,6 +29,16 @@ def report(ictx, pager, filters):
 
 
 # ------------------------------------------------------------------------------
+@dep.command('print-variables')
+@click.pass_obj
+@click.argument('format_string')
+def print_variables(ictx, format_string):
+    '''Print depfile variables of current project, according to the supplied format string'''
+    from ..cmds.dep import print_variables
+    print_variables(ictx, format_string)
+
+
+# ------------------------------------------------------------------------------
 @dep.command('ls', short_help="List project files by group")
 @click.argument('group', type=click.Choice(dep_command_types))
 @click.option('-o', '--output', default=None, help="Destination of the command output. Default: stdout")

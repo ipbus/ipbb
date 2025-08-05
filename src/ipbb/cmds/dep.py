@@ -158,6 +158,12 @@ def report(ictx, pager, filters):
             raise SystemExit(1)
 
 
+# ------------------------------------------------------------------------------
+
+def print_variables(ictx, format_string):
+    lVariables = dict(ictx.depParser.settings)
+    print(format_string.format(**lVariables))
+
 
 # ------------------------------------------------------------------------------
 

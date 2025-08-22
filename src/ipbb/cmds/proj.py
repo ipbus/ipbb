@@ -176,7 +176,7 @@ def cd(ictx, projname, aVerbose):
     ictx._autodetect()
 
     # cprint(f"New current directory {os.getcwd()}")
-    if ictx.currentproj:
+    if ictx.currentproj and aVerbose:
         cprint(f"Current project: [cyan]{ictx.currentproj.name}[/cyan]")
 
 

@@ -24,7 +24,7 @@ def vitishls(env, proj, verbosity):
     pass
 
 # ------------------------------------------------------------------------------
-@vitishls.resultcallback()
+@vitishls.result_callback()
 @click.pass_obj
 def process_vitishls(env, subcommands, proj, verbosity):
     from ..cmds.vitishls import vitishls
@@ -78,7 +78,7 @@ def cosim(ctx, *args, **kwargs):
 
 # ------------------------------------------------------------------------------
 @vitishls.command('export-ip', short_help='Export ip repostory.')
-@click.option('-c', '--to-component', callback=validateOptionalComponent, autocompletion=completeComponent)
+@click.option('-c', '--to-component', callback=validateOptionalComponent, shell_complete=completeComponent)
 @click.pass_obj
 @click.pass_context
 def export_ip(ctx, *args, **kwargs):

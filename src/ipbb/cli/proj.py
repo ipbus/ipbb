@@ -26,8 +26,8 @@ def proj():
 @proj.command('create', short_help="Create a new project area.")
 @click.argument('toolset', type=click.Choice(['vivado', 'sim', 'vitis-hls']))
 @click.argument('projname')
-@click.argument('component', callback=validateComponent, autocompletion=completeComponent)
-@click.argument('topdep', default='__auto__', autocompletion=completeDepFile('component'))
+@click.argument('component', callback=validateComponent, shell_complete=completeComponent)
+@click.argument('topdep', default='__auto__', shell_complete=completeDepFile('component'))
 @click.pass_obj
 def create(env, toolset, projname, component, topdep ):
     '''Creates a new area of name PROJNAME
@@ -57,7 +57,7 @@ def ls( env ):
 # ------------------------------------------------------------------------------
 @proj.command('cd', short_help="Change working directory.")
 @click.option('-v', '--verbose', 'aVerbose', count=True, help="Command verbosity")
-@click.argument( 'projname', autocompletion=completeProject )
+@click.argument( 'projname', shell_complete=completeProject )
 @click.pass_obj
 def cd( env, projname, aVerbose ):
     '''Changes current working directory (command line only)

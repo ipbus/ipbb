@@ -120,7 +120,7 @@ def srcs_info(env):
 
 # ------------------------------------------------------------------------------
 @srcs.command('reset', short_help="Run setup sequence on a source package")
-@click.argument('pkg', default=None, autocompletion=completeSrcPackage)
+@click.argument('pkg', default=None, shell_complete=completeSrcPackage)
 @click.pass_obj
 def srcs_reset(env, pkg):
     '''Run setup sequence on a source package
@@ -142,7 +142,7 @@ def srcs_create_component(env, component):
 
 # ------------------------------------------------------------------------------
 @srcs.command('run', short_help="Run stuff")
-@click.option('-p', '--pkg', default=None, autocompletion=completeSrcPackage)
+@click.option('-p', '--pkg', default=None, shell_complete=completeSrcPackage)
 @click.argument('cmd', nargs=1)
 @click.argument('args', nargs=-1)
 @click.pass_obj

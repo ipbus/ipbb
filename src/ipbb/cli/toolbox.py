@@ -18,8 +18,8 @@ def toolbox(env):
 @toolbox.command('check-dep', short_help="Performs basic checks on dependency files")
 @click.option('-v', '--verbose', count=True)
 @click.argument('toolset', type=click.Choice(['vivado', 'sim']))
-@click.argument('component', callback=validateComponent, autocompletion=completeComponent)
-@click.argument('depfile', required=False, default=None, autocompletion=completeDepFile('component'))
+@click.argument('component', callback=validateComponent, shell_complete=completeComponent)
+@click.argument('depfile', required=False, default=None, shell_complete=completeDepFile('component'))
 @click.pass_obj
 def check_depfile(env, verbose, toolset, component, depfile):
     '''Perform basic checks on dependency files'''
@@ -28,7 +28,7 @@ def check_depfile(env, verbose, toolset, component, depfile):
 
 
 @toolbox.command('vhdl-beautify', help="Beautifies VHDL files in components within an ipbb work area or standalone files/directories")
-@click.option('-c', '--component', callback=validateMultiplePackageOrComponents, autocompletion=completeComponent, multiple=True)
+@click.option('-c', '--component', callback=validateMultiplePackageOrComponents, shell_complete=completeComponent, multiple=True)
 @click.option('-p', '--path', type=click.Path(), multiple=True)
 @click.pass_obj
 def vhdl_beautify(env, component, path):

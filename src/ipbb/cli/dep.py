@@ -9,7 +9,7 @@ from ..depparser import dep_command_types
 # ------------------------------------------------------------------------------
 @click.group()
 @click.pass_obj
-@click.option('-p', '--proj', default=None, autocompletion=completeProject)
+@click.option('-p', '--proj', default=None, shell_complete=completeProject)
 def dep(ictx, proj):
     '''Dependencies command group'''
     from ..cmds.dep import dep

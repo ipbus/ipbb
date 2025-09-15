@@ -24,7 +24,7 @@ def vivado(ictx, loglevel):
     pass
 
 # ------------------------------------------------------------------------------
-@vivado.resultcallback()
+@vivado.result_callback()
 @click.pass_obj
 def process_vivado(ictx, subcommands, loglevel):
 

@@ -21,7 +21,7 @@ def sim(env, proj):
     pass
 
 # ------------------------------------------------------------------------------
-@sim.resultcallback()
+@sim.result_callback()
 @click.pass_obj
 def process_sim(env, subcommands, proj):
 

@@ -142,6 +142,20 @@ def resource_usage(ictx, *args, **kwargs):
 
 
 # ------------------------------------------------------------------------------
+@vivado.command('cdc-report', short_help="Create a CDC report")
+@click.option('-c', '--cell', 'aCell', default=None, help="Submodule name")
+@click.option('-f', '--file', 'aFile', type=click.Path(), default=None, help="Output file")
+@click.option('--details', 'aDetails', is_flag=True, default=False, help="Provide details of paths not safely timed")
+@click.option('--severity', 'aSeverity', type=click.Choice(['info', 'warning', 'critical']), default=None, help="Report only the severity specified")
+@click.pass_obj
+@click.pass_context
+def resource_usage(ictx, *args, **kwargs):
+    '''Create a CDC report'''
+    from ..cmds.vivado import cdc_report
+    return (ictx.command.name, cdc_report, args, kwargs)
+
+
+# ------------------------------------------------------------------------------
 @vivado.command('bitfile', short_help="Generate the bitfile.")
 @click.pass_obj
 @click.pass_context

@@ -521,6 +521,43 @@ def slack_histogram(ictx, aCell, aFile, aDetails, aNumBins, aSlackMax, aSlackMin
 
 
 # ------------------------------------------------------------------------------
+def cdc_report(ictx, aCell, aFile, aDetails, aSeverity):
+
+    lSessionId = 'cdc_report'
+
+    # Check that the project exists.
+    ensure_vivado_project_path(ictx.vivadoProjFile)
+
+    # And that the Vivado ictx is up
+    ensure_vivado(ictx)
+
+    lCmd = "report_cdc"
+    if aCell:
+        lCmd += f" -cells {aCell}"
+
+    if aFile:
+        lCmd += f" -file {aFile}"
+
+    if aDetails:
+        lCmd += " -details"
+
+    if aSeverity:
+        lCmd += f" -severity {aSeverity}"
+
+    try:
+        with ictx.vivadoSessions.getctx(lSessionId) as lConsole:
+            lProject = VivadoProject(lConsole, ictx.vivadoProjFile)
+            for c in (
+                    'open_run impl_1',
+                    lCmd
+                ):
+                lConsole(c)
+    except VivadoConsoleError as lExc:
+        logVivadoConsoleError(lExc)
+        raise click.Abort()
+
+
+# ------------------------------------------------------------------------------
 def bitfile(ictx):
     '''Create a bitfile'''
 

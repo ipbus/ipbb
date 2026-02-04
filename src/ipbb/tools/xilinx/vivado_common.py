@@ -158,7 +158,7 @@ class VivadoOutputFormatter(OutputFormatter):
                 else:
                     continue
             else:
-                if self.loglevel >= self.__log_info:
+                if self.loglevel > self.__log_info:
                     continue
 
 

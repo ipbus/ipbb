@@ -291,9 +291,11 @@ def git(ictx, repo, branch_or_tag_or_revision, revision, dest, depth):
     # checkout out a revision should have been handled at the CLI
     # option handling stage.
     if (lRefKind == 'revision') or (revision is not None):
-        git_target = branch_or_tag_or_revision if (lRefKind == 'revision') else revision
         sh.git('init', lRepoName, _out=sys.stdout, _cwd=ictx.srcdir)
         sh.git('remote', 'add', 'origin', repo, _out=sys.stdout, _cwd=lRepoLocalPath)
+        sh.git('fetch', _out=sys.stdout, _cwd=lRepoLocalPath)
+        git_target_tmp = sh.git('rev-parse', branch_or_tag_or_revision, '-q', _cwd=lRepoLocalPath)
+        git_target = git_target_tmp.split()
         cprint('Fetching & checking out [blue]{}[/blue]'.format(git_target))
         try:
             lFetchArgs = ['fetch', 'origin', git_target, '-q']

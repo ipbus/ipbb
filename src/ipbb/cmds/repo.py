@@ -294,15 +294,15 @@ def git(ictx, repo, branch_or_tag_or_revision, revision, dest, depth):
         sh.git('init', lRepoName, _out=sys.stdout, _cwd=ictx.srcdir)
         sh.git('remote', 'add', 'origin', repo, _out=sys.stdout, _cwd=lRepoLocalPath)
         sh.git('fetch', _out=sys.stdout, _cwd=lRepoLocalPath)
-        git_target_tmp = sh.git('rev-parse', branch_or_tag_or_revision, '-q', _cwd=lRepoLocalPath)
+        git_target_tmp = sh.git('rev-parse', branch_or_tag_or_revision if revision is None else revision, '-q', _cwd=lRepoLocalPath)
         git_target = git_target_tmp.split()
-        cprint('Fetching & checking out [blue]{}[/blue]'.format(git_target))
+        cprint('Fetching & checking out [blue]{}[/blue]'.format(git_target[0]))
         try:
-            lFetchArgs = ['fetch', 'origin', git_target, '-q']
+            lFetchArgs = ['fetch', 'origin', git_target[0], '-q']
             if depth is not None:
                 lFetchArgs += [f'--depth={depth}']
             sh.git(*lFetchArgs, _out=sys.stdout, _cwd=lRepoLocalPath)
-            sh.git('checkout', git_target, '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
+            sh.git('checkout', git_target[0], '-q', _out=sys.stdout, _cwd=lRepoLocalPath)
         except Exception as err:
             raise click.ClickException(f"Failed to check out requested revision: {str(err)}.")
     else:

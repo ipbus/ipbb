@@ -276,8 +276,7 @@ def runsimulation(ictx, aGenericTop):
     # Now dig through the simulation log for errors.
     def sounds_like_sim_error(line):
         tmp = line.strip().lower()
-        res = (tmp.find("error") > -1) and \
-            not tmp.startswith("warn")
+        res = tmp.startswith("error")
         return res
     sim_errors = [i for i in sim_output if sounds_like_sim_error(i)]
     sim_error_detected = len(sim_errors) > 0

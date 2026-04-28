@@ -274,7 +274,11 @@ def runsimulation(ictx, aGenericTop):
     lConsole('set_property generic {} [get_filesets sim_1]')
 
     # Now dig through the simulation log for errors.
-    sim_errors = [i for i in sim_output if (i.lower().find("error") > -1)]
+    def sounds_like_sim_error(line):
+        tmp = line.strip().lower()
+        res = tmp.startswith("error")
+        return res
+    sim_errors = [i for i in sim_output if sounds_like_sim_error(i)]
     sim_error_detected = len(sim_errors) > 0
     if sim_error_detected:
         error_strings = ["  {0:s}".format(i) for i in sim_errors]

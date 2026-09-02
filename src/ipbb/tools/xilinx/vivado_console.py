@@ -370,7 +370,6 @@ class VivadoConsole(object):
 
         if lErrors or (self._stopOnCWarnings and lCriticalWarnings):
             raise VivadoConsoleError(aCmd, lErrors, lCriticalWarnings)
-
         return tuple(lBuffer)
 
     # --------------------------------------------------------------

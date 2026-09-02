@@ -16,7 +16,7 @@ class VivadoHWServer(VivadoConsole):
 
     # --------------------------------------------------------------
     def openHw(self):
-        return self.execute('open_hw')
+        return self.execute('open_hw_manager')
 
     # --------------------------------------------------------------
     def connect(self, uri=None):
@@ -26,8 +26,9 @@ class VivadoHWServer(VivadoConsole):
         return self.execute(' '.join(lCmd))
 
     # --------------------------------------------------------------
-    def getHwTargets(self):
-        return self.execute('get_hw_targets')[0].split()
+    def getHwTargets(self, quiet=True):
+        ret = self.execute('get_hw_targets' + (' -quiet' if quiet else ''))[0]
+        return ret.split() if ret is not None else ''
 
     # --------------------------------------------------------------
     def openHwTarget(self, target, is_xvc=False):
@@ -35,12 +36,13 @@ class VivadoHWServer(VivadoConsole):
 
     # --------------------------------------------------------------
     def closeHwTarget(self, target=None):
-        lCmd = 'close_hw_target' + ('' if target is None else ' ' + target)
+        lCmd = 'close_hw_target' + ('' if target is None else ' ' + '{' + target + '}' )
         return self.execute(lCmd)
 
     # --------------------------------------------------------------
-    def getHwDevices(self):
-        return self.execute('get_hw_devices')[0].split()
+    def getHwDevices(self, quiet=True):
+        ret = self.execute('get_hw_devices' + (' -quiet' if quiet else ''))[0]
+        return ret.split() if ret is not None else ''
 
     # --------------------------------------------------------------
     def programDevice(self, device, bitfile, probe=None):

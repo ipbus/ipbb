@@ -106,27 +106,23 @@ def list(obj):
         cprint("Looking for targets")
         v.openHw()
         lConnectedHwServer = v.connect(lHwServerURI)[0]
+
+        for target in lVirtualCables:
+
+            cprint(f"> Opening Virtual Cable [blue]{target}[/blue]")
+            for retry in range(5):
+                try:
+                    v.openHwTarget(target, is_xvc=True)
+                except VivadoConsoleError as lExc:
+                    v.closeHwTarget()
+                    continue
+                break
+
         lHwTargets = v.getHwTargets()
     except VivadoConsoleError as lExc:
         logVivadoConsoleError(lExc)
-        raise click.Abort()
-
-    if lVirtualCables:
-        for vc in lVirtualCables:
-            lVCTarget = lConnectedHwServer + '/xilinx_tcf/Xilix/' + vc
-            if lVCTarget in lHwTargets:
-                continue
-
-            # for lRetries in range(5):
-            try:
-                v.openHwTarget(vc, is_xvc=True)
-                v.closeHwTarget()
-            except VivadoConsoleError as lExc:
-                continue
-            break
-            # Update the list
-            # lHwTargets = v.getHwTargets()
-            lHwTargets += [lVCTarget]
+        
+    print()
 
     for target in lHwTargets:
         cprint(f"- target [blue]{target}[/blue]")
@@ -134,30 +130,32 @@ def list(obj):
         try:
             v.openHwTarget(target)
         except VivadoConsoleError as lExc:
-            v.closeHwTarget(target)
+            v.closeHwTarget()
             continue
-
+        
         hw_devices = v.getHwDevices()
         for device in hw_devices:
             cprint(f"  + [green]{device}[/green]")
 
-        v.closeHwTarget(target)
-
-
+        v.closeHwTarget()
 # ------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
-def _validateDevice(ctx, param, value):
-    lSeparators = value.count(':')
-    # Validate the format
-    if lSeparators == 0:
-        return (value, None)
-    elif lSeparators == 1:
-        return tuple(value.split(':'))
-    else:
-        raise click.BadParameter(
-            'Malformed device name : %s. Expected <target>:<device>' % value
-        )
+# # ------------------------------------------------------------------------------
+# def _validateDevice(ctx, param, value):
+#     '''
+#     Device string format:
+#     <hw target>:<port>?<device>
+#     '''
+#     lSeparators = value.count(':')
+#     # Validate the format
+#     if lSeparators == 0:
+#         return (value, None)
+#     elif lSeparators == 1:
+#         return tuple(value.split(':'))
+#     else:
+#         raise click.BadParameter(
+#             'Malformed device name : %s. Expected <target>:<device>' % value
+#         )
 
 
 # ------------------------------------------------------------------------------
@@ -165,16 +163,19 @@ def _validateDevice(ctx, param, value):
 
 # ------------------------------------------------------------------------------
 @vivado.command('program')
-@click.argument('deviceid', callback=_validateDevice)
+@click.argument('targetid')
+@click.argument('deviceid')
 @click.argument('bitfile', type=click.Path(exists=True))
 @click.option('-p', '--probe', type=click.Path(), default=None, help="Probe file")
 @click.option('-y', 'yes', is_flag=True, default=False, help="Proceed with asking for confirmation.")
 @click.pass_obj
-def program(obj, deviceid, bitfile, probe, yes):
+def program(obj, targetid, deviceid, bitfile, probe, yes):
 
     lVerbosity = obj.options['vivado.verbosity']
+    lHwServerURI = obj.options['vivado.hw_server']
+    lVirtualCables = obj.options['vivado.virtualcables']
 
-    target, device = deviceid
+    target, device = targetid, deviceid
 
     bitbase, bitext = splitext(bitfile)
     if bitext == '.tgz':
@@ -193,7 +194,6 @@ def program(obj, deviceid, bitfile, probe, yes):
         cprint(f"Extracting {lBitFiles[0]} from {bitfile} to {lTmpDir}", style='green')
         bitfile = join(lTmpDir, lBitFiles[0])
 
-    lHwServerURI = obj.options['vivado.hw_server']
 
     # Build vivado interface
     lVivado = autodetectVivadoVariant()
@@ -208,6 +208,20 @@ def program(obj, deviceid, bitfile, probe, yes):
         cprint("... done")
         v.openHw()
         v.connect(lHwServerURI)
+
+        #--- Add Virtual Cables ---
+        for target in lVirtualCables:
+
+            cprint(f"> Opening Virtual Cable [blue]{target}[/blue]")
+            for retry in range(5):
+                try:
+                    v.openHwTarget(target, is_xvc=True)
+                except VivadoConsoleError as lExc:
+                    v.closeHwTarget()
+                    continue
+                break
+        #----
+
         hw_targets = v.getHwTargets()
 
         cprint(f"Found targets: [blue]{', '.join(hw_targets)}[/blue]")

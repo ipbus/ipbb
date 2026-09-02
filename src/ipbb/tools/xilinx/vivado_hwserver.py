@@ -32,7 +32,7 @@ class VivadoHWServer(VivadoConsole):
 
     # --------------------------------------------------------------
     def openHwTarget(self, target, is_xvc=False):
-        return self.execute('open_hw_target {1} {{{0}}}'.format(target, '-xvc_url' if is_xvc else ''))
+        return self.execute('open_hw_target {1} {0}'.format(target, '-xvc_url' if is_xvc else ''))
 
     # --------------------------------------------------------------
     def closeHwTarget(self, target=None):

@@ -82,6 +82,26 @@ def vivado(obj, aVerbosity, aHwServerURI, aVirtualCables):
     obj.options['vivado.virtualcables'] = aVirtualCables
 # ------------------------------------------------------------------------------
 
+
+# ------------------------------------------------------------------------------
+def _add_xvc_targets(hw_srv, virtual_cables):
+    """Helper function to add virtual cables"""
+    for target in virtual_cables:
+
+        cprint(f"> Opening Virtual Cable [blue]{target}[/blue]")
+        for retry in range(5):
+            try:
+                hw_srv.openHwTarget(target, is_xvc=True)
+            except VivadoConsoleError as lExc:
+                # v.closeHwTarget()
+                continue
+            break
+        else:
+            cprint(f'[yellow]Failed to open virtual cable {target}[/yellow]')
+            continue
+
+        cprint(f'[cyan]XVC {target} open after {retry} retry(es)[/cyan]')
+
 # ------------------------------------------------------------------------------
 @vivado.command('list', short_help="Vivado programmer interface.")
 @click.pass_obj
@@ -107,16 +127,8 @@ def list(obj):
         v.openHw()
         lConnectedHwServer = v.connect(lHwServerURI)[0]
 
-        for target in lVirtualCables:
 
-            cprint(f"> Opening Virtual Cable [blue]{target}[/blue]")
-            for retry in range(5):
-                try:
-                    v.openHwTarget(target, is_xvc=True)
-                except VivadoConsoleError as lExc:
-                    v.closeHwTarget()
-                    continue
-                break
+        _add_xvc_targets(v, lVirtualCables)
 
         lHwTargets = v.getHwTargets()
     except VivadoConsoleError as lExc:
@@ -138,6 +150,8 @@ def list(obj):
             cprint(f"  + [green]{device}[/green]")
 
         v.closeHwTarget()
+    
+    del v
 # ------------------------------------------------------------------------------
 
 # # ------------------------------------------------------------------------------
@@ -210,16 +224,7 @@ def program(obj, targetid, deviceid, bitfile, probe, yes):
         v.connect(lHwServerURI)
 
         #--- Add Virtual Cables ---
-        for target in lVirtualCables:
-
-            cprint(f"> Opening Virtual Cable [blue]{target}[/blue]")
-            for retry in range(5):
-                try:
-                    v.openHwTarget(target, is_xvc=True)
-                except VivadoConsoleError as lExc:
-                    v.closeHwTarget()
-                    continue
-                break
+        _add_xvc_targets(v, lVirtualCables)
         #----
 
         hw_targets = v.getHwTargets()
